@@ -1,0 +1,26 @@
+# Delphi outputs
+*.dcu
+*.dcp
+*.bpl
+*.map
+*.tds
+*.local
+*.identcache
+*.stat
+*.otares
+__history/
+Win32/
+Win64/
+OSX32/
+OSX64/
+Android/
+Android64/
+iOSDevice32/
+iOSDevice64/
+
+# Generated build output
+Build/Delphi/
+
+# Python
+__pycache__/
+*.pyc

@@ -1,0 +1,18 @@
+﻿package h5uGridVclD;
+
+{$DESCRIPTION 'h5u Grid VCL design-time package'}
+{$DESIGNONLY}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl,
+  vcl,
+  designide,
+  h5uGridCoreR,
+  h5uGridVclR,
+  h5uGridCoreD;
+
+contains
+  Vcl.h5u.Grid.Design in '..\Source\Design\Vcl.h5u.Grid.Design.pas';
+
+end.

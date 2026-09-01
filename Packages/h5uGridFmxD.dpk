@@ -1,0 +1,18 @@
+﻿package h5uGridFmxD;
+
+{$DESCRIPTION 'h5u Grid FMX design-time package'}
+{$DESIGNONLY}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl,
+  fmx,
+  designide,
+  h5uGridCoreR,
+  h5uGridFmxR,
+  h5uGridCoreD;
+
+contains
+  FMX.h5u.Grid.Design in '..\Source\Design\FMX.h5u.Grid.Design.pas';
+
+end.

@@ -1,0 +1,165 @@
+﻿object MainForm: TMainForm
+  Left = 0
+  Top = 0
+  Caption = 'h5u.Grid FMX - VirtualSource / Live'
+  ClientHeight = 610
+  ClientWidth = 1040
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  object ToolBar: TToolBar
+    Size.Width = 1040.000000000000000000
+    Size.Height = 50.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+    object PauseCheck: TCheckBox
+      Position.X = 8.000000000000000000
+      Position.Y = 13.000000000000000000
+      Size.Width = 82.000000000000000000
+      Size.Height = 24.000000000000000000
+      Size.PlatformDefault = False
+      Text = 'Pause'
+      OnChange = OptionChange
+    end
+    object CacheCheck: TCheckBox
+      Position.X = 96.000000000000000000
+      Position.Y = 13.000000000000000000
+      Size.Width = 120.000000000000000000
+      Size.Height = 24.000000000000000000
+      Size.PlatformDefault = False
+      IsChecked = True
+      Text = 'Viewport-Cache'
+      OnChange = OptionChange
+    end
+    object DarkCheck: TCheckBox
+      Position.X = 222.000000000000000000
+      Position.Y = 13.000000000000000000
+      Size.Width = 100.000000000000000000
+      Size.Height = 24.000000000000000000
+      Size.PlatformDefault = False
+      Text = 'Dark Mode'
+      OnChange = OptionChange
+    end
+    object AppendButton: TButton
+      Position.X = 338.000000000000000000
+      Position.Y = 8.000000000000000000
+      Size.Width = 122.000000000000000000
+      Size.Height = 34.000000000000000000
+      Size.PlatformDefault = False
+      Text = 'Event anhängen'
+      OnClick = AppendButtonClick
+    end
+    object ClearButton: TButton
+      Position.X = 468.000000000000000000
+      Position.Y = 8.000000000000000000
+      Size.Width = 90.000000000000000000
+      Size.Height = 34.000000000000000000
+      Size.PlatformDefault = False
+      Text = 'Leeren'
+      OnClick = ClearButtonClick
+    end
+  end
+  object Grid: Th5uFmxGrid
+    Align = Client
+    Position.Y = 50.000000000000000000
+    Size.Width = 1040.000000000000000000
+    Size.Height = 560.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 1
+    DataController = VirtualController
+    Columns = <
+      item
+        Id = 'id'
+        Caption = 'ID'
+        FieldName = 'ID'
+        Width = 68
+        VisibleIndex = 0
+        FixedKind = Left
+        ReadOnly = True
+        DataType = Integer
+      end
+      item
+        Id = 'timestamp'
+        Caption = 'Zeit'
+        FieldName = 'TIMESTAMP'
+        Width = 145
+        VisibleIndex = 1
+        ReadOnly = True
+        DataType = DateTime
+        DisplayFormat = 'dd.mm.yyyy hh:nn:ss'
+      end
+      item
+        Id = 'source'
+        Caption = 'Quelle'
+        FieldName = 'SOURCE'
+        Width = 110
+        VisibleIndex = 2
+        ReadOnly = True
+        DataType = Text
+      end
+      item
+        Id = 'message'
+        Caption = 'Meldung'
+        FieldName = 'MESSAGE'
+        Width = 550
+        VisibleIndex = 3
+        DataType = Text
+        WordWrap = True
+        AutoHeight = True
+        MaxAutoHeight = 98
+      end
+      item
+        Id = 'severity'
+        Caption = 'Stufe'
+        FieldName = 'SEVERITY'
+        Width = 68
+        VisibleIndex = 4
+        ReadOnly = True
+        DataType = Integer
+      end
+      item
+        Id = 'ack'
+        Caption = 'Quittiert'
+        FieldName = 'ACK'
+        Width = 80
+        VisibleIndex = 5
+        DataType = Boolean
+        EditorKind = Boolean
+      end>
+    RowHeight.Mode = Automatic
+    RowHeight.MinHeight = 26
+    RowHeight.MaxHeight = 105
+    RowHeight.EstimatedHeight = 30
+    ScrollHints.VerticalColumnId = 'message'
+    RowStyles.StripePeriod = 5
+    RowStyles.StripeOffset = 5
+    RowStyles.StyleKeyColumnId = 'severity'
+    RowStyles.Mappings = <
+      item
+        Value = 2
+        StyleName = 'Warning'
+      end
+      item
+        Value = 3
+        StyleName = 'Error'
+      end>
+  end
+  object VirtualController: Th5uVirtualController
+    Cache.Mode = Viewport
+    OnGetRowCount = VirtualGetRowCount
+    OnGetRowKey = VirtualGetRowKey
+    OnGetValue = VirtualGetValue
+    OnSetValue = VirtualSetValue
+    Left = 32
+    Top = 80
+  end
+  object LiveTimer: TTimer
+    Enabled = True
+    Interval = 900
+    OnTimer = LiveTimerTimer
+    Left = 104
+    Top = 80
+  end
+end

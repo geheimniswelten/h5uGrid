@@ -1,0 +1,18 @@
+﻿package h5uGridCoreD;
+
+{$DESCRIPTION 'h5u Grid common design-time package'}
+{$DESIGNONLY}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl,
+  vcl,
+  dbrtl,
+  dsnap,
+  designide,
+  h5uGridCoreR;
+
+contains
+  h5u.Grid.Design in '..\Source\Design\h5u.Grid.Design.pas';
+
+end.

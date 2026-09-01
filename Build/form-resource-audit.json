@@ -1,0 +1,36 @@
+{
+  "resource_files": 6,
+  "projects": 6,
+  "findings": [
+    {
+      "severity": "error",
+      "file": "Demos/FMX/ClientDataSet/h5uGridFmxClientDataSetDemo.dpr",
+      "message": "Form class MainForm missing from Main.pas"
+    },
+    {
+      "severity": "error",
+      "file": "Demos/FMX/ObjectList/h5uGridFmxObjectListDemo.dpr",
+      "message": "Form class MainForm missing from Main.pas"
+    },
+    {
+      "severity": "error",
+      "file": "Demos/FMX/VirtualLive/h5uGridFmxVirtualLiveDemo.dpr",
+      "message": "Form class MainForm missing from Main.pas"
+    },
+    {
+      "severity": "error",
+      "file": "Demos/VCL/ClientDataSet/h5uGridVclClientDataSetDemo.dpr",
+      "message": "Form class MainForm missing from Main.pas"
+    },
+    {
+      "severity": "error",
+      "file": "Demos/VCL/ObjectList/h5uGridVclObjectListDemo.dpr",
+      "message": "Form class MainForm missing from Main.pas"
+    },
+    {
+      "severity": "error",
+      "file": "Demos/VCL/VirtualLive/h5uGridVclVirtualLiveDemo.dpr",
+      "message": "Form class MainForm missing from Main.pas"
+    }
+  ]
+}

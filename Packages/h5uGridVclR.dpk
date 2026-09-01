@@ -1,0 +1,19 @@
+﻿package h5uGridVclR;
+
+{$DESCRIPTION 'h5u Grid VCL runtime'}
+{$RUNONLY}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl,
+  vcl,
+  vclx,
+  vclimg,
+  h5uGridCoreR;
+
+contains
+  Vcl.h5u.Grid.Styles in '..\Source\Vcl\Vcl.h5u.Grid.Styles.pas',
+  Vcl.h5u.Grid.Editors in '..\Source\Vcl\Vcl.h5u.Grid.Editors.pas',
+  Vcl.h5u.Grid in '..\Source\Vcl\Vcl.h5u.Grid.pas';
+
+end.

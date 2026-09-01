@@ -1,0 +1,168 @@
+﻿object MainForm: TMainForm
+  Left = 0
+  Top = 0
+  Caption = 'h5u.Grid FMX - Objektliste / RTTI'
+  ClientHeight = 610
+  ClientWidth = 1020
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  OnCreate = FormCreate
+  object ToolBar: TToolBar
+    Size.Width = 1020.000000000000000000
+    Size.Height = 50.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+    object AddButton: TButton
+      Position.X = 8.000000000000000000
+      Position.Y = 8.000000000000000000
+      Size.Width = 132.000000000000000000
+      Size.Height = 34.000000000000000000
+      Size.PlatformDefault = False
+      Text = 'Objekt hinzufügen'
+      OnClick = AddButtonClick
+    end
+    object CacheCheck: TCheckBox
+      Position.X = 154.000000000000000000
+      Position.Y = 13.000000000000000000
+      Size.Width = 118.000000000000000000
+      Size.Height = 24.000000000000000000
+      Size.PlatformDefault = False
+      Text = 'RTTI-Cache'
+      OnChange = OptionChange
+    end
+    object LiveCheck: TCheckBox
+      Position.X = 278.000000000000000000
+      Position.Y = 13.000000000000000000
+      Size.Width = 112.000000000000000000
+      Size.Height = 24.000000000000000000
+      Size.PlatformDefault = False
+      IsChecked = True
+      Text = 'Live ändern'
+      OnChange = OptionChange
+    end
+    object DarkCheck: TCheckBox
+      Position.X = 396.000000000000000000
+      Position.Y = 13.000000000000000000
+      Size.Width = 100.000000000000000000
+      Size.Height = 24.000000000000000000
+      Size.PlatformDefault = False
+      Text = 'Dark Mode'
+      OnChange = OptionChange
+    end
+  end
+  object Grid: Th5uFmxGrid
+    Align = Client
+    Position.Y = 50.000000000000000000
+    Size.Width = 1020.000000000000000000
+    Size.Height = 560.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 1
+    DataController = ObjectController
+    Columns = <
+      item
+        Id = 'id'
+        Caption = 'ID'
+        FieldName = 'Id'
+        Width = 64
+        VisibleIndex = 0
+        FixedKind = Left
+        ReadOnly = True
+        DataType = Integer
+      end
+      item
+        Id = 'name'
+        Caption = 'Name'
+        FieldName = 'Name'
+        Width = 145
+        VisibleIndex = 1
+        DataType = Text
+      end
+      item
+        Id = 'department'
+        Caption = 'Abteilung'
+        FieldName = 'Department'
+        Width = 120
+        VisibleIndex = 2
+        DataType = Text
+      end
+      item
+        Id = 'notes'
+        Caption = 'Hinweis'
+        FieldName = 'Notes'
+        Width = 320
+        VisibleIndex = 3
+        DataType = Text
+        WordWrap = True
+        AutoHeight = True
+        MaxAutoHeight = 96
+      end
+      item
+        Id = 'amount'
+        Caption = 'Betrag'
+        FieldName = 'Amount'
+        Width = 105
+        VisibleIndex = 4
+        DataType = Currency
+        DisplayFormat = '#,##0.00'
+        Highlighted = True
+      end
+      item
+        Id = 'active'
+        Caption = 'Aktiv'
+        FieldName = 'Active'
+        Width = 64
+        VisibleIndex = 5
+        DataType = Boolean
+        EditorKind = Boolean
+      end
+      item
+        Id = 'priority'
+        Caption = 'Priorität'
+        FieldName = 'Priority'
+        Width = 78
+        VisibleIndex = 6
+        DataType = Integer
+      end
+      item
+        Id = 'updated'
+        Caption = 'Geändert'
+        FieldName = 'UpdatedAt'
+        Width = 145
+        VisibleIndex = 7
+        DataType = DateTime
+        DisplayFormat = 'dd.mm.yyyy hh:nn:ss'
+      end>
+    RowHeight.Mode = Automatic
+    RowHeight.MinHeight = 26
+    RowHeight.MaxHeight = 105
+    RowHeight.EstimatedHeight = 30
+    ScrollHints.VerticalColumnId = 'name'
+    RowStyles.StripePeriod = 3
+    RowStyles.StripeOffset = 3
+    RowStyles.StyleKeyColumnId = 'priority'
+    RowStyles.Mappings = <
+      item
+        Value = 2
+        StyleName = 'Warning'
+      end
+      item
+        Value = 3
+        StyleName = 'Error'
+      end>
+  end
+  object ObjectController: Th5uObjectListController
+    OwnsObjects = True
+    KeyPropertyName = 'Id'
+    Cache.Mode = None
+    Left = 32
+    Top = 80
+  end
+  object UpdateTimer: TTimer
+    Enabled = True
+    Interval = 800
+    OnTimer = UpdateTimerTimer
+    Left = 104
+    Top = 80
+  end
+end
