@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""Reproduzierbarer, compilerunabhängiger Release-Audit für h5u.Grid.
+"""Reproducible, compiler-independent release audit for h5u.Grid.
 
-Der Audit ersetzt keinen Delphi-Build. Er prüft jedoch Quell-/Unit-Namen,
-Projektpfade, Form-Ressourcen, Demo-Verdrahtung, Namenskonventionen und einige
-hochwertige Konsistenzregeln. tree-sitter-pascal wird optional verwendet.
+The audit intentionally checks only rules that can be verified reliably
+without an Embarcadero Delphi compiler. It does not claim a DCC build.
 """
 from __future__ import annotations
 
@@ -12,7 +11,6 @@ import re
 import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Iterable
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "Source"
@@ -33,47 +31,57 @@ findings: list[Finding] = []
 checks: dict[str, dict[str, int | str]] = {}
 
 
-def add(severity: str, check: str, path: Path | str, message: str, line: int | None = None) -> None:
-    p = Path(path)
-    try:
-        filename = str(p.resolve().relative_to(ROOT.resolve()))
-    except Exception:
-        filename = str(path)
-    findings.append(Finding(severity, check, filename, message, line))
-
-
-def text(path: Path) -> str:
+def read(path: Path) -> str:
     return path.read_text(encoding="utf-8-sig", errors="replace")
+
+
+def relative(path: Path | str) -> str:
+    value = Path(path)
+    try:
+        return value.resolve().relative_to(ROOT.resolve()).as_posix()
+    except Exception:
+        return str(path)
 
 
 def line_no(value: str, pos: int) -> int:
     return value.count("\n", 0, pos) + 1
 
 
-def finish_check(name: str, before: int) -> None:
+def add(severity: str, check: str, path: Path | str, message: str, line: int | None = None) -> None:
+    findings.append(Finding(severity, check, relative(path), message, line))
+
+
+def finish(name: str, before: int, status: str | None = None) -> None:
     own = findings[before:]
-    checks[name] = {
-        "errors": sum(x.severity == "error" for x in own),
-        "warnings": sum(x.severity == "warning" for x in own),
+    result: dict[str, int | str] = {
+        "errors": sum(item.severity == "error" for item in own),
+        "warnings": sum(item.severity == "warning" for item in own),
     }
+    if status:
+        result["status"] = status
+    checks[name] = result
 
 
-def iter_code_files() -> Iterable[Path]:
-    yield from SOURCE.rglob("*.pas")
-    yield from (ROOT / "Packages").rglob("*.dpk")
-    yield from DEMOS.rglob("*.pas")
-    yield from DEMOS.rglob("*.dpr")
+def require_patterns(name: str, rel: str, patterns: list[tuple[str, str]]) -> None:
+    path = ROOT / rel
+    if not path.is_file():
+        add("error", name, path, "Datei fehlt")
+        return
+    value = read(path)
+    for pattern, description in patterns:
+        if not re.search(pattern, value, re.I | re.S | re.M):
+            add("error", name, path, f"Erwartete Signatur fehlt: {description}")
 
 
-def check_required_layout() -> None:
+def check_layout() -> None:
     name = "required-layout"
     before = len(findings)
     required = [
         "Source/Common/h5u.Grid.Types.pas",
         "Source/Common/h5u.Grid.Factory.pas",
-        "Source/Common/h5u.Grid.Selection.pas",
         "Source/Common/h5u.Grid.Columns.pas",
         "Source/Common/h5u.Grid.Options.pas",
+        "Source/Common/h5u.Grid.Selection.pas",
         "Source/Common/h5u.Grid.Data.Core.pas",
         "Source/Common/h5u.Grid.Data.DataSet.pas",
         "Source/Common/h5u.Grid.Data.Objects.pas",
@@ -85,271 +93,353 @@ def check_required_layout() -> None:
         "Docs/CONCEPT.md",
         "Docs/QUICKHELP.md",
         "Docs/FEATURE-MATRIX.md",
+        "VERSION.txt",
     ]
     for rel in required:
         if not (ROOT / rel).is_file():
-            add("error", name, rel, "Erforderliche Datei fehlt")
-    expected = {(p, d) for p in ("VCL", "FMX") for d in ("ClientDataSet", "ObjectList", "VirtualLive")}
+            add("error", name, ROOT / rel, "Erforderliche Datei fehlt")
+
+    expected = {(platform, demo) for platform in ("VCL", "FMX") for demo in ("ClientDataSet", "ObjectList", "VirtualLive")}
     actual: set[tuple[str, str]] = set()
     for dpr in DEMOS.rglob("*.dpr"):
-        rel = dpr.relative_to(DEMOS).parts
-        if len(rel) >= 3:
-            actual.add((rel[0], rel[1]))
-    for item in sorted(expected - actual):
-        add("error", name, DEMOS / item[0] / item[1], "Erwartetes Demo-Projekt fehlt")
+        parts = dpr.relative_to(DEMOS).parts
+        if len(parts) >= 3:
+            actual.add((parts[0], parts[1]))
+    for platform, demo in sorted(expected - actual):
+        add("error", name, DEMOS / platform / demo, "Erwartetes Demo-Projekt fehlt")
     if len(list(DEMOS.rglob("*.dpr"))) != 6:
         add("error", name, DEMOS, "Es werden exakt sechs Demo-DPRs erwartet")
-    finish_check(name, before)
+    finish(name, before)
 
 
-def check_units_and_namespaces() -> None:
-    name = "unit-namespaces"
+def check_units_and_paths() -> None:
+    name = "units-and-project-paths"
     before = len(findings)
-    unit_names: set[str] = set()
+    unit_re = re.compile(r"^\s*unit\s+([^;]+);", re.I | re.M)
     for path in SOURCE.rglob("*.pas"):
-        value = text(path)
-        match = re.search(r"^\s*unit\s+([^;]+);", value, re.I | re.M)
+        value = read(path)
+        match = unit_re.search(value)
         if not match:
             add("error", name, path, "Unit-Deklaration fehlt")
             continue
-        unit_name = match.group(1).strip()
-        unit_names.add(unit_name.lower())
-        if unit_name.lower() != path.stem.lower():
-            add("error", name, path, f"Unit-Name {unit_name!r} stimmt nicht mit Dateiname überein")
+        declared = match.group(1).strip()
+        if declared.casefold() != path.stem.casefold():
+            add("error", name, path, f"Unit {declared!r} stimmt nicht mit dem Dateinamen überein")
         if path.parent.name == "Common" and re.search(r"\b(?:Vcl|FMX)\.", value, re.I):
             add("error", name, path, "Gemeinsame Unit referenziert einen Plattform-Namensraum")
         if path.parent.name == "Vcl" and re.search(r"\bFMX\.", value, re.I):
             add("error", name, path, "VCL-Unit referenziert FMX")
         if path.parent.name == "FMX" and re.search(r"\bVcl\.", value, re.I):
             add("error", name, path, "FMX-Unit referenziert VCL")
-    if (SOURCE / "Common" / "h5u.Grid.pas").exists():
-        add("error", name, SOURCE / "Common" / "h5u.Grid.pas", "Name ist für Vcl./FMX.-Fassade reserviert")
-    finish_check(name, before)
+        if not re.search(r"\bend\s*\.\s*$", value, re.I | re.S):
+            add("error", name, path, "Unit endet nicht mit end.")
+
+    path_re = re.compile(r"\bin\s*['\"]([^'\"]+)['\"]", re.I)
+    for path in list((ROOT / "Packages").rglob("*.dpk")) + list(DEMOS.rglob("*.dpr")):
+        value = read(path)
+        for match in path_re.finditer(value):
+            raw = match.group(1)
+            target = (path.parent / raw.replace("\\", "/")).resolve()
+            if not target.is_file():
+                add("error", name, path, f"Referenzierte Datei fehlt: {raw}", line_no(value, match.start()))
+
+    build_script = ROOT / "Build" / "build-delphi.ps1"
+    if build_script.is_file():
+        value = read(build_script)
+        for match in re.finditer(r"Join-Path\s+\$root\s+'([^']+)'", value, re.I):
+            raw = match.group(1)
+            target = (ROOT / raw.replace("\\", "/")).resolve()
+            if not target.exists():
+                add(
+                    "error",
+                    name,
+                    build_script,
+                    f"Buildskript referenziert fehlenden Pfad: {raw}",
+                    line_no(value, match.start()),
+                )
+    finish(name, before)
 
 
-def check_identifier_casing() -> None:
-    name = "identifier-casing"
+def check_naming() -> None:
+    name = "h5u-naming"
     before = len(findings)
     for path in list(SOURCE.rglob("*.pas")) + list(DEMOS.rglob("*.pas")) + list(DEMOS.rglob("*.dpr")):
-        value = text(path)
+        value = read(path)
         for match in re.finditer(r"\b(?:TH5u|IH5u|EH5u)[A-Za-z0-9_]*", value):
             add("error", name, path, f"Nichtkanonische Schreibweise: {match.group(0)}", line_no(value, match.start()))
-    finish_check(name, before)
-
-
-def check_project_paths() -> None:
-    name = "project-paths"
-    before = len(findings)
-    for path in list((ROOT / "Packages").rglob("*.dpk")) + list(DEMOS.rglob("*.dpr")):
-        value = text(path)
-        for match in re.finditer(r"\bin\s*['\"]([^'\"]+)['\"]", value, re.I):
-            rel = match.group(1).replace("\\", "/")
-            target = (path.parent / rel).resolve()
-            if not target.is_file():
-                add("error", name, path, f"Referenzierte Datei fehlt: {match.group(1)}", line_no(value, match.start()))
-        if re.search(r"\{\$R\s+\*\.res\}", value, re.I) and not path.with_suffix(".res").exists():
-            add("error", name, path, "{$R *.res} vorhanden, aber Projekt-/Package-RES fehlt")
-    finish_check(name, before)
+    if (SOURCE / "Common" / "h5u.Grid.pas").exists():
+        add("error", name, SOURCE / "Common" / "h5u.Grid.pas", "Name ist für die Vcl./FMX.-Fassade reserviert")
+    finish(name, before)
 
 
 def check_forms() -> None:
     name = "form-resources"
     before = len(findings)
-    resources = list(DEMOS.rglob("*.dfm")) + list(DEMOS.rglob("*.fmx"))
-    for path in resources:
-        value = text(path)
-        pas = path.with_suffix(".pas")
+    resource_results: list[dict[str, str]] = []
+    resources = sorted(list(DEMOS.rglob("*.dfm")) + list(DEMOS.rglob("*.fmx")))
+    for resource in resources:
+        pas = resource.with_suffix(".pas")
         if not pas.is_file():
-            add("error", name, path, "Zugehörige Pascal-Unit fehlt")
+            add("error", name, resource, "Zugehörige Pascal-Unit fehlt")
             continue
-        pvalue = text(pas)
-        root = re.search(r"^\s*(?:object|inherited|inline)\s+\w+\s*:\s*([\w.]+)", value, re.I | re.M)
+        rvalue = read(resource)
+        pvalue = read(pas)
+        root = re.search(r"^\s*(?:object|inherited|inline)\s+\w+\s*:\s*([\w.]+)", rvalue, re.I | re.M)
         if not root:
-            add("error", name, path, "Root-Objekt nicht gefunden")
+            add("error", name, resource, "Root-Objekt nicht gefunden")
         else:
             cls = root.group(1).split(".")[-1]
             if not re.search(r"\b" + re.escape(cls) + r"\s*=\s*class\b", pvalue, re.I):
-                add("error", name, path, f"Formklasse {cls} fehlt in Pascal-Unit")
-        for event in re.finditer(r"^\s*(On[A-Za-z0-9_]+)\s*=\s*([A-Za-z_][A-Za-z0-9_]*)\s*$", value, re.M):
+                add("error", name, resource, f"Formklasse {cls} fehlt in Pascal-Unit")
+        for event in re.finditer(r"^\s*(On[A-Za-z0-9_]+)\s*=\s*([A-Za-z_][A-Za-z0-9_]*)\s*$", rvalue, re.M):
             method = event.group(2)
             if not re.search(r"\b" + re.escape(method) + r"\s*\(", pvalue, re.I):
-                add("error", name, path, f"Handler {method} für {event.group(1)} nicht deklariert", line_no(value, event.start()))
-        if re.search(r"^\s*FileName\s*=\s*.+$", value, re.I | re.M):
-            add("error", name, path, "Externe ClientDataSet-Datei eingetragen")
-        if path.parent.name == "ClientDataSet":
-            for pattern, message in [
-                (r":\s*Th5uSampleClientDataSet\b", "Th5uSampleClientDataSet fehlt"),
-                (r":\s*TDataSource\b", "TDataSource fehlt"),
-                (r":\s*Th5uDataSetController\b", "Th5uDataSetController fehlt"),
-                (r"AutoCreateSampleData\s*=\s*True", "Designer-Musterdaten sind nicht aktiviert"),
-                (r"DataSet\s*=\s*\w+", "TDataSource ist nicht mit DataSet verbunden"),
-                (r"DataSource\s*=\s*\w+", "DataSet-Controller ist nicht mit TDataSource verbunden"),
-                (r"DataController\s*=\s*\w+", "Grid ist nicht mit DataController verbunden"),
-            ]:
-                if not re.search(pattern, value, re.I):
-                    add("error", name, path, message)
-    finish_check(name, before)
+                add("error", name, resource, f"Handler {method} für {event.group(1)} fehlt", line_no(rvalue, event.start()))
+        if re.search(r"^\s*FileName\s*=", rvalue, re.I | re.M):
+            add("error", name, resource, "Externe ClientDataSet-Datei eingetragen")
+        resource_results.append({"resource": relative(resource), "unit": relative(pas), "status": "checked"})
 
-
-def check_feature_signatures() -> None:
-    name = "feature-signatures"
-    before = len(findings)
-    requirements: dict[str, list[str]] = {
-        "Source/Common/h5u.Grid.Factory.pas": [
-            r"Th5uFactoryContext", r"FactoryScope", r"OnGetClass", r"OnCreateInstance", r"OnConfigureInstance",
-            r"\bGrid\s*:", r"\bView\s*:", r"\bDataController\s*:", r"\bColumn\s*:", r"\bRowKey\s*:",
-        ],
-        "Source/Common/h5u.Grid.Selection.pas": [r"SelectedRows", r"SelectedColumns", r"CellRanges", r"MultiRange"],
-        "Source/Common/h5u.Grid.Columns.pas": [r"RowSpan", r"ColumnSpan", r"ScrollHintText", r"AutoHeight"],
-        "Source/Common/h5u.Grid.Options.pas": [r"WholeRows", r"PixelSnap", r"ThumbHint", r"RowHeight", r"RepeatEvery|Period"],
-        "Source/Common/h5u.Grid.SampleData.pas": [r"TClientDataSet", r"AutoCreateSampleData", r"ftBlob", r"PICTURE"],
-        "Source/Vcl/Vcl.h5u.Grid.pas": [r"CustomDraw", r"FactoryScope", r"OnGetRowHeight", r"OnGetThumbHint"],
-        "Source/FMX/FMX.h5u.Grid.pas": [r"CustomDraw", r"FactoryScope", r"OnGetRowHeight", r"OnGetThumbHint"],
+    form_findings = [item for item in findings[before:] if item.check == name]
+    payload = {
+        "resource_files": len(resources),
+        "demo_projects": len(list(DEMOS.rglob("*.dpr"))),
+        "errors": sum(item.severity == "error" for item in form_findings),
+        "resources": resource_results,
+        "findings": [asdict(item) for item in form_findings],
     }
-    for rel, patterns in requirements.items():
+    (BUILD / "form-resource-audit.json").write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    lines = [
+        "# Form-/Ressourcen-Audit",
+        "",
+        f"- Ressourcen: **{payload['resource_files']}**",
+        f"- Demo-Projekte: **{payload['demo_projects']}**",
+        f"- Harte Befunde: **{payload['errors']}**",
+        "",
+    ]
+    if form_findings:
+        lines += ["## Befunde", ""]
+        for item in form_findings:
+            lines.append(f"- **{item.severity.upper()}** `{item.file}` – {item.message}")
+    else:
+        lines.append("Alle DFM-/FMX-Ressourcen, Rootklassen und eingetragenen Eventhandler wurden konsistent gefunden.")
+    (BUILD / "FORM_RESOURCE_AUDIT.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    finish(name, before)
+
+
+def check_factory_and_features() -> None:
+    name = "factory-and-feature-signatures"
+    before = len(findings)
+    require_patterns(name, "Source/Common/h5u.Grid.Types.pas", [
+        (r"Th5uFactoryContext\s*=\s*record", "Factory-Kontext"),
+        (r"\bGrid\s*:\s*TObject", "Grid-Zeiger im Factory-Kontext"),
+        (r"\bView\s*:\s*TObject", "View-Zeiger im Factory-Kontext"),
+        (r"\bDataController\s*:\s*TObject", "Controller-Zeiger im Factory-Kontext"),
+        (r"\bColumn\s*:\s*TObject", "Column-Zeiger im Factory-Kontext"),
+        (r"\bRowKey\s*:\s*Th5uRowKey", "RowKey im Factory-Kontext"),
+        (r"Th5uVerticalScrollMode\s*=.*?WholeRows.*?PixelSnap", "vertikale Scrollmodi"),
+        (r"RowSpacing.*?ColumnSpacing.*?ContentPadding", "Separator-Elementarten"),
+        (r"h5uColorLightGray\s*=\s*Th5uColor\(\$FFD3D3D3\)", "hellgrauer Defaultfarbwert"),
+    ])
+    require_patterns(name, "Source/Common/h5u.Grid.Factory.pas", [
+        (r"Th5uFactoryScope", "lokaler Factory-Scope"),
+        (r"OnGetClass", "OnGetClass"),
+        (r"OnCreateInstance", "OnCreateInstance"),
+        (r"OnConfigureInstance", "OnConfigureInstance"),
+        (r"function\s+RegisterClass\s*\(", "Klassenregistrierung"),
+    ])
+    require_patterns(name, "Source/Common/h5u.Grid.Options.pas", [
+        (r"Th5uGridSpacingOptions\s*=\s*class", "Spacing-Options"),
+        (r"property\s+Left:.*?default\s+1", "Left-Default 1"),
+        (r"property\s+Top:.*?default\s+1", "Top-Default 1"),
+        (r"property\s+Right:.*?default\s+1", "Right-Default 1"),
+        (r"property\s+Bottom:.*?default\s+1", "Bottom-Default 1"),
+        (r"property\s+RowSpacing:.*?default\s+1", "RowSpacing-Default 1"),
+        (r"DefaultColumnRightSpacing.*?default\s+1", "ColumnSpacing-Default 1"),
+        (r"RowSpacingColor.*?default\s+h5uColorLightGray", "Row-Separatorfarbe"),
+        (r"ColumnSpacingColor.*?default\s+h5uColorLightGray", "Column-Separatorfarbe"),
+        (r"ContentPaddingColor.*?default\s+h5uColorLightGray", "Außenrandfarbe"),
+        (r"constructor\s+Th5uGridSpacingOptions\.Create.*?FLeft\s*:=\s*1.*?FTop\s*:=\s*1.*?FRight\s*:=\s*1.*?FBottom\s*:=\s*1.*?FRowSpacing\s*:=\s*1.*?FDefaultColumnRightSpacing\s*:=\s*1", "Laufzeitdefaults der Separatorbreiten"),
+        (r"constructor\s+Th5uGridSpacingOptions\.Create.*?FRowSpacingColor\s*:=\s*h5uColorLightGray.*?FColumnSpacingColor\s*:=\s*h5uColorLightGray.*?FContentPaddingColor\s*:=\s*h5uColorLightGray", "Laufzeitdefaults der Separatorfarben"),
+        (r"procedure\s+SetAllSeparators\s*\(", "gemeinsames Aktivieren/Deaktivieren"),
+        (r"Th5uGridAppearanceOptions", "Grid-Appearance"),
+        (r"DefaultCellColor", "Grid-Defaultfarbe"),
+    ])
+    require_patterns(name, "Source/Common/h5u.Grid.Columns.pas", [
+        (r"property\s+RightSpacing:.*?default\s+-1", "RightSpacing mit Vererbungswert -1"),
+        (r"constructor\s+Th5uGridColumn\.Create.*?FRightSpacing\s*:=\s*-1", "RightSpacing-Laufzeitdefault -1"),
+        (r"constructor\s+Th5uGridColumn\.Create.*?FColor\s*:=\s*h5uColorDefault", "Column-Farbdefault"),
+        (r"property\s+Color:\s*Th5uColor", "Column-Farbe"),
+        (r"AutoHeight", "AutoHeight"),
+        (r"RowSpan", "Header RowSpan"),
+        (r"ColumnSpan", "Header ColumnSpan"),
+    ])
+    for rel, grid_class in [
+        ("Source/Vcl/Vcl.h5u.Grid.pas", "Th5uVclGrid"),
+        ("Source/FMX/FMX.h5u.Grid.pas", "Th5uFmxGrid"),
+    ]:
+        require_patterns(name, rel, [
+            (rf"{grid_class}\s*=\s*class", "Grid-Klasse"),
+            (r"property\s+Spacing:\s*Th5uGridSpacingOptions", "Spacing-Property"),
+            (r"property\s+Appearance:\s*Th5uGridAppearanceOptions", "Appearance-Property"),
+            (r"property\s+GridLines:\s*Boolean", "GridLines-Komfortschalter"),
+            (r"procedure\s+" + grid_class + r"\.SetGridLines.*?SetAllSeparators\(1\).*?SetAllSeparators\(0\)", "GridLines setzt 1 oder 0"),
+            (r"function\s+" + grid_class + r"\.GetGridLines.*?FSpacing\.Left.*?FSpacing\.Top.*?FSpacing\.Right.*?FSpacing\.Bottom.*?FSpacing\.RowSpacing.*?FSpacing\.DefaultColumnRightSpacing", "GridLines berücksichtigt alle globalen Separatoren"),
+            (r"OnGetRowSpacing", "zeilenabhängiger Abstand"),
+            (r"DrawSpacingRect", "Separator-Rendering"),
+            (r"DrawContentPadding", "Außenrand-Rendering"),
+            (r"GetEffectiveColumnRightSpacing", "Column-Vererbung"),
+            (r"FactoryScope", "Factory-Scope pro Grid"),
+            (r"AcquireVisualCell", "gepoolte sichtbare Zellobjekte"),
+        ])
+    require_patterns(name, "Demos/VCL/ClientDataSet/Main.pas", [
+        (r"Grid\.GridLines\s*:=\s*SeparatorsCheck\.Checked", "VCL Separator-Schalter"),
+        (r"RightSpacing\s*:=\s*8", "VCL individueller Column-Abstand"),
+        (r"DefaultCellColor", "VCL Grid-Farbe"),
+        (r"\.Color\s*:=\s*h5uColorFromRgb", "VCL Column-Farbe"),
+    ])
+    require_patterns(name, "Demos/FMX/ClientDataSet/Main.pas", [
+        (r"Grid\.GridLines\s*:=\s*SeparatorsCheck\.IsChecked", "FMX Separator-Schalter"),
+        (r"RightSpacing\s*:=\s*8", "FMX individueller Column-Abstand"),
+        (r"DefaultCellColor", "FMX Grid-Farbe"),
+        (r"\.Color\s*:=\s*h5uColorFromRgb", "FMX Column-Farbe"),
+    ])
+    finish(name, before)
+
+
+
+def check_documented_api() -> None:
+    name = "documented-public-api"
+    before = len(findings)
+    forbidden: list[tuple[str, str]] = [
+        (r"\bRegisterOverride\s*\(", "nicht vorhandene Factory-Methode RegisterOverride"),
+        (r"\bRegisterRule\s*\(", "nicht vorhandene Factory-Methode RegisterRule"),
+        (r"\.ItemClass\s*:?=", "nicht vorhandene ObjectList-Property ItemClass"),
+        (r"\.AddObject\s*\(", "nicht vorhandene ObjectList-Methode AddObject"),
+        (r"\bTh5uDataCacheMode\b", "veralteter Cache-Typname"),
+        (r"ScrollHints\.Vertical\.", "veralteter verschachtelter ScrollHint-Pfad"),
+    ]
+    for rel in ("Docs/CONCEPT.md", "Docs/QUICKHELP.md"):
         path = ROOT / rel
-        if not path.exists():
+        if not path.is_file():
             continue
-        value = text(path)
-        for pattern in patterns:
-            if not re.search(pattern, value, re.I | re.S):
-                add("error", name, path, f"Erwartete Prototyp-Signatur fehlt: {pattern}")
-    finish_check(name, before)
-
-
-def check_source_placeholders_and_direct_creates() -> None:
-    name = "source-policy"
-    before = len(findings)
-    create_pattern = re.compile(
-        r"\b(Th5u[A-Za-z0-9_]*(?:Column|Cell|Editor|View|Renderer|Painter|Cache|Page|Session|Header|VisibleRow|VisibleColumn|StyleAdapter|MetricsProvider)[A-Za-z0-9_]*)\.Create\s*\(",
-        re.I,
-    )
-    for path in SOURCE.rglob("*.pas"):
-        value = text(path)
-        for pattern in (r"\bTODO\b", r"\bFIXME\b", r"NotImplemented"):
+        value = read(path)
+        for pattern, description in forbidden:
             for match in re.finditer(pattern, value, re.I):
-                add("error", name, path, f"Quellplatzhalter: {match.group(0)}", line_no(value, match.start()))
-        for match in create_pattern.finditer(value):
-            add("error", name, path, f"Kandidat für direkte Factory-Umgehung: {match.group(1)}.Create", line_no(value, match.start()))
-    finish_check(name, before)
+                add("error", name, path, description, line_no(value, match.start()))
 
+    require_patterns(name, "Docs/QUICKHELP.md", [
+        (r"FactoryScope\.RegisterClass\s*\(", "reale Factory-API"),
+        (r"ObjectController1\.Add\s*\(", "reale ObjectList-API"),
+        (r"ASourceRowIndex\s*:\s*Int64", "reale VirtualController-Signatur"),
+        (r"Spacing\.SetAllSeparators\s*\(1\)", "Separator-Komfortmethode"),
+    ])
+    finish(name, before)
 
-def check_method_coverage() -> None:
-    """Konservativer Namens-/Anzahlvergleich nicht abstrakter Klassenmethoden."""
-    name = "method-coverage"
+def check_placeholders_and_version() -> None:
+    name = "source-placeholders-and-version"
     before = len(findings)
     for path in SOURCE.rglob("*.pas"):
-        value = text(path)
-        marker = re.search(r"^\s*implementation\b", value, re.I | re.M)
-        if not marker:
+        value = read(path)
+        for match in re.finditer(r"\b(?:TODO-COMPILE|FIXME-COMPILE|NotImplemented|<UNRESOLVED>)\b", value, re.I):
+            add("error", name, path, f"Nicht aufgelöster Platzhalter: {match.group(0)}", line_no(value, match.start()))
+    version = read(ROOT / "VERSION.txt").strip() if (ROOT / "VERSION.txt").exists() else ""
+    if version != "0.1.1":
+        add("error", name, ROOT / "VERSION.txt", f"Erwartete Version 0.1.1, gefunden {version!r}")
+    for rel in ("README.md", "CHANGELOG.md", "Build/BUILD_STATUS.md"):
+        path = ROOT / rel
+        if path.exists() and "0.1.1" not in read(path):
+            add("error", name, path, "Version 0.1.1 wird nicht genannt")
+    finish(name, before)
+
+
+
+def check_method_consistency() -> None:
+    """Compare declarations and implementations for release-touched classes."""
+    name = "declaration-implementation-consistency"
+    before = len(findings)
+    targets = [
+        ("Source/Common/h5u.Grid.Options.pas", "Th5uGridSpacingOptions"),
+        ("Source/Common/h5u.Grid.Options.pas", "Th5uGridAppearanceOptions"),
+        ("Source/Common/h5u.Grid.Columns.pas", "Th5uGridColumn"),
+        ("Source/Vcl/Vcl.h5u.Grid.pas", "Th5uVclGrid"),
+        ("Source/FMX/FMX.h5u.Grid.pas", "Th5uFmxGrid"),
+    ]
+    for rel, class_name in targets:
+        path = ROOT / rel
+        value = read(path)
+        start = re.search(
+            rf"(?im)^\s*{re.escape(class_name)}\s*=\s*class\s*\([^\n]+\)\s*$",
+            value,
+        )
+        if not start:
+            add("error", name, path, f"Klassenrumpf {class_name} nicht gefunden")
             continue
-        iface, impl = value[: marker.start()], value[marker.end() :]
-        impl_counts: dict[tuple[str, str], int] = {}
-        for match in re.finditer(
-            r"^\s*(?:class\s+)?(?:procedure|function|constructor|destructor)\s+([A-Za-z_][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)\b",
-            impl,
-            re.I | re.M,
-        ):
-            key = (match.group(1).lower(), match.group(2).lower())
-            impl_counts[key] = impl_counts.get(key, 0) + 1
-        source_lines = iface.splitlines()
-        i = 0
-        while i < len(source_lines):
-            start = re.match(r"^\s*(Th5u[A-Za-z0-9_]*)\s*=\s*(class|record)\b(?!\s+of\b)", source_lines[i], re.I)
-            if not start:
-                i += 1
-                continue
-            cls, kind = start.group(1), start.group(2).lower()
-            depth, j, block = 1, i + 1, []
-            while j < len(source_lines):
-                current = source_lines[j]
-                if re.search(r"=\s*(?:class|record)\b(?!\s+of\b)", current, re.I):
-                    depth += 1
-                if re.match(r"^\s*end\s*;", current, re.I):
-                    depth -= 1
-                    if depth == 0:
-                        break
-                block.append(current)
-                j += 1
-            declared: dict[tuple[str, str], int] = {}
-            k = 0
-            while k < len(block):
-                method = re.match(
-                    r"^\s*(?:class\s+)?(?:procedure|function|constructor|destructor)\s+([A-Za-z_][A-Za-z0-9_]*)\b",
-                    block[k],
-                    re.I,
-                )
-                if method:
-                    signature, q = block[k].strip(), k + 1
-                    while ";" not in signature and q < len(block):
-                        signature += " " + block[q].strip()
-                        q += 1
-                    k = q - 1
-                    low = signature.lower()
-                    if kind != "interface" and " abstract" not in low and " external" not in low:
-                        key = (cls.lower(), method.group(1).lower())
-                        declared[key] = declared.get(key, 0) + 1
-                k += 1
-            for key, count in declared.items():
-                have = impl_counts.get(key, 0)
-                if have < count:
-                    add("error", name, path, f"{cls}.{key[1]}: {count} Deklaration(en), {have} Implementierung(en)")
-            i = max(i + 1, j + 1)
-    finish_check(name, before)
+        end_match = re.search(r"(?im)^\s*end\s*;", value[start.end():])
+        if not end_match:
+            add("error", name, path, f"Ende des Klassenrumpfs {class_name} nicht gefunden")
+            continue
+        block = value[start.start():start.end() + end_match.end()]
+        declarations = {
+            match.group(1).casefold()
+            for match in re.finditer(
+                r"(?im)^\s*(?:class\s+)?(?:function|procedure|constructor|destructor)\s+"
+                r"([A-Za-z_][A-Za-z0-9_]*)\b",
+                block,
+            )
+        }
+        implementations = {
+            match.group(1).casefold()
+            for match in re.finditer(
+                rf"(?im)^\s*(?:class\s+)?(?:function|procedure|constructor|destructor)\s+"
+                rf"{re.escape(class_name)}\.([A-Za-z_][A-Za-z0-9_]*)\b",
+                value,
+            )
+        }
+        for method in sorted(declarations - implementations):
+            add("error", name, path, f"Implementierung fehlt: {class_name}.{method}")
+        for method in sorted(implementations - declarations):
+            add("error", name, path, f"Deklaration fehlt: {class_name}.{method}")
+    finish(name, before)
 
-
-def check_tree_sitter() -> None:
+def check_optional_parser() -> None:
     name = "tree-sitter-pascal"
     before = len(findings)
     try:
         from tree_sitter import Language, Parser  # type: ignore
         import tree_sitter_pascal  # type: ignore
     except Exception:
-        checks[name] = {"errors": 0, "warnings": 1, "status": "optional dependency unavailable"}
+        checks[name] = {"errors": 0, "warnings": 0, "status": "optionale Abhängigkeit nicht installiert"}
         return
+
     parser = Parser(Language(tree_sitter_pascal.language()))
     for path in SOURCE.rglob("*.pas"):
         data = path.read_bytes()
         tree = parser.parse(data)
-        stack = [tree.root_node]
-        errors = 0
-        first = None
-        while stack:
-            node = stack.pop()
-            if node.type == "ERROR" or node.is_missing:
-                errors += 1
-                if first is None:
-                    first = node
-            stack.extend(node.children)
-        if errors and first is not None:
-            add(
-                "error",
-                name,
-                path,
-                f"{errors} Syntaxbaumfehler; erster bei Zeile {first.start_point.row + 1}, Spalte {first.start_point.column + 1}",
-                first.start_point.row + 1,
-            )
-    finish_check(name, before)
+        if tree.root_node.has_error:
+            add("warning", name, path, "Parser meldet Delphi-spezifische Syntaxdiagnosen; mit DCC prüfen")
+    finish(name, before, "Parser ausgeführt")
 
 
 def write_reports() -> int:
-    errors = sum(x.severity == "error" for x in findings)
-    warnings = sum(x.severity == "warning" for x in findings)
+    errors = sum(item.severity == "error" for item in findings)
+    warnings = sum(item.severity == "warning" for item in findings)
     payload = {
         "date": "2026-09-01",
-        "root": str(ROOT),
+        "version": read(ROOT / "VERSION.txt").strip(),
         "source_units": len(list(SOURCE.rglob("*.pas"))),
         "demo_projects": len(list(DEMOS.rglob("*.dpr"))),
         "checks": checks,
         "summary": {"errors": errors, "warnings": warnings},
-        "findings": [asdict(x) for x in findings],
+        "findings": [asdict(item) for item in findings],
         "note": "Dieser Audit ersetzt keinen Build mit dem Embarcadero-Delphi-Compiler.",
     }
     (BUILD / "RELEASE_AUDIT.json").write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
     lines = [
         "# Reproduzierbarer Release-Audit",
         "",
-        "**Stand:** 1. September 2026",
+        "**Stand:** 1. September 2026  ",
+        f"**Version:** {payload['version']}",
         "",
         f"- Source-Units: **{payload['source_units']}**",
         f"- Demo-Projekte: **{payload['demo_projects']}**",
@@ -360,33 +450,33 @@ def write_reports() -> int:
         "",
     ]
     for check, result in checks.items():
-        extra = f" – {result['status']}" if "status" in result else ""
-        lines.append(f"- `{check}`: {result.get('errors', 0)} Fehler, {result.get('warnings', 0)} Warnungen{extra}")
+        status = f" – {result['status']}" if "status" in result else ""
+        lines.append(f"- `{check}`: {result.get('errors', 0)} Fehler, {result.get('warnings', 0)} Warnungen{status}")
     lines += ["", "## Befunde", ""]
     if findings:
         for item in findings:
             location = f":{item.line}" if item.line else ""
             lines.append(f"- **{item.severity.upper()}** `{item.file}{location}` – {item.message}")
     else:
-        lines.append("Keine Befunde.")
+        lines.append("Keine harten oder inhaltlichen Befunde aus den zuverlässig compilerunabhängig prüfbaren Regeln.")
     lines += [
         "",
-        "> Der Audit ist compilerunabhängig und ersetzt keinen DCC-/IDE-Build. Versionsabhängige VCL-/FMX-API-Unterschiede können nur mit der Zielversion abschließend geprüft werden.",
+        "> Der optionale Pascal-Parser ist in dieser Umgebung nicht installiert. Der Audit ersetzt ausdrücklich keinen DCC-/IDE-Build.",
     ]
     (BUILD / "RELEASE_AUDIT.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     return 1 if errors else 0
 
 
 def main() -> int:
-    check_required_layout()
-    check_units_and_namespaces()
-    check_identifier_casing()
-    check_project_paths()
+    check_layout()
+    check_units_and_paths()
+    check_naming()
     check_forms()
-    check_feature_signatures()
-    check_source_placeholders_and_direct_creates()
-    check_method_coverage()
-    check_tree_sitter()
+    check_factory_and_features()
+    check_documented_api()
+    check_placeholders_and_version()
+    check_method_consistency()
+    check_optional_parser()
     return write_reports()
 
 

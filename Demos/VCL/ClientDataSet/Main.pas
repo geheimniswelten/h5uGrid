@@ -39,6 +39,8 @@ type
     CacheCheck: TCheckBox;
     DarkCheck: TCheckBox;
     PictureCheck: TCheckBox;
+    SeparatorsCheck: TCheckBox;
+    ColumnColorsCheck: TCheckBox;
     NextPageButton: TButton;
     MoveNameButton: TButton;
     InfoLabel: TLabel;
@@ -116,6 +118,9 @@ end;
 procedure TMainForm.ApplyOptions;
 var
   LPictureColumn: Th5uGridColumn;
+  LNameColumn: Th5uGridColumn;
+  LActiveColumn: Th5uGridColumn;
+  LDescriptionColumn: Th5uGridColumn;
 begin
   if AutoHeightCheck.Checked then
     Grid.RowHeight.Mode := Th5uRowHeightMode.Automatic
@@ -157,6 +162,47 @@ begin
     Grid.Theme := Th5uGridTheme.Dark
   else
     Grid.Theme := Th5uGridTheme.ApplicationStyle;
+
+  // GridLines toggles all grid-wide one-pixel separator bands.
+  // Explicit per-column RightSpacing values remain independent.
+  Grid.GridLines := SeparatorsCheck.Checked;
+
+  LDescriptionColumn := Grid.Columns.FindById('description');
+  if Assigned(LDescriptionColumn) then
+    if SeparatorsCheck.Checked then
+      LDescriptionColumn.RightSpacing := 8
+    else
+      LDescriptionColumn.RightSpacing := 0;
+
+  LNameColumn := Grid.Columns.FindById('name');
+  LActiveColumn := Grid.Columns.FindById('active');
+  if ColumnColorsCheck.Checked then
+  begin
+    if DarkCheck.Checked then
+    begin
+      Grid.Appearance.DefaultCellColor := h5uColorFromRgb(31, 31, 31);
+      if Assigned(LNameColumn) then
+        LNameColumn.Color := h5uColorFromRgb(31, 43, 54);
+      if Assigned(LActiveColumn) then
+        LActiveColumn.Color := h5uColorFromRgb(29, 49, 34);
+    end
+    else
+    begin
+      Grid.Appearance.DefaultCellColor := h5uColorFromRgb(253, 253, 253);
+      if Assigned(LNameColumn) then
+        LNameColumn.Color := h5uColorFromRgb(234, 244, 255);
+      if Assigned(LActiveColumn) then
+        LActiveColumn.Color := h5uColorFromRgb(234, 248, 236);
+    end;
+  end
+  else
+  begin
+    Grid.Appearance.DefaultCellColor := h5uColorDefault;
+    if Assigned(LNameColumn) then
+      LNameColumn.Color := h5uColorDefault;
+    if Assigned(LActiveColumn) then
+      LActiveColumn.Color := h5uColorDefault;
+  end;
 
   LPictureColumn := Grid.Columns.FindById('picture');
   if Assigned(LPictureColumn) then

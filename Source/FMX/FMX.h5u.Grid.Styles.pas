@@ -41,12 +41,16 @@ implementation
 
 function h5uColorToFmx(const AColor: Th5uColor): TAlphaColor;
 begin
+  if (AColor = h5uColorDefault) or
+     (AColor = h5uColorNone) then
+    Exit(TAlphaColorRec.Null);
+
   Result := TAlphaColor(Cardinal(AColor));
 end;
 
 function h5uFmxToColor(const AColor: TAlphaColor): Th5uColor;
 begin
-  Result := Th5uColor(AColor);
+  Result := Th5uColor(Cardinal(AColor));
 end;
 
 function h5uGetFmxPalette(ATheme: Th5uGridTheme): Th5uFmxPalette;

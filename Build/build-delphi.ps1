@@ -161,12 +161,12 @@ $designPackages = @(
 )
 
 $demoProjects = @(
-    (Join-Path $root 'Demos\VCL\ClientDataSet\h5uGridDemoVclClientDataSet.dpr'),
-    (Join-Path $root 'Demos\VCL\ObjectList\h5uGridDemoVclObjectList.dpr'),
-    (Join-Path $root 'Demos\VCL\VirtualLive\h5uGridDemoVclVirtualLive.dpr'),
-    (Join-Path $root 'Demos\FMX\ClientDataSet\h5uGridDemoFmxClientDataSet.dpr'),
-    (Join-Path $root 'Demos\FMX\ObjectList\h5uGridDemoFmxObjectList.dpr'),
-    (Join-Path $root 'Demos\FMX\VirtualLive\h5uGridDemoFmxVirtualLive.dpr')
+    (Join-Path $root 'Demos\VCL\ClientDataSet\h5uGridVclClientDataSetDemo.dpr'),
+    (Join-Path $root 'Demos\VCL\ObjectList\h5uGridVclObjectListDemo.dpr'),
+    (Join-Path $root 'Demos\VCL\VirtualLive\h5uGridVclVirtualLiveDemo.dpr'),
+    (Join-Path $root 'Demos\FMX\ClientDataSet\h5uGridFmxClientDataSetDemo.dpr'),
+    (Join-Path $root 'Demos\FMX\ObjectList\h5uGridFmxObjectListDemo.dpr'),
+    (Join-Path $root 'Demos\FMX\VirtualLive\h5uGridFmxVirtualLiveDemo.dpr')
 )
 
 if (-not $SkipRuntimePackages) {

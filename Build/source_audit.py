@@ -57,7 +57,7 @@ def rel(path: Path, root: Path) -> str:
 
 
 def check_pascal_file(path: Path, root: Path, findings: list[Finding]) -> None:
-    text = path.read_text(encoding="utf-8")
+    text = path.read_text(encoding="utf-8-sig")
     match = UNIT_RE.search(text)
     if path.suffix.lower() == ".pas":
         if not match:
@@ -91,7 +91,7 @@ def check_pascal_file(path: Path, root: Path, findings: list[Finding]) -> None:
 
 
 def check_project_paths(path: Path, root: Path, findings: list[Finding]) -> None:
-    text = path.read_text(encoding="utf-8")
+    text = path.read_text(encoding="utf-8-sig")
     base = path.parent
     for unit_name, raw_path in CONTAINS_PATH_RE.findall(text):
         target = (base / raw_path.replace("\\", "/")).resolve()
@@ -101,7 +101,7 @@ def check_project_paths(path: Path, root: Path, findings: list[Finding]) -> None
             )
             continue
         if target.suffix.lower() == ".pas":
-            source = target.read_text(encoding="utf-8")
+            source = target.read_text(encoding="utf-8-sig")
             unit_match = UNIT_RE.search(source)
             if not unit_match or unit_match.group(1).casefold() != unit_name.casefold():
                 findings.append(
@@ -115,7 +115,7 @@ def check_project_paths(path: Path, root: Path, findings: list[Finding]) -> None
 
 
 def check_demo(main_pas: Path, root: Path, findings: list[Finding]) -> None:
-    text = main_pas.read_text(encoding="utf-8")
+    text = main_pas.read_text(encoding="utf-8-sig")
     resource = RESOURCE_RE.search(text)
     if not resource:
         findings.append(Finding("error", rel(main_pas, root), 1, "form unit has no {$R *.dfm/fmx} resource"))
@@ -129,7 +129,7 @@ def check_demo(main_pas: Path, root: Path, findings: list[Finding]) -> None:
         return
 
     class_match = FORM_CLASS_RE.search(text)
-    resource_text = form_resource.read_text(encoding="utf-8")
+    resource_text = form_resource.read_text(encoding="utf-8-sig")
     root_match = re.search(r"(?im)^\s*(?:object|inherited)\s+\w+\s*:\s*(T\w+)", resource_text)
     if class_match and root_match and class_match.group(1).casefold() != root_match.group(1).casefold():
         findings.append(
@@ -259,11 +259,11 @@ def main() -> int:
         check_demo(main_pas, root, findings)
 
         demo_path = main_pas.as_posix().casefold()
-        combined = main_pas.read_text(encoding="utf-8")
+        combined = main_pas.read_text(encoding="utf-8-sig")
         for extension in (".dfm", ".fmx"):
             resource = main_pas.with_suffix(extension)
             if resource.exists():
-                combined += "\n" + resource.read_text(encoding="utf-8")
+                combined += "\n" + resource.read_text(encoding="utf-8-sig")
                 break
 
         expected = None

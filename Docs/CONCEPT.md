@@ -91,16 +91,22 @@ Liveänderungen werden nicht durch komplettes Neuladen erzwungen. Die Quelle kan
 Jede Gridinstanz besitzt einen eigenen `FactoryScope`. Dadurch können zwei Grids auf derselben Form gleichzeitig unterschiedliche Klassen verwenden.
 
 ```pascal
-OrdersGrid.FactoryScope.RegisterOverride(
+OrdersGrid.FactoryScope.RegisterClass(
   h5uClassIdGridDataCell,
-  TOrdersDataCell
+  Th5uVclVisualCell,
+  TOrdersDataCell,
+  100
 );
 
-LogGrid.FactoryScope.RegisterOverride(
+LogGrid.FactoryScope.RegisterClass(
   h5uClassIdGridDataCell,
-  TLogDataCell
+  Th5uVclVisualCell,
+  TLogDataCell,
+  100
 );
 ```
+
+Unter FMX wird entsprechend `Th5uFmxVisualCell` als erwartete Basisklasse verwendet. Der optionale fünfte Parameter ist ein Prädikat über `Th5uFactoryContext` und erlaubt Regeln für einzelne Grids, Views, Columns, Rows oder Elementarten.
 
 Eine optionale `Th5uClassFactory` kann gemeinsam verwendet werden. Lokale Regeln des Grids haben gegenüber globaleren Vorgaben Vorrang.
 
@@ -138,9 +144,9 @@ Standard-Activator
     ↓
 OnConfigureInstance
     ↓
-OnBindInstance bei sichtbarer Verwendung
+FactoryScope.OnBindInstance bei sichtbarer Verwendung
     ↓
-OnUnbindInstance und Rückgabe an den Pool
+FactoryScope.OnUnbindInstance und Rückgabe an den Pool
 ```
 
 Austauschbare Frameworkobjekte werden nicht direkt mit einer fest codierten konkreten Klasse erzeugt.
@@ -200,7 +206,77 @@ Beispiel:
 
 Der gleiche Layoutansatz ist für mehrzeilige Datensatzblöcke und Datengruppenköpfe vorgesehen.
 
-## 8. Variable RowHeight
+## 8. Trennflächen, Abstände und Farben
+
+Abstände sind Teil der Layoutgeometrie. Sie werden nicht als zustandsabhängiger Style behandelt, weil ein Wechsel zwischen `Selected`, `Hot` oder `Focused` das Layout nicht verändern darf.
+
+Die Grid-Defaults sind:
+
+```pascal
+Grid.Spacing.Left := 1;
+Grid.Spacing.Top := 1;
+Grid.Spacing.Right := 1;
+Grid.Spacing.Bottom := 1;
+Grid.Spacing.RowSpacing := 1;
+Grid.Spacing.DefaultColumnRightSpacing := 1;
+
+Grid.Spacing.RowSpacingColor := h5uColorLightGray;
+Grid.Spacing.ColumnSpacingColor := h5uColorLightGray;
+Grid.Spacing.ContentPaddingColor := h5uColorLightGray;
+```
+
+Damit entstehen standardmäßig ein Pixel breite hellgraue Trennflächen:
+
+- zwischen Datenzeilen,
+- zwischen Header und Datenbereich,
+- rechts neben jeder Column,
+- rechts neben dem Row Indicator,
+- am oberen, linken, rechten und unteren Rand des Grid-Inhalts.
+
+Ein Wert von `0` entfernt den betreffenden Abstand vollständig. Jede Column kann den rechten Abstand überschreiben:
+
+```pascal
+Column.RightSpacing := -1; // Grid-Default erben
+Column.RightSpacing := 0;  // für diese Column deaktivieren
+Column.RightSpacing := 8;  // acht Pixel nach rechts
+```
+
+Die Zellbreite und der Abstand bleiben getrennte Größen. Scrollbereich, Fixed Columns, Headerlayout, HitTest, Selektion und Editorpositionen verwenden stets die effektive Layoutbreite aus `Column.Width + RightSpacing`.
+
+Der Zeilenabstand kann pro Datensatz angepasst werden. `OnGetRowSpacing` erhält den bereits berechneten Default als `var`-Parameter:
+
+```pascal
+procedure TForm1.GridGetRowSpacing(
+  Sender: TObject;
+  const AContext: Th5uGetRowHeightContext;
+  var ASpacing: Integer);
+begin
+  if (AContext.ViewRowIndex + 1) mod 5 = 0 then
+    ASpacing := 6;
+end;
+```
+
+Die normale Zellfarbe kann auf Grid- und Column-Ebene gesetzt werden:
+
+```pascal
+Grid.Appearance.DefaultCellColor := h5uColorFromRgb(253, 253, 253);
+AmountColumn.Color := h5uColorFromRgb(255, 244, 216);
+NameColumn.Color := h5uColorDefault;
+```
+
+`h5uColorDefault` bedeutet Vererbung aus Row-/Grid-/Theme-Darstellung. Selection-, Fokus- und Fehlerdarstellung behalten Vorrang vor einer festen Column-Farbe.
+
+Für besondere Separator-Darstellungen existieren eigene CustomDraw-Elementarten:
+
+```pascal
+Th5uElementKind.RowSpacing
+Th5uElementKind.ColumnSpacing
+Th5uElementKind.ContentPadding
+```
+
+Der aktive Skin darf als Fallback die Farbe liefern, wenn eine Separatorfarbe auf `h5uColorDefault` gesetzt wird. Die Größe der Abstände bleibt jedoch eine statische Layoutproperty und ändert sich nicht mit einem Zellzustand.
+
+## 9. Variable RowHeight
 
 Eine Textzelle kann Word-Wrap und `AutoHeight` aktivieren. Die höchste beitragende Zelle bestimmt zunächst den Vorschlag für die logische Zeile. Anschließend erhält `OnGetRowHeight` diesen Wert als `var`-Parameter.
 
@@ -218,7 +294,7 @@ RowMetrics-Cache
 
 Der Cache wird unter anderem bei Wert-, Breiten-, Font-, DPI-, Style- und Themeänderungen invalidiert.
 
-## 9. Scrolling
+## 10. Scrolling
 
 Vertikal und horizontal stehen konzeptionell drei Modi bereit:
 
@@ -230,7 +306,7 @@ Bei einer Zeile, die höher als der Viewport ist, muss auch im Ganzzeilenmodus i
 
 Variable Höhen werden über einen Row-Metrics-Index abgebildet. Noch nicht gemessene Zeilen verwenden eine Schätzhöhe; beim Nachmessen bleibt die sichtbare Anchor-Row stabil.
 
-## 10. Thumb-Hints
+## 11. Thumb-Hints
 
 Beim Ziehen des Scrollbar-Thumbs kann neben dem Thumb ein Hint erscheinen.
 
@@ -246,7 +322,7 @@ Vertikal:
 
 `OnGetThumbHint` erhält den vorgeschlagenen Text als `var`-Parameter. Bei virtuellen Daten darf der Hint die UI nicht blockieren; er verwendet zunächst Cache-/Fallbackinformationen und kann später aktualisiert werden.
 
-## 11. Selektion
+## 12. Selektion
 
 Das Modell trennt:
 
@@ -258,7 +334,7 @@ Das Modell trennt:
 
 Zeilen werden anhand stabiler RowKeys, Columns anhand stabiler IDs gespeichert. „Alle Zeilen“ wird bei sehr großen Quellen symbolisch dargestellt und nicht als Millionen einzelner Keys materialisiert.
 
-## 12. Styles und CustomDraw
+## 13. Styles und CustomDraw
 
 Die Darstellung wird in dieser Reihenfolge aufgelöst:
 
@@ -290,7 +366,7 @@ Mitgeliefert werden:
 
 Der native VCL-/FMX-Style liefert Grundfarben und Control-Erscheinung. Semantische Gridrollen ergänzen fehlende Grid-spezifische Zustände. CustomDraw kann vor oder nach der Standardzeichnung eingreifen oder sie vollständig ersetzen.
 
-## 13. Periodische und wertabhängige Zeilenstyles
+## 14. Periodische und wertabhängige Zeilenstyles
 
 Odd/Even ist nur ein Spezialfall einer periodischen Regel. Konfigurierbar sind beispielsweise:
 
@@ -301,7 +377,7 @@ Odd/Even ist nur ein Spezialfall einer periodischen Regel. Konfigurierbar sind b
 
 Zusätzlich kann eine Boolean-/Integer-Column als `StyleKeyColumnId` dienen. Ein Mapping ordnet deren Werte benannten Styles zu. Die Column darf unsichtbar sein und wird vom Controller trotzdem als Datenabhängigkeit behandelt.
 
-## 14. Cache und Pagination
+## 15. Cache und Pagination
 
 Cache und sichtbare Pagination sind voneinander getrennt.
 
@@ -321,7 +397,7 @@ Pagination:
 
 Ein kontinuierlich scrollendes Grid darf intern trotzdem seitenweise laden. Selektion, Summen und Gruppierung müssen jeweils ihren Gültigkeitsbereich ausweisen.
 
-## 15. Erweiterungsziel
+## 16. Erweiterungsziel
 
 Die aktuelle Implementierung konzentriert sich auf den vertikalen Testpfad. Der Core ist so angelegt, dass später ohne Bruch ergänzt werden können:
 

@@ -42,6 +42,8 @@ type
     FStyleName: string;
     FHeaderStyleName: string;
     FHighlighted: Boolean;
+    FRightSpacing: Integer;
+    FColor: Th5uColor;
     FClassId: Th5uClassId;
     FCellClassId: Th5uClassId;
     FHeaderCellClassId: Th5uClassId;
@@ -56,6 +58,8 @@ type
     procedure SetFieldName(const AValue: string);
     procedure SetFixedKind(const AValue: Th5uFixedKind);
     procedure SetId(const AValue: string);
+    procedure SetColor(const AValue: Th5uColor);
+    procedure SetRightSpacing(const AValue: Integer);
     procedure SetVisible(const AValue: Boolean);
     procedure SetVisibleIndex(const AValue: Integer);
     procedure SetWidth(const AValue: Integer);
@@ -102,6 +106,10 @@ type
       read FHeaderStyleName write FHeaderStyleName;
     property Highlighted: Boolean
       read FHighlighted write FHighlighted default False;
+    property RightSpacing: Integer
+      read FRightSpacing write SetRightSpacing default -1;
+    property Color: Th5uColor
+      read FColor write SetColor default h5uColorDefault;
     property ClassId: Th5uClassId read FClassId write FClassId;
     property CellClassId: Th5uClassId
       read FCellClassId write FCellClassId;
@@ -276,6 +284,8 @@ begin
     FStyleName := LSource.FStyleName;
     FHeaderStyleName := LSource.FHeaderStyleName;
     FHighlighted := LSource.FHighlighted;
+    FRightSpacing := LSource.FRightSpacing;
+    FColor := LSource.FColor;
     FClassId := LSource.FClassId;
     FCellClassId := LSource.FCellClassId;
     FHeaderCellClassId := LSource.FHeaderCellClassId;
@@ -316,6 +326,8 @@ begin
   FAutoHeight := False;
   FMaxAutoHeight := 160;
   FMaxLines := 0;
+  FRightSpacing := -1;
+  FColor := h5uColorDefault;
   FClassId := 'h5u.grid.column.default';
   FCellClassId := h5uClassIdGridDataCell;
   FHeaderCellClassId := h5uClassIdGridHeaderCell;
@@ -337,6 +349,14 @@ begin
     Result := FFieldName
   else
     Result := inherited GetDisplayName;
+end;
+
+procedure Th5uGridColumn.SetColor(const AValue: Th5uColor);
+begin
+  if FColor = AValue then
+    Exit;
+  FColor := AValue;
+  Changed;
 end;
 
 procedure Th5uGridColumn.SetCaption(const AValue: string);
@@ -372,6 +392,17 @@ begin
   if FId = AValue then
     Exit;
   FId := AValue;
+  Changed;
+end;
+
+procedure Th5uGridColumn.SetRightSpacing(const AValue: Integer);
+begin
+  if FRightSpacing = AValue then
+    Exit;
+  if AValue < -1 then
+    FRightSpacing := -1
+  else
+    FRightSpacing := EnsureRange(AValue, -1, 1000);
   Changed;
 end;
 

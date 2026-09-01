@@ -62,6 +62,12 @@ type
     var ACacheResult: Boolean
   ) of object;
 
+  Th5uGetRowSpacingEvent = procedure(
+    Sender: TObject;
+    const AContext: Th5uGetRowHeightContext;
+    var ASpacing: Integer
+  ) of object;
+
   Th5uThumbHintContext = record
     Grid: Th5uVclGrid;
     DataController: Th5uCustomDataController;
@@ -214,6 +220,8 @@ type
     FScrollHints: Th5uScrollHintOptions;
     FRowStyles: Th5uRowStyleOptions;
     FCustomization: Th5uCustomizationOptions;
+    FSpacing: Th5uGridSpacingOptions;
+    FAppearance: Th5uGridAppearanceOptions;
 
     FTheme: Th5uGridTheme;
     FHeaderRowHeight: Integer;
@@ -221,7 +229,6 @@ type
     FShowHeader: Boolean;
     FShowRowIndicator: Boolean;
     FAllowEditing: Boolean;
-    FGridLines: Boolean;
 
     FVScrollBar: TScrollBar;
     FHScrollBar: TScrollBar;
@@ -248,6 +255,7 @@ type
     FResizeOriginalWidth: Integer;
 
     FOnGetRowHeight: Th5uGetRowHeightEvent;
+    FOnGetRowSpacing: Th5uGetRowSpacingEvent;
     FOnGetThumbHint: Th5uGetThumbHintEvent;
     FOnGetRowAppearance: Th5uRowAppearanceEvent;
     FOnGetCellAppearance: Th5uCellAppearanceEvent;
@@ -267,7 +275,10 @@ type
     procedure SetScrollHints(const AValue: Th5uScrollHintOptions);
     procedure SetRowStyles(const AValue: Th5uRowStyleOptions);
     procedure SetCustomization(const AValue: Th5uCustomizationOptions);
+    procedure SetSpacing(const AValue: Th5uGridSpacingOptions);
+    procedure SetAppearance(const AValue: Th5uGridAppearanceOptions);
     procedure SetSelection(const AValue: Th5uGridSelection);
+    procedure SetGridLines(const AValue: Boolean);
     procedure SetHeaderRowHeight(const AValue: Integer);
     procedure SetRowIndicatorWidth(const AValue: Integer);
 
@@ -293,10 +304,27 @@ type
       Shift: TShiftState
     );
 
+    function GetUnpaddedViewportRect: TRect;
     function GetViewportRect: TRect;
     function GetHeaderHeight: Integer;
     function GetDataViewportRect: TRect;
     function GetTotalColumnWidth: Integer;
+    function GetEffectiveColumnRightSpacing(
+      AColumn: Th5uGridColumn
+    ): Integer;
+    function GetRowSpacingFor(
+      AViewRowIndex: Int64;
+      const ARowKey: Th5uRowKey
+    ): Integer;
+    function GetGridLines: Boolean;
+    function ResolveColor(
+      const AColor: Th5uColor;
+      AFallback: TColor
+    ): TColor;
+    function ResolveDefaultCellColor: TColor;
+    function ResolveRowSpacingColor: TColor;
+    function ResolveColumnSpacingColor: TColor;
+    function ResolveContentPaddingColor: TColor;
     function GetEstimatedTotalRowHeight: Int64;
     procedure LayoutScrollBars;
     procedure UpdateScrollBars;
@@ -307,8 +335,17 @@ type
       ADefaultClass: Th5uVclVisualCellClass
     ): Th5uVclVisualCell;
 
+    procedure DrawContentPadding;
     procedure DrawHeaders;
     procedure DrawRows;
+    procedure DrawSpacingRect(
+      const ABounds: TRect;
+      AElementKind: Th5uElementKind;
+      AColumn: Th5uGridColumn;
+      AViewRowIndex: Int64;
+      const ARowKey: Th5uRowKey;
+      AColor: TColor
+    );
     procedure DrawDefaultHeaders;
     procedure DrawCustomHeaderLayout;
     procedure DrawRowIndicator(
@@ -483,6 +520,10 @@ type
       read FRowStyles write SetRowStyles;
     property Customization: Th5uCustomizationOptions
       read FCustomization write SetCustomization;
+    property Spacing: Th5uGridSpacingOptions
+      read FSpacing write SetSpacing;
+    property Appearance: Th5uGridAppearanceOptions
+      read FAppearance write SetAppearance;
 
     property Theme: Th5uGridTheme
       read FTheme write SetTheme
@@ -497,8 +538,10 @@ type
       read FShowRowIndicator write FShowRowIndicator default True;
     property AllowEditing: Boolean
       read FAllowEditing write FAllowEditing default True;
+    // Convenience switch for all grid-wide one-pixel separators.
+    // Explicit per-column RightSpacing values remain independently configurable.
     property GridLines: Boolean
-      read FGridLines write FGridLines default True;
+      read GetGridLines write SetGridLines default True;
 
     property OnGetClass: Th5uGetClassEvent
       read GetOnGetClass write SetOnGetClass;
@@ -508,6 +551,8 @@ type
       read GetOnConfigureInstance write SetOnConfigureInstance;
     property OnGetRowHeight: Th5uGetRowHeightEvent
       read FOnGetRowHeight write FOnGetRowHeight;
+    property OnGetRowSpacing: Th5uGetRowSpacingEvent
+      read FOnGetRowSpacing write FOnGetRowSpacing;
     property OnGetThumbHint: Th5uGetThumbHintEvent
       read FOnGetThumbHint write FOnGetThumbHint;
     property OnGetRowAppearance: Th5uRowAppearanceEvent
@@ -598,7 +643,7 @@ begin
   if FAppearance.HasBackground then
     Result := h5uColorToVcl(FAppearance.Background)
   else
-    Result := LPalette.CellBackground;
+    Result := AGrid.ResolveDefaultCellColor;
 end;
 
 function Th5uVclVisualCell.EffectiveForeground(
@@ -645,23 +690,12 @@ end;
 
 procedure Th5uVclVisualCell.PaintDefault(
   AGrid: Th5uVclGrid; ACanvas: TCanvas);
-var
-  LPalette: Th5uVclPalette;
 begin
-  LPalette := h5uGetVclPalette(AGrid.Theme);
+  // Separators are independent layout elements. Painting them around every
+  // cell would double their width and would make per-column spacing impossible.
   ACanvas.Brush.Color := EffectiveBackground(AGrid);
   ACanvas.FillRect(FBounds);
-
-  if AGrid.GridLines then
-  begin
-    ACanvas.Pen.Color := LPalette.CellBorder;
-    ACanvas.Brush.Style := bsClear;
-    ACanvas.Rectangle(FBounds);
-    ACanvas.Brush.Style := bsSolid;
-  end;
 end;
-
-{ Th5uVclDataCell }
 
 destructor Th5uVclDataCell.Destroy;
 begin
@@ -852,10 +886,6 @@ begin
   begin
     ACanvas.Brush.Color := LPalette.HeaderBackground;
     ACanvas.FillRect(Bounds);
-    ACanvas.Pen.Color := LPalette.CellBorder;
-    ACanvas.Brush.Style := bsClear;
-    ACanvas.Rectangle(Bounds);
-    ACanvas.Brush.Style := bsSolid;
   end;
 
   ACanvas.Font.Assign(AGrid.Font);
@@ -872,9 +902,8 @@ begin
     DT_NOPREFIX or DT_CENTER or DT_VCENTER or
     DT_SINGLELINE or DT_END_ELLIPSIS
   );
+  ACanvas.Brush.Style := bsSolid;
 end;
-
-{ Th5uVclGrid }
 
 function Th5uVclGrid.AcquireVisualCell(
   const AContext: Th5uFactoryContext;
@@ -1116,6 +1145,8 @@ var
   LRightX: Integer;
   LColumn: Th5uGridColumn;
   LInfo: Th5uVisibleColumnInfo;
+  LVisibilityRect: TRect;
+  LSpacing: Integer;
   I: Integer;
 begin
   LColumns := FColumns.VisibleColumns;
@@ -1125,18 +1156,29 @@ begin
     LViewRect := GetViewportRect;
     LDataLeft := LViewRect.Left;
     if FShowRowIndicator then
-      Inc(LDataLeft, FRowIndicatorWidth);
+      Inc(
+        LDataLeft,
+        FRowIndicatorWidth + FSpacing.DefaultColumnRightSpacing
+      );
     LDataRight := LViewRect.Right;
 
     LLeftX := LDataLeft;
     for I := 0 to High(LColumns) do
       if LColumns[I].FixedKind = Th5uFixedKind.Left then
-        Inc(LLeftX, LColumns[I].Width);
+        Inc(
+          LLeftX,
+          LColumns[I].Width +
+          GetEffectiveColumnRightSpacing(LColumns[I])
+        );
 
     LRightX := LDataRight;
     for I := High(LColumns) downto 0 do
       if LColumns[I].FixedKind = Th5uFixedKind.Right then
-        Dec(LRightX, LColumns[I].Width);
+        Dec(
+          LRightX,
+          LColumns[I].Width +
+          GetEffectiveColumnRightSpacing(LColumns[I])
+        );
 
     LNormalX := LLeftX - FHorizontalOffset;
     LLeftX := LDataLeft;
@@ -1144,6 +1186,7 @@ begin
     for I := 0 to High(LColumns) do
     begin
       LColumn := LColumns[I];
+      LSpacing := GetEffectiveColumnRightSpacing(LColumn);
       LInfo.Column := LColumn;
       LInfo.VisibleIndex := I;
 
@@ -1156,7 +1199,7 @@ begin
               LLeftX + LColumn.Width,
               LViewRect.Bottom
             );
-            Inc(LLeftX, LColumn.Width);
+            Inc(LLeftX, LColumn.Width + LSpacing);
           end;
 
         Th5uFixedKind.Right:
@@ -1167,7 +1210,7 @@ begin
               LRightX + LColumn.Width,
               LViewRect.Bottom
             );
-            Inc(LRightX, LColumn.Width);
+            Inc(LRightX, LColumn.Width + LSpacing);
           end;
 
       else
@@ -1178,12 +1221,14 @@ begin
             LNormalX + LColumn.Width,
             LViewRect.Bottom
           );
-          Inc(LNormalX, LColumn.Width);
+          Inc(LNormalX, LColumn.Width + LSpacing);
         end;
       end;
 
       LAll.Add(LInfo);
-      if h5uRectIntersects(LInfo.Bounds, LViewRect) then
+      LVisibilityRect := LInfo.Bounds;
+      Inc(LVisibilityRect.Right, LSpacing);
+      if h5uRectIntersects(LVisibilityRect, LViewRect) then
         LInfos.Add(LInfo);
     end;
 
@@ -1320,6 +1365,10 @@ begin
   FRowStyles := Th5uRowStyleOptions.Create;
   FRowStyles.OnChanged := OptionsChanged;
   FCustomization := Th5uCustomizationOptions.Create;
+  FSpacing := Th5uGridSpacingOptions.Create;
+  FSpacing.OnChanged := OptionsChanged;
+  FAppearance := Th5uGridAppearanceOptions.Create;
+  FAppearance.OnChanged := OptionsChanged;
 
   FDataLink := Th5uDataControllerLink.Create;
   FDataLink.OnChanged := DataChanged;
@@ -1332,7 +1381,6 @@ begin
   FShowHeader := True;
   FShowRowIndicator := True;
   FAllowEditing := True;
-  FGridLines := True;
   FEditRowIndex := -1;
 
   FVScrollBar := TScrollBar.Create(Self);
@@ -1383,6 +1431,8 @@ begin
   FRowHeightCache.Free;
   FCellPool.Free;
   FDataLink.Free;
+  FAppearance.Free;
+  FSpacing.Free;
   FCustomization.Free;
   FRowStyles.Free;
   FScrollHints.Free;
@@ -1431,7 +1481,7 @@ var
   LDelta: Integer;
 begin
   LDelta := FScrolling.WheelRows *
-    FRowHeight.EstimatedHeight;
+    (FRowHeight.EstimatedHeight + FSpacing.RowSpacing);
 
   if WheelDelta > 0 then
     Dec(FVerticalOffset, LDelta)
@@ -1446,12 +1496,15 @@ begin
 
   if FScrolling.VerticalMode =
      Th5uVerticalScrollMode.WholeRows then
+  begin
+    FindFirstVisibleRow(FVerticalOffset, LDelta);
     FVerticalOffset := EnsureRange(
-      FindFirstVisibleRow(FVerticalOffset, LDelta) *
-        FRowHeight.EstimatedHeight,
+      FVerticalOffset +
+        (LDelta - GetDataViewportRect.Top),
       0,
       FVScrollBar.Max
     );
+  end;
 
   FVScrollBar.Position := FVerticalOffset;
   Invalidate;
@@ -1470,13 +1523,17 @@ var
   LStartInfo: Th5uVisibleColumnInfo;
   LEndInfo: Th5uVisibleColumnInfo;
   LRect: TRect;
+  LSeparatorRect: TRect;
   LContext: Th5uFactoryContext;
   LCell: Th5uVclVisualCell;
   LAppearance: Th5uResolvedAppearance;
   LViewRect: TRect;
   LClassId: Th5uClassId;
+  LRightSpacing: Integer;
+  LRowSpacing: Integer;
 begin
   LViewRect := GetViewportRect;
+  LRowSpacing := FSpacing.RowSpacing;
   for LCellDef in FHeaderLayout.Cells do
   begin
     if (LCellDef.LayoutColumn < 0) or
@@ -1493,11 +1550,13 @@ begin
 
     LRect := Rect(
       LStartInfo.Bounds.Left,
-      LViewRect.Top + LCellDef.LayoutRow * FHeaderRowHeight,
+      LViewRect.Top +
+        LCellDef.LayoutRow * (FHeaderRowHeight + LRowSpacing),
       LEndInfo.Bounds.Right,
       LViewRect.Top +
-        (LCellDef.LayoutRow + Max(1, LCellDef.RowSpan)) *
-        FHeaderRowHeight
+        LCellDef.LayoutRow * (FHeaderRowHeight + LRowSpacing) +
+        Max(1, LCellDef.RowSpan) * FHeaderRowHeight +
+        (Max(1, LCellDef.RowSpan) - 1) * LRowSpacing
     );
 
     if not h5uRectIntersects(LRect, LViewRect) then
@@ -1540,6 +1599,46 @@ begin
       LAppearance
     );
     LCell.Paint(Self, Canvas);
+
+    LRightSpacing := GetEffectiveColumnRightSpacing(LEndInfo.Column);
+    if LRightSpacing > 0 then
+    begin
+      LSeparatorRect := Rect(
+        LRect.Right,
+        LRect.Top,
+        Min(LRect.Right + LRightSpacing, LViewRect.Right),
+        LRect.Bottom
+      );
+      if not IsRectEmpty(LSeparatorRect) then
+        DrawSpacingRect(
+          LSeparatorRect,
+          Th5uElementKind.ColumnSpacing,
+          LEndInfo.Column,
+          -1,
+          Th5uRowKey.Empty,
+          ResolveColumnSpacingColor
+        );
+    end;
+
+    if LRowSpacing > 0 then
+    begin
+      LSeparatorRect := Rect(
+        LRect.Left,
+        LRect.Bottom,
+        LRect.Right + LRightSpacing,
+        Min(LRect.Bottom + LRowSpacing, LViewRect.Bottom)
+      );
+      IntersectRect(LSeparatorRect, LSeparatorRect, LViewRect);
+      if not IsRectEmpty(LSeparatorRect) then
+        DrawSpacingRect(
+          LSeparatorRect,
+          Th5uElementKind.RowSpacing,
+          LContext.Column,
+          -1,
+          Th5uRowKey.Empty,
+          ResolveRowSpacingColor
+        );
+    end;
   end;
 end;
 
@@ -1547,67 +1646,193 @@ procedure Th5uVclGrid.DrawDefaultHeaders;
 var
   LInfo: Th5uVisibleColumnInfo;
   LRect: TRect;
+  LDrawRect: TRect;
+  LSeparatorRect: TRect;
   LContext: Th5uFactoryContext;
   LCell: Th5uVclVisualCell;
   LAppearance: Th5uResolvedAppearance;
   LClassId: Th5uClassId;
+  LRightSpacing: Integer;
 begin
   for LInfo in FVisibleColumns do
   begin
     LRect := LInfo.Bounds;
     LRect.Top := GetViewportRect.Top;
-    LRect.Bottom := LRect.Top + GetHeaderHeight;
+    LRect.Bottom := LRect.Top + FHeaderRowHeight;
 
-    LClassId := LInfo.Column.HeaderCellClassId;
-    if string(LClassId) = '' then
-      LClassId := h5uClassIdGridHeaderCell;
+    LDrawRect := LRect;
+    IntersectRect(LDrawRect, LDrawRect, GetViewportRect);
+    if not IsRectEmpty(LDrawRect) then
+    begin
+      LClassId := LInfo.Column.HeaderCellClassId;
+      if string(LClassId) = '' then
+        LClassId := h5uClassIdGridHeaderCell;
 
-    LContext := Th5uFactoryContext.Create(
-      Self,
-      Self,
-      FDataController,
-      LClassId,
-      Th5uElementKind.ColumnHeaderCell
+      LContext := Th5uFactoryContext.Create(
+        Self,
+        Self,
+        FDataController,
+        LClassId,
+        Th5uElementKind.ColumnHeaderCell
+      );
+      LContext.Column := LInfo.Column;
+      LContext.LayoutColumn := LInfo.VisibleIndex;
+      LContext.ElementFlags := [Th5uElementFlag.Header];
+      if LInfo.Column.FixedKind <> Th5uFixedKind.None then
+        Include(LContext.ElementFlags, Th5uElementFlag.FixedColumn);
+      if FSelection.IsColumnSelected(LInfo.Column.Id) then
+        Include(LContext.ElementFlags, Th5uElementFlag.Selected);
+
+      LAppearance.Clear;
+      LAppearance.StyleName := LInfo.Column.HeaderStyleName;
+      LCell := AcquireVisualCell(LContext, Th5uVclHeaderCell);
+      LCell.BindCell(
+        LContext,
+        LDrawRect,
+        TValue.Empty,
+        LInfo.Column.Caption,
+        LAppearance
+      );
+      LCell.Paint(Self, Canvas);
+    end;
+
+    // The separator remains visible even if pixel scrolling starts inside it
+    // and the corresponding cell itself is already outside the viewport.
+    LRightSpacing := GetEffectiveColumnRightSpacing(LInfo.Column);
+    if LRightSpacing > 0 then
+    begin
+      LSeparatorRect := Rect(
+        LRect.Right,
+        LRect.Top,
+        LRect.Right + LRightSpacing,
+        LRect.Bottom
+      );
+      IntersectRect(LSeparatorRect, LSeparatorRect, GetViewportRect);
+      if not IsRectEmpty(LSeparatorRect) then
+        DrawSpacingRect(
+          LSeparatorRect,
+          Th5uElementKind.ColumnSpacing,
+          LInfo.Column,
+          -1,
+          Th5uRowKey.Empty,
+          ResolveColumnSpacingColor
+        );
+    end;
+  end;
+end;
+
+procedure Th5uVclGrid.DrawContentPadding;
+var
+  LOuterRect: TRect;
+  LInnerRect: TRect;
+  LPaddingRect: TRect;
+  LColor: TColor;
+begin
+  LOuterRect := GetUnpaddedViewportRect;
+  LInnerRect := GetViewportRect;
+  LColor := ResolveContentPaddingColor;
+
+  if LInnerRect.Top > LOuterRect.Top then
+  begin
+    LPaddingRect := Rect(
+      LOuterRect.Left,
+      LOuterRect.Top,
+      LOuterRect.Right,
+      LInnerRect.Top
     );
-    LContext.Column := LInfo.Column;
-    LContext.LayoutColumn := LInfo.VisibleIndex;
-    LContext.ElementFlags := [Th5uElementFlag.Header];
-    if LInfo.Column.FixedKind <> Th5uFixedKind.None then
-      Include(LContext.ElementFlags, Th5uElementFlag.FixedColumn);
-    if FSelection.IsColumnSelected(LInfo.Column.Id) then
-      Include(LContext.ElementFlags, Th5uElementFlag.Selected);
-
-    LAppearance.Clear;
-    LAppearance.StyleName := LInfo.Column.HeaderStyleName;
-    LCell := AcquireVisualCell(LContext, Th5uVclHeaderCell);
-    LCell.BindCell(
-      LContext,
-      LRect,
-      TValue.Empty,
-      LInfo.Column.Caption,
-      LAppearance
+    DrawSpacingRect(
+      LPaddingRect,
+      Th5uElementKind.ContentPadding,
+      nil,
+      -1,
+      Th5uRowKey.Empty,
+      LColor
     );
-    LCell.Paint(Self, Canvas);
+  end;
+
+  if LInnerRect.Bottom < LOuterRect.Bottom then
+  begin
+    LPaddingRect := Rect(
+      LOuterRect.Left,
+      LInnerRect.Bottom,
+      LOuterRect.Right,
+      LOuterRect.Bottom
+    );
+    DrawSpacingRect(
+      LPaddingRect,
+      Th5uElementKind.ContentPadding,
+      nil,
+      -1,
+      Th5uRowKey.Empty,
+      LColor
+    );
+  end;
+
+  if LInnerRect.Left > LOuterRect.Left then
+  begin
+    LPaddingRect := Rect(
+      LOuterRect.Left,
+      LInnerRect.Top,
+      LInnerRect.Left,
+      LInnerRect.Bottom
+    );
+    DrawSpacingRect(
+      LPaddingRect,
+      Th5uElementKind.ContentPadding,
+      nil,
+      -1,
+      Th5uRowKey.Empty,
+      LColor
+    );
+  end;
+
+  if LInnerRect.Right < LOuterRect.Right then
+  begin
+    LPaddingRect := Rect(
+      LInnerRect.Right,
+      LInnerRect.Top,
+      LOuterRect.Right,
+      LInnerRect.Bottom
+    );
+    DrawSpacingRect(
+      LPaddingRect,
+      Th5uElementKind.ContentPadding,
+      nil,
+      -1,
+      Th5uRowKey.Empty,
+      LColor
+    );
   end;
 end;
 
 procedure Th5uVclGrid.DrawHeaders;
 var
   LRect: TRect;
+  LSeparatorRect: TRect;
+  LHeaderRect: TRect;
   LContext: Th5uFactoryContext;
   LCell: Th5uVclVisualCell;
   LAppearance: Th5uResolvedAppearance;
+  LPalette: Th5uVclPalette;
+  LContentBottom: Integer;
 begin
   if not FShowHeader then
     Exit;
 
+  LPalette := h5uGetVclPalette(FTheme);
+  LHeaderRect := GetViewportRect;
+  LHeaderRect.Bottom := LHeaderRect.Top + GetHeaderHeight;
+  Canvas.Brush.Color := LPalette.HeaderBackground;
+  Canvas.FillRect(LHeaderRect);
+
   if FShowRowIndicator then
   begin
+    LContentBottom := LHeaderRect.Bottom - FSpacing.RowSpacing;
     LRect := Rect(
       GetViewportRect.Left,
       GetViewportRect.Top,
       GetViewportRect.Left + FRowIndicatorWidth,
-      GetViewportRect.Top + GetHeaderHeight
+      Max(GetViewportRect.Top, LContentBottom)
     );
     LContext := Th5uFactoryContext.Create(
       Self,
@@ -1631,6 +1856,24 @@ begin
       LAppearance
     );
     LCell.Paint(Self, Canvas);
+
+    if FSpacing.DefaultColumnRightSpacing > 0 then
+    begin
+      LSeparatorRect := Rect(
+        LRect.Right,
+        LRect.Top,
+        LRect.Right + FSpacing.DefaultColumnRightSpacing,
+        LRect.Bottom
+      );
+      DrawSpacingRect(
+        LSeparatorRect,
+        Th5uElementKind.ColumnSpacing,
+        nil,
+        -1,
+        Th5uRowKey.Empty,
+        ResolveColumnSpacingColor
+      );
+    end;
   end;
 
   if FHeaderLayout.Enabled and
@@ -1638,12 +1881,31 @@ begin
     DrawCustomHeaderLayout
   else
     DrawDefaultHeaders;
+
+  if FSpacing.RowSpacing > 0 then
+  begin
+    LSeparatorRect := Rect(
+      LHeaderRect.Left,
+      LHeaderRect.Bottom - FSpacing.RowSpacing,
+      LHeaderRect.Right,
+      LHeaderRect.Bottom
+    );
+    DrawSpacingRect(
+      LSeparatorRect,
+      Th5uElementKind.RowSpacing,
+      nil,
+      -1,
+      Th5uRowKey.Empty,
+      ResolveRowSpacingColor
+    );
+  end;
 end;
 
 procedure Th5uVclGrid.DrawRowIndicator(
   const ARowInfo: Th5uVisibleRowInfo; ASelected: Boolean);
 var
   LRect: TRect;
+  LSeparatorRect: TRect;
   LContext: Th5uFactoryContext;
   LCell: Th5uVclVisualCell;
   LAppearance: Th5uResolvedAppearance;
@@ -1690,6 +1952,30 @@ begin
     LAppearance
   );
   LCell.Paint(Self, Canvas);
+
+  if FSpacing.DefaultColumnRightSpacing > 0 then
+  begin
+    LSeparatorRect := Rect(
+      LRect.Right,
+      LRect.Top,
+      LRect.Right + FSpacing.DefaultColumnRightSpacing,
+      LRect.Bottom
+    );
+    IntersectRect(
+      LSeparatorRect,
+      LSeparatorRect,
+      GetDataViewportRect
+    );
+    if not IsRectEmpty(LSeparatorRect) then
+      DrawSpacingRect(
+        LSeparatorRect,
+        Th5uElementKind.ColumnSpacing,
+        nil,
+        ARowInfo.RowIndex,
+        ARowInfo.RowKey,
+        ResolveColumnSpacingColor
+      );
+  end;
 end;
 
 procedure Th5uVclGrid.DrawRows;
@@ -1699,12 +1985,14 @@ var
   LRowIndex: Int64;
   LRowCount: Int64;
   LHeight: Integer;
+  LRowSpacing: Integer;
   LRowRect: TRect;
   LRowKey: Th5uRowKey;
   LRows: TList<Th5uVisibleRowInfo>;
   LRowInfo: Th5uVisibleRowInfo;
   LColumnInfo: Th5uVisibleColumnInfo;
   LCellRect: TRect;
+  LSeparatorRect: TRect;
   LContext: Th5uFactoryContext;
   LCell: Th5uVclVisualCell;
   LValue: TValue;
@@ -1718,6 +2006,7 @@ var
   LFocused: Boolean;
   LClassId: Th5uClassId;
   LOverscanBottom: Integer;
+  LColumnSpacing: Integer;
 begin
   if not Assigned(FDataController) then
   begin
@@ -1745,13 +2034,15 @@ begin
   LRows := TList<Th5uVisibleRowInfo>.Create;
   try
     LOverscanBottom := LDataRect.Bottom +
-      FScrolling.OverscanRows * FRowHeight.EstimatedHeight;
+      FScrolling.OverscanRows *
+      (FRowHeight.EstimatedHeight + FSpacing.RowSpacing);
 
     while (LRowIndex < LRowCount) and
           (LTop < LOverscanBottom) do
     begin
       LRowKey := FDataController.GetRowKey(LRowIndex);
       LHeight := GetRowHeightFor(LRowIndex, LRowKey);
+      LRowSpacing := GetRowSpacingFor(LRowIndex, LRowKey);
       LRowRect := Rect(
         LDataRect.Left,
         LTop,
@@ -1783,118 +2074,161 @@ begin
           LCellRect.Top := LRowRect.Top;
           LCellRect.Bottom := LRowRect.Bottom;
           IntersectRect(LCellRect, LCellRect, LDataRect);
-          if IsRectEmpty(LCellRect) then
-            Continue;
 
-          LCellSelected :=
-            LRowSelected or
-            FSelection.IsColumnSelected(
-              LColumnInfo.Column.Id
-            ) or
-            FSelection.IsCellSelected(
+          if not IsRectEmpty(LCellRect) then
+          begin
+            LCellSelected :=
+              LRowSelected or
+              FSelection.IsColumnSelected(LColumnInfo.Column.Id) or
+              FSelection.IsCellSelected(
+                LRowIndex,
+                LColumnInfo.VisibleIndex
+              );
+            LFocused :=
+              FSelection.FocusedCell.IsValid and
+              (FSelection.FocusedCell.RowIndex = LRowIndex) and
+              (FSelection.FocusedCell.ColumnIndex =
+                LColumnInfo.VisibleIndex);
+
+            LClassId := LColumnInfo.Column.CellClassId;
+            if string(LClassId) = '' then
+              LClassId := h5uClassIdGridDataCell;
+            if (LColumnInfo.Column.FixedKind <>
+                Th5uFixedKind.None) and
+               (LClassId = h5uClassIdGridDataCell) then
+              LClassId := h5uClassIdGridFixedCell;
+
+            LContext := Th5uFactoryContext.Create(
+              Self,
+              Self,
+              FDataController,
+              LClassId,
+              Th5uElementKind.DataCell
+            );
+            LContext.Column := LColumnInfo.Column;
+            LContext.RowKey := LRowKey;
+            LContext.ViewRowIndex := LRowIndex;
+            LContext.SourceRowIndex := LRowIndex;
+            LContext.RowStyleKey := LStyleKey;
+
+            if LColumnInfo.Column.FixedKind <>
+               Th5uFixedKind.None then
+              Include(
+                LContext.ElementFlags,
+                Th5uElementFlag.FixedColumn
+              );
+            if LCellSelected then
+              Include(
+                LContext.ElementFlags,
+                Th5uElementFlag.Selected
+              );
+            if LFocused then
+              Include(
+                LContext.ElementFlags,
+                Th5uElementFlag.Focused
+              );
+            if Odd(LRowIndex) then
+              Include(
+                LContext.ElementFlags,
+                Th5uElementFlag.OddRow
+              )
+            else
+              Include(
+                LContext.ElementFlags,
+                Th5uElementFlag.EvenRow
+              );
+            if (FRowStyles.StripePeriod > 0) and
+               (((LRowIndex + 1 - FRowStyles.StripeOffset) mod
+                 FRowStyles.StripePeriod) = 0) then
+              Include(
+                LContext.ElementFlags,
+                Th5uElementFlag.PatternRow
+              );
+            if LColumnInfo.Column.ReadOnly then
+              Include(
+                LContext.ElementFlags,
+                Th5uElementFlag.ReadOnly
+              );
+
+            LValue := FDataController.GetValue(
               LRowIndex,
-              LColumnInfo.VisibleIndex
+              LColumnInfo.Column.FieldName
             );
-          LFocused :=
-            FSelection.FocusedCell.IsValid and
-            (FSelection.FocusedCell.RowIndex = LRowIndex) and
-            (FSelection.FocusedCell.ColumnIndex =
-              LColumnInfo.VisibleIndex);
-
-          LClassId := LColumnInfo.Column.CellClassId;
-          if string(LClassId) = '' then
-            LClassId := h5uClassIdGridDataCell;
-          if (LColumnInfo.Column.FixedKind <>
-              Th5uFixedKind.None) and
-             (LClassId = h5uClassIdGridDataCell) then
-            LClassId := h5uClassIdGridFixedCell;
-
-          LContext := Th5uFactoryContext.Create(
-            Self,
-            Self,
-            FDataController,
-            LClassId,
-            Th5uElementKind.DataCell
-          );
-          LContext.Column := LColumnInfo.Column;
-          LContext.RowKey := LRowKey;
-          LContext.ViewRowIndex := LRowIndex;
-          LContext.RowStyleKey := LStyleKey;
-
-          if LColumnInfo.Column.FixedKind <>
-             Th5uFixedKind.None then
-            Include(
-              LContext.ElementFlags,
-              Th5uElementFlag.FixedColumn
-            );
-          if LCellSelected then
-            Include(
-              LContext.ElementFlags,
-              Th5uElementFlag.Selected
-            );
-          if LFocused then
-            Include(
-              LContext.ElementFlags,
-              Th5uElementFlag.Focused
-            );
-          if Odd(LRowIndex) then
-            Include(
-              LContext.ElementFlags,
-              Th5uElementFlag.OddRow
-            )
-          else
-            Include(
-              LContext.ElementFlags,
-              Th5uElementFlag.EvenRow
-            );
-          if (FRowStyles.StripePeriod > 0) and
-             (((LRowIndex + 1 - FRowStyles.StripeOffset) mod
-               FRowStyles.StripePeriod) = 0) then
-            Include(
-              LContext.ElementFlags,
-              Th5uElementFlag.PatternRow
-            );
-          if LColumnInfo.Column.ReadOnly then
-            Include(
-              LContext.ElementFlags,
-              Th5uElementFlag.ReadOnly
+            LContext.Value := LValue;
+            LDisplayText := FDataController.GetDisplayText(
+              LRowIndex,
+              LColumnInfo.Column.FieldName,
+              LColumnInfo.Column.DisplayFormat
             );
 
-          LValue := FDataController.GetValue(
-            LRowIndex,
-            LColumnInfo.Column.FieldName
-          );
-          LContext.Value := LValue;
-          LDisplayText := FDataController.GetDisplayText(
-            LRowIndex,
-            LColumnInfo.Column.FieldName,
-            LColumnInfo.Column.DisplayFormat
-          );
+            LCellAppearance := ResolveCellAppearance(
+              LContext,
+              LColumnInfo.Column,
+              LRowAppearance,
+              LCellSelected,
+              LFocused
+            );
 
-          LCellAppearance := ResolveCellAppearance(
-            LContext,
-            LColumnInfo.Column,
-            LRowAppearance,
-            LCellSelected,
-            LFocused
-          );
+            LCell := AcquireVisualCell(
+              LContext,
+              GetDataCellClass(LContext)
+            );
+            LCell.BindCell(
+              LContext,
+              LCellRect,
+              LValue,
+              LDisplayText,
+              LCellAppearance
+            );
+            LCell.Paint(Self, Canvas);
+          end;
 
-          LCell := AcquireVisualCell(
-            LContext,
-            GetDataCellClass(LContext)
+          LColumnSpacing := GetEffectiveColumnRightSpacing(
+            LColumnInfo.Column
           );
-          LCell.BindCell(
-            LContext,
-            LCellRect,
-            LValue,
-            LDisplayText,
-            LCellAppearance
-          );
-          LCell.Paint(Self, Canvas);
+          if LColumnSpacing > 0 then
+          begin
+            LSeparatorRect := Rect(
+              LColumnInfo.Bounds.Right,
+              LRowRect.Top,
+              LColumnInfo.Bounds.Right + LColumnSpacing,
+              LRowRect.Bottom
+            );
+            IntersectRect(LSeparatorRect, LSeparatorRect, LDataRect);
+            if not IsRectEmpty(LSeparatorRect) then
+              DrawSpacingRect(
+                LSeparatorRect,
+                Th5uElementKind.ColumnSpacing,
+                LColumnInfo.Column,
+                LRowIndex,
+                LRowKey,
+                ResolveColumnSpacingColor
+              );
+          end;
         end;
       end;
 
-      Inc(LTop, LHeight);
+      if LRowSpacing > 0 then
+      begin
+        LSeparatorRect := Rect(
+          LDataRect.Left,
+          LRowRect.Bottom,
+          LDataRect.Right,
+          LRowRect.Bottom + LRowSpacing
+        );
+        IntersectRect(LSeparatorRect, LSeparatorRect, LDataRect);
+        if not IsRectEmpty(LSeparatorRect) then
+          DrawSpacingRect(
+            LSeparatorRect,
+            Th5uElementKind.RowSpacing,
+            nil,
+            LRowIndex,
+            LRowKey,
+            ResolveRowSpacingColor
+          );
+      end;
+
+      Inc(LTop, LHeight + LRowSpacing);
       Inc(LRowIndex);
     end;
 
@@ -1902,6 +2236,76 @@ begin
   finally
     LRows.Free;
   end;
+end;
+
+procedure Th5uVclGrid.DrawSpacingRect(
+  const ABounds: TRect;
+  AElementKind: Th5uElementKind;
+  AColumn: Th5uGridColumn;
+  AViewRowIndex: Int64;
+  const ARowKey: Th5uRowKey;
+  AColor: TColor);
+var
+  LClassId: Th5uClassId;
+  LFactoryContext: Th5uFactoryContext;
+  LDrawContext: Th5uVclDrawContext;
+  LAppearance: Th5uResolvedAppearance;
+  LDrawDefault: Boolean;
+begin
+  if IsRectEmpty(ABounds) then
+    Exit;
+
+  case AElementKind of
+    Th5uElementKind.RowSpacing:
+      LClassId := h5uClassIdGridRowSpacing;
+    Th5uElementKind.ColumnSpacing:
+      LClassId := h5uClassIdGridColumnSpacing;
+  else
+    LClassId := h5uClassIdGridContentPadding;
+  end;
+
+  LFactoryContext := Th5uFactoryContext.Create(
+    Self,
+    Self,
+    FDataController,
+    LClassId,
+    AElementKind
+  );
+  LFactoryContext.Column := AColumn;
+  LFactoryContext.ViewRowIndex := AViewRowIndex;
+  LFactoryContext.SourceRowIndex := AViewRowIndex;
+  LFactoryContext.RowKey := ARowKey;
+
+  LAppearance.Clear;
+  if AColor <> clNone then
+  begin
+    LAppearance.HasBackground := True;
+    LAppearance.Background := h5uVclToColor(AColor);
+  end;
+  LDrawContext.FactoryContext := LFactoryContext;
+  LDrawContext.Bounds := ABounds;
+  LDrawContext.DisplayText := '';
+  LDrawContext.Appearance := LAppearance;
+
+  LDrawDefault := True;
+  DoCustomDraw(
+    Canvas,
+    LDrawContext,
+    Th5uCustomDrawStage.BeforeDefault,
+    LDrawDefault
+  );
+  if LDrawDefault and (AColor <> clNone) then
+  begin
+    Canvas.Brush.Style := bsSolid;
+    Canvas.Brush.Color := AColor;
+    Canvas.FillRect(ABounds);
+  end;
+  DoCustomDraw(
+    Canvas,
+    LDrawContext,
+    Th5uCustomDrawStage.AfterDefault,
+    LDrawDefault
+  );
 end;
 
 procedure Th5uVclGrid.EditorExit(Sender: TObject);
@@ -1934,6 +2338,8 @@ var
   LIndex: Int64;
   LCount: Int64;
   LHeight: Integer;
+  LSpacing: Integer;
+  LExtent: Integer;
   LRemaining: Int64;
   LKey: Th5uRowKey;
 begin
@@ -1950,12 +2356,14 @@ begin
   begin
     LKey := FDataController.GetRowKey(LIndex);
     LHeight := GetRowHeightFor(LIndex, LKey, LCount <= 5000);
-    if LRemaining < LHeight then
+    LSpacing := GetRowSpacingFor(LIndex, LKey);
+    LExtent := LHeight + LSpacing;
+    if LRemaining < LExtent then
     begin
       ATop := GetDataViewportRect.Top - Integer(LRemaining);
       Exit(LIndex);
     end;
-    Dec(LRemaining, LHeight);
+    Dec(LRemaining, LExtent);
     Inc(LIndex);
   end;
 end;
@@ -1980,14 +2388,19 @@ var
   LCount: Int64;
   LIndex: Int64;
   LKey: Th5uRowKey;
+  LHeight: Integer;
 begin
   Result := 0;
   if not Assigned(FDataController) then
     Exit;
 
   LCount := FDataController.GetRowCount;
-  if (FRowHeight.Mode = Th5uRowHeightMode.Fixed) then
-    Exit(LCount * FRowHeight.FixedHeight);
+  if (FRowHeight.Mode = Th5uRowHeightMode.Fixed) and
+     not Assigned(FOnGetRowSpacing) then
+    Exit(
+      LCount *
+      (FRowHeight.FixedHeight + FSpacing.RowSpacing)
+    );
 
   if LCount <= 5000 then
   begin
@@ -1995,11 +2408,16 @@ begin
     for LIndex := 0 to LCount - 1 do
     begin
       LKey := FDataController.GetRowKey(LIndex);
-      Inc(Result, GetRowHeightFor(LIndex, LKey, True));
+      if FRowHeight.Mode = Th5uRowHeightMode.Fixed then
+        LHeight := FRowHeight.FixedHeight
+      else
+        LHeight := GetRowHeightFor(LIndex, LKey, True);
+      Inc(Result, LHeight + GetRowSpacingFor(LIndex, LKey));
     end;
   end
   else
-    Result := LCount * FRowHeight.EstimatedHeight;
+    Result := LCount *
+      (FRowHeight.EstimatedHeight + FSpacing.RowSpacing);
 end;
 
 function Th5uVclGrid.GetFixedCellClass(
@@ -2015,13 +2433,20 @@ begin
 end;
 
 function Th5uVclGrid.GetHeaderHeight: Integer;
+var
+  LRowCount: Integer;
 begin
   if not FShowHeader then
     Exit(0);
-  if FHeaderLayout.Enabled then
-    Result := Max(1, FHeaderLayout.RowCount) * FHeaderRowHeight
+
+  if FHeaderLayout.Enabled and
+     (FHeaderLayout.Cells.Count > 0) then
+    LRowCount := Max(1, FHeaderLayout.RowCount)
   else
-    Result := FHeaderRowHeight;
+    LRowCount := 1;
+
+  Result := LRowCount *
+    (FHeaderRowHeight + FSpacing.RowSpacing);
 end;
 
 function Th5uVclGrid.GetOnConfigureInstance:
@@ -2149,24 +2574,133 @@ begin
   );
 end;
 
+function Th5uVclGrid.GetEffectiveColumnRightSpacing(
+  AColumn: Th5uGridColumn): Integer;
+begin
+  if Assigned(AColumn) and (AColumn.RightSpacing >= 0) then
+    Result := AColumn.RightSpacing
+  else
+    Result := FSpacing.DefaultColumnRightSpacing;
+end;
+
+function Th5uVclGrid.GetRowSpacingFor(
+  AViewRowIndex: Int64;
+  const ARowKey: Th5uRowKey): Integer;
+var
+  LContext: Th5uGetRowHeightContext;
+begin
+  Result := FSpacing.RowSpacing;
+  if Assigned(FOnGetRowSpacing) then
+  begin
+    LContext.Grid := Self;
+    LContext.DataController := FDataController;
+    LContext.RowKey := ARowKey;
+    LContext.ViewRowIndex := AViewRowIndex;
+    LContext.SourceRowIndex := AViewRowIndex;
+    LContext.IsEstimated := False;
+    FOnGetRowSpacing(Self, LContext, Result);
+  end;
+  Result := EnsureRange(Result, 0, 1000);
+end;
+
+function Th5uVclGrid.GetGridLines: Boolean;
+begin
+  // Explicit per-column RightSpacing values are intentionally independent
+  // from this compatibility property.
+  Result :=
+    (FSpacing.Left > 0) or
+    (FSpacing.Top > 0) or
+    (FSpacing.Right > 0) or
+    (FSpacing.Bottom > 0) or
+    (FSpacing.RowSpacing > 0) or
+    (FSpacing.DefaultColumnRightSpacing > 0);
+end;
+
 function Th5uVclGrid.GetTotalColumnWidth: Integer;
 var
   LColumn: Th5uGridColumn;
 begin
   Result := 0;
   for LColumn in FColumns.VisibleColumns do
-    Inc(Result, LColumn.Width);
+    Inc(
+      Result,
+      LColumn.Width +
+      GetEffectiveColumnRightSpacing(LColumn)
+    );
   if FShowRowIndicator then
-    Inc(Result, FRowIndicatorWidth);
+    Inc(
+      Result,
+      FRowIndicatorWidth +
+      FSpacing.DefaultColumnRightSpacing
+    );
 end;
 
-function Th5uVclGrid.GetViewportRect: TRect;
+function Th5uVclGrid.GetUnpaddedViewportRect: TRect;
 begin
   Result := ClientRect;
   if FVScrollBar.Visible then
     Dec(Result.Right, FVScrollBar.Width);
   if FHScrollBar.Visible then
     Dec(Result.Bottom, FHScrollBar.Height);
+end;
+
+function Th5uVclGrid.GetViewportRect: TRect;
+begin
+  Result := GetUnpaddedViewportRect;
+
+  Inc(Result.Left, FSpacing.Left);
+  Inc(Result.Top, FSpacing.Top);
+  Dec(Result.Right, FSpacing.Right);
+  Dec(Result.Bottom, FSpacing.Bottom);
+
+  if Result.Right < Result.Left then
+    Result.Right := Result.Left;
+  if Result.Bottom < Result.Top then
+    Result.Bottom := Result.Top;
+end;
+
+function Th5uVclGrid.ResolveColor(
+  const AColor: Th5uColor;
+  AFallback: TColor): TColor;
+begin
+  if AColor = h5uColorDefault then
+    Result := AFallback
+  else if AColor = h5uColorNone then
+    Result := clNone
+  else
+    Result := h5uColorToVcl(AColor);
+end;
+
+function Th5uVclGrid.ResolveDefaultCellColor: TColor;
+begin
+  Result := ResolveColor(
+    FAppearance.DefaultCellColor,
+    h5uGetVclPalette(FTheme).CellBackground
+  );
+end;
+
+function Th5uVclGrid.ResolveRowSpacingColor: TColor;
+begin
+  Result := ResolveColor(
+    FSpacing.RowSpacingColor,
+    h5uGetVclPalette(FTheme).CellBorder
+  );
+end;
+
+function Th5uVclGrid.ResolveColumnSpacingColor: TColor;
+begin
+  Result := ResolveColor(
+    FSpacing.ColumnSpacingColor,
+    h5uGetVclPalette(FTheme).CellBorder
+  );
+end;
+
+function Th5uVclGrid.ResolveContentPaddingColor: TColor;
+begin
+  Result := ResolveColor(
+    FSpacing.ContentPaddingColor,
+    h5uGetVclPalette(FTheme).CellBorder
+  );
 end;
 
 function Th5uVclGrid.GetVisualCellClass(
@@ -2532,6 +3066,7 @@ procedure Th5uVclGrid.Paint;
 var
   LPalette: Th5uVclPalette;
   LViewRect: TRect;
+  LDataRect: TRect;
 begin
   LPalette := h5uGetVclPalette(FTheme);
   Canvas.Brush.Color := LPalette.EmptyArea;
@@ -2542,9 +3077,15 @@ begin
   BuildColumnLayout;
   BeginVisualPass;
 
+  DrawContentPadding;
+
   LViewRect := GetViewportRect;
   Canvas.Brush.Color := LPalette.GridBackground;
   Canvas.FillRect(LViewRect);
+
+  LDataRect := GetDataViewportRect;
+  Canvas.Brush.Color := ResolveDefaultCellColor;
+  Canvas.FillRect(LDataRect);
 
   DrawHeaders;
   DrawRows;
@@ -2631,7 +3172,15 @@ begin
   Result := ARowAppearance;
   LPalette := h5uGetVclPalette(FTheme);
 
-  if AColumn.Highlighted and not ASelected then
+  if AColumn.Color <> h5uColorDefault then
+  begin
+    Result.HasBackground := True;
+    Result.Background := AColumn.Color;
+  end;
+
+  if AColumn.Highlighted and
+     (AColumn.Color = h5uColorDefault) and
+     not ASelected then
   begin
     Result.HasBackground := True;
     Result.Background := h5uVclToColor(
@@ -2679,10 +3228,14 @@ begin
     Result.Background := h5uVclToColor(LPalette.WarningBackground)
   else if SameText(AStyleName, 'Stripe') then
     Result.Background := h5uVclToColor(LPalette.StripeBackground)
+  else if FAppearance.DefaultCellColor <> h5uColorDefault then
+    Result.Background := h5uVclToColor(ResolveDefaultCellColor)
   else if SameText(AStyleName, 'Odd') then
     Result.Background := h5uVclToColor(LPalette.OddBackground)
+  else if SameText(AStyleName, 'Even') then
+    Result.Background := h5uVclToColor(LPalette.EvenBackground)
   else
-    Result.Background := h5uVclToColor(LPalette.EvenBackground);
+    Result.Background := h5uVclToColor(ResolveDefaultCellColor);
 
   if Assigned(FOnGetRowAppearance) then
     FOnGetRowAppearance(
@@ -2788,6 +3341,26 @@ procedure Th5uVclGrid.SetCustomization(
   const AValue: Th5uCustomizationOptions);
 begin
   FCustomization.Assign(AValue);
+end;
+
+procedure Th5uVclGrid.SetAppearance(
+  const AValue: Th5uGridAppearanceOptions);
+begin
+  FAppearance.Assign(AValue);
+end;
+
+procedure Th5uVclGrid.SetGridLines(const AValue: Boolean);
+begin
+  if AValue then
+    FSpacing.SetAllSeparators(1)
+  else
+    FSpacing.SetAllSeparators(0);
+end;
+
+procedure Th5uVclGrid.SetSpacing(
+  const AValue: Th5uGridSpacingOptions);
+begin
+  FSpacing.Assign(AValue);
 end;
 
 procedure Th5uVclGrid.SetDataController(
@@ -3155,9 +3728,18 @@ begin
     LTotalWidth := GetTotalColumnWidth;
     LTotalHeight := GetEstimatedTotalRowHeight;
 
-    LNeedHorizontal := LTotalWidth > LClient.Width;
-    LNeedVertical :=
-      LTotalHeight > (LClient.Height - GetHeaderHeight);
+    LAvailableWidth := Max(
+      0,
+      LClient.Width - FSpacing.Left - FSpacing.Right
+    );
+    LAvailableHeight := Max(
+      0,
+      LClient.Height - FSpacing.Top - FSpacing.Bottom -
+      GetHeaderHeight
+    );
+
+    LNeedHorizontal := LTotalWidth > LAvailableWidth;
+    LNeedVertical := LTotalHeight > LAvailableHeight;
 
     FHScrollBar.Visible := LNeedHorizontal;
     FVScrollBar.Visible := LNeedVertical;
@@ -3181,7 +3763,7 @@ begin
     FVScrollBar.LargeChange := Max(1, LAvailableHeight);
     FVScrollBar.SmallChange := Max(
       1,
-      FRowHeight.EstimatedHeight
+      FRowHeight.EstimatedHeight + FSpacing.RowSpacing
     );
 
     FHorizontalOffset := EnsureRange(

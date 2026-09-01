@@ -23,6 +23,9 @@ Zweck:
 - Bildspalte
 - lokale Factory-Regel für eine spezielle Zelle
 - Column verschieben
+- schaltbare 1-Pixel-Trennflächen einschließlich Außenrand
+- Grid-Defaultfarbe und eigene Farben einzelner Columns
+- eigener rechter Abstand der Beschreibungs-Column
 
 Dies ist die wichtigste Referenzdemo des Prototyps.
 
@@ -72,6 +75,8 @@ Zweck:
 - selbst erzeugte Designer-Daten
 - zentrale Optionen für AutoHeight, Theme, Cache und Paging
 - Text-, Boolean- und Bilddarstellung
+- schaltbare 1-Pixel-Trennflächen und Column-Farben
+- eigener rechter Column-Abstand als Layoutbeispiel
 
 ## FMX ObjectList
 
@@ -104,7 +109,7 @@ Zweck:
 ## Empfohlene Testreihenfolge
 
 1. VCL ClientDataSet bauen und starten.
-2. RowHeight, Dark Mode, Bildspalte und Paging einzeln schalten.
+2. RowHeight, Trennlinien, Column-Farben, Dark Mode, Bildspalte und Paging einzeln schalten.
 3. Columns per Maus verschieben, skalieren und ausblenden.
 4. Row-, Column- und Zellbereichselektion prüfen.
 5. ObjectList-Demo mit Cache an/aus vergleichen.

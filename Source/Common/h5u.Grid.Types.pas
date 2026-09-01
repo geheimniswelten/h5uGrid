@@ -1,4 +1,4 @@
-﻿unit h5u.Grid.Types;
+unit h5u.Grid.Types;
 
 interface
 
@@ -12,10 +12,15 @@ uses
 
 type
   Th5uClassId = type string;
-  Th5uColor = type Cardinal;
+  // Valid explicit colors use ARGB values $00000000..$FFFFFFFF. Negative
+  // values are reserved for semantic sentinels and therefore cannot collide
+  // with an actual VCL/FMX color.
+  Th5uColor = type Int64;
 
 const
-  h5uColorNone = Th5uColor($00000000);
+  h5uColorDefault = Th5uColor(-1);
+  h5uColorNone = Th5uColor(-2);
+  h5uColorLightGray = Th5uColor($FFD3D3D3);
 
   h5uClassIdGridVisibleRow = Th5uClassId('h5u.grid.visual.row');
   h5uClassIdGridDataCell = Th5uClassId('h5u.grid.visual.cell.data');
@@ -29,6 +34,9 @@ const
   h5uClassIdGridImageEditor = Th5uClassId('h5u.grid.editor.image');
   h5uClassIdGridRowMetrics = Th5uClassId('h5u.grid.row-metrics');
   h5uClassIdGridThumbHint = Th5uClassId('h5u.grid.thumb-hint');
+  h5uClassIdGridRowSpacing = Th5uClassId('h5u.grid.spacing.row');
+  h5uClassIdGridColumnSpacing = Th5uClassId('h5u.grid.spacing.column');
+  h5uClassIdGridContentPadding = Th5uClassId('h5u.grid.spacing.content-padding');
   h5uClassIdDataSession = Th5uClassId('h5u.grid.data.session');
   h5uClassIdDataCache = Th5uClassId('h5u.grid.data.cache');
   h5uClassIdDataPage = Th5uClassId('h5u.grid.data.page');
@@ -67,6 +75,9 @@ type
     FooterCell,
     Editor,
     ThumbHint,
+    RowSpacing,
+    ColumnSpacing,
+    ContentPadding,
     DetailView,
     DataSession,
     DataCache,
@@ -308,7 +319,33 @@ type
     procedure Clear;
   end;
 
+function h5uColorFromArgb(
+  AAlpha, ARed, AGreen, ABlue: Byte
+): Th5uColor; inline;
+function h5uColorFromRgb(
+  ARed, AGreen, ABlue: Byte
+): Th5uColor; inline;
+
 implementation
+
+function h5uColorFromArgb(
+  AAlpha, ARed, AGreen, ABlue: Byte
+): Th5uColor;
+begin
+  Result := Th5uColor(
+    (Cardinal(AAlpha) shl 24) or
+    (Cardinal(ARed) shl 16) or
+    (Cardinal(AGreen) shl 8) or
+    Cardinal(ABlue)
+  );
+end;
+
+function h5uColorFromRgb(
+  ARed, AGreen, ABlue: Byte
+): Th5uColor;
+begin
+  Result := h5uColorFromArgb($FF, ARed, AGreen, ABlue);
+end;
 
 { Th5uRowKey }
 

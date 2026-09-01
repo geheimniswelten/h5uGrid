@@ -21,6 +21,12 @@ Legende:
 | native Style-Anbindung | – | Ja | Basis | VCL umfangreicher; FMX semantische Palette plus Styled Controls |
 | Classic2000/Modern/Dark | – | Ja | Ja | Built-in-Themes |
 | CustomDraw | – | Ja | Basis | VCL Referenzpfad vollständiger |
+| 1-px-Trennflächen als Default | Ja | Ja | Ja | hellgrau; Größe `0` deaktiviert |
+| Außenabstände am Grid-Inhalt | Ja | Ja | Ja | oben/links/rechts/unten getrennt |
+| Column-Abstand rechts | Ja | Ja | Ja | `-1` erbt Grid-Default |
+| Row-Abstand per Event | Ja | Ja | Ja | vorgeschlagener Wert als `var`-Parameter |
+| Separator-CustomDraw | Ja | Ja | Ja | Row/Column/ContentPadding |
+| Grid-/Column-Zellfarben | Ja | Ja | Ja | plattformneutrale ARGB-Werte |
 | Textzelle | Ja | Ja | Ja | Word-Wrap |
 | Boolean-Editor | Ja | Ja | Ja | aktives Control nur beim Editieren |
 | Bild/BLOB/TBytes | Ja | Ja | Ja | sichtbare Dekodierung, Editorbasis |

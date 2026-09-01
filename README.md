@@ -2,7 +2,7 @@
 
 `h5u.Grid` ist ein quelloffener Teststand für ein erweiterbares Delphi-Grid mit gemeinsamem Daten-/Controllerkern und getrennten VCL-/FMX-Präsentationen.
 
-Das Paket dient dazu, Architektur, API, Design-Time-Verhalten und die wichtigsten Interaktionspfade früh in einer realen Delphi-Umgebung zu erproben. Es ist ausdrücklich ein **Prototyp 0.1.0** und noch keine vollständige Grid-Suite.
+Das Paket dient dazu, Architektur, API, Design-Time-Verhalten und die wichtigsten Interaktionspfade früh in einer realen Delphi-Umgebung zu erproben. Es ist ausdrücklich ein **Prototyp 0.1.1** und noch keine vollständige Grid-Suite.
 
 ## Enthaltene Testschwerpunkte
 
@@ -20,7 +20,9 @@ Das Paket dient dazu, Architektur, API, Design-Time-Verhalten und die wichtigste
 - Text-, Boolean- und Bild/BLOB-Darstellung; aktive Editoren werden als echte Controls erzeugt,
 - Spalten verschieben, ausblenden, fixieren und in ihrer Breite verändern,
 - konfigurierbare Controller-Caches und Pagination-Grundlagen,
-- native VCL-/FMX-Style-Anbindung, eingebaute Classic-/Modern-/Dark-Paletten und CustomDraw-Hooks.
+- native VCL-/FMX-Style-Anbindung, eingebaute Classic-/Modern-/Dark-Paletten und CustomDraw-Hooks,
+- standardmäßig 1 Pixel breite hellgraue Trennflächen zwischen Rows und Columns sowie am äußeren Inhaltsrand,
+- deaktivierbare Abstände (`0`), vererbbarer Column-Abstand (`RightSpacing = -1`) und eigene Grid-/Column-Farben.
 
 Die VCL-Ausgabe bildet im ersten Stand den umfassenderen Referenzpfad. Die FMX-Ausgabe verwendet denselben Core und dieselben Controller, besitzt aber noch nicht bei allen Komfortfunktionen vollständige Parität. Die genaue Abdeckung steht in der [Funktionsmatrix](Docs/FEATURE-MATRIX.md).
 
@@ -120,7 +122,7 @@ Dadurch können mehrere Gridinstanzen gleichzeitig unterschiedliche Cells, Heade
 
 ## Prüfstatus
 
-Der Quellstand wurde mit Parser-, Namespace-, Projektpfad-, DFM/FMX-, Event-, Namens- und Factory-Policy-Prüfungen auditiert. Die konsolidierten Ergebnisse stehen unter `Build`.
+Der Quellstand wurde mit statischen Struktur-, Namespace-, Projektpfad-, DFM/FMX-, Event-, Namens- und Factory-Policy-Prüfungen auditiert. Die konsolidierten Ergebnisse stehen unter `Build`.
 
 Im Erstellungscontainer war **kein Embarcadero-Delphi-Compiler** vorhanden. Das Paket enthält deshalb keine BPL/DCU/EXE-Dateien und behauptet keinen erfolgreichen DCC-Build. Der maßgebliche nächste Schritt ist der Build mit der konkret eingesetzten Delphi-Version; dabei können insbesondere versionsabhängige VCL-/FMX- und DesignIDE-Details sichtbar werden.
 

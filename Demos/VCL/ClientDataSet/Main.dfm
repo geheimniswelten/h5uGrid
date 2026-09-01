@@ -16,12 +16,12 @@
     Left = 0
     Top = 0
     Width = 1120
-    Height = 82
+    Height = 104
     Align = alTop
     TabOrder = 0
     object InfoLabel: TLabel
       Left = 12
-      Top = 52
+      Top = 76
       Width = 913
       Height = 17
       Caption = 'Designer-Test: Grid, DataSource, Controller, Spalten und Musterdaten liegen auf dem Formular. Doppelklick editiert; Rechtsklick im Header öffnet den Column Chooser.'
@@ -99,6 +99,28 @@
       TabOrder = 6
       OnClick = OptionClick
     end
+    object SeparatorsCheck: TCheckBox
+      Left = 12
+      Top = 42
+      Width = 122
+      Height = 20
+      Caption = '1 px Trennlinien'
+      Checked = True
+      State = cbChecked
+      TabOrder = 9
+      OnClick = OptionClick
+    end
+    object ColumnColorsCheck: TCheckBox
+      Left = 142
+      Top = 42
+      Width = 126
+      Height = 20
+      Caption = 'Spaltenfarben'
+      Checked = True
+      State = cbChecked
+      TabOrder = 10
+      OnClick = OptionClick
+    end
     object NextPageButton: TButton
       Left = 816
       Top = 8
@@ -120,11 +142,12 @@
   end
   object Grid: Th5uVclGrid
     Left = 0
-    Top = 82
+    Top = 104
     Width = 1120
-    Height = 568
+    Height = 546
     Align = alClient
     DataController = DataController
+    Appearance.DefaultCellColor = 4294835709
     HeaderLayout.Enabled = True
     HeaderLayout.RowCount = 2
     HeaderLayout.Cells = <
@@ -230,6 +253,7 @@
         Width = 145
         VisibleIndex = 1
         DataType = Text
+        Color = 4293588223
         ScrollHintText = 'Artikelname'
       end
       item
@@ -246,6 +270,7 @@
         FieldName = 'DESCRIPTION'
         Width = 285
         VisibleIndex = 3
+        RightSpacing = 8
         DataType = Text
         WordWrap = True
         AutoHeight = True
@@ -287,6 +312,7 @@
         VisibleIndex = 7
         DataType = Boolean
         EditorKind = Boolean
+        Color = 4293589228
       end
       item
         Id = 'created_at'

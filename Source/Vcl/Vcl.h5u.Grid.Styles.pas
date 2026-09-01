@@ -72,6 +72,11 @@ end;
 
 function h5uColorToVcl(const AColor: Th5uColor): TColor;
 begin
+  if AColor = h5uColorDefault then
+    Exit(clDefault);
+  if AColor = h5uColorNone then
+    Exit(clNone);
+
   Result := RGB(
     (Cardinal(AColor) shr 16) and $FF,
     (Cardinal(AColor) shr 8) and $FF,

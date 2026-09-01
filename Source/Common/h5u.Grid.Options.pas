@@ -14,6 +14,74 @@ uses
 type
   Th5uOptionsChangedEvent = procedure(Sender: TObject) of object;
 
+  // Spacing is layout geometry. A value of 1 produces the default one-pixel
+  // separator; 0 disables the corresponding separator completely.
+  Th5uGridSpacingOptions = class(TPersistent)
+  private
+    FLeft: Integer;
+    FTop: Integer;
+    FRight: Integer;
+    FBottom: Integer;
+    FRowSpacing: Integer;
+    FDefaultColumnRightSpacing: Integer;
+    FRowSpacingColor: Th5uColor;
+    FColumnSpacingColor: Th5uColor;
+    FContentPaddingColor: Th5uColor;
+    FOnChanged: Th5uOptionsChangedEvent;
+    procedure Changed;
+    procedure SetBottom(const AValue: Integer);
+    procedure SetColumnSpacingColor(const AValue: Th5uColor);
+    procedure SetContentPaddingColor(const AValue: Th5uColor);
+    procedure SetDefaultColumnRightSpacing(const AValue: Integer);
+    procedure SetLeft(const AValue: Integer);
+    procedure SetRight(const AValue: Integer);
+    procedure SetRowSpacing(const AValue: Integer);
+    procedure SetRowSpacingColor(const AValue: Th5uColor);
+    procedure SetTop(const AValue: Integer);
+  public
+    constructor Create;
+    procedure Assign(Source: TPersistent); override;
+    procedure SetAllSeparators(const ASize: Integer);
+    property OnChanged: Th5uOptionsChangedEvent
+      read FOnChanged write FOnChanged;
+  published
+    property Left: Integer read FLeft write SetLeft default 1;
+    property Top: Integer read FTop write SetTop default 1;
+    property Right: Integer read FRight write SetRight default 1;
+    property Bottom: Integer read FBottom write SetBottom default 1;
+    property RowSpacing: Integer
+      read FRowSpacing write SetRowSpacing default 1;
+    property DefaultColumnRightSpacing: Integer
+      read FDefaultColumnRightSpacing
+      write SetDefaultColumnRightSpacing default 1;
+    property RowSpacingColor: Th5uColor
+      read FRowSpacingColor write SetRowSpacingColor
+      default h5uColorLightGray;
+    property ColumnSpacingColor: Th5uColor
+      read FColumnSpacingColor write SetColumnSpacingColor
+      default h5uColorLightGray;
+    property ContentPaddingColor: Th5uColor
+      read FContentPaddingColor write SetContentPaddingColor
+      default h5uColorLightGray;
+  end;
+
+  Th5uGridAppearanceOptions = class(TPersistent)
+  private
+    FDefaultCellColor: Th5uColor;
+    FOnChanged: Th5uOptionsChangedEvent;
+    procedure Changed;
+    procedure SetDefaultCellColor(const AValue: Th5uColor);
+  public
+    constructor Create;
+    procedure Assign(Source: TPersistent); override;
+    property OnChanged: Th5uOptionsChangedEvent
+      read FOnChanged write FOnChanged;
+  published
+    property DefaultCellColor: Th5uColor
+      read FDefaultCellColor write SetDefaultCellColor
+      default h5uColorDefault;
+  end;
+
   Th5uRowHeightOptions = class(TPersistent)
   private
     FMode: Th5uRowHeightMode;
@@ -224,6 +292,188 @@ type
   end;
 
 implementation
+
+{ Th5uGridSpacingOptions }
+
+procedure Th5uGridSpacingOptions.Assign(Source: TPersistent);
+var
+  LSource: Th5uGridSpacingOptions;
+begin
+  if Source is Th5uGridSpacingOptions then
+  begin
+    LSource := Th5uGridSpacingOptions(Source);
+    FLeft := LSource.FLeft;
+    FTop := LSource.FTop;
+    FRight := LSource.FRight;
+    FBottom := LSource.FBottom;
+    FRowSpacing := LSource.FRowSpacing;
+    FDefaultColumnRightSpacing :=
+      LSource.FDefaultColumnRightSpacing;
+    FRowSpacingColor := LSource.FRowSpacingColor;
+    FColumnSpacingColor := LSource.FColumnSpacingColor;
+    FContentPaddingColor := LSource.FContentPaddingColor;
+    Changed;
+  end
+  else
+    inherited Assign(Source);
+end;
+
+procedure Th5uGridSpacingOptions.Changed;
+begin
+  if Assigned(FOnChanged) then
+    FOnChanged(Self);
+end;
+
+constructor Th5uGridSpacingOptions.Create;
+begin
+  inherited Create;
+  FLeft := 1;
+  FTop := 1;
+  FRight := 1;
+  FBottom := 1;
+  FRowSpacing := 1;
+  FDefaultColumnRightSpacing := 1;
+  FRowSpacingColor := h5uColorLightGray;
+  FColumnSpacingColor := h5uColorLightGray;
+  FContentPaddingColor := h5uColorLightGray;
+end;
+
+procedure Th5uGridSpacingOptions.SetBottom(const AValue: Integer);
+begin
+  if FBottom = AValue then
+    Exit;
+  FBottom := EnsureRange(AValue, 0, 10000);
+  Changed;
+end;
+
+procedure Th5uGridSpacingOptions.SetColumnSpacingColor(
+  const AValue: Th5uColor);
+begin
+  if FColumnSpacingColor = AValue then
+    Exit;
+  FColumnSpacingColor := AValue;
+  Changed;
+end;
+
+procedure Th5uGridSpacingOptions.SetContentPaddingColor(
+  const AValue: Th5uColor);
+begin
+  if FContentPaddingColor = AValue then
+    Exit;
+  FContentPaddingColor := AValue;
+  Changed;
+end;
+
+procedure Th5uGridSpacingOptions.SetDefaultColumnRightSpacing(
+  const AValue: Integer);
+begin
+  if FDefaultColumnRightSpacing = AValue then
+    Exit;
+  FDefaultColumnRightSpacing := EnsureRange(AValue, 0, 1000);
+  Changed;
+end;
+
+procedure Th5uGridSpacingOptions.SetLeft(const AValue: Integer);
+begin
+  if FLeft = AValue then
+    Exit;
+  FLeft := EnsureRange(AValue, 0, 10000);
+  Changed;
+end;
+
+procedure Th5uGridSpacingOptions.SetAllSeparators(
+  const ASize: Integer);
+var
+  LSize: Integer;
+begin
+  LSize := EnsureRange(ASize, 0, 1000);
+  if
+    (FLeft = LSize) and
+    (FTop = LSize) and
+    (FRight = LSize) and
+    (FBottom = LSize) and
+    (FRowSpacing = LSize) and
+    (FDefaultColumnRightSpacing = LSize)
+  then
+    Exit;
+
+  FLeft := LSize;
+  FTop := LSize;
+  FRight := LSize;
+  FBottom := LSize;
+  FRowSpacing := LSize;
+  FDefaultColumnRightSpacing := LSize;
+  Changed;
+end;
+
+procedure Th5uGridSpacingOptions.SetRight(const AValue: Integer);
+begin
+  if FRight = AValue then
+    Exit;
+  FRight := EnsureRange(AValue, 0, 10000);
+  Changed;
+end;
+
+procedure Th5uGridSpacingOptions.SetRowSpacing(
+  const AValue: Integer);
+begin
+  if FRowSpacing = AValue then
+    Exit;
+  FRowSpacing := EnsureRange(AValue, 0, 1000);
+  Changed;
+end;
+
+procedure Th5uGridSpacingOptions.SetRowSpacingColor(
+  const AValue: Th5uColor);
+begin
+  if FRowSpacingColor = AValue then
+    Exit;
+  FRowSpacingColor := AValue;
+  Changed;
+end;
+
+procedure Th5uGridSpacingOptions.SetTop(const AValue: Integer);
+begin
+  if FTop = AValue then
+    Exit;
+  FTop := EnsureRange(AValue, 0, 10000);
+  Changed;
+end;
+
+{ Th5uGridAppearanceOptions }
+
+procedure Th5uGridAppearanceOptions.Assign(Source: TPersistent);
+begin
+  if Source is Th5uGridAppearanceOptions then
+  begin
+    FDefaultCellColor :=
+      Th5uGridAppearanceOptions(Source).FDefaultCellColor;
+    Changed;
+  end
+  else
+    inherited Assign(Source);
+end;
+
+procedure Th5uGridAppearanceOptions.Changed;
+begin
+  if Assigned(FOnChanged) then
+    FOnChanged(Self);
+end;
+
+constructor Th5uGridAppearanceOptions.Create;
+begin
+  inherited Create;
+  FDefaultCellColor := h5uColorDefault;
+end;
+
+procedure Th5uGridAppearanceOptions.SetDefaultCellColor(
+  const AValue: Th5uColor);
+begin
+  if FDefaultCellColor = AValue then
+    Exit;
+  FDefaultCellColor := AValue;
+  Changed;
+end;
 
 { Th5uRowHeightOptions }
 
