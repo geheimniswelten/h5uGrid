@@ -607,3 +607,14 @@ Bei unerwartetem Verhalten zuerst prüfen:
 4. Ist die StyleKey-/Thumb-Hint-Column trotz Unsichtbarkeit verfügbar?
 5. Wird ein Factoryobjekt in `FactoryScope.OnBindInstance` vollständig auf den neuen Kontext eingestellt?
 6. Ist der passende VCL- beziehungsweise FMX-Unit-Scope aktiv?
+
+## 21. Quellformatierung
+
+Für alle Pascal-Quellen gilt eine maximale Zeilenlänge von 180 Zeichen. Properties und Methodensignaturen bleiben einzeilig, solange sie einschließlich Einrückung in diese Grenze passen. Insbesondere Implementationsköpfe werden nicht bereits bei 80 oder 100 Zeichen umgebrochen.
+
+```powershell
+python Build\format_pascal.py
+python Build\format_pascal.py --check
+```
+
+Der Formatter bearbeitet nur Deklarationsblöcke. Ausführbare Anweisungen bleiben unverändert. Details: [CODING-STYLE.md](CODING-STYLE.md).

@@ -19,10 +19,7 @@ type
   Th5uCustomDataController = class;
   Th5uDataControllerLink = class;
 
-  Th5uDataControllerChangedEvent = procedure(
-    Sender: TObject;
-    const AChange: Th5uDataChange
-  ) of object;
+  Th5uDataControllerChangedEvent = procedure(Sender: TObject; const AChange: Th5uDataChange) of object;
 
   Th5uDataControllerLink = class(TObject)
   private
@@ -32,10 +29,8 @@ type
   public
     destructor Destroy; override;
     procedure DataChanged(const AChange: Th5uDataChange);
-    property Controller: Th5uCustomDataController
-      read FController write SetController;
-    property OnChanged: Th5uDataControllerChangedEvent
-      read FOnChanged write FOnChanged;
+    property Controller: Th5uCustomDataController read FController write SetController;
+    property OnChanged: Th5uDataControllerChangedEvent read FOnChanged write FOnChanged;
   end;
 
   Th5uDataViewSession = class(Th5uFactoryObject)
@@ -67,35 +62,15 @@ type
     procedure PaginationOptionsChanged(Sender: TObject);
     procedure SetSharedClassFactory(const AValue: Th5uClassFactory);
   protected
-    procedure Notification(
-      AComponent: TComponent;
-      Operation: TOperation
-    ); override;
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
 
     function GetSourceRowCount: Int64; virtual; abstract;
-    function GetSourceRowKey(
-      ASourceRowIndex: Int64
-    ): Th5uRowKey; virtual;
-    function GetSourceValue(
-      ASourceRowIndex: Int64;
-      const AFieldName: string
-    ): TValue; virtual; abstract;
-    procedure SetSourceValue(
-      ASourceRowIndex: Int64;
-      const AFieldName: string;
-      const AValue: TValue
-    ); virtual;
-    function GetSourceCanEdit(
-      ASourceRowIndex: Int64;
-      const AFieldName: string
-    ): Boolean; virtual;
-    function GetSourceDisplayText(
-      ASourceRowIndex: Int64;
-      const AFieldName, ADisplayFormat: string
-    ): string; virtual;
-    function MapViewToSourceIndex(
-      AViewRowIndex: Int64
-    ): Int64; virtual;
+    function GetSourceRowKey(ASourceRowIndex: Int64): Th5uRowKey; virtual;
+    function GetSourceValue(ASourceRowIndex: Int64; const AFieldName: string): TValue; virtual; abstract;
+    procedure SetSourceValue(ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue); virtual;
+    function GetSourceCanEdit(ASourceRowIndex: Int64; const AFieldName: string): Boolean; virtual;
+    function GetSourceDisplayText(ASourceRowIndex: Int64; const AFieldName, ADisplayFormat: string): string; virtual;
+    function MapViewToSourceIndex(AViewRowIndex: Int64): Int64; virtual;
 
     procedure DoCacheOptionsChanged; virtual;
     procedure DoPaginationChanged; virtual;
@@ -104,9 +79,7 @@ type
     procedure UnregisterLink(ALink: Th5uDataControllerLink);
     procedure NotifyDataChanged(const AChange: Th5uDataChange);
 
-    function GetDataSessionClass(
-      const AContext: Th5uFactoryContext
-    ): TClass; virtual;
+    function GetDataSessionClass(const AContext: Th5uFactoryContext): TClass; virtual;
 
     property Links: TList<Th5uDataControllerLink> read FLinks;
   public
@@ -116,9 +89,7 @@ type
     procedure BeginUpdate;
     procedure EndUpdate;
     procedure Invalidate;
-    procedure PrepareRange(
-      AFirstViewRow, ACount: Int64
-    ); virtual;
+    procedure PrepareRange(AFirstViewRow, ACount: Int64); virtual;
 
     function GetRowCount: Int64;
     function GetTotalRowCount: Int64;
@@ -128,55 +99,28 @@ type
     // a page boundary without treating it as the end of the source.
     function IsRowAvailable(AViewRowIndex: Int64): Boolean;
     function GetRowKey(AViewRowIndex: Int64): Th5uRowKey;
-    function GetValue(
-      AViewRowIndex: Int64;
-      const AFieldName: string
-    ): TValue;
-    procedure SetValue(
-      AViewRowIndex: Int64;
-      const AFieldName: string;
-      const AValue: TValue
-    );
-    function CanEdit(
-      AViewRowIndex: Int64;
-      const AFieldName: string
-    ): Boolean;
-    function GetDisplayText(
-      AViewRowIndex: Int64;
-      const AFieldName: string;
-      const ADisplayFormat: string = ''
-    ): string;
+    function GetValue(AViewRowIndex: Int64; const AFieldName: string): TValue;
+    procedure SetValue(AViewRowIndex: Int64; const AFieldName: string; const AValue: TValue);
+    function CanEdit(AViewRowIndex: Int64; const AFieldName: string): Boolean;
+    function GetDisplayText(AViewRowIndex: Int64; const AFieldName: string; const ADisplayFormat: string = ''): string;
 
-    function CreateSession(
-      AGrid, AView: TObject
-    ): Th5uDataViewSession; virtual;
+    function CreateSession(AGrid, AView: TObject): Th5uDataViewSession; virtual;
 
     property FactoryScope: Th5uFactoryScope read FFactoryScope;
   published
-    property Enabled: Boolean
-      read FEnabled write FEnabled default True;
-    property SharedClassFactory: Th5uClassFactory
-      read FSharedClassFactory write SetSharedClassFactory;
+    property Enabled: Boolean read FEnabled write FEnabled default True;
+    property SharedClassFactory: Th5uClassFactory read FSharedClassFactory write SetSharedClassFactory;
     property Cache: Th5uCacheOptions read FCache write FCache;
-    property Pagination: Th5uPaginationOptions
-      read FPagination write FPagination;
+    property Pagination: Th5uPaginationOptions read FPagination write FPagination;
   end;
 
-function h5uValueToDisplayText(
-  const AValue: TValue;
-  const ADisplayFormat: string = ''
-): string;
+function h5uValueToDisplayText(const AValue: TValue; const ADisplayFormat: string = ''): string;
 
-function h5uTryValueAsInteger(
-  const AValue: TValue;
-  out AInteger: Integer
-): Boolean;
+function h5uTryValueAsInteger(const AValue: TValue; out AInteger: Integer): Boolean;
 
 implementation
 
-function h5uValueToDisplayText(
-  const AValue: TValue;
-  const ADisplayFormat: string): string;
+function h5uValueToDisplayText(const AValue: TValue; const ADisplayFormat: string): string;
 var
   LBytes: TBytes;
   LFloat: Extended;
@@ -194,24 +138,12 @@ begin
   end;
 
   case AValue.Kind of
-    tkString, tkLString, tkWString, tkUString, tkChar, tkWChar:
-      Result := AValue.ToString;
+    tkString, tkLString, tkWString, tkUString, tkChar, tkWChar: Result := AValue.ToString;
 
-    tkInteger, tkInt64, tkEnumeration:
-      if (ADisplayFormat <> '') and
-         (AValue.Kind <> tkEnumeration) then
-        Result := FormatFloat(
-          ADisplayFormat,
-          AValue.AsInt64
-        )
-      else
-        Result := AValue.ToString;
+    tkInteger, tkInt64, tkEnumeration: if (ADisplayFormat <> '') and (AValue.Kind <> tkEnumeration) then Result := FormatFloat(ADisplayFormat, AValue.AsInt64) else Result :=
+      AValue.ToString;
 
-    tkFloat:
-      begin
-        if AValue.TypeInfo = TypeInfo(TDateTime) then
-        begin
-          LDateTime := AValue.AsType<TDateTime>;
+    tkFloat: begin if AValue.TypeInfo = TypeInfo(TDateTime) then begin LDateTime := AValue.AsType<TDateTime>;
           if ADisplayFormat <> '' then
             Result := FormatDateTime(ADisplayFormat, LDateTime)
           else
@@ -227,27 +159,16 @@ begin
         end;
       end;
 
-    tkVariant:
-      if VarIsNull(AValue.AsVariant) or
-         VarIsEmpty(AValue.AsVariant) then
-        Result := ''
-      else
-        Result := VarToStr(AValue.AsVariant);
+    tkVariant: if VarIsNull(AValue.AsVariant) or VarIsEmpty(AValue.AsVariant) then Result := '' else Result := VarToStr(AValue.AsVariant);
 
-    tkClass:
-      if Assigned(AValue.AsObject) then
-        Result := AValue.AsObject.ToString
-      else
-        Result := '';
+    tkClass: if Assigned(AValue.AsObject) then Result := AValue.AsObject.ToString else Result := '';
 
   else
     Result := AValue.ToString;
   end;
 end;
 
-function h5uTryValueAsInteger(
-  const AValue: TValue;
-  out AInteger: Integer): Boolean;
+function h5uTryValueAsInteger(const AValue: TValue; out AInteger: Integer): Boolean;
 var
   LText: string;
 begin
@@ -258,18 +179,11 @@ begin
     Exit;
 
   case AValue.Kind of
-    tkInteger, tkInt64:
-      begin
-        AInteger := AValue.AsInteger;
+    tkInteger, tkInt64: begin AInteger := AValue.AsInteger;
         Exit(True);
       end;
 
-    tkEnumeration:
-      begin
-        if AValue.TypeInfo = TypeInfo(Boolean) then
-          AInteger := Ord(AValue.AsBoolean)
-        else
-          AInteger := AValue.AsOrdinal;
+    tkEnumeration: begin if AValue.TypeInfo = TypeInfo(Boolean) then AInteger := Ord(AValue.AsBoolean) else AInteger := AValue.AsOrdinal;
         Exit(True);
       end;
   end;
@@ -280,8 +194,7 @@ end;
 
 { Th5uDataControllerLink }
 
-procedure Th5uDataControllerLink.DataChanged(
-  const AChange: Th5uDataChange);
+procedure Th5uDataControllerLink.DataChanged(const AChange: Th5uDataChange);
 begin
   if Assigned(FOnChanged) then
     FOnChanged(FController, AChange);
@@ -293,8 +206,7 @@ begin
   inherited Destroy;
 end;
 
-procedure Th5uDataControllerLink.SetController(
-  const AValue: Th5uCustomDataController);
+procedure Th5uDataControllerLink.SetController(const AValue: Th5uCustomDataController);
 begin
   if FController = AValue then
     Exit;
@@ -310,8 +222,7 @@ end;
 
 { Th5uDataViewSession }
 
-constructor Th5uDataViewSession.Create(
-  const AContext: Th5uFactoryContext);
+constructor Th5uDataViewSession.Create(const AContext: Th5uFactoryContext);
 begin
   inherited Create(AContext);
   FGrid := AContext.Grid;
@@ -339,8 +250,7 @@ begin
   Invalidate;
 end;
 
-function Th5uCustomDataController.CanEdit(
-  AViewRowIndex: Int64; const AFieldName: string): Boolean;
+function Th5uCustomDataController.CanEdit(AViewRowIndex: Int64; const AFieldName: string): Boolean;
 var
   LSourceIndex: Int64;
 begin
@@ -364,8 +274,7 @@ begin
   FEnabled := True;
 end;
 
-function Th5uCustomDataController.CreateSession(
-  AGrid, AView: TObject): Th5uDataViewSession;
+function Th5uCustomDataController.CreateSession(AGrid, AView: TObject): Th5uDataViewSession;
 var
   LContext: Th5uFactoryContext;
 begin
@@ -420,15 +329,12 @@ begin
   end;
 end;
 
-function Th5uCustomDataController.GetDataSessionClass(
-  const AContext: Th5uFactoryContext): TClass;
+function Th5uCustomDataController.GetDataSessionClass(const AContext: Th5uFactoryContext): TClass;
 begin
   Result := Th5uDataViewSession;
 end;
 
-function Th5uCustomDataController.GetDisplayText(
-  AViewRowIndex: Int64;
-  const AFieldName, ADisplayFormat: string): string;
+function Th5uCustomDataController.GetDisplayText(AViewRowIndex: Int64; const AFieldName, ADisplayFormat: string): string;
 var
   LSourceIndex: Int64;
 begin
@@ -463,22 +369,19 @@ begin
     Result := FPagination.PageSize;
 end;
 
-function Th5uCustomDataController.GetSourceRowIndex(
-  AViewRowIndex: Int64): Int64;
+function Th5uCustomDataController.GetSourceRowIndex(AViewRowIndex: Int64): Int64;
 begin
   if not FEnabled then
     Exit(-1);
   Result := MapViewToSourceIndex(AViewRowIndex);
 end;
 
-function Th5uCustomDataController.IsRowAvailable(
-  AViewRowIndex: Int64): Boolean;
+function Th5uCustomDataController.IsRowAvailable(AViewRowIndex: Int64): Boolean;
 begin
   Result := GetSourceRowIndex(AViewRowIndex) >= 0;
 end;
 
-function Th5uCustomDataController.GetRowKey(
-  AViewRowIndex: Int64): Th5uRowKey;
+function Th5uCustomDataController.GetRowKey(AViewRowIndex: Int64): Th5uRowKey;
 var
   LSourceIndex: Int64;
 begin
@@ -488,16 +391,12 @@ begin
   Result := GetSourceRowKey(LSourceIndex);
 end;
 
-function Th5uCustomDataController.GetSourceCanEdit(
-  ASourceRowIndex: Int64;
-  const AFieldName: string): Boolean;
+function Th5uCustomDataController.GetSourceCanEdit(ASourceRowIndex: Int64; const AFieldName: string): Boolean;
 begin
   Result := False;
 end;
 
-function Th5uCustomDataController.GetSourceDisplayText(
-  ASourceRowIndex: Int64;
-  const AFieldName, ADisplayFormat: string): string;
+function Th5uCustomDataController.GetSourceDisplayText(ASourceRowIndex: Int64; const AFieldName, ADisplayFormat: string): string;
 begin
   Result := h5uValueToDisplayText(
     GetSourceValue(ASourceRowIndex, AFieldName),
@@ -505,8 +404,7 @@ begin
   );
 end;
 
-function Th5uCustomDataController.GetSourceRowKey(
-  ASourceRowIndex: Int64): Th5uRowKey;
+function Th5uCustomDataController.GetSourceRowKey(ASourceRowIndex: Int64): Th5uRowKey;
 begin
   Result := Th5uRowKey.FromInt64(ASourceRowIndex);
 end;
@@ -518,8 +416,7 @@ begin
   Result := GetSourceRowCount;
 end;
 
-function Th5uCustomDataController.GetValue(
-  AViewRowIndex: Int64; const AFieldName: string): TValue;
+function Th5uCustomDataController.GetValue(AViewRowIndex: Int64; const AFieldName: string): TValue;
 var
   LSourceIndex: Int64;
 begin
@@ -539,8 +436,7 @@ begin
   NotifyDataChanged(Th5uDataChange.ResetAll);
 end;
 
-function Th5uCustomDataController.MapViewToSourceIndex(
-  AViewRowIndex: Int64): Int64;
+function Th5uCustomDataController.MapViewToSourceIndex(AViewRowIndex: Int64): Int64;
 begin
   Result := AViewRowIndex;
   if FPagination.Mode = Th5uPaginationMode.NumberedPages then
@@ -550,8 +446,7 @@ begin
     Result := -1;
 end;
 
-procedure Th5uCustomDataController.Notification(
-  AComponent: TComponent; Operation: TOperation);
+procedure Th5uCustomDataController.Notification(AComponent: TComponent; Operation: TOperation);
 begin
   inherited Notification(AComponent, Operation);
   if (Operation = opRemove) and
@@ -559,8 +454,7 @@ begin
     SharedClassFactory := nil;
 end;
 
-procedure Th5uCustomDataController.NotifyDataChanged(
-  const AChange: Th5uDataChange);
+procedure Th5uCustomDataController.NotifyDataChanged(const AChange: Th5uDataChange);
 var
   LLinks: TArray<Th5uDataControllerLink>;
   LLink: Th5uDataControllerLink;
@@ -576,8 +470,7 @@ begin
     LLink.DataChanged(AChange);
 end;
 
-procedure Th5uCustomDataController.PaginationOptionsChanged(
-  Sender: TObject);
+procedure Th5uCustomDataController.PaginationOptionsChanged(Sender: TObject);
 var
   LChange: Th5uDataChange;
 begin
@@ -587,20 +480,17 @@ begin
   NotifyDataChanged(LChange);
 end;
 
-procedure Th5uCustomDataController.PrepareRange(
-  AFirstViewRow, ACount: Int64);
+procedure Th5uCustomDataController.PrepareRange(AFirstViewRow, ACount: Int64);
 begin
 end;
 
-procedure Th5uCustomDataController.RegisterLink(
-  ALink: Th5uDataControllerLink);
+procedure Th5uCustomDataController.RegisterLink(ALink: Th5uDataControllerLink);
 begin
   if FLinks.IndexOf(ALink) < 0 then
     FLinks.Add(ALink);
 end;
 
-procedure Th5uCustomDataController.SetSharedClassFactory(
-  const AValue: Th5uClassFactory);
+procedure Th5uCustomDataController.SetSharedClassFactory(const AValue: Th5uClassFactory);
 begin
   if FSharedClassFactory = AValue then
     Exit;
@@ -619,10 +509,7 @@ begin
     FFactoryScope.Parent := h5uGlobalFactoryScope;
 end;
 
-procedure Th5uCustomDataController.SetSourceValue(
-  ASourceRowIndex: Int64;
-  const AFieldName: string;
-  const AValue: TValue);
+procedure Th5uCustomDataController.SetSourceValue(ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue);
 begin
   raise Eh5uDataController.CreateFmt(
     '%s does not support editing field "%s".',
@@ -630,10 +517,7 @@ begin
   );
 end;
 
-procedure Th5uCustomDataController.SetValue(
-  AViewRowIndex: Int64;
-  const AFieldName: string;
-  const AValue: TValue);
+procedure Th5uCustomDataController.SetValue(AViewRowIndex: Int64; const AFieldName: string; const AValue: TValue);
 var
   LSourceIndex: Int64;
 begin
@@ -650,8 +534,7 @@ begin
   SetSourceValue(LSourceIndex, AFieldName, AValue);
 end;
 
-procedure Th5uCustomDataController.UnregisterLink(
-  ALink: Th5uDataControllerLink);
+procedure Th5uCustomDataController.UnregisterLink(ALink: Th5uDataControllerLink);
 begin
   FLinks.Remove(ALink);
 end;

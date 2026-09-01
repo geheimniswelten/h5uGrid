@@ -44,12 +44,7 @@ type
     procedure OptionClick(Sender: TObject);
     procedure NextPageButtonClick(Sender: TObject);
     procedure ToggleGroupsButtonClick(Sender: TObject);
-    procedure GridGetThumbHint(
-      Sender: TObject;
-      const AContext: Th5uFmxThumbHintContext;
-      var AText: string;
-      var AVisible: Boolean
-    );
+    procedure GridGetThumbHint(Sender: TObject; const AContext: Th5uFmxThumbHintContext; var AText: string; var AVisible: Boolean);
   private
     FAllAdjacentGroupsCollapsed: Boolean;
     procedure ApplyOptions;
@@ -197,11 +192,7 @@ begin
   ApplyOptions;
 end;
 
-procedure TMainForm.GridGetThumbHint(
-  Sender: TObject;
-  const AContext: Th5uFmxThumbHintContext;
-  var AText: string;
-  var AVisible: Boolean);
+procedure TMainForm.GridGetThumbHint(Sender: TObject; const AContext: Th5uFmxThumbHintContext; var AText: string; var AVisible: Boolean);
 begin
   if AContext.Axis = Th5uScrollAxis.Vertical then
     AText := 'FMX: ' + AText;

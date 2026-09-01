@@ -44,28 +44,10 @@ type
     procedure AppendButtonClick(Sender: TObject);
     procedure ClearButtonClick(Sender: TObject);
     procedure LiveTimerTimer(Sender: TObject);
-    procedure VirtualGetRowCount(
-      Sender: TObject;
-      var ARowCount: Int64
-    );
-    procedure VirtualGetRowKey(
-      Sender: TObject;
-      ASourceRowIndex: Int64;
-      var ARowKey: Th5uRowKey
-    );
-    procedure VirtualGetValue(
-      Sender: TObject;
-      ASourceRowIndex: Int64;
-      const AFieldName: string;
-      var AValue: TValue
-    );
-    procedure VirtualSetValue(
-      Sender: TObject;
-      ASourceRowIndex: Int64;
-      const AFieldName: string;
-      const AValue: TValue;
-      var AHandled: Boolean
-    );
+    procedure VirtualGetRowCount(Sender: TObject; var ARowCount: Int64);
+    procedure VirtualGetRowKey(Sender: TObject; ASourceRowIndex: Int64; var ARowKey: Th5uRowKey);
+    procedure VirtualGetValue(Sender: TObject; ASourceRowIndex: Int64; const AFieldName: string; var AValue: TValue);
+    procedure VirtualSetValue(Sender: TObject; ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue; var AHandled: Boolean);
   private
     FRows: TObjectList<TLiveRow>;
     FNextId: Int64;
@@ -168,27 +150,19 @@ begin
   ApplyOptions;
 end;
 
-procedure TMainForm.VirtualGetRowCount(
-  Sender: TObject; var ARowCount: Int64);
+procedure TMainForm.VirtualGetRowCount(Sender: TObject; var ARowCount: Int64);
 begin
   ARowCount := FRows.Count;
 end;
 
-procedure TMainForm.VirtualGetRowKey(
-  Sender: TObject;
-  ASourceRowIndex: Int64;
-  var ARowKey: Th5uRowKey);
+procedure TMainForm.VirtualGetRowKey(Sender: TObject; ASourceRowIndex: Int64; var ARowKey: Th5uRowKey);
 begin
   if (ASourceRowIndex >= 0) and
      (ASourceRowIndex < FRows.Count) then
     ARowKey := Th5uRowKey.FromInt64(FRows[ASourceRowIndex].Id);
 end;
 
-procedure TMainForm.VirtualGetValue(
-  Sender: TObject;
-  ASourceRowIndex: Int64;
-  const AFieldName: string;
-  var AValue: TValue);
+procedure TMainForm.VirtualGetValue(Sender: TObject; ASourceRowIndex: Int64; const AFieldName: string; var AValue: TValue);
 var
   LRow: TLiveRow;
 begin
@@ -211,12 +185,7 @@ begin
     AValue := TValue.From<Boolean>(LRow.Acknowledged);
 end;
 
-procedure TMainForm.VirtualSetValue(
-  Sender: TObject;
-  ASourceRowIndex: Int64;
-  const AFieldName: string;
-  const AValue: TValue;
-  var AHandled: Boolean);
+procedure TMainForm.VirtualSetValue(Sender: TObject; ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue; var AHandled: Boolean);
 begin
   AHandled := False;
   if (ASourceRowIndex < 0) or

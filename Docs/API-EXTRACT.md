@@ -2,8 +2,8 @@
 
 > Automatisch aus den vollständigen `interface`-Abschnitten des ausgelieferten Quellstands erzeugt. Maßgeblich bleiben die Pascal-Units.
 
-**Erzeugt:** 1. September 2026  
-**Version:** 0.1.3
+**Erzeugt:** 2. September 2026  
+**Version:** 0.1.4
 
 ## `FMX.h5u.Grid`
 
@@ -63,18 +63,9 @@ type
     IsEstimated: Boolean;
   end;
 
-  Th5uFmxGetRowHeightEvent = procedure(
-    Sender: TObject;
-    const AContext: Th5uFmxGetRowHeightContext;
-    var AHeight: Single;
-    var ACacheResult: Boolean
-  ) of object;
+  Th5uFmxGetRowHeightEvent = procedure(Sender: TObject; const AContext: Th5uFmxGetRowHeightContext; var AHeight: Single; var ACacheResult: Boolean) of object;
 
-  Th5uFmxGetRowSpacingEvent = procedure(
-    Sender: TObject;
-    const AContext: Th5uFmxGetRowHeightContext;
-    var ASpacing: Single
-  ) of object;
+  Th5uFmxGetRowSpacingEvent = procedure(Sender: TObject; const AContext: Th5uFmxGetRowHeightContext; var ASpacing: Single) of object;
 
   Th5uFmxThumbHintContext = record
     Grid: Th5uFmxGrid;
@@ -87,12 +78,7 @@ type
     DisplayText: string;
   end;
 
-  Th5uFmxGetThumbHintEvent = procedure(
-    Sender: TObject;
-    const AContext: Th5uFmxThumbHintContext;
-    var AText: string;
-    var AVisible: Boolean
-  ) of object;
+  Th5uFmxGetThumbHintEvent = procedure(Sender: TObject; const AContext: Th5uFmxThumbHintContext; var AText: string; var AVisible: Boolean) of object;
 
   Th5uFmxDrawContext = record
     FactoryContext: Th5uFactoryContext;
@@ -101,13 +87,7 @@ type
     Appearance: Th5uResolvedAppearance;
   end;
 
-  Th5uFmxCustomDrawEvent = procedure(
-    Sender: TObject;
-    ACanvas: TCanvas;
-    const AContext: Th5uFmxDrawContext;
-    AStage: Th5uFmxCustomDrawStage;
-    var ADrawDefault: Boolean
-  ) of object;
+  Th5uFmxCustomDrawEvent = procedure(Sender: TObject; ACanvas: TCanvas; const AContext: Th5uFmxDrawContext; AStage: Th5uFmxCustomDrawStage; var ADrawDefault: Boolean) of object;
 
   Th5uFmxVisibleColumnInfo = record
     Column: Th5uGridColumn;
@@ -141,22 +121,11 @@ type
     FAppearance: Th5uResolvedAppearance;
     FInUse: Boolean;
   protected
-    procedure PaintDefault(
-      AGrid: Th5uFmxGrid;
-      ACanvas: TCanvas
-    ); virtual;
+    procedure PaintDefault(AGrid: Th5uFmxGrid; ACanvas: TCanvas); virtual;
   public
-    procedure BindCell(
-      const AContext: Th5uFactoryContext;
-      const ABounds: TRectF;
-      const AValue: TValue;
-      const ADisplayText: string;
-      const AAppearance: Th5uResolvedAppearance
-    ); virtual;
-    procedure Paint(
-      AGrid: Th5uFmxGrid;
-      ACanvas: TCanvas
-    ); virtual;
+    procedure BindCell(const AContext: Th5uFactoryContext; const ABounds: TRectF; const AValue: TValue; const ADisplayText: string;
+      const AAppearance: Th5uResolvedAppearance); virtual;
+    procedure Paint(AGrid: Th5uFmxGrid; ACanvas: TCanvas); virtual;
     property Context: Th5uFactoryContext read FContext;
     property Bounds: TRectF read FBounds;
     property Value: TValue read FValue;
@@ -168,10 +137,7 @@ type
   // and the tree branch-end band. Its ClassId is resolved per grid instance.
   Th5uFmxSpacingCell = class(Th5uFmxVisualCell)
   protected
-    procedure PaintDefault(
-      AGrid: Th5uFmxGrid;
-      ACanvas: TCanvas
-    ); override;
+    procedure PaintDefault(AGrid: Th5uFmxGrid; ACanvas: TCanvas); override;
   end;
 
   Th5uFmxDataCell = class(Th5uFmxVisualCell)
@@ -180,28 +146,19 @@ type
     FBitmapSignature: Integer;
     procedure EnsureBitmap;
   protected
-    procedure PaintDefault(
-      AGrid: Th5uFmxGrid;
-      ACanvas: TCanvas
-    ); override;
+    procedure PaintDefault(AGrid: Th5uFmxGrid; ACanvas: TCanvas); override;
   public
     destructor Destroy; override;
   end;
 
   Th5uFmxHeaderCell = class(Th5uFmxVisualCell)
   protected
-    procedure PaintDefault(
-      AGrid: Th5uFmxGrid;
-      ACanvas: TCanvas
-    ); override;
+    procedure PaintDefault(AGrid: Th5uFmxGrid; ACanvas: TCanvas); override;
   end;
 
   Th5uFmxAdjacentGroupGlyphCell = class(Th5uFmxVisualCell)
   protected
-    procedure PaintDefault(
-      AGrid: Th5uFmxGrid;
-      ACanvas: TCanvas
-    ); override;
+    procedure PaintDefault(AGrid: Th5uFmxGrid; ACanvas: TCanvas); override;
   end;
 
   Th5uFmxGrid = class(TStyledControl)
@@ -260,8 +217,7 @@ type
     FOnGetTreeLevel: Th5uGetTreeLevelEvent;
     FOnGetTreeBranchEnd: Th5uGetTreeBranchEndEvent;
     FOnGetAdjacentGroupId: Th5uGetAdjacentGroupIdEvent;
-    FOnAdjacentGroupStateChanged:
-      Th5uAdjacentGroupStateChangedEvent;
+    FOnAdjacentGroupStateChanged: Th5uAdjacentGroupStateChangedEvent;
 
     procedure ColumnsChanged(Sender: TObject; AColumn: Th5uGridColumn);
     procedure DataChanged(Sender: TObject; const AChange: Th5uDataChange);
@@ -270,12 +226,7 @@ type
     procedure ScrollChanged(Sender: TObject);
     procedure ThumbHintTimer(Sender: TObject);
     procedure EditorExit(Sender: TObject);
-    procedure EditorKeyDown(
-      Sender: TObject;
-      var Key: Word;
-      var KeyChar: Char;
-      Shift: TShiftState
-    );
+    procedure EditorKeyDown(Sender: TObject; var Key: Word; var KeyChar: Char; Shift: TShiftState);
 
     procedure SetColumns(const AValue: Th5uGridColumns);
     procedure SetHeaderLayout(const AValue: Th5uHeaderLayout);
@@ -289,9 +240,7 @@ type
     procedure SetSpacing(const AValue: Th5uGridSpacingOptions);
     procedure SetAppearance(const AValue: Th5uGridAppearanceOptions);
     procedure SetTree(const AValue: Th5uTreeOptions);
-    procedure SetAdjacentGroupFolding(
-      const AValue: Th5uAdjacentGroupFoldingOptions
-    );
+    procedure SetAdjacentGroupFolding(const AValue: Th5uAdjacentGroupFoldingOptions);
     procedure SetSelection(const AValue: Th5uGridSelection);
     procedure SetTheme(const AValue: Th5uGridTheme);
     procedure SetGridLines(const AValue: Boolean);
@@ -301,168 +250,66 @@ type
     function GetOnCreateInstance: Th5uCreateInstanceEvent;
     procedure SetOnCreateInstance(const AValue: Th5uCreateInstanceEvent);
     function GetOnConfigureInstance: Th5uConfigureInstanceEvent;
-    procedure SetOnConfigureInstance(
-      const AValue: Th5uConfigureInstanceEvent
-    );
+    procedure SetOnConfigureInstance(const AValue: Th5uConfigureInstanceEvent);
 
     function GetUnpaddedViewportRect: TRectF;
     function GetViewportRect: TRectF;
     function GetDataViewportRect: TRectF;
     function GetHeaderHeight: Single;
     function GetTotalColumnWidth: Single;
-    function GetEffectiveColumnRightSpacing(
-      AColumn: Th5uGridColumn
-    ): Single;
-    procedure InvalidateAdjacentGroupMap(
-      AClearStates: Boolean = False
-    );
+    function GetEffectiveColumnRightSpacing(AColumn: Th5uGridColumn): Single;
+    procedure InvalidateAdjacentGroupMap(AClearStates: Boolean = False);
     procedure EnsureAdjacentGroupMap;
     function ResolveAdjacentGroupFieldName: string;
-    function TryGetAdjacentGroupIdForControllerRow(
-      AControllerRowIndex: Int64;
-      out AGroupId: TValue
-    ): Boolean;
+    function TryGetAdjacentGroupIdForControllerRow(AControllerRowIndex: Int64; out AGroupId: TValue): Boolean;
     function GetViewRowCount: Int64;
-    function MapViewToControllerRowIndex(
-      AViewRowIndex: Int64;
-      AAllowLookAhead: Boolean = False
-    ): Int64;
+    function MapViewToControllerRowIndex(AViewRowIndex: Int64; AAllowLookAhead: Boolean = False): Int64;
     function GetViewSourceRowIndex(AViewRowIndex: Int64): Int64;
     function GetViewRowKey(AViewRowIndex: Int64): Th5uRowKey;
-    function GetViewValue(
-      AViewRowIndex: Int64;
-      const AFieldName: string
-    ): TValue;
-    procedure SetViewValue(
-      AViewRowIndex: Int64;
-      const AFieldName: string;
-      const AValue: TValue
-    );
-    function CanEditViewValue(
-      AViewRowIndex: Int64;
-      const AFieldName: string
-    ): Boolean;
-    function GetViewDisplayText(
-      AViewRowIndex: Int64;
-      const AFieldName, ADisplayFormat: string
-    ): string;
+    function GetViewValue(AViewRowIndex: Int64; const AFieldName: string): TValue;
+    procedure SetViewValue(AViewRowIndex: Int64; const AFieldName: string; const AValue: TValue);
+    function CanEditViewValue(AViewRowIndex: Int64; const AFieldName: string): Boolean;
+    function GetViewDisplayText(AViewRowIndex: Int64; const AFieldName, ADisplayFormat: string): string;
     function IsViewRowAvailable(AViewRowIndex: Int64): Boolean;
-    procedure PrepareViewRange(
-      AFirstViewRow, ACount: Int64
-    );
-    function TryGetAdjacentGroupRowInfo(
-      AViewRowIndex: Int64;
-      out AInfo: Th5uAdjacentGroupRowInfo
-    ): Boolean;
-    procedure PopulateAdjacentGroupContext(
-      var AContext: Th5uFactoryContext;
-      AViewRowIndex: Int64
-    );
-    function GetAdjacentGroupEndBandInfo(
-      AViewRowIndex: Int64;
-      out AInfo: Th5uAdjacentGroupRowInfo
-    ): Boolean;
-    procedure DoAdjacentGroupStateChanged(
-      const AInfo: Th5uAdjacentGroupRowInfo
-    );
-    function GetRowSpacingFor(
-      AViewRowIndex: Int64;
-      const ARowKey: Th5uRowKey
-    ): Single;
-    function TryGetTreeLevelFor(
-      AViewRowIndex: Int64;
-      const ARowKey: Th5uRowKey;
-      out ALevel: Integer
-    ): Boolean;
-    function GetTreeBranchEndInfo(
-      AViewRowIndex: Int64;
-      const ARowKey: Th5uRowKey;
-      out ATreeLevel: Integer;
-      out AClosedTreeLevels: Integer
-    ): Boolean;
-    function GetEffectiveRowSeparatorFor(
-      AViewRowIndex: Int64;
-      const ARowKey: Th5uRowKey;
-      out AElementKind: Th5uElementKind;
-      out AColor: TAlphaColor;
-      out AStyleName: string;
-      out ATreeLevel: Integer;
-      out AClosedTreeLevels: Integer
-    ): Single;
+    procedure PrepareViewRange(AFirstViewRow, ACount: Int64);
+    function TryGetAdjacentGroupRowInfo(AViewRowIndex: Int64; out AInfo: Th5uAdjacentGroupRowInfo): Boolean;
+    procedure PopulateAdjacentGroupContext(var AContext: Th5uFactoryContext; AViewRowIndex: Int64);
+    function GetAdjacentGroupEndBandInfo(AViewRowIndex: Int64; out AInfo: Th5uAdjacentGroupRowInfo): Boolean;
+    procedure DoAdjacentGroupStateChanged(const AInfo: Th5uAdjacentGroupRowInfo);
+    function GetRowSpacingFor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey): Single;
+    function TryGetTreeLevelFor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey; out ALevel: Integer): Boolean;
+    function GetTreeBranchEndInfo(AViewRowIndex: Int64; const ARowKey: Th5uRowKey; out ATreeLevel: Integer; out AClosedTreeLevels: Integer): Boolean;
+    function GetEffectiveRowSeparatorFor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey; out AElementKind: Th5uElementKind; out AColor: TAlphaColor; out AStyleName: string;
+      out ATreeLevel: Integer; out AClosedTreeLevels: Integer): Single;
     function GetGridLines: Boolean;
-    function ResolveColor(
-      const AColor: Th5uColor;
-      AFallback: TAlphaColor
-    ): TAlphaColor;
+    function ResolveColor(const AColor: Th5uColor; AFallback: TAlphaColor): TAlphaColor;
     function ResolveDefaultCellColor: TAlphaColor;
     function ResolveRowSpacingColor: TAlphaColor;
     function ResolveColumnSpacingColor: TAlphaColor;
     function ResolveContentPaddingColor: TAlphaColor;
-    function ResolveTreeBranchEndColor(
-      AViewRowIndex: Int64;
-      const ARowKey: Th5uRowKey
-    ): TAlphaColor;
-    function ResolveAdjacentGroupEndColor(
-      AViewRowIndex: Int64;
-      const ARowKey: Th5uRowKey
-    ): TAlphaColor;
+    function ResolveTreeBranchEndColor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey): TAlphaColor;
+    function ResolveAdjacentGroupEndColor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey): TAlphaColor;
     function GetEstimatedTotalRowHeight: Double;
     procedure LayoutScrollBars;
     procedure UpdateScrollBars;
     procedure BuildColumnLayout;
     procedure BeginVisualPass;
-    function AcquireVisualCell(
-      const AContext: Th5uFactoryContext;
-      ADefaultClass: Th5uFmxVisualCellClass
-    ): Th5uFmxVisualCell;
+    function AcquireVisualCell(const AContext: Th5uFactoryContext; ADefaultClass: Th5uFmxVisualCellClass): Th5uFmxVisualCell;
 
     procedure DrawContentPadding;
     procedure DrawHeaders;
     procedure DrawRows;
-    procedure DrawSpacingRect(
-      const ABounds: TRectF;
-      AElementKind: Th5uElementKind;
-      AColumn: Th5uGridColumn;
-      AViewRowIndex: Int64;
-      const ARowKey: Th5uRowKey;
-      AColor: TAlphaColor;
-      const AStyleName: string = '';
-      ATreeLevel: Integer = -1;
-      AClosedTreeLevels: Integer = 0
-    );
-    function GetAdjacentGroupGlyphRect(
-      const ARowInfo: Th5uFmxVisibleRowInfo
-    ): TRectF;
-    procedure DrawAdjacentGroupGlyph(
-      const ARowInfo: Th5uFmxVisibleRowInfo;
-      ASelected: Boolean
-    );
-    function GetRowHeightFor(
-      AViewRowIndex: Int64;
-      const ARowKey: Th5uRowKey;
-      AAllowMeasure: Boolean = True
-    ): Single;
-    function MeasureCellHeight(
-      AViewRowIndex: Int64;
-      AColumn: Th5uGridColumn
-    ): Single;
-    function FindFirstVisibleRow(
-      AOffset: Double;
-      out ATop: Single
-    ): Int64;
-    function ResolveRowBackground(
-      AViewRowIndex: Int64
-    ): TAlphaColor;
-    function ResolveCellAppearance(
-      AViewRowIndex: Int64;
-      AColumn: Th5uGridColumn;
-      ASelected, AFocused: Boolean
-    ): Th5uResolvedAppearance;
+    procedure DrawSpacingRect(const ABounds: TRectF; AElementKind: Th5uElementKind; AColumn: Th5uGridColumn; AViewRowIndex: Int64; const ARowKey: Th5uRowKey; AColor: TAlphaColor;
+      const AStyleName: string = ''; ATreeLevel: Integer = -1; AClosedTreeLevels: Integer = 0);
+    function GetAdjacentGroupGlyphRect(const ARowInfo: Th5uFmxVisibleRowInfo): TRectF;
+    procedure DrawAdjacentGroupGlyph(const ARowInfo: Th5uFmxVisibleRowInfo; ASelected: Boolean);
+    function GetRowHeightFor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey; AAllowMeasure: Boolean = True): Single;
+    function MeasureCellHeight(AViewRowIndex: Int64; AColumn: Th5uGridColumn): Single;
+    function FindFirstVisibleRow(AOffset: Double; out ATop: Single): Int64;
+    function ResolveRowBackground(AViewRowIndex: Int64): TAlphaColor;
+    function ResolveCellAppearance(AViewRowIndex: Int64; AColumn: Th5uGridColumn; ASelected, AFocused: Boolean): Th5uResolvedAppearance;
 
-    function BuildThumbHintText(
-      AAxis: Th5uScrollAxis;
-      out AContext: Th5uFmxThumbHintContext
-    ): string;
+    function BuildThumbHintText(AAxis: Th5uScrollAxis; out AContext: Th5uFmxThumbHintContext): string;
     procedure ShowThumbHint(AAxis: Th5uScrollAxis);
     procedure HideThumbHint;
 
@@ -471,68 +318,32 @@ type
     procedure CancelEditor;
     procedure ImageEditorCommit(Sender: TObject);
     procedure ImageEditorCancel(Sender: TObject);
-    function ParseEditorValue(
-      AColumn: Th5uGridColumn;
-      const AText: string
-    ): TValue;
+    function ParseEditorValue(AColumn: Th5uGridColumn; const AText: string): TValue;
 
-    function GetVisualCellClass(
-      const AContext: Th5uFactoryContext;
-      ADefaultClass: Th5uFmxVisualCellClass
-    ): Th5uFmxVisualCellClass; virtual;
-    procedure DoCustomDraw(
-      ACanvas: TCanvas;
-      const AContext: Th5uFmxDrawContext;
-      AStage: Th5uFmxCustomDrawStage;
-      var ADrawDefault: Boolean
-    );
+    function GetVisualCellClass(const AContext: Th5uFactoryContext; ADefaultClass: Th5uFmxVisualCellClass): Th5uFmxVisualCellClass; virtual;
+    procedure DoCustomDraw(ACanvas: TCanvas; const AContext: Th5uFmxDrawContext; AStage: Th5uFmxCustomDrawStage; var ADrawDefault: Boolean);
   protected
     procedure Paint; override;
     procedure Resize; override;
-    procedure Notification(
-      AComponent: TComponent;
-      Operation: TOperation
-    ); override;
-    procedure MouseDown(
-      Button: TMouseButton;
-      Shift: TShiftState;
-      X, Y: Single
-    ); override;
-    procedure MouseMove(
-      Shift: TShiftState;
-      X, Y: Single
-    ); override;
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
+    procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Single); override;
+    procedure MouseMove(Shift: TShiftState; X, Y: Single); override;
     procedure DblClick; override;
-    procedure MouseWheel(
-      Shift: TShiftState;
-      WheelDelta: Integer;
-      var Handled: Boolean
-    ); override;
+    procedure MouseWheel(Shift: TShiftState; WheelDelta: Integer; var Handled: Boolean); override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
     function GridHitTest(X, Y: Single): Th5uFmxHitTestInfo;
     procedure InvalidateAllRowHeights;
-    procedure MoveColumn(
-      AColumn: Th5uGridColumn;
-      ANewVisibleIndex: Integer
-    );
-    procedure SetColumnVisible(
-      AColumn: Th5uGridColumn;
-      AVisible: Boolean
-    );
+    procedure MoveColumn(AColumn: Th5uGridColumn; ANewVisibleIndex: Integer);
+    procedure SetColumnVisible(AColumn: Th5uGridColumn; AVisible: Boolean);
     procedure ToggleAdjacentGroup(AViewRowIndex: Int64);
-    procedure SetAdjacentGroupCollapsed(
-      AViewRowIndex: Int64;
-      ACollapsed: Boolean
-    );
+    procedure SetAdjacentGroupCollapsed(AViewRowIndex: Int64; ACollapsed: Boolean);
     procedure ExpandAllAdjacentGroups;
     procedure CollapseAllAdjacentGroups;
     procedure ResetAdjacentGroupStates;
-    function IsAdjacentGroupCollapsed(
-      AViewRowIndex: Int64
-    ): Boolean;
+    function IsAdjacentGroupCollapsed(AViewRowIndex: Int64): Boolean;
 
     property FactoryScope: Th5uFactoryScope read FFactoryScope;
   published
@@ -560,77 +371,42 @@ type
     property Visible;
     property Width;
 
-    property DataController: Th5uCustomDataController
-      read FDataController write SetDataController;
-    property SharedClassFactory: Th5uClassFactory
-      read FSharedClassFactory write SetSharedClassFactory;
-    property Columns: Th5uGridColumns
-      read FColumns write SetColumns;
-    property HeaderLayout: Th5uHeaderLayout
-      read FHeaderLayout write SetHeaderLayout;
-    property Selection: Th5uGridSelection
-      read FSelection write SetSelection;
-    property RowHeight: Th5uRowHeightOptions
-      read FRowHeight write SetRowHeight;
-    property Scrolling: Th5uScrollingOptions
-      read FScrolling write SetScrolling;
-    property ScrollHints: Th5uScrollHintOptions
-      read FScrollHints write SetScrollHints;
-    property RowStyles: Th5uRowStyleOptions
-      read FRowStyles write SetRowStyles;
-    property Customization: Th5uCustomizationOptions
-      read FCustomization write SetCustomization;
-    property Spacing: Th5uGridSpacingOptions
-      read FSpacing write SetSpacing;
-    property Appearance: Th5uGridAppearanceOptions
-      read FAppearance write SetAppearance;
-    property Tree: Th5uTreeOptions
-      read FTree write SetTree;
-    property AdjacentGroupFolding: Th5uAdjacentGroupFoldingOptions
-      read FAdjacentGroupFolding write SetAdjacentGroupFolding;
-    property Theme: Th5uGridTheme
-      read FTheme write SetTheme
-      default Th5uGridTheme.ApplicationStyle;
-    property HeaderRowHeight: Single
-      read FHeaderRowHeight write FHeaderRowHeight;
-    property RowIndicatorWidth: Single
-      read FRowIndicatorWidth write FRowIndicatorWidth;
-    property ShowHeader: Boolean
-      read FShowHeader write FShowHeader default True;
-    property ShowRowIndicator: Boolean
-      read FShowRowIndicator write FShowRowIndicator default True;
-    property AllowEditing: Boolean
-      read FAllowEditing write FAllowEditing default True;
+    property DataController: Th5uCustomDataController read FDataController write SetDataController;
+    property SharedClassFactory: Th5uClassFactory read FSharedClassFactory write SetSharedClassFactory;
+    property Columns: Th5uGridColumns read FColumns write SetColumns;
+    property HeaderLayout: Th5uHeaderLayout read FHeaderLayout write SetHeaderLayout;
+    property Selection: Th5uGridSelection read FSelection write SetSelection;
+    property RowHeight: Th5uRowHeightOptions read FRowHeight write SetRowHeight;
+    property Scrolling: Th5uScrollingOptions read FScrolling write SetScrolling;
+    property ScrollHints: Th5uScrollHintOptions read FScrollHints write SetScrollHints;
+    property RowStyles: Th5uRowStyleOptions read FRowStyles write SetRowStyles;
+    property Customization: Th5uCustomizationOptions read FCustomization write SetCustomization;
+    property Spacing: Th5uGridSpacingOptions read FSpacing write SetSpacing;
+    property Appearance: Th5uGridAppearanceOptions read FAppearance write SetAppearance;
+    property Tree: Th5uTreeOptions read FTree write SetTree;
+    property AdjacentGroupFolding: Th5uAdjacentGroupFoldingOptions read FAdjacentGroupFolding write SetAdjacentGroupFolding;
+    property Theme: Th5uGridTheme read FTheme write SetTheme default Th5uGridTheme.ApplicationStyle;
+    property HeaderRowHeight: Single read FHeaderRowHeight write FHeaderRowHeight;
+    property RowIndicatorWidth: Single read FRowIndicatorWidth write FRowIndicatorWidth;
+    property ShowHeader: Boolean read FShowHeader write FShowHeader default True;
+    property ShowRowIndicator: Boolean read FShowRowIndicator write FShowRowIndicator default True;
+    property AllowEditing: Boolean read FAllowEditing write FAllowEditing default True;
     // Convenience switch for all grid-wide one-pixel separators.
     // Explicit per-column RightSpacing values remain independently configurable.
-    property GridLines: Boolean
-      read GetGridLines write SetGridLines default True;
+    property GridLines: Boolean read GetGridLines write SetGridLines default True;
     property TextSize: Single read FTextSize write FTextSize;
 
-    property OnGetClass: Th5uGetClassEvent
-      read GetOnGetClass write SetOnGetClass;
-    property OnCreateInstance: Th5uCreateInstanceEvent
-      read GetOnCreateInstance write SetOnCreateInstance;
-    property OnConfigureInstance: Th5uConfigureInstanceEvent
-      read GetOnConfigureInstance write SetOnConfigureInstance;
-    property OnGetRowHeight: Th5uFmxGetRowHeightEvent
-      read FOnGetRowHeight write FOnGetRowHeight;
-    property OnGetRowSpacing: Th5uFmxGetRowSpacingEvent
-      read FOnGetRowSpacing write FOnGetRowSpacing;
-    property OnGetThumbHint: Th5uFmxGetThumbHintEvent
-      read FOnGetThumbHint write FOnGetThumbHint;
-    property OnCustomDraw: Th5uFmxCustomDrawEvent
-      read FOnCustomDraw write FOnCustomDraw;
-    property OnGetTreeLevel: Th5uGetTreeLevelEvent
-      read FOnGetTreeLevel write FOnGetTreeLevel;
-    property OnGetTreeBranchEnd: Th5uGetTreeBranchEndEvent
-      read FOnGetTreeBranchEnd write FOnGetTreeBranchEnd;
-    property OnGetAdjacentGroupId: Th5uGetAdjacentGroupIdEvent
-      read FOnGetAdjacentGroupId write FOnGetAdjacentGroupId;
-    property OnAdjacentGroupStateChanged:
-      Th5uAdjacentGroupStateChangedEvent
-      read FOnAdjacentGroupStateChanged
-      write FOnAdjacentGroupStateChanged;
+    property OnGetClass: Th5uGetClassEvent read GetOnGetClass write SetOnGetClass;
+    property OnCreateInstance: Th5uCreateInstanceEvent read GetOnCreateInstance write SetOnCreateInstance;
+    property OnConfigureInstance: Th5uConfigureInstanceEvent read GetOnConfigureInstance write SetOnConfigureInstance;
+    property OnGetRowHeight: Th5uFmxGetRowHeightEvent read FOnGetRowHeight write FOnGetRowHeight;
+    property OnGetRowSpacing: Th5uFmxGetRowSpacingEvent read FOnGetRowSpacing write FOnGetRowSpacing;
+    property OnGetThumbHint: Th5uFmxGetThumbHintEvent read FOnGetThumbHint write FOnGetThumbHint;
+    property OnCustomDraw: Th5uFmxCustomDrawEvent read FOnCustomDraw write FOnCustomDraw;
+    property OnGetTreeLevel: Th5uGetTreeLevelEvent read FOnGetTreeLevel write FOnGetTreeLevel;
+    property OnGetTreeBranchEnd: Th5uGetTreeBranchEndEvent read FOnGetTreeBranchEnd write FOnGetTreeBranchEnd;
+    property OnGetAdjacentGroupId: Th5uGetAdjacentGroupIdEvent read FOnGetAdjacentGroupId write FOnGetAdjacentGroupId;
+    property OnAdjacentGroupStateChanged: Th5uAdjacentGroupStateChangedEvent read FOnAdjacentGroupStateChanged write FOnAdjacentGroupStateChanged;
     property OnClick;
     property OnDblClick;
     property OnDragDrop;
@@ -801,17 +577,8 @@ type
     FPendingRun: Th5uAdjacentGroupRun;
     procedure FinalizePendingRun;
     procedure RebuildVisibleRows;
-    function BuildComparisonKey(
-      const AGroupId: TValue;
-      AControllerRowIndex: Int64;
-      AAvailable: Boolean;
-      out AKey: string
-    ): Boolean;
-    function BuildStateKey(
-      const ARowKey: Th5uRowKey;
-      AControllerRowIndex: Int64;
-      const AComparisonKey: string
-    ): string;
+    function BuildComparisonKey(const AGroupId: TValue; AControllerRowIndex: Int64; AAvailable: Boolean; out AKey: string): Boolean;
+    function BuildStateKey(const ARowKey: Th5uRowKey; AControllerRowIndex: Int64; const AComparisonKey: string): string;
     function GetRun(AIndex: Integer): Th5uAdjacentGroupRun;
     function GetRunCount: Integer;
   public
@@ -820,29 +587,14 @@ type
 
     procedure Clear(AClearStates: Boolean = False);
     procedure ResetStates;
-    procedure BeginBuild(
-      AInitialState: Th5uAdjacentGroupInitialState;
-      ACaseSensitive: Boolean;
-      AGroupEmptyValues: Boolean
-    );
-    procedure AddRow(
-      AControllerRowIndex: Int64;
-      const ARowKey: Th5uRowKey;
-      const AGroupId: TValue;
-      AAvailable: Boolean
-    );
+    procedure BeginBuild(AInitialState: Th5uAdjacentGroupInitialState; ACaseSensitive: Boolean; AGroupEmptyValues: Boolean);
+    procedure AddRow(AControllerRowIndex: Int64; const ARowKey: Th5uRowKey; const AGroupId: TValue; AAvailable: Boolean);
     procedure EndBuild;
 
     function GetVisibleRowCount: Int64;
     function MapViewToController(AViewRowIndex: Int64): Int64;
-    function TryGetRowInfo(
-      AViewRowIndex: Int64;
-      out AInfo: Th5uAdjacentGroupRowInfo
-    ): Boolean;
-    function SetCollapsedAtViewRow(
-      AViewRowIndex: Int64;
-      ACollapsed: Boolean
-    ): Boolean;
+    function TryGetRowInfo(AViewRowIndex: Int64; out AInfo: Th5uAdjacentGroupRowInfo): Boolean;
+    function SetCollapsedAtViewRow(AViewRowIndex: Int64; ACollapsed: Boolean): Boolean;
     function ToggleAtViewRow(AViewRowIndex: Int64): Boolean;
     function ExpandAll: Boolean;
     function CollapseAll: Boolean;
@@ -870,10 +622,7 @@ type
   Th5uGridColumn = class;
   Th5uGridColumns = class;
 
-  Th5uColumnChangedEvent = procedure(
-    Sender: TObject;
-    AColumn: Th5uGridColumn
-  ) of object;
+  Th5uColumnChangedEvent = procedure(Sender: TObject; AColumn: Th5uGridColumn) of object;
 
   Th5uGridColumn = class(TCollectionItem)
   private
@@ -934,56 +683,31 @@ type
     property MinWidth: Integer read FMinWidth write FMinWidth default 24;
     property MaxWidth: Integer read FMaxWidth write FMaxWidth default 1000;
     property Visible: Boolean read FVisible write SetVisible default True;
-    property VisibleIndex: Integer
-      read FVisibleIndex write SetVisibleIndex default -1;
-    property FixedKind: Th5uFixedKind
-      read FFixedKind write SetFixedKind default Th5uFixedKind.None;
-    property ReadOnly: Boolean
-      read FReadOnly write FReadOnly default False;
-    property DataType: Th5uColumnDataType
-      read FDataType write FDataType default Th5uColumnDataType.Auto;
-    property EditorKind: Th5uColumnEditorKind
-      read FEditorKind write FEditorKind
-      default Th5uColumnEditorKind.Automatic;
-    property WordWrap: Boolean
-      read FWordWrap write FWordWrap default False;
-    property AutoHeight: Boolean
-      read FAutoHeight write FAutoHeight default False;
-    property MaxAutoHeight: Integer
-      read FMaxAutoHeight write FMaxAutoHeight default 160;
-    property MaxLines: Integer
-      read FMaxLines write FMaxLines default 0;
-    property DisplayFormat: string
-      read FDisplayFormat write FDisplayFormat;
-    property ScrollHintText: string
-      read FScrollHintText write FScrollHintText;
+    property VisibleIndex: Integer read FVisibleIndex write SetVisibleIndex default -1;
+    property FixedKind: Th5uFixedKind read FFixedKind write SetFixedKind default Th5uFixedKind.None;
+    property ReadOnly: Boolean read FReadOnly write FReadOnly default False;
+    property DataType: Th5uColumnDataType read FDataType write FDataType default Th5uColumnDataType.Auto;
+    property EditorKind: Th5uColumnEditorKind read FEditorKind write FEditorKind default Th5uColumnEditorKind.Automatic;
+    property WordWrap: Boolean read FWordWrap write FWordWrap default False;
+    property AutoHeight: Boolean read FAutoHeight write FAutoHeight default False;
+    property MaxAutoHeight: Integer read FMaxAutoHeight write FMaxAutoHeight default 160;
+    property MaxLines: Integer read FMaxLines write FMaxLines default 0;
+    property DisplayFormat: string read FDisplayFormat write FDisplayFormat;
+    property ScrollHintText: string read FScrollHintText write FScrollHintText;
     property StyleName: string read FStyleName write FStyleName;
-    property HeaderStyleName: string
-      read FHeaderStyleName write FHeaderStyleName;
-    property Highlighted: Boolean
-      read FHighlighted write FHighlighted default False;
-    property RightSpacing: Integer
-      read FRightSpacing write SetRightSpacing default -1;
-    property Color: Th5uColor
-      read FColor write SetColor default h5uColorDefault;
+    property HeaderStyleName: string read FHeaderStyleName write FHeaderStyleName;
+    property Highlighted: Boolean read FHighlighted write FHighlighted default False;
+    property RightSpacing: Integer read FRightSpacing write SetRightSpacing default -1;
+    property Color: Th5uColor read FColor write SetColor default h5uColorDefault;
     property ClassId: Th5uClassId read FClassId write FClassId;
-    property CellClassId: Th5uClassId
-      read FCellClassId write FCellClassId;
-    property HeaderCellClassId: Th5uClassId
-      read FHeaderCellClassId write FHeaderCellClassId;
-    property CanMove: Boolean
-      read FCanMove write FCanMove default True;
-    property CanHide: Boolean
-      read FCanHide write FCanHide default True;
-    property CanResize: Boolean
-      read FCanResize write FCanResize default True;
-    property CanSelect: Boolean
-      read FCanSelect write FCanSelect default True;
-    property ShowInColumnChooser: Boolean
-      read FShowInColumnChooser write FShowInColumnChooser default True;
-    property ImagePreserveAspectRatio: Boolean
-      read FImagePreserveAspectRatio write FImagePreserveAspectRatio
-      default True;
+    property CellClassId: Th5uClassId read FCellClassId write FCellClassId;
+    property HeaderCellClassId: Th5uClassId read FHeaderCellClassId write FHeaderCellClassId;
+    property CanMove: Boolean read FCanMove write FCanMove default True;
+    property CanHide: Boolean read FCanHide write FCanHide default True;
+    property CanResize: Boolean read FCanResize write FCanResize default True;
+    property CanSelect: Boolean read FCanSelect write FCanSelect default True;
+    property ShowInColumnChooser: Boolean read FShowInColumnChooser write FShowInColumnChooser default True;
+    property ImagePreserveAspectRatio: Boolean read FImagePreserveAspectRatio write FImagePreserveAspectRatio default True;
   end;
 
   Th5uGridColumns = class(TOwnedCollection)
@@ -1001,10 +725,8 @@ type
     function VisibleColumns: TArray<Th5uGridColumn>;
     procedure NormalizeVisibleIndexes;
     procedure MoveColumn(AColumn: Th5uGridColumn; ANewVisibleIndex: Integer);
-    property Items[AIndex: Integer]: Th5uGridColumn
-      read GetItem write SetItem; default;
-    property OnChanged: Th5uColumnChangedEvent
-      read FOnChanged write FOnChanged;
+    property Items[AIndex: Integer]: Th5uGridColumn read GetItem write SetItem; default;
+    property OnChanged: Th5uColumnChangedEvent read FOnChanged write FOnChanged;
   end;
 
   Th5uHeaderLayoutCell = class(TCollectionItem)
@@ -1026,13 +748,10 @@ type
     property Id: string read FId write FId;
     property Caption: string read FCaption write FCaption;
     property ColumnId: string read FColumnId write FColumnId;
-    property LayoutRow: Integer
-      read FLayoutRow write FLayoutRow default 0;
-    property LayoutColumn: Integer
-      read FLayoutColumn write FLayoutColumn default 0;
+    property LayoutRow: Integer read FLayoutRow write FLayoutRow default 0;
+    property LayoutColumn: Integer read FLayoutColumn write FLayoutColumn default 0;
     property RowSpan: Integer read FRowSpan write FRowSpan default 1;
-    property ColumnSpan: Integer
-      read FColumnSpan write FColumnSpan default 1;
+    property ColumnSpan: Integer read FColumnSpan write FColumnSpan default 1;
     property StyleName: string read FStyleName write FStyleName;
     property ClassId: Th5uClassId read FClassId write FClassId;
   end;
@@ -1043,8 +762,7 @@ type
   public
     constructor Create(AOwner: TPersistent);
     function Add: Th5uHeaderLayoutCell;
-    property Items[AIndex: Integer]: Th5uHeaderLayoutCell
-      read GetItem; default;
+    property Items[AIndex: Integer]: Th5uHeaderLayoutCell read GetItem; default;
   end;
 
   Th5uHeaderLayout = class(TPersistent)
@@ -1084,8 +802,7 @@ type
     constructor Create(AOwner: TPersistent);
     function Add: Th5uRowStyleMapping;
     function FindStyle(AValue: Integer; out AStyleName: string): Boolean;
-    property Items[AIndex: Integer]: Th5uRowStyleMapping
-      read GetItem; default;
+    property Items[AIndex: Integer]: Th5uRowStyleMapping read GetItem; default;
   end;
 ```
 
@@ -1111,10 +828,7 @@ type
   Th5uCustomDataController = class;
   Th5uDataControllerLink = class;
 
-  Th5uDataControllerChangedEvent = procedure(
-    Sender: TObject;
-    const AChange: Th5uDataChange
-  ) of object;
+  Th5uDataControllerChangedEvent = procedure(Sender: TObject; const AChange: Th5uDataChange) of object;
 
   Th5uDataControllerLink = class(TObject)
   private
@@ -1124,10 +838,8 @@ type
   public
     destructor Destroy; override;
     procedure DataChanged(const AChange: Th5uDataChange);
-    property Controller: Th5uCustomDataController
-      read FController write SetController;
-    property OnChanged: Th5uDataControllerChangedEvent
-      read FOnChanged write FOnChanged;
+    property Controller: Th5uCustomDataController read FController write SetController;
+    property OnChanged: Th5uDataControllerChangedEvent read FOnChanged write FOnChanged;
   end;
 
   Th5uDataViewSession = class(Th5uFactoryObject)
@@ -1159,35 +871,15 @@ type
     procedure PaginationOptionsChanged(Sender: TObject);
     procedure SetSharedClassFactory(const AValue: Th5uClassFactory);
   protected
-    procedure Notification(
-      AComponent: TComponent;
-      Operation: TOperation
-    ); override;
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
 
     function GetSourceRowCount: Int64; virtual; abstract;
-    function GetSourceRowKey(
-      ASourceRowIndex: Int64
-    ): Th5uRowKey; virtual;
-    function GetSourceValue(
-      ASourceRowIndex: Int64;
-      const AFieldName: string
-    ): TValue; virtual; abstract;
-    procedure SetSourceValue(
-      ASourceRowIndex: Int64;
-      const AFieldName: string;
-      const AValue: TValue
-    ); virtual;
-    function GetSourceCanEdit(
-      ASourceRowIndex: Int64;
-      const AFieldName: string
-    ): Boolean; virtual;
-    function GetSourceDisplayText(
-      ASourceRowIndex: Int64;
-      const AFieldName, ADisplayFormat: string
-    ): string; virtual;
-    function MapViewToSourceIndex(
-      AViewRowIndex: Int64
-    ): Int64; virtual;
+    function GetSourceRowKey(ASourceRowIndex: Int64): Th5uRowKey; virtual;
+    function GetSourceValue(ASourceRowIndex: Int64; const AFieldName: string): TValue; virtual; abstract;
+    procedure SetSourceValue(ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue); virtual;
+    function GetSourceCanEdit(ASourceRowIndex: Int64; const AFieldName: string): Boolean; virtual;
+    function GetSourceDisplayText(ASourceRowIndex: Int64; const AFieldName, ADisplayFormat: string): string; virtual;
+    function MapViewToSourceIndex(AViewRowIndex: Int64): Int64; virtual;
 
     procedure DoCacheOptionsChanged; virtual;
     procedure DoPaginationChanged; virtual;
@@ -1196,9 +888,7 @@ type
     procedure UnregisterLink(ALink: Th5uDataControllerLink);
     procedure NotifyDataChanged(const AChange: Th5uDataChange);
 
-    function GetDataSessionClass(
-      const AContext: Th5uFactoryContext
-    ): TClass; virtual;
+    function GetDataSessionClass(const AContext: Th5uFactoryContext): TClass; virtual;
 
     property Links: TList<Th5uDataControllerLink> read FLinks;
   public
@@ -1208,9 +898,7 @@ type
     procedure BeginUpdate;
     procedure EndUpdate;
     procedure Invalidate;
-    procedure PrepareRange(
-      AFirstViewRow, ACount: Int64
-    ); virtual;
+    procedure PrepareRange(AFirstViewRow, ACount: Int64); virtual;
 
     function GetRowCount: Int64;
     function GetTotalRowCount: Int64;
@@ -1220,49 +908,24 @@ type
     // a page boundary without treating it as the end of the source.
     function IsRowAvailable(AViewRowIndex: Int64): Boolean;
     function GetRowKey(AViewRowIndex: Int64): Th5uRowKey;
-    function GetValue(
-      AViewRowIndex: Int64;
-      const AFieldName: string
-    ): TValue;
-    procedure SetValue(
-      AViewRowIndex: Int64;
-      const AFieldName: string;
-      const AValue: TValue
-    );
-    function CanEdit(
-      AViewRowIndex: Int64;
-      const AFieldName: string
-    ): Boolean;
-    function GetDisplayText(
-      AViewRowIndex: Int64;
-      const AFieldName: string;
-      const ADisplayFormat: string = ''
-    ): string;
+    function GetValue(AViewRowIndex: Int64; const AFieldName: string): TValue;
+    procedure SetValue(AViewRowIndex: Int64; const AFieldName: string; const AValue: TValue);
+    function CanEdit(AViewRowIndex: Int64; const AFieldName: string): Boolean;
+    function GetDisplayText(AViewRowIndex: Int64; const AFieldName: string; const ADisplayFormat: string = ''): string;
 
-    function CreateSession(
-      AGrid, AView: TObject
-    ): Th5uDataViewSession; virtual;
+    function CreateSession(AGrid, AView: TObject): Th5uDataViewSession; virtual;
 
     property FactoryScope: Th5uFactoryScope read FFactoryScope;
   published
-    property Enabled: Boolean
-      read FEnabled write FEnabled default True;
-    property SharedClassFactory: Th5uClassFactory
-      read FSharedClassFactory write SetSharedClassFactory;
+    property Enabled: Boolean read FEnabled write FEnabled default True;
+    property SharedClassFactory: Th5uClassFactory read FSharedClassFactory write SetSharedClassFactory;
     property Cache: Th5uCacheOptions read FCache write FCache;
-    property Pagination: Th5uPaginationOptions
-      read FPagination write FPagination;
+    property Pagination: Th5uPaginationOptions read FPagination write FPagination;
   end;
 
-function h5uValueToDisplayText(
-  const AValue: TValue;
-  const ADisplayFormat: string = ''
-): string;
+function h5uValueToDisplayText(const AValue: TValue; const ADisplayFormat: string = ''): string;
 
-function h5uTryValueAsInteger(
-  const AValue: TValue;
-  out AInteger: Integer
-): Boolean;
+function h5uTryValueAsInteger(const AValue: TValue; out AInteger: Integer): Boolean;
 ```
 
 ## `h5u.Grid.Data.DataSet`
@@ -1319,53 +982,27 @@ type
     function GetDataSet: TDataSet;
     function ReadFieldValue(AField: TField): TValue;
     procedure WriteFieldValue(AField: TField; const AValue: TValue);
-    function CreateSnapshot(
-      ASourceRowIndex: Int64
-    ): Th5uDataRowSnapshot;
-    function GetSnapshot(
-      ASourceRowIndex: Int64
-    ): Th5uDataRowSnapshot;
+    function CreateSnapshot(ASourceRowIndex: Int64): Th5uDataRowSnapshot;
+    function GetSnapshot(ASourceRowIndex: Int64): Th5uDataRowSnapshot;
     procedure ClearSnapshotCache;
     function GoToSourceRow(ASourceRowIndex: Int64): Boolean;
   protected
-    procedure Notification(
-      AComponent: TComponent;
-      Operation: TOperation
-    ); override;
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     function GetSourceRowCount: Int64; override;
-    function GetSourceRowKey(
-      ASourceRowIndex: Int64
-    ): Th5uRowKey; override;
-    function GetSourceValue(
-      ASourceRowIndex: Int64;
-      const AFieldName: string
-    ): TValue; override;
-    procedure SetSourceValue(
-      ASourceRowIndex: Int64;
-      const AFieldName: string;
-      const AValue: TValue
-    ); override;
-    function GetSourceCanEdit(
-      ASourceRowIndex: Int64;
-      const AFieldName: string
-    ): Boolean; override;
+    function GetSourceRowKey(ASourceRowIndex: Int64): Th5uRowKey; override;
+    function GetSourceValue(ASourceRowIndex: Int64; const AFieldName: string): TValue; override;
+    procedure SetSourceValue(ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue); override;
+    function GetSourceCanEdit(ASourceRowIndex: Int64; const AFieldName: string): Boolean; override;
     procedure DoCacheOptionsChanged; override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-    procedure PrepareRange(
-      AFirstViewRow, ACount: Int64
-    ); override;
-    procedure DataSetChanged(
-      AKind: Th5uDataChangeKind;
-      AField: TField = nil
-    );
+    procedure PrepareRange(AFirstViewRow, ACount: Int64); override;
+    procedure DataSetChanged(AKind: Th5uDataChangeKind; AField: TField = nil);
     property DataSet: TDataSet read GetDataSet;
   published
-    property DataSource: TDataSource
-      read FDataSource write SetDataSource;
-    property KeyFieldName: string
-      read FKeyFieldName write FKeyFieldName;
+    property DataSource: TDataSource read FDataSource write SetDataSource;
+    property KeyFieldName: string read FKeyFieldName write FKeyFieldName;
   end;
 ```
 
@@ -1393,10 +1030,7 @@ type
     constructor Create(const AKey: Th5uRowKey);
     destructor Destroy; override;
     function GetValue(const AFieldName: string): TValue;
-    procedure SetValue(
-      const AFieldName: string;
-      const AValue: TValue
-    );
+    procedure SetValue(const AFieldName: string; const AValue: TValue);
     property Key: Th5uRowKey read FKey write FKey;
   end;
 
@@ -1406,31 +1040,16 @@ type
     FNextKey: Int64;
   protected
     function GetSourceRowCount: Int64; override;
-    function GetSourceRowKey(
-      ASourceRowIndex: Int64
-    ): Th5uRowKey; override;
-    function GetSourceValue(
-      ASourceRowIndex: Int64;
-      const AFieldName: string
-    ): TValue; override;
-    procedure SetSourceValue(
-      ASourceRowIndex: Int64;
-      const AFieldName: string;
-      const AValue: TValue
-    ); override;
-    function GetSourceCanEdit(
-      ASourceRowIndex: Int64;
-      const AFieldName: string
-    ): Boolean; override;
+    function GetSourceRowKey(ASourceRowIndex: Int64): Th5uRowKey; override;
+    function GetSourceValue(ASourceRowIndex: Int64; const AFieldName: string): TValue; override;
+    procedure SetSourceValue(ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue); override;
+    function GetSourceCanEdit(ASourceRowIndex: Int64; const AFieldName: string): Boolean; override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
     function AppendRow: Th5uMemoryRow;
-    function AppendValues(
-      const AFieldNames: array of string;
-      const AValues: array of TValue
-    ): Th5uMemoryRow;
+    function AppendValues(const AFieldNames: array of string; const AValues: array of TValue): Th5uMemoryRow;
     procedure DeleteRow(AIndex: Integer);
     procedure Clear;
     function Row(AIndex: Integer): Th5uMemoryRow;
@@ -1462,42 +1081,17 @@ type
     FRttiContext: TRttiContext;
     FPropertyCache: TDictionary<string, TRttiProperty>;
     FValueCache: TDictionary<string, TValue>;
-    function ResolveProperty(
-      AObject: TObject;
-      const APropertyName: string
-    ): TRttiProperty;
-    function ReadPropertyPath(
-      AObject: TObject;
-      const APath: string
-    ): TValue;
-    procedure WritePropertyPath(
-      AObject: TObject;
-      const APath: string;
-      const AValue: TValue
-    );
-    function ValueCacheKey(
-      ASourceRowIndex: Int64;
-      const AFieldName: string
-    ): string;
+    function ResolveProperty(AObject: TObject; const APropertyName: string): TRttiProperty;
+    function ReadPropertyPath(AObject: TObject; const APath: string): TValue;
+    procedure WritePropertyPath(AObject: TObject; const APath: string; const AValue: TValue);
+    function ValueCacheKey(ASourceRowIndex: Int64; const AFieldName: string): string;
     procedure ClearValueCache;
   protected
     function GetSourceRowCount: Int64; override;
-    function GetSourceRowKey(
-      ASourceRowIndex: Int64
-    ): Th5uRowKey; override;
-    function GetSourceValue(
-      ASourceRowIndex: Int64;
-      const AFieldName: string
-    ): TValue; override;
-    procedure SetSourceValue(
-      ASourceRowIndex: Int64;
-      const AFieldName: string;
-      const AValue: TValue
-    ); override;
-    function GetSourceCanEdit(
-      ASourceRowIndex: Int64;
-      const AFieldName: string
-    ): Boolean; override;
+    function GetSourceRowKey(ASourceRowIndex: Int64): Th5uRowKey; override;
+    function GetSourceValue(ASourceRowIndex: Int64; const AFieldName: string): TValue; override;
+    procedure SetSourceValue(ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue); override;
+    function GetSourceCanEdit(ASourceRowIndex: Int64; const AFieldName: string): Boolean; override;
     procedure DoCacheOptionsChanged; override;
   public
     constructor Create(AOwner: TComponent); override;
@@ -1507,19 +1101,14 @@ type
     procedure Insert(AIndex: Integer; AObject: TObject);
     procedure Delete(AIndex: Integer);
     procedure Clear;
-    procedure NotifyObjectChanged(
-      AObject: TObject;
-      const APropertyName: string = ''
-    );
+    procedure NotifyObjectChanged(AObject: TObject; const APropertyName: string = '');
     function Item(AIndex: Integer): TObject;
 
     function GetCount: Integer;
     property Count: Integer read GetCount;
   published
-    property OwnsObjects: Boolean
-      read FOwnsObjects write FOwnsObjects default False;
-    property KeyPropertyName: string
-      read FKeyPropertyName write FKeyPropertyName;
+    property OwnsObjects: Boolean read FOwnsObjects write FOwnsObjects default False;
+    property KeyPropertyName: string read FKeyPropertyName write FKeyPropertyName;
   end;
 ```
 
@@ -1539,44 +1128,17 @@ uses
   h5u.Grid.Types;
 
 type
-  Th5uVirtualGetRowCountEvent = procedure(
-    Sender: TObject;
-    var ARowCount: Int64
-  ) of object;
+  Th5uVirtualGetRowCountEvent = procedure(Sender: TObject; var ARowCount: Int64) of object;
 
-  Th5uVirtualGetRowKeyEvent = procedure(
-    Sender: TObject;
-    ASourceRowIndex: Int64;
-    var ARowKey: Th5uRowKey
-  ) of object;
+  Th5uVirtualGetRowKeyEvent = procedure(Sender: TObject; ASourceRowIndex: Int64; var ARowKey: Th5uRowKey) of object;
 
-  Th5uVirtualGetValueEvent = procedure(
-    Sender: TObject;
-    ASourceRowIndex: Int64;
-    const AFieldName: string;
-    var AValue: TValue
-  ) of object;
+  Th5uVirtualGetValueEvent = procedure(Sender: TObject; ASourceRowIndex: Int64; const AFieldName: string; var AValue: TValue) of object;
 
-  Th5uVirtualSetValueEvent = procedure(
-    Sender: TObject;
-    ASourceRowIndex: Int64;
-    const AFieldName: string;
-    const AValue: TValue;
-    var AHandled: Boolean
-  ) of object;
+  Th5uVirtualSetValueEvent = procedure(Sender: TObject; ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue; var AHandled: Boolean) of object;
 
-  Th5uVirtualCanEditEvent = procedure(
-    Sender: TObject;
-    ASourceRowIndex: Int64;
-    const AFieldName: string;
-    var ACanEdit: Boolean
-  ) of object;
+  Th5uVirtualCanEditEvent = procedure(Sender: TObject; ASourceRowIndex: Int64; const AFieldName: string; var ACanEdit: Boolean) of object;
 
-  Th5uVirtualPrepareRangeEvent = procedure(
-    Sender: TObject;
-    AFirstSourceRow, ACount: Int64;
-    AQueryGeneration: Int64
-  ) of object;
+  Th5uVirtualPrepareRangeEvent = procedure(Sender: TObject; AFirstSourceRow, ACount: Int64; AQueryGeneration: Int64) of object;
 
   Th5uVirtualController = class(Th5uCustomDataController)
   private
@@ -1588,65 +1150,35 @@ type
     FOnPrepareRange: Th5uVirtualPrepareRangeEvent;
     FValueCache: TDictionary<string, TValue>;
     FQueryGeneration: Int64;
-    function CacheKey(
-      ASourceRowIndex: Int64;
-      const AFieldName: string
-    ): string;
+    function CacheKey(ASourceRowIndex: Int64; const AFieldName: string): string;
     procedure ClearValueCache;
   protected
     function GetSourceRowCount: Int64; override;
-    function GetSourceRowKey(
-      ASourceRowIndex: Int64
-    ): Th5uRowKey; override;
-    function GetSourceValue(
-      ASourceRowIndex: Int64;
-      const AFieldName: string
-    ): TValue; override;
-    procedure SetSourceValue(
-      ASourceRowIndex: Int64;
-      const AFieldName: string;
-      const AValue: TValue
-    ); override;
-    function GetSourceCanEdit(
-      ASourceRowIndex: Int64;
-      const AFieldName: string
-    ): Boolean; override;
+    function GetSourceRowKey(ASourceRowIndex: Int64): Th5uRowKey; override;
+    function GetSourceValue(ASourceRowIndex: Int64; const AFieldName: string): TValue; override;
+    procedure SetSourceValue(ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue); override;
+    function GetSourceCanEdit(ASourceRowIndex: Int64; const AFieldName: string): Boolean; override;
     procedure DoCacheOptionsChanged; override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
-    procedure PrepareRange(
-      AFirstViewRow, ACount: Int64
-    ); override;
+    procedure PrepareRange(AFirstViewRow, ACount: Int64); override;
 
     procedure NotifyReset;
-    procedure NotifyRowsInserted(
-      AFirstSourceRow, ACount: Int64
-    );
-    procedure NotifyRowsDeleted(
-      AFirstSourceRow, ACount: Int64
-    );
-    procedure NotifyRowChanged(
-      ASourceRowIndex: Int64;
-      const AColumnId: string = ''
-    );
+    procedure NotifyRowsInserted(AFirstSourceRow, ACount: Int64);
+    procedure NotifyRowsDeleted(AFirstSourceRow, ACount: Int64);
+    procedure NotifyRowChanged(ASourceRowIndex: Int64; const AColumnId: string = '');
 
     procedure BeginNewQuery;
     property QueryGeneration: Int64 read FQueryGeneration;
   published
-    property OnGetRowCount: Th5uVirtualGetRowCountEvent
-      read FOnGetRowCount write FOnGetRowCount;
-    property OnGetRowKey: Th5uVirtualGetRowKeyEvent
-      read FOnGetRowKey write FOnGetRowKey;
-    property OnGetValue: Th5uVirtualGetValueEvent
-      read FOnGetValue write FOnGetValue;
-    property OnSetValue: Th5uVirtualSetValueEvent
-      read FOnSetValue write FOnSetValue;
-    property OnCanEdit: Th5uVirtualCanEditEvent
-      read FOnCanEdit write FOnCanEdit;
-    property OnPrepareRange: Th5uVirtualPrepareRangeEvent
-      read FOnPrepareRange write FOnPrepareRange;
+    property OnGetRowCount: Th5uVirtualGetRowCountEvent read FOnGetRowCount write FOnGetRowCount;
+    property OnGetRowKey: Th5uVirtualGetRowKeyEvent read FOnGetRowKey write FOnGetRowKey;
+    property OnGetValue: Th5uVirtualGetValueEvent read FOnGetValue write FOnGetValue;
+    property OnSetValue: Th5uVirtualSetValueEvent read FOnSetValue write FOnSetValue;
+    property OnCanEdit: Th5uVirtualCanEditEvent read FOnCanEdit write FOnCanEdit;
+    property OnPrepareRange: Th5uVirtualPrepareRangeEvent read FOnPrepareRange write FOnPrepareRange;
   end;
 ```
 
@@ -1678,35 +1210,15 @@ type
   Th5uCollectionItemClass = class of TCollectionItem;
   Th5uAnyObjectClass = class of TObject;
 
-  Th5uClassRulePredicate = reference to function(
-    const AContext: Th5uFactoryContext): Boolean;
+  Th5uClassRulePredicate = reference to function(const AContext: Th5uFactoryContext): Boolean;
 
-  Th5uGetClassEvent = procedure(
-    Sender: TObject;
-    const AContext: Th5uFactoryContext;
-    var AClass: TClass;
-    var ACacheScope: Th5uFactoryCacheScope
-  ) of object;
+  Th5uGetClassEvent = procedure(Sender: TObject; const AContext: Th5uFactoryContext; var AClass: TClass; var ACacheScope: Th5uFactoryCacheScope) of object;
 
-  Th5uCreateInstanceEvent = procedure(
-    Sender: TObject;
-    const AContext: Th5uFactoryContext;
-    AInstanceClass: TClass;
-    var AInstance: TObject;
-    var AHandled: Boolean
-  ) of object;
+  Th5uCreateInstanceEvent = procedure(Sender: TObject; const AContext: Th5uFactoryContext; AInstanceClass: TClass; var AInstance: TObject; var AHandled: Boolean) of object;
 
-  Th5uConfigureInstanceEvent = procedure(
-    Sender: TObject;
-    const AContext: Th5uFactoryContext;
-    AInstance: TObject
-  ) of object;
+  Th5uConfigureInstanceEvent = procedure(Sender: TObject; const AContext: Th5uFactoryContext; AInstance: TObject) of object;
 
-  Th5uInstanceEvent = procedure(
-    Sender: TObject;
-    const AContext: Th5uFactoryContext;
-    AInstance: TObject
-  ) of object;
+  Th5uInstanceEvent = procedure(Sender: TObject; const AContext: Th5uFactoryContext; AInstance: TObject) of object;
 
   Th5uFactoryObject = class(TObject)
   public
@@ -1746,70 +1258,38 @@ type
     FOnInstanceCreated: Th5uInstanceEvent;
     FOnBindInstance: Th5uInstanceEvent;
     FOnUnbindInstance: Th5uInstanceEvent;
-    function FindLocalClass(
-      const AContext: Th5uFactoryContext;
-      AExpectedBaseClass: TClass
-    ): TClass;
-    procedure ValidateClass(
-      const AClassId: Th5uClassId;
-      AClass, AExpectedBaseClass: TClass
-    );
+    function FindLocalClass(const AContext: Th5uFactoryContext; AExpectedBaseClass: TClass): TClass;
+    procedure ValidateClass(const AClassId: Th5uClassId; AClass, AExpectedBaseClass: TClass);
     procedure SetParent(const AValue: Th5uFactoryScope);
   public
     constructor Create(AOwner: TObject);
     destructor Destroy; override;
 
-    function RegisterClass(
-      const AClassId: Th5uClassId;
-      AExpectedBaseClass, AImplementationClass: TClass;
-      APriority: Integer = 0;
-      const APredicate: Th5uClassRulePredicate = nil
-    ): Th5uClassRegistration;
+    function RegisterClass(const AClassId: Th5uClassId; AExpectedBaseClass, AImplementationClass: TClass; APriority: Integer = 0;
+      const APredicate: Th5uClassRulePredicate = nil): Th5uClassRegistration;
 
     procedure Unregister(ARegistration: Th5uClassRegistration);
     procedure Clear;
 
-    function ResolveClass(
-      const AContext: Th5uFactoryContext;
-      AExpectedBaseClass, ADefaultClass: TClass;
-      out ACacheScope: Th5uFactoryCacheScope
-    ): TClass;
+    function ResolveClass(const AContext: Th5uFactoryContext; AExpectedBaseClass, ADefaultClass: TClass; out ACacheScope: Th5uFactoryCacheScope): TClass;
 
-    function CreateInstance(
-      const AContext: Th5uFactoryContext;
-      AExpectedBaseClass, ADefaultClass: TClass
-    ): TObject;
+    function CreateInstance(const AContext: Th5uFactoryContext; AExpectedBaseClass, ADefaultClass: TClass): TObject;
 
-    procedure ConfigureInstance(
-      const AContext: Th5uFactoryContext;
-      AInstance: TObject
-    );
+    procedure ConfigureInstance(const AContext: Th5uFactoryContext; AInstance: TObject);
 
-    procedure BindInstance(
-      const AContext: Th5uFactoryContext;
-      AInstance: TObject
-    );
+    procedure BindInstance(const AContext: Th5uFactoryContext; AInstance: TObject);
 
-    procedure UnbindInstance(
-      const AContext: Th5uFactoryContext;
-      AInstance: TObject
-    );
+    procedure UnbindInstance(const AContext: Th5uFactoryContext; AInstance: TObject);
 
     property Owner: TObject read FOwner;
     property Parent: Th5uFactoryScope read FParent write SetParent;
 
-    property OnGetClass: Th5uGetClassEvent
-      read FOnGetClass write FOnGetClass;
-    property OnCreateInstance: Th5uCreateInstanceEvent
-      read FOnCreateInstance write FOnCreateInstance;
-    property OnConfigureInstance: Th5uConfigureInstanceEvent
-      read FOnConfigureInstance write FOnConfigureInstance;
-    property OnInstanceCreated: Th5uInstanceEvent
-      read FOnInstanceCreated write FOnInstanceCreated;
-    property OnBindInstance: Th5uInstanceEvent
-      read FOnBindInstance write FOnBindInstance;
-    property OnUnbindInstance: Th5uInstanceEvent
-      read FOnUnbindInstance write FOnUnbindInstance;
+    property OnGetClass: Th5uGetClassEvent read FOnGetClass write FOnGetClass;
+    property OnCreateInstance: Th5uCreateInstanceEvent read FOnCreateInstance write FOnCreateInstance;
+    property OnConfigureInstance: Th5uConfigureInstanceEvent read FOnConfigureInstance write FOnConfigureInstance;
+    property OnInstanceCreated: Th5uInstanceEvent read FOnInstanceCreated write FOnInstanceCreated;
+    property OnBindInstance: Th5uInstanceEvent read FOnBindInstance write FOnBindInstance;
+    property OnUnbindInstance: Th5uInstanceEvent read FOnUnbindInstance write FOnUnbindInstance;
   end;
 
   Th5uClassFactory = class(TComponent)
@@ -1826,12 +1306,9 @@ type
     destructor Destroy; override;
     property Scope: Th5uFactoryScope read FScope;
   published
-    property OnGetClass: Th5uGetClassEvent
-      read GetOnGetClass write SetOnGetClass;
-    property OnCreateInstance: Th5uCreateInstanceEvent
-      read GetOnCreateInstance write SetOnCreateInstance;
-    property OnConfigureInstance: Th5uConfigureInstanceEvent
-      read GetOnConfigureInstance write SetOnConfigureInstance;
+    property OnGetClass: Th5uGetClassEvent read GetOnGetClass write SetOnGetClass;
+    property OnCreateInstance: Th5uCreateInstanceEvent read GetOnCreateInstance write SetOnCreateInstance;
+    property OnConfigureInstance: Th5uConfigureInstanceEvent read GetOnConfigureInstance write SetOnConfigureInstance;
   end;
 
 function h5uGlobalFactoryScope: Th5uFactoryScope;
@@ -1882,27 +1359,17 @@ type
     constructor Create;
     procedure Assign(Source: TPersistent); override;
     procedure SetAllSeparators(const ASize: Integer);
-    property OnChanged: Th5uOptionsChangedEvent
-      read FOnChanged write FOnChanged;
+    property OnChanged: Th5uOptionsChangedEvent read FOnChanged write FOnChanged;
   published
     property Left: Integer read FLeft write SetLeft default 1;
     property Top: Integer read FTop write SetTop default 1;
     property Right: Integer read FRight write SetRight default 1;
     property Bottom: Integer read FBottom write SetBottom default 1;
-    property RowSpacing: Integer
-      read FRowSpacing write SetRowSpacing default 1;
-    property DefaultColumnRightSpacing: Integer
-      read FDefaultColumnRightSpacing
-      write SetDefaultColumnRightSpacing default 1;
-    property RowSpacingColor: Th5uColor
-      read FRowSpacingColor write SetRowSpacingColor
-      default h5uColorLightGray;
-    property ColumnSpacingColor: Th5uColor
-      read FColumnSpacingColor write SetColumnSpacingColor
-      default h5uColorLightGray;
-    property ContentPaddingColor: Th5uColor
-      read FContentPaddingColor write SetContentPaddingColor
-      default h5uColorLightGray;
+    property RowSpacing: Integer read FRowSpacing write SetRowSpacing default 1;
+    property DefaultColumnRightSpacing: Integer read FDefaultColumnRightSpacing write SetDefaultColumnRightSpacing default 1;
+    property RowSpacingColor: Th5uColor read FRowSpacingColor write SetRowSpacingColor default h5uColorLightGray;
+    property ColumnSpacingColor: Th5uColor read FColumnSpacingColor write SetColumnSpacingColor default h5uColorLightGray;
+    property ContentPaddingColor: Th5uColor read FContentPaddingColor write SetContentPaddingColor default h5uColorLightGray;
   end;
 
   Th5uGridAppearanceOptions = class(TPersistent)
@@ -1914,12 +1381,9 @@ type
   public
     constructor Create;
     procedure Assign(Source: TPersistent); override;
-    property OnChanged: Th5uOptionsChangedEvent
-      read FOnChanged write FOnChanged;
+    property OnChanged: Th5uOptionsChangedEvent read FOnChanged write FOnChanged;
   published
-    property DefaultCellColor: Th5uColor
-      read FDefaultCellColor write SetDefaultCellColor
-      default h5uColorDefault;
+    property DefaultCellColor: Th5uColor read FDefaultCellColor write SetDefaultCellColor default h5uColorDefault;
   end;
 
   // When a flattened tree leaves one or more child levels, this band replaces
@@ -1942,19 +1406,13 @@ type
   public
     constructor Create;
     procedure Assign(Source: TPersistent); override;
-    property OnChanged: Th5uOptionsChangedEvent
-      read FOnChanged write FOnChanged;
+    property OnChanged: Th5uOptionsChangedEvent read FOnChanged write FOnChanged;
   published
-    property Enabled: Boolean
-      read FEnabled write SetEnabled default False;
-    property Height: Integer
-      read FHeight write SetHeight default 6;
-    property Color: Th5uColor
-      read FColor write SetColor default h5uColorDefault;
-    property StyleName: string
-      read FStyleName write SetStyleName;
-    property IncludeEndOfData: Boolean
-      read FIncludeEndOfData write SetIncludeEndOfData default True;
+    property Enabled: Boolean read FEnabled write SetEnabled default False;
+    property Height: Integer read FHeight write SetHeight default 6;
+    property Color: Th5uColor read FColor write SetColor default h5uColorDefault;
+    property StyleName: string read FStyleName write SetStyleName;
+    property IncludeEndOfData: Boolean read FIncludeEndOfData write SetIncludeEndOfData default True;
   end;
 
   Th5uTreeOptions = class(TPersistent)
@@ -1965,25 +1423,19 @@ type
     FOnChanged: Th5uOptionsChangedEvent;
     procedure Changed;
     procedure ChildChanged(Sender: TObject);
-    procedure SetBranchEndBand(
-      const AValue: Th5uTreeBranchEndBandOptions
-    );
+    procedure SetBranchEndBand(const AValue: Th5uTreeBranchEndBandOptions);
     procedure SetEnabled(const AValue: Boolean);
     procedure SetLevelColumnId(const AValue: string);
   public
     constructor Create;
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
-    property OnChanged: Th5uOptionsChangedEvent
-      read FOnChanged write FOnChanged;
+    property OnChanged: Th5uOptionsChangedEvent read FOnChanged write FOnChanged;
   published
-    property Enabled: Boolean
-      read FEnabled write SetEnabled default False;
+    property Enabled: Boolean read FEnabled write SetEnabled default False;
     // May name a Column.Id, Column.FieldName or a controller field directly.
-    property LevelColumnId: string
-      read FLevelColumnId write SetLevelColumnId;
-    property BranchEndBand: Th5uTreeBranchEndBandOptions
-      read FBranchEndBand write SetBranchEndBand;
+    property LevelColumnId: string read FLevelColumnId write SetLevelColumnId;
+    property BranchEndBand: Th5uTreeBranchEndBandOptions read FBranchEndBand write SetBranchEndBand;
   end;
 
   // Optional separator after one contiguous run of equal IDs. It replaces
@@ -1999,24 +1451,16 @@ type
     procedure SetColor(const AValue: Th5uColor);
     procedure SetHeight(const AValue: Integer);
     procedure SetStyleName(const AValue: string);
-    procedure SetVisibility(
-      const AValue: Th5uAdjacentGroupEndBandVisibility
-    );
+    procedure SetVisibility(const AValue: Th5uAdjacentGroupEndBandVisibility);
   public
     constructor Create;
     procedure Assign(Source: TPersistent); override;
-    property OnChanged: Th5uOptionsChangedEvent
-      read FOnChanged write FOnChanged;
+    property OnChanged: Th5uOptionsChangedEvent read FOnChanged write FOnChanged;
   published
-    property Visibility: Th5uAdjacentGroupEndBandVisibility
-      read FVisibility write SetVisibility
-      default Th5uAdjacentGroupEndBandVisibility.Never;
-    property Height: Integer
-      read FHeight write SetHeight default 6;
-    property Color: Th5uColor
-      read FColor write SetColor default h5uColorDefault;
-    property StyleName: string
-      read FStyleName write SetStyleName;
+    property Visibility: Th5uAdjacentGroupEndBandVisibility read FVisibility write SetVisibility default Th5uAdjacentGroupEndBandVisibility.Never;
+    property Height: Integer read FHeight write SetHeight default 6;
+    property Color: Th5uColor read FColor write SetColor default h5uColorDefault;
+    property StyleName: string read FStyleName write SetStyleName;
   end;
 
   // Adjacent-group folding keeps the controller's current order intact. Only
@@ -2037,42 +1481,27 @@ type
     procedure ChildChanged(Sender: TObject);
     procedure SetCaseSensitive(const AValue: Boolean);
     procedure SetEnabled(const AValue: Boolean);
-    procedure SetEndBand(
-      const AValue: Th5uAdjacentGroupEndBandOptions
-    );
+    procedure SetEndBand(const AValue: Th5uAdjacentGroupEndBandOptions);
     procedure SetGroupEmptyValues(const AValue: Boolean);
     procedure SetIdColumnId(const AValue: string);
-    procedure SetInitialState(
-      const AValue: Th5uAdjacentGroupInitialState
-    );
+    procedure SetInitialState(const AValue: Th5uAdjacentGroupInitialState);
     procedure SetPreserveStateOnDataChange(const AValue: Boolean);
     procedure SetShowFoldGlyph(const AValue: Boolean);
   public
     constructor Create;
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
-    property OnChanged: Th5uOptionsChangedEvent
-      read FOnChanged write FOnChanged;
+    property OnChanged: Th5uOptionsChangedEvent read FOnChanged write FOnChanged;
   published
-    property Enabled: Boolean
-      read FEnabled write SetEnabled default False;
+    property Enabled: Boolean read FEnabled write SetEnabled default False;
     // May name a Column.Id, Column.FieldName or controller field directly.
-    property IdColumnId: string
-      read FIdColumnId write SetIdColumnId;
-    property InitialState: Th5uAdjacentGroupInitialState
-      read FInitialState write SetInitialState
-      default Th5uAdjacentGroupInitialState.Expanded;
-    property ShowFoldGlyph: Boolean
-      read FShowFoldGlyph write SetShowFoldGlyph default True;
-    property CaseSensitive: Boolean
-      read FCaseSensitive write SetCaseSensitive default True;
-    property GroupEmptyValues: Boolean
-      read FGroupEmptyValues write SetGroupEmptyValues default True;
-    property PreserveStateOnDataChange: Boolean
-      read FPreserveStateOnDataChange
-      write SetPreserveStateOnDataChange default True;
-    property EndBand: Th5uAdjacentGroupEndBandOptions
-      read FEndBand write SetEndBand;
+    property IdColumnId: string read FIdColumnId write SetIdColumnId;
+    property InitialState: Th5uAdjacentGroupInitialState read FInitialState write SetInitialState default Th5uAdjacentGroupInitialState.Expanded;
+    property ShowFoldGlyph: Boolean read FShowFoldGlyph write SetShowFoldGlyph default True;
+    property CaseSensitive: Boolean read FCaseSensitive write SetCaseSensitive default True;
+    property GroupEmptyValues: Boolean read FGroupEmptyValues write SetGroupEmptyValues default True;
+    property PreserveStateOnDataChange: Boolean read FPreserveStateOnDataChange write SetPreserveStateOnDataChange default True;
+    property EndBand: Th5uAdjacentGroupEndBandOptions read FEndBand write SetEndBand;
   end;
 
   Th5uRowHeightOptions = class(TPersistent)
@@ -2093,22 +1522,14 @@ type
   public
     constructor Create;
     procedure Assign(Source: TPersistent); override;
-    property OnChanged: Th5uOptionsChangedEvent
-      read FOnChanged write FOnChanged;
+    property OnChanged: Th5uOptionsChangedEvent read FOnChanged write FOnChanged;
   published
-    property Mode: Th5uRowHeightMode
-      read FMode write SetMode default Th5uRowHeightMode.Fixed;
-    property FixedHeight: Integer
-      read FFixedHeight write SetFixedHeight default 24;
-    property MinHeight: Integer
-      read FMinHeight write SetMinHeight default 20;
-    property MaxHeight: Integer
-      read FMaxHeight write SetMaxHeight default 180;
-    property EstimatedHeight: Integer
-      read FEstimatedHeight write SetEstimatedHeight default 24;
-    property MeasureScope: Th5uAutoHeightMeasureScope
-      read FMeasureScope write FMeasureScope
-      default Th5uAutoHeightMeasureScope.ExplicitContributorColumns;
+    property Mode: Th5uRowHeightMode read FMode write SetMode default Th5uRowHeightMode.Fixed;
+    property FixedHeight: Integer read FFixedHeight write SetFixedHeight default 24;
+    property MinHeight: Integer read FMinHeight write SetMinHeight default 20;
+    property MaxHeight: Integer read FMaxHeight write SetMaxHeight default 180;
+    property EstimatedHeight: Integer read FEstimatedHeight write SetEstimatedHeight default 24;
+    property MeasureScope: Th5uAutoHeightMeasureScope read FMeasureScope write FMeasureScope default Th5uAutoHeightMeasureScope.ExplicitContributorColumns;
   end;
 
   Th5uScrollingOptions = class(TPersistent)
@@ -2123,21 +1544,13 @@ type
   public
     constructor Create;
     procedure Assign(Source: TPersistent); override;
-    property OnChanged: Th5uOptionsChangedEvent
-      read FOnChanged write FOnChanged;
+    property OnChanged: Th5uOptionsChangedEvent read FOnChanged write FOnChanged;
   published
-    property VerticalMode: Th5uVerticalScrollMode
-      read FVerticalMode write FVerticalMode
-      default Th5uVerticalScrollMode.Pixel;
-    property HorizontalMode: Th5uHorizontalScrollMode
-      read FHorizontalMode write FHorizontalMode
-      default Th5uHorizontalScrollMode.Pixel;
-    property OverscanRows: Integer
-      read FOverscanRows write FOverscanRows default 2;
-    property SnapDelay: Integer
-      read FSnapDelay write FSnapDelay default 120;
-    property WheelRows: Integer
-      read FWheelRows write FWheelRows default 3;
+    property VerticalMode: Th5uVerticalScrollMode read FVerticalMode write FVerticalMode default Th5uVerticalScrollMode.Pixel;
+    property HorizontalMode: Th5uHorizontalScrollMode read FHorizontalMode write FHorizontalMode default Th5uHorizontalScrollMode.Pixel;
+    property OverscanRows: Integer read FOverscanRows write FOverscanRows default 2;
+    property SnapDelay: Integer read FSnapDelay write FSnapDelay default 120;
+    property WheelRows: Integer read FWheelRows write FWheelRows default 3;
   end;
 
   Th5uScrollHintOptions = class(TPersistent)
@@ -2151,18 +1564,13 @@ type
   public
     constructor Create;
     procedure Assign(Source: TPersistent); override;
-    property OnChanged: Th5uOptionsChangedEvent
-      read FOnChanged write FOnChanged;
+    property OnChanged: Th5uOptionsChangedEvent read FOnChanged write FOnChanged;
   published
     property Enabled: Boolean read FEnabled write FEnabled default True;
-    property Triggers: Th5uScrollHintTriggers
-      read FTriggers write FTriggers;
-    property VerticalColumnId: string
-      read FVerticalColumnId write FVerticalColumnId;
-    property ShowRowPosition: Boolean
-      read FShowRowPosition write FShowRowPosition default True;
-    property UseHeaderPath: Boolean
-      read FUseHeaderPath write FUseHeaderPath default True;
+    property Triggers: Th5uScrollHintTriggers read FTriggers write FTriggers;
+    property VerticalColumnId: string read FVerticalColumnId write FVerticalColumnId;
+    property ShowRowPosition: Boolean read FShowRowPosition write FShowRowPosition default True;
+    property UseHeaderPath: Boolean read FUseHeaderPath write FUseHeaderPath default True;
   end;
 
   Th5uPaginationOptions = class(TPersistent)
@@ -2177,16 +1585,11 @@ type
   public
     constructor Create;
     procedure Assign(Source: TPersistent); override;
-    property OnChanged: Th5uOptionsChangedEvent
-      read FOnChanged write FOnChanged;
+    property OnChanged: Th5uOptionsChangedEvent read FOnChanged write FOnChanged;
   published
-    property Mode: Th5uPaginationMode
-      read FMode write FMode
-      default Th5uPaginationMode.Continuous;
-    property PageSize: Integer
-      read FPageSize write SetPageSize default 100;
-    property PageIndex: Integer
-      read FPageIndex write SetPageIndex default 0;
+    property Mode: Th5uPaginationMode read FMode write FMode default Th5uPaginationMode.Continuous;
+    property PageSize: Integer read FPageSize write SetPageSize default 100;
+    property PageIndex: Integer read FPageIndex write SetPageIndex default 0;
   end;
 
   Th5uCacheOptions = class(TPersistent)
@@ -2202,21 +1605,14 @@ type
   public
     constructor Create;
     procedure Assign(Source: TPersistent); override;
-    property OnChanged: Th5uOptionsChangedEvent
-      read FOnChanged write FOnChanged;
+    property OnChanged: Th5uOptionsChangedEvent read FOnChanged write FOnChanged;
   published
-    property Mode: Th5uCacheMode
-      read FMode write FMode default Th5uCacheMode.Viewport;
-    property PageSize: Integer
-      read FPageSize write FPageSize default 200;
-    property MaxCachedPages: Integer
-      read FMaxCachedPages write FMaxCachedPages default 8;
-    property PrefetchPagesBefore: Integer
-      read FPrefetchPagesBefore write FPrefetchPagesBefore default 1;
-    property PrefetchPagesAfter: Integer
-      read FPrefetchPagesAfter write FPrefetchPagesAfter default 2;
-    property MaxMemoryBytes: Int64
-      read FMaxMemoryBytes write FMaxMemoryBytes;
+    property Mode: Th5uCacheMode read FMode write FMode default Th5uCacheMode.Viewport;
+    property PageSize: Integer read FPageSize write FPageSize default 200;
+    property MaxCachedPages: Integer read FMaxCachedPages write FMaxCachedPages default 8;
+    property PrefetchPagesBefore: Integer read FPrefetchPagesBefore write FPrefetchPagesBefore default 1;
+    property PrefetchPagesAfter: Integer read FPrefetchPagesAfter write FPrefetchPagesAfter default 2;
+    property MaxMemoryBytes: Int64 read FMaxMemoryBytes write FMaxMemoryBytes;
   end;
 
   Th5uRowStyleOptions = class(TPersistent)
@@ -2236,32 +1632,18 @@ type
     constructor Create;
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
-    function ResolveStyle(
-      AViewRowIndex: Int64;
-      AStyleKey: Integer;
-      AHasStyleKey: Boolean
-    ): string;
-    property OnChanged: Th5uOptionsChangedEvent
-      read FOnChanged write FOnChanged;
+    function ResolveStyle(AViewRowIndex: Int64; AStyleKey: Integer; AHasStyleKey: Boolean): string;
+    property OnChanged: Th5uOptionsChangedEvent read FOnChanged write FOnChanged;
   published
-    property StripePeriod: Integer
-      read FStripePeriod write FStripePeriod default 2;
-    property StripeOffset: Integer
-      read FStripeOffset write FStripeOffset default 1;
-    property StripeStyleName: string
-      read FStripeStyleName write FStripeStyleName;
-    property OddStyleName: string
-      read FOddStyleName write FOddStyleName;
-    property EvenStyleName: string
-      read FEvenStyleName write FEvenStyleName;
-    property StyleKeyColumnId: string
-      read FStyleKeyColumnId write FStyleKeyColumnId;
-    property Mappings: Th5uRowStyleMappings
-      read FMappings write SetMappings;
-    property RestartAtGroup: Boolean
-      read FRestartAtGroup write FRestartAtGroup default False;
-    property RestartAtPage: Boolean
-      read FRestartAtPage write FRestartAtPage default False;
+    property StripePeriod: Integer read FStripePeriod write FStripePeriod default 2;
+    property StripeOffset: Integer read FStripeOffset write FStripeOffset default 1;
+    property StripeStyleName: string read FStripeStyleName write FStripeStyleName;
+    property OddStyleName: string read FOddStyleName write FOddStyleName;
+    property EvenStyleName: string read FEvenStyleName write FEvenStyleName;
+    property StyleKeyColumnId: string read FStyleKeyColumnId write FStyleKeyColumnId;
+    property Mappings: Th5uRowStyleMappings read FMappings write SetMappings;
+    property RestartAtGroup: Boolean read FRestartAtGroup write FRestartAtGroup default False;
+    property RestartAtPage: Boolean read FRestartAtPage write FRestartAtPage default False;
   end;
 
   Th5uCustomizationOptions = class(TPersistent)
@@ -2274,14 +1656,10 @@ type
     constructor Create;
     procedure Assign(Source: TPersistent); override;
   published
-    property AllowColumnMoving: Boolean
-      read FAllowColumnMoving write FAllowColumnMoving default True;
-    property AllowColumnHiding: Boolean
-      read FAllowColumnHiding write FAllowColumnHiding default True;
-    property AllowColumnResizing: Boolean
-      read FAllowColumnResizing write FAllowColumnResizing default True;
-    property ShowColumnChooser: Boolean
-      read FShowColumnChooser write FShowColumnChooser default True;
+    property AllowColumnMoving: Boolean read FAllowColumnMoving write FAllowColumnMoving default True;
+    property AllowColumnHiding: Boolean read FAllowColumnHiding write FAllowColumnHiding default True;
+    property AllowColumnResizing: Boolean read FAllowColumnResizing write FAllowColumnResizing default True;
+    property ShowColumnChooser: Boolean read FShowColumnChooser write FShowColumnChooser default True;
   end;
 ```
 
@@ -2317,12 +1695,9 @@ type
     procedure RecreateSampleData;
     procedure EnsureSampleData;
   published
-    property AutoCreateSampleData: Boolean
-      read FAutoCreateSampleData write SetAutoCreateSampleData default True;
-    property IncludeImages: Boolean
-      read FIncludeImages write SetIncludeImages default True;
-    property SampleRowCount: Integer
-      read FSampleRowCount write SetSampleRowCount default 25;
+    property AutoCreateSampleData: Boolean read FAutoCreateSampleData write SetAutoCreateSampleData default True;
+    property IncludeImages: Boolean read FIncludeImages write SetIncludeImages default True;
+    property SampleRowCount: Integer read FSampleRowCount write SetSampleRowCount default 25;
   end;
 ```
 
@@ -2369,55 +1744,32 @@ type
     procedure ClearColumns;
     procedure ClearCellRanges;
 
-    procedure SelectRow(
-      const ARowKey: Th5uRowKey;
-      AAdd: Boolean = False
-    );
+    procedure SelectRow(const ARowKey: Th5uRowKey; AAdd: Boolean = False);
     procedure ToggleRow(const ARowKey: Th5uRowKey);
     procedure SelectAllRows;
     procedure ExcludeRow(const ARowKey: Th5uRowKey);
     function IsRowSelected(const ARowKey: Th5uRowKey): Boolean;
 
-    procedure SelectColumn(
-      const AColumnId: string;
-      AAdd: Boolean = False
-    );
+    procedure SelectColumn(const AColumnId: string; AAdd: Boolean = False);
     procedure ToggleColumn(const AColumnId: string);
     function IsColumnSelected(const AColumnId: string): Boolean;
 
-    procedure AddCellRange(
-      const ARange: Th5uCellRange;
-      AAdd: Boolean = False
-    );
-    function IsCellSelected(
-      ARowIndex: Int64;
-      AColumnIndex: Integer
-    ): Boolean;
+    procedure AddCellRange(const ARange: Th5uCellRange; AAdd: Boolean = False);
+    function IsCellSelected(ARowIndex: Int64; AColumnIndex: Integer): Boolean;
 
-    procedure SetFocus(
-      const ACell: Th5uCellAddress;
-      AUpdateAnchor: Boolean
-    );
+    procedure SetFocus(const ACell: Th5uCellAddress; AUpdateAnchor: Boolean);
 
     property CellRanges: TList<Th5uCellRange> read FCellRanges;
     property FocusedCell: Th5uCellAddress read FFocusedCell;
     property AnchorCell: Th5uCellAddress read FAnchorCell;
     property AllRowsSelected: Boolean read FAllRowsSelected;
-    property OnChanged: Th5uSelectionChangedEvent
-      read FOnChanged write FOnChanged;
+    property OnChanged: Th5uSelectionChangedEvent read FOnChanged write FOnChanged;
   published
-    property AllowedKinds: Th5uSelectionKinds
-      read FAllowedKinds write SetAllowedKinds;
-    property CombinationMode: Th5uSelectionCombinationMode
-      read FCombinationMode write FCombinationMode
-      default Th5uSelectionCombinationMode.Mixed;
-    property Scope: Th5uSelectionScope
-      read FScope write FScope
-      default Th5uSelectionScope.CurrentQuery;
-    property MultiRange: Boolean
-      read FMultiRange write FMultiRange default True;
-    property KeepAcrossPages: Boolean
-      read FKeepAcrossPages write FKeepAcrossPages default True;
+    property AllowedKinds: Th5uSelectionKinds read FAllowedKinds write SetAllowedKinds;
+    property CombinationMode: Th5uSelectionCombinationMode read FCombinationMode write FCombinationMode default Th5uSelectionCombinationMode.Mixed;
+    property Scope: Th5uSelectionScope read FScope write FScope default Th5uSelectionScope.CurrentQuery;
+    property MultiRange: Boolean read FMultiRange write FMultiRange default True;
+    property KeepAcrossPages: Boolean read FKeepAcrossPages write FKeepAcrossPages default True;
   end;
 ```
 
@@ -2603,11 +1955,7 @@ type
     ClassId: Th5uClassId;
     CreationReason: Th5uCreationReason;
 
-    class function Create(
-      AGrid, AView, AController: TObject;
-      const AClassId: Th5uClassId;
-      AElementKind: Th5uElementKind
-    ): Th5uFactoryContext; static;
+    class function Create(AGrid, AView, AController: TObject; const AClassId: Th5uClassId; AElementKind: Th5uElementKind): Th5uFactoryContext; static;
   end;
 
   Th5uTreeLevelContext = record
@@ -2618,12 +1966,7 @@ type
     SourceRowIndex: Int64;
   end;
 
-  Th5uGetTreeLevelEvent = procedure(
-    Sender: TObject;
-    const AContext: Th5uTreeLevelContext;
-    var ALevel: Integer;
-    var AAvailable: Boolean
-  ) of object;
+  Th5uGetTreeLevelEvent = procedure(Sender: TObject; const AContext: Th5uTreeLevelContext; var ALevel: Integer; var AAvailable: Boolean) of object;
 
   Th5uTreeBranchEndContext = record
     Grid: TObject;
@@ -2637,12 +1980,7 @@ type
     IsEndOfData: Boolean;
   end;
 
-  Th5uGetTreeBranchEndEvent = procedure(
-    Sender: TObject;
-    const AContext: Th5uTreeBranchEndContext;
-    var AIsBranchEnd: Boolean;
-    var AClosedLevels: Integer
-  ) of object;
+  Th5uGetTreeBranchEndEvent = procedure(Sender: TObject; const AContext: Th5uTreeBranchEndContext; var AIsBranchEnd: Boolean; var AClosedLevels: Integer) of object;
 
   Th5uAdjacentGroupInitialState = (
     Expanded,
@@ -2664,12 +2002,7 @@ type
     SourceRowIndex: Int64;
   end;
 
-  Th5uGetAdjacentGroupIdEvent = procedure(
-    Sender: TObject;
-    const AContext: Th5uAdjacentGroupIdContext;
-    var AGroupId: TValue;
-    var AAvailable: Boolean
-  ) of object;
+  Th5uGetAdjacentGroupIdEvent = procedure(Sender: TObject; const AContext: Th5uAdjacentGroupIdContext; var AGroupId: TValue; var AAvailable: Boolean) of object;
 
   Th5uAdjacentGroupStateChangedContext = record
     Grid: TObject;
@@ -2681,10 +2014,7 @@ type
     Collapsed: Boolean;
   end;
 
-  Th5uAdjacentGroupStateChangedEvent = procedure(
-    Sender: TObject;
-    const AContext: Th5uAdjacentGroupStateChangedContext
-  ) of object;
+  Th5uAdjacentGroupStateChangedEvent = procedure(Sender: TObject; const AContext: Th5uAdjacentGroupStateChangedContext) of object;
 
   Th5uGridTheme = (
     ApplicationStyle,
@@ -2813,10 +2143,7 @@ type
     EndRowIndex: Int64;
     StartColumnIndex: Integer;
     EndColumnIndex: Integer;
-    class function Create(
-      AStartRow, AEndRow: Int64;
-      AStartColumn, AEndColumn: Integer
-    ): Th5uCellRange; static;
+    class function Create(AStartRow, AEndRow: Int64; AStartColumn, AEndColumn: Integer): Th5uCellRange; static;
     procedure Normalize;
     function Contains(ARowIndex: Int64; AColumnIndex: Integer): Boolean;
   end;
@@ -2844,12 +2171,8 @@ type
     procedure Clear;
   end;
 
-function h5uColorFromArgb(
-  AAlpha, ARed, AGreen, ABlue: Byte
-): Th5uColor; inline;
-function h5uColorFromRgb(
-  ARed, AGreen, ABlue: Byte
-): Th5uColor; inline;
+function h5uColorFromArgb(AAlpha, ARed, AGreen, ABlue: Byte): Th5uColor; inline;
+function h5uColorFromRgb(ARed, AGreen, ABlue: Byte): Th5uColor; inline;
 ```
 
 ## `Vcl.h5u.Grid`
@@ -2912,18 +2235,9 @@ type
     IsEstimated: Boolean;
   end;
 
-  Th5uGetRowHeightEvent = procedure(
-    Sender: TObject;
-    const AContext: Th5uGetRowHeightContext;
-    var AHeight: Integer;
-    var ACacheResult: Boolean
-  ) of object;
+  Th5uGetRowHeightEvent = procedure(Sender: TObject; const AContext: Th5uGetRowHeightContext; var AHeight: Integer; var ACacheResult: Boolean) of object;
 
-  Th5uGetRowSpacingEvent = procedure(
-    Sender: TObject;
-    const AContext: Th5uGetRowHeightContext;
-    var ASpacing: Integer
-  ) of object;
+  Th5uGetRowSpacingEvent = procedure(Sender: TObject; const AContext: Th5uGetRowHeightContext; var ASpacing: Integer) of object;
 
   Th5uThumbHintContext = record
     Grid: Th5uVclGrid;
@@ -2941,25 +2255,11 @@ type
     IsValueAvailable: Boolean;
   end;
 
-  Th5uGetThumbHintEvent = procedure(
-    Sender: TObject;
-    const AContext: Th5uThumbHintContext;
-    var AText: string;
-    var AVisible: Boolean
-  ) of object;
+  Th5uGetThumbHintEvent = procedure(Sender: TObject; const AContext: Th5uThumbHintContext; var AText: string; var AVisible: Boolean) of object;
 
-  Th5uRowAppearanceEvent = procedure(
-    Sender: TObject;
-    AViewRowIndex: Int64;
-    const ARowKey: Th5uRowKey;
-    var AAppearance: Th5uResolvedAppearance
-  ) of object;
+  Th5uRowAppearanceEvent = procedure(Sender: TObject; AViewRowIndex: Int64; const ARowKey: Th5uRowKey; var AAppearance: Th5uResolvedAppearance) of object;
 
-  Th5uCellAppearanceEvent = procedure(
-    Sender: TObject;
-    const AContext: Th5uFactoryContext;
-    var AAppearance: Th5uResolvedAppearance
-  ) of object;
+  Th5uCellAppearanceEvent = procedure(Sender: TObject; const AContext: Th5uFactoryContext; var AAppearance: Th5uResolvedAppearance) of object;
 
   Th5uVclDrawContext = record
     FactoryContext: Th5uFactoryContext;
@@ -2968,13 +2268,7 @@ type
     Appearance: Th5uResolvedAppearance;
   end;
 
-  Th5uVclCustomDrawEvent = procedure(
-    Sender: TObject;
-    ACanvas: TCanvas;
-    const AContext: Th5uVclDrawContext;
-    AStage: Th5uCustomDrawStage;
-    var ADrawDefault: Boolean
-  ) of object;
+  Th5uVclCustomDrawEvent = procedure(Sender: TObject; ACanvas: TCanvas; const AContext: Th5uVclDrawContext; AStage: Th5uCustomDrawStage; var ADrawDefault: Boolean) of object;
 
   Th5uVisibleColumnInfo = record
     Column: Th5uGridColumn;
@@ -3008,28 +2302,13 @@ type
     FAppearance: Th5uResolvedAppearance;
     FInUse: Boolean;
   protected
-    procedure PaintDefault(
-      AGrid: Th5uVclGrid;
-      ACanvas: TCanvas
-    ); virtual;
-    function EffectiveBackground(
-      AGrid: Th5uVclGrid
-    ): TColor;
-    function EffectiveForeground(
-      AGrid: Th5uVclGrid
-    ): TColor;
+    procedure PaintDefault(AGrid: Th5uVclGrid; ACanvas: TCanvas); virtual;
+    function EffectiveBackground(AGrid: Th5uVclGrid): TColor;
+    function EffectiveForeground(AGrid: Th5uVclGrid): TColor;
   public
-    procedure BindCell(
-      const AContext: Th5uFactoryContext;
-      const ABounds: TRect;
-      const AValue: TValue;
-      const ADisplayText: string;
-      const AAppearance: Th5uResolvedAppearance
-    ); virtual;
-    procedure Paint(
-      AGrid: Th5uVclGrid;
-      ACanvas: TCanvas
-    ); virtual;
+    procedure BindCell(const AContext: Th5uFactoryContext; const ABounds: TRect; const AValue: TValue; const ADisplayText: string;
+      const AAppearance: Th5uResolvedAppearance); virtual;
+    procedure Paint(AGrid: Th5uVclGrid; ACanvas: TCanvas); virtual;
 
     property Context: Th5uFactoryContext read FContext;
     property Bounds: TRect read FBounds;
@@ -3042,10 +2321,7 @@ type
   // and the tree branch-end band. Its ClassId is resolved per grid instance.
   Th5uVclSpacingCell = class(Th5uVclVisualCell)
   protected
-    procedure PaintDefault(
-      AGrid: Th5uVclGrid;
-      ACanvas: TCanvas
-    ); override;
+    procedure PaintDefault(AGrid: Th5uVclGrid; ACanvas: TCanvas); override;
   end;
 
   Th5uVclDataCell = class(Th5uVclVisualCell)
@@ -3054,20 +2330,14 @@ type
     FPictureSignature: Integer;
     procedure EnsurePicture;
   protected
-    procedure PaintDefault(
-      AGrid: Th5uVclGrid;
-      ACanvas: TCanvas
-    ); override;
+    procedure PaintDefault(AGrid: Th5uVclGrid; ACanvas: TCanvas); override;
   public
     destructor Destroy; override;
   end;
 
   Th5uVclHeaderCell = class(Th5uVclVisualCell)
   protected
-    procedure PaintDefault(
-      AGrid: Th5uVclGrid;
-      ACanvas: TCanvas
-    ); override;
+    procedure PaintDefault(AGrid: Th5uVclGrid; ACanvas: TCanvas); override;
   end;
 
   Th5uVclFixedCell = class(Th5uVclDataCell);
@@ -3076,10 +2346,7 @@ type
   // The class is resolved through the per-grid FactoryScope.
   Th5uVclAdjacentGroupGlyphCell = class(Th5uVclVisualCell)
   protected
-    procedure PaintDefault(
-      AGrid: Th5uVclGrid;
-      ACanvas: TCanvas
-    ); override;
+    procedure PaintDefault(AGrid: Th5uVclGrid; ACanvas: TCanvas); override;
   end;
 
   Th5uVclGrid = class(TCustomControl)
@@ -3144,8 +2411,7 @@ type
     FOnGetTreeLevel: Th5uGetTreeLevelEvent;
     FOnGetTreeBranchEnd: Th5uGetTreeBranchEndEvent;
     FOnGetAdjacentGroupId: Th5uGetAdjacentGroupIdEvent;
-    FOnAdjacentGroupStateChanged:
-      Th5uAdjacentGroupStateChangedEvent;
+    FOnAdjacentGroupStateChanged: Th5uAdjacentGroupStateChangedEvent;
 
     procedure ColumnsChanged(Sender: TObject; AColumn: Th5uGridColumn);
     procedure DataChanged(Sender: TObject; const AChange: Th5uDataChange);
@@ -3164,9 +2430,7 @@ type
     procedure SetSpacing(const AValue: Th5uGridSpacingOptions);
     procedure SetAppearance(const AValue: Th5uGridAppearanceOptions);
     procedure SetTree(const AValue: Th5uTreeOptions);
-    procedure SetAdjacentGroupFolding(
-      const AValue: Th5uAdjacentGroupFoldingOptions
-    );
+    procedure SetAdjacentGroupFolding(const AValue: Th5uAdjacentGroupFoldingOptions);
     procedure SetSelection(const AValue: Th5uGridSelection);
     procedure SetGridLines(const AValue: Boolean);
     procedure SetHeaderRowHeight(const AValue: Integer);
@@ -3177,271 +2441,108 @@ type
     function GetOnCreateInstance: Th5uCreateInstanceEvent;
     procedure SetOnCreateInstance(const AValue: Th5uCreateInstanceEvent);
     function GetOnConfigureInstance: Th5uConfigureInstanceEvent;
-    procedure SetOnConfigureInstance(
-      const AValue: Th5uConfigureInstanceEvent
-    );
+    procedure SetOnConfigureInstance(const AValue: Th5uConfigureInstanceEvent);
 
-    procedure ScrollBarScroll(
-      Sender: TObject;
-      ScrollCode: TScrollCode;
-      var ScrollPos: Integer
-    );
+    procedure ScrollBarScroll(Sender: TObject; ScrollCode: TScrollCode; var ScrollPos: Integer);
     procedure ThumbHintTimer(Sender: TObject);
     procedure EditorExit(Sender: TObject);
-    procedure EditorKeyDown(
-      Sender: TObject;
-      var Key: Word;
-      Shift: TShiftState
-    );
+    procedure EditorKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 
     function GetUnpaddedViewportRect: TRect;
     function GetViewportRect: TRect;
     function GetHeaderHeight: Integer;
     function GetDataViewportRect: TRect;
     function GetTotalColumnWidth: Integer;
-    function GetEffectiveColumnRightSpacing(
-      AColumn: Th5uGridColumn
-    ): Integer;
-    procedure InvalidateAdjacentGroupMap(
-      AClearStates: Boolean = False
-    );
+    function GetEffectiveColumnRightSpacing(AColumn: Th5uGridColumn): Integer;
+    procedure InvalidateAdjacentGroupMap(AClearStates: Boolean = False);
     procedure EnsureAdjacentGroupMap;
     function ResolveAdjacentGroupFieldName: string;
-    function TryGetAdjacentGroupIdForControllerRow(
-      AControllerRowIndex: Int64;
-      out AGroupId: TValue
-    ): Boolean;
+    function TryGetAdjacentGroupIdForControllerRow(AControllerRowIndex: Int64; out AGroupId: TValue): Boolean;
     function GetViewRowCount: Int64;
-    function MapViewToControllerRowIndex(
-      AViewRowIndex: Int64;
-      AAllowLookAhead: Boolean = False
-    ): Int64;
+    function MapViewToControllerRowIndex(AViewRowIndex: Int64; AAllowLookAhead: Boolean = False): Int64;
     function GetViewSourceRowIndex(AViewRowIndex: Int64): Int64;
     function GetViewRowKey(AViewRowIndex: Int64): Th5uRowKey;
-    function GetViewValue(
-      AViewRowIndex: Int64;
-      const AFieldName: string
-    ): TValue;
-    procedure SetViewValue(
-      AViewRowIndex: Int64;
-      const AFieldName: string;
-      const AValue: TValue
-    );
-    function CanEditViewValue(
-      AViewRowIndex: Int64;
-      const AFieldName: string
-    ): Boolean;
-    function GetViewDisplayText(
-      AViewRowIndex: Int64;
-      const AFieldName, ADisplayFormat: string
-    ): string;
+    function GetViewValue(AViewRowIndex: Int64; const AFieldName: string): TValue;
+    procedure SetViewValue(AViewRowIndex: Int64; const AFieldName: string; const AValue: TValue);
+    function CanEditViewValue(AViewRowIndex: Int64; const AFieldName: string): Boolean;
+    function GetViewDisplayText(AViewRowIndex: Int64; const AFieldName, ADisplayFormat: string): string;
     function IsViewRowAvailable(AViewRowIndex: Int64): Boolean;
-    procedure PrepareViewRange(
-      AFirstViewRow, ACount: Int64
-    );
-    function TryGetAdjacentGroupRowInfo(
-      AViewRowIndex: Int64;
-      out AInfo: Th5uAdjacentGroupRowInfo
-    ): Boolean;
-    procedure PopulateAdjacentGroupContext(
-      var AContext: Th5uFactoryContext;
-      AViewRowIndex: Int64
-    );
-    function GetAdjacentGroupEndBandInfo(
-      AViewRowIndex: Int64;
-      out AInfo: Th5uAdjacentGroupRowInfo
-    ): Boolean;
-    procedure DoAdjacentGroupStateChanged(
-      const AInfo: Th5uAdjacentGroupRowInfo
-    );
-    function GetRowSpacingFor(
-      AViewRowIndex: Int64;
-      const ARowKey: Th5uRowKey
-    ): Integer;
-    function TryGetTreeLevelFor(
-      AViewRowIndex: Int64;
-      const ARowKey: Th5uRowKey;
-      out ALevel: Integer
-    ): Boolean;
-    function GetTreeBranchEndInfo(
-      AViewRowIndex: Int64;
-      const ARowKey: Th5uRowKey;
-      out ATreeLevel: Integer;
-      out AClosedTreeLevels: Integer
-    ): Boolean;
-    function GetEffectiveRowSeparatorFor(
-      AViewRowIndex: Int64;
-      const ARowKey: Th5uRowKey;
-      out AElementKind: Th5uElementKind;
-      out AColor: TColor;
-      out AStyleName: string;
-      out ATreeLevel: Integer;
-      out AClosedTreeLevels: Integer
-    ): Integer;
+    procedure PrepareViewRange(AFirstViewRow, ACount: Int64);
+    function TryGetAdjacentGroupRowInfo(AViewRowIndex: Int64; out AInfo: Th5uAdjacentGroupRowInfo): Boolean;
+    procedure PopulateAdjacentGroupContext(var AContext: Th5uFactoryContext; AViewRowIndex: Int64);
+    function GetAdjacentGroupEndBandInfo(AViewRowIndex: Int64; out AInfo: Th5uAdjacentGroupRowInfo): Boolean;
+    procedure DoAdjacentGroupStateChanged(const AInfo: Th5uAdjacentGroupRowInfo);
+    function GetRowSpacingFor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey): Integer;
+    function TryGetTreeLevelFor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey; out ALevel: Integer): Boolean;
+    function GetTreeBranchEndInfo(AViewRowIndex: Int64; const ARowKey: Th5uRowKey; out ATreeLevel: Integer; out AClosedTreeLevels: Integer): Boolean;
+    function GetEffectiveRowSeparatorFor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey; out AElementKind: Th5uElementKind; out AColor: TColor; out AStyleName: string;
+      out ATreeLevel: Integer; out AClosedTreeLevels: Integer): Integer;
     function GetGridLines: Boolean;
-    function ResolveColor(
-      const AColor: Th5uColor;
-      AFallback: TColor
-    ): TColor;
+    function ResolveColor(const AColor: Th5uColor; AFallback: TColor): TColor;
     function ResolveDefaultCellColor: TColor;
     function ResolveRowSpacingColor: TColor;
     function ResolveColumnSpacingColor: TColor;
     function ResolveContentPaddingColor: TColor;
-    function ResolveTreeBranchEndColor(
-      AViewRowIndex: Int64;
-      const ARowKey: Th5uRowKey
-    ): TColor;
-    function ResolveAdjacentGroupEndColor(
-      AViewRowIndex: Int64;
-      const ARowKey: Th5uRowKey
-    ): TColor;
+    function ResolveTreeBranchEndColor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey): TColor;
+    function ResolveAdjacentGroupEndColor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey): TColor;
     function GetEstimatedTotalRowHeight: Int64;
     procedure LayoutScrollBars;
     procedure UpdateScrollBars;
     procedure BuildColumnLayout;
     procedure BeginVisualPass;
-    function AcquireVisualCell(
-      const AContext: Th5uFactoryContext;
-      ADefaultClass: Th5uVclVisualCellClass
-    ): Th5uVclVisualCell;
+    function AcquireVisualCell(const AContext: Th5uFactoryContext; ADefaultClass: Th5uVclVisualCellClass): Th5uVclVisualCell;
 
     procedure DrawContentPadding;
     procedure DrawHeaders;
     procedure DrawRows;
-    procedure DrawSpacingRect(
-      const ABounds: TRect;
-      AElementKind: Th5uElementKind;
-      AColumn: Th5uGridColumn;
-      AViewRowIndex: Int64;
-      const ARowKey: Th5uRowKey;
-      AColor: TColor;
-      const AStyleName: string = '';
-      ATreeLevel: Integer = -1;
-      AClosedTreeLevels: Integer = 0
-    );
+    procedure DrawSpacingRect(const ABounds: TRect; AElementKind: Th5uElementKind; AColumn: Th5uGridColumn; AViewRowIndex: Int64; const ARowKey: Th5uRowKey; AColor: TColor;
+      const AStyleName: string = ''; ATreeLevel: Integer = -1; AClosedTreeLevels: Integer = 0);
     procedure DrawDefaultHeaders;
     procedure DrawCustomHeaderLayout;
-    procedure DrawRowIndicator(
-      const ARowInfo: Th5uVisibleRowInfo;
-      ASelected: Boolean
-    );
-    function GetAdjacentGroupGlyphRect(
-      const ARowInfo: Th5uVisibleRowInfo
-    ): TRect;
-    procedure DrawAdjacentGroupGlyph(
-      const ARowInfo: Th5uVisibleRowInfo;
-      ASelected: Boolean
-    );
+    procedure DrawRowIndicator(const ARowInfo: Th5uVisibleRowInfo; ASelected: Boolean);
+    function GetAdjacentGroupGlyphRect(const ARowInfo: Th5uVisibleRowInfo): TRect;
+    procedure DrawAdjacentGroupGlyph(const ARowInfo: Th5uVisibleRowInfo; ASelected: Boolean);
 
-    function GetRowHeightFor(
-      AViewRowIndex: Int64;
-      const ARowKey: Th5uRowKey;
-      AAllowMeasure: Boolean = True
-    ): Integer;
-    function MeasureCellHeight(
-      AViewRowIndex: Int64;
-      AColumn: Th5uGridColumn
-    ): Integer;
-    function FindFirstVisibleRow(
-      AOffset: Int64;
-      out ATop: Integer
-    ): Int64;
-    function GetRowStyle(
-      AViewRowIndex: Int64;
-      out AStyleKey: TValue
-    ): string;
-    function ResolveRowAppearance(
-      AViewRowIndex: Int64;
-      const ARowKey: Th5uRowKey;
-      const AStyleName: string
-    ): Th5uResolvedAppearance;
-    function ResolveCellAppearance(
-      const AContext: Th5uFactoryContext;
-      AColumn: Th5uGridColumn;
-      const ARowAppearance: Th5uResolvedAppearance;
-      ASelected, AFocused: Boolean
-    ): Th5uResolvedAppearance;
+    function GetRowHeightFor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey; AAllowMeasure: Boolean = True): Integer;
+    function MeasureCellHeight(AViewRowIndex: Int64; AColumn: Th5uGridColumn): Integer;
+    function FindFirstVisibleRow(AOffset: Int64; out ATop: Integer): Int64;
+    function GetRowStyle(AViewRowIndex: Int64; out AStyleKey: TValue): string;
+    function ResolveRowAppearance(AViewRowIndex: Int64; const ARowKey: Th5uRowKey; const AStyleName: string): Th5uResolvedAppearance;
+    function ResolveCellAppearance(const AContext: Th5uFactoryContext; AColumn: Th5uGridColumn; const ARowAppearance: Th5uResolvedAppearance;
+      ASelected, AFocused: Boolean): Th5uResolvedAppearance;
 
-    function ColumnInfoAtPoint(
-      X, Y: Integer;
-      out AInfo: Th5uVisibleColumnInfo
-    ): Boolean;
-    function RowInfoAtPoint(
-      X, Y: Integer;
-      out AInfo: Th5uVisibleRowInfo
-    ): Boolean;
+    function ColumnInfoAtPoint(X, Y: Integer; out AInfo: Th5uVisibleColumnInfo): Boolean;
+    function RowInfoAtPoint(X, Y: Integer; out AInfo: Th5uVisibleRowInfo): Boolean;
 
-    procedure ShowThumbHint(
-      AAxis: Th5uScrollAxis;
-      ATrigger: Th5uScrollHintTrigger
-    );
+    procedure ShowThumbHint(AAxis: Th5uScrollAxis; ATrigger: Th5uScrollHintTrigger);
     procedure HideThumbHint;
-    function BuildThumbHintText(
-      AAxis: Th5uScrollAxis;
-      ATrigger: Th5uScrollHintTrigger;
-      out AContext: Th5uThumbHintContext
-    ): string;
+    function BuildThumbHintText(AAxis: Th5uScrollAxis; ATrigger: Th5uScrollHintTrigger; out AContext: Th5uThumbHintContext): string;
 
     procedure StartEdit(const AHit: Th5uHitTestInfo);
     procedure CommitEditor;
     procedure CancelEditor;
-    function ParseEditorValue(
-      AColumn: Th5uGridColumn;
-      const AText: string
-    ): TValue;
+    function ParseEditorValue(AColumn: Th5uGridColumn; const AText: string): TValue;
 
     procedure ShowColumnChooser;
     procedure ColumnChooserClick(Sender: TObject);
     procedure RebuildAfterLayoutChange;
 
-    function GetVisualCellClass(
-      const AContext: Th5uFactoryContext;
-      ADefaultClass: Th5uVclVisualCellClass
-    ): Th5uVclVisualCellClass; virtual;
+    function GetVisualCellClass(const AContext: Th5uFactoryContext; ADefaultClass: Th5uVclVisualCellClass): Th5uVclVisualCellClass; virtual;
 
-    procedure DoCustomDraw(
-      ACanvas: TCanvas;
-      const AContext: Th5uVclDrawContext;
-      AStage: Th5uCustomDrawStage;
-      var ADrawDefault: Boolean
-    );
+    procedure DoCustomDraw(ACanvas: TCanvas; const AContext: Th5uVclDrawContext; AStage: Th5uCustomDrawStage; var ADrawDefault: Boolean);
   protected
     procedure Paint; override;
     procedure Resize; override;
-    procedure Notification(
-      AComponent: TComponent;
-      Operation: TOperation
-    ); override;
-    procedure MouseDown(
-      Button: TMouseButton;
-      Shift: TShiftState;
-      X, Y: Integer
-    ); override;
-    procedure MouseMove(
-      Shift: TShiftState;
-      X, Y: Integer
-    ); override;
-    procedure MouseUp(
-      Button: TMouseButton;
-      Shift: TShiftState;
-      X, Y: Integer
-    ); override;
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
+    procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
+    procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
+    procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
     procedure DblClick; override;
-    function DoMouseWheel(
-      Shift: TShiftState;
-      WheelDelta: Integer;
-      MousePos: TPoint
-    ): Boolean; override;
+    function DoMouseWheel(Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint): Boolean; override;
 
-    function GetDataCellClass(
-      const AContext: Th5uFactoryContext
-    ): Th5uVclVisualCellClass; virtual;
-    function GetHeaderCellClass(
-      const AContext: Th5uFactoryContext
-    ): Th5uVclVisualCellClass; virtual;
-    function GetFixedCellClass(
-      const AContext: Th5uFactoryContext
-    ): Th5uVclVisualCellClass; virtual;
+    function GetDataCellClass(const AContext: Th5uFactoryContext): Th5uVclVisualCellClass; virtual;
+    function GetHeaderCellClass(const AContext: Th5uFactoryContext): Th5uVclVisualCellClass; virtual;
+    function GetFixedCellClass(const AContext: Th5uFactoryContext): Th5uVclVisualCellClass; virtual;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -3451,28 +2552,15 @@ type
     procedure InvalidateAllRowHeights;
 
     function HitTest(X, Y: Integer): Th5uHitTestInfo;
-    procedure MoveColumn(
-      AColumn: Th5uGridColumn;
-      ANewVisibleIndex: Integer
-    );
-    procedure SetColumnVisible(
-      AColumn: Th5uGridColumn;
-      AVisible: Boolean
-    );
-    procedure AutoCreateColumnsFromDataSet(
-      AClearExisting: Boolean = True
-    );
+    procedure MoveColumn(AColumn: Th5uGridColumn; ANewVisibleIndex: Integer);
+    procedure SetColumnVisible(AColumn: Th5uGridColumn; AVisible: Boolean);
+    procedure AutoCreateColumnsFromDataSet(AClearExisting: Boolean = True);
     procedure ToggleAdjacentGroup(AViewRowIndex: Int64);
-    procedure SetAdjacentGroupCollapsed(
-      AViewRowIndex: Int64;
-      ACollapsed: Boolean
-    );
+    procedure SetAdjacentGroupCollapsed(AViewRowIndex: Int64; ACollapsed: Boolean);
     procedure ExpandAllAdjacentGroups;
     procedure CollapseAllAdjacentGroups;
     procedure ResetAdjacentGroupStates;
-    function IsAdjacentGroupCollapsed(
-      AViewRowIndex: Int64
-    ): Boolean;
+    function IsAdjacentGroupCollapsed(AViewRowIndex: Int64): Boolean;
 
     property FactoryScope: Th5uFactoryScope read FFactoryScope;
     property HorizontalOffset: Integer read FHorizontalOffset;
@@ -3491,81 +2579,44 @@ type
     property TabStop;
     property Visible;
 
-    property DataController: Th5uCustomDataController
-      read FDataController write SetDataController;
-    property SharedClassFactory: Th5uClassFactory
-      read FSharedClassFactory write SetSharedClassFactory;
-    property Columns: Th5uGridColumns
-      read FColumns write SetColumns;
-    property HeaderLayout: Th5uHeaderLayout
-      read FHeaderLayout write SetHeaderLayout;
-    property Selection: Th5uGridSelection
-      read FSelection write SetSelection;
-    property RowHeight: Th5uRowHeightOptions
-      read FRowHeight write SetRowHeight;
-    property Scrolling: Th5uScrollingOptions
-      read FScrolling write SetScrolling;
-    property ScrollHints: Th5uScrollHintOptions
-      read FScrollHints write SetScrollHints;
-    property RowStyles: Th5uRowStyleOptions
-      read FRowStyles write SetRowStyles;
-    property Customization: Th5uCustomizationOptions
-      read FCustomization write SetCustomization;
-    property Spacing: Th5uGridSpacingOptions
-      read FSpacing write SetSpacing;
-    property Appearance: Th5uGridAppearanceOptions
-      read FAppearance write SetAppearance;
-    property Tree: Th5uTreeOptions
-      read FTree write SetTree;
-    property AdjacentGroupFolding: Th5uAdjacentGroupFoldingOptions
-      read FAdjacentGroupFolding write SetAdjacentGroupFolding;
+    property DataController: Th5uCustomDataController read FDataController write SetDataController;
+    property SharedClassFactory: Th5uClassFactory read FSharedClassFactory write SetSharedClassFactory;
+    property Columns: Th5uGridColumns read FColumns write SetColumns;
+    property HeaderLayout: Th5uHeaderLayout read FHeaderLayout write SetHeaderLayout;
+    property Selection: Th5uGridSelection read FSelection write SetSelection;
+    property RowHeight: Th5uRowHeightOptions read FRowHeight write SetRowHeight;
+    property Scrolling: Th5uScrollingOptions read FScrolling write SetScrolling;
+    property ScrollHints: Th5uScrollHintOptions read FScrollHints write SetScrollHints;
+    property RowStyles: Th5uRowStyleOptions read FRowStyles write SetRowStyles;
+    property Customization: Th5uCustomizationOptions read FCustomization write SetCustomization;
+    property Spacing: Th5uGridSpacingOptions read FSpacing write SetSpacing;
+    property Appearance: Th5uGridAppearanceOptions read FAppearance write SetAppearance;
+    property Tree: Th5uTreeOptions read FTree write SetTree;
+    property AdjacentGroupFolding: Th5uAdjacentGroupFoldingOptions read FAdjacentGroupFolding write SetAdjacentGroupFolding;
 
-    property Theme: Th5uGridTheme
-      read FTheme write SetTheme
-      default Th5uGridTheme.ApplicationStyle;
-    property HeaderRowHeight: Integer
-      read FHeaderRowHeight write SetHeaderRowHeight default 26;
-    property RowIndicatorWidth: Integer
-      read FRowIndicatorWidth write SetRowIndicatorWidth default 34;
-    property ShowHeader: Boolean
-      read FShowHeader write FShowHeader default True;
-    property ShowRowIndicator: Boolean
-      read FShowRowIndicator write FShowRowIndicator default True;
-    property AllowEditing: Boolean
-      read FAllowEditing write FAllowEditing default True;
+    property Theme: Th5uGridTheme read FTheme write SetTheme default Th5uGridTheme.ApplicationStyle;
+    property HeaderRowHeight: Integer read FHeaderRowHeight write SetHeaderRowHeight default 26;
+    property RowIndicatorWidth: Integer read FRowIndicatorWidth write SetRowIndicatorWidth default 34;
+    property ShowHeader: Boolean read FShowHeader write FShowHeader default True;
+    property ShowRowIndicator: Boolean read FShowRowIndicator write FShowRowIndicator default True;
+    property AllowEditing: Boolean read FAllowEditing write FAllowEditing default True;
     // Convenience switch for all grid-wide one-pixel separators.
     // Explicit per-column RightSpacing values remain independently configurable.
-    property GridLines: Boolean
-      read GetGridLines write SetGridLines default True;
+    property GridLines: Boolean read GetGridLines write SetGridLines default True;
 
-    property OnGetClass: Th5uGetClassEvent
-      read GetOnGetClass write SetOnGetClass;
-    property OnCreateInstance: Th5uCreateInstanceEvent
-      read GetOnCreateInstance write SetOnCreateInstance;
-    property OnConfigureInstance: Th5uConfigureInstanceEvent
-      read GetOnConfigureInstance write SetOnConfigureInstance;
-    property OnGetRowHeight: Th5uGetRowHeightEvent
-      read FOnGetRowHeight write FOnGetRowHeight;
-    property OnGetRowSpacing: Th5uGetRowSpacingEvent
-      read FOnGetRowSpacing write FOnGetRowSpacing;
-    property OnGetThumbHint: Th5uGetThumbHintEvent
-      read FOnGetThumbHint write FOnGetThumbHint;
-    property OnGetRowAppearance: Th5uRowAppearanceEvent
-      read FOnGetRowAppearance write FOnGetRowAppearance;
-    property OnGetCellAppearance: Th5uCellAppearanceEvent
-      read FOnGetCellAppearance write FOnGetCellAppearance;
-    property OnCustomDraw: Th5uVclCustomDrawEvent
-      read FOnCustomDraw write FOnCustomDraw;
-    property OnGetTreeLevel: Th5uGetTreeLevelEvent
-      read FOnGetTreeLevel write FOnGetTreeLevel;
-    property OnGetTreeBranchEnd: Th5uGetTreeBranchEndEvent
-      read FOnGetTreeBranchEnd write FOnGetTreeBranchEnd;
-    property OnGetAdjacentGroupId: Th5uGetAdjacentGroupIdEvent
-      read FOnGetAdjacentGroupId write FOnGetAdjacentGroupId;
-    property OnAdjacentGroupStateChanged:
-      Th5uAdjacentGroupStateChangedEvent
-      read FOnAdjacentGroupStateChanged
-      write FOnAdjacentGroupStateChanged;
+    property OnGetClass: Th5uGetClassEvent read GetOnGetClass write SetOnGetClass;
+    property OnCreateInstance: Th5uCreateInstanceEvent read GetOnCreateInstance write SetOnCreateInstance;
+    property OnConfigureInstance: Th5uConfigureInstanceEvent read GetOnConfigureInstance write SetOnConfigureInstance;
+    property OnGetRowHeight: Th5uGetRowHeightEvent read FOnGetRowHeight write FOnGetRowHeight;
+    property OnGetRowSpacing: Th5uGetRowSpacingEvent read FOnGetRowSpacing write FOnGetRowSpacing;
+    property OnGetThumbHint: Th5uGetThumbHintEvent read FOnGetThumbHint write FOnGetThumbHint;
+    property OnGetRowAppearance: Th5uRowAppearanceEvent read FOnGetRowAppearance write FOnGetRowAppearance;
+    property OnGetCellAppearance: Th5uCellAppearanceEvent read FOnGetCellAppearance write FOnGetCellAppearance;
+    property OnCustomDraw: Th5uVclCustomDrawEvent read FOnCustomDraw write FOnCustomDraw;
+    property OnGetTreeLevel: Th5uGetTreeLevelEvent read FOnGetTreeLevel write FOnGetTreeLevel;
+    property OnGetTreeBranchEnd: Th5uGetTreeBranchEndEvent read FOnGetTreeBranchEnd write FOnGetTreeBranchEnd;
+    property OnGetAdjacentGroupId: Th5uGetAdjacentGroupIdEvent read FOnGetAdjacentGroupId write FOnGetAdjacentGroupId;
+    property OnAdjacentGroupStateChanged: Th5uAdjacentGroupStateChangedEvent read FOnAdjacentGroupStateChanged write FOnAdjacentGroupStateChanged;
     property OnClick;
     property OnDblClick;
     property OnEnter;
@@ -3619,10 +2670,7 @@ type
     procedure SetBytes(const AValue: TBytes);
   public
     constructor Create(AOwner: TComponent); override;
-    class function Execute(
-      AOwner: TComponent;
-      var ABytes: TBytes
-    ): Boolean;
+    class function Execute(AOwner: TComponent; var ABytes: TBytes): Boolean;
   end;
 ```
 

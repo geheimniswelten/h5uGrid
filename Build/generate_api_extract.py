@@ -41,7 +41,7 @@ def main() -> None:
         "",
         "> Automatisch aus den vollständigen `interface`-Abschnitten des ausgelieferten Quellstands erzeugt. Maßgeblich bleiben die Pascal-Units.",
         "",
-        "**Erzeugt:** 1. September 2026  ",
+        "**Erzeugt:** 2. September 2026  ",
         f"**Version:** {VERSION}",
         "",
     ]

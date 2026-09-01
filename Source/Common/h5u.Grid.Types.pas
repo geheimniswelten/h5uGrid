@@ -179,11 +179,7 @@ type
     ClassId: Th5uClassId;
     CreationReason: Th5uCreationReason;
 
-    class function Create(
-      AGrid, AView, AController: TObject;
-      const AClassId: Th5uClassId;
-      AElementKind: Th5uElementKind
-    ): Th5uFactoryContext; static;
+    class function Create(AGrid, AView, AController: TObject; const AClassId: Th5uClassId; AElementKind: Th5uElementKind): Th5uFactoryContext; static;
   end;
 
   Th5uTreeLevelContext = record
@@ -194,12 +190,7 @@ type
     SourceRowIndex: Int64;
   end;
 
-  Th5uGetTreeLevelEvent = procedure(
-    Sender: TObject;
-    const AContext: Th5uTreeLevelContext;
-    var ALevel: Integer;
-    var AAvailable: Boolean
-  ) of object;
+  Th5uGetTreeLevelEvent = procedure(Sender: TObject; const AContext: Th5uTreeLevelContext; var ALevel: Integer; var AAvailable: Boolean) of object;
 
   Th5uTreeBranchEndContext = record
     Grid: TObject;
@@ -213,12 +204,7 @@ type
     IsEndOfData: Boolean;
   end;
 
-  Th5uGetTreeBranchEndEvent = procedure(
-    Sender: TObject;
-    const AContext: Th5uTreeBranchEndContext;
-    var AIsBranchEnd: Boolean;
-    var AClosedLevels: Integer
-  ) of object;
+  Th5uGetTreeBranchEndEvent = procedure(Sender: TObject; const AContext: Th5uTreeBranchEndContext; var AIsBranchEnd: Boolean; var AClosedLevels: Integer) of object;
 
   Th5uAdjacentGroupInitialState = (
     Expanded,
@@ -240,12 +226,7 @@ type
     SourceRowIndex: Int64;
   end;
 
-  Th5uGetAdjacentGroupIdEvent = procedure(
-    Sender: TObject;
-    const AContext: Th5uAdjacentGroupIdContext;
-    var AGroupId: TValue;
-    var AAvailable: Boolean
-  ) of object;
+  Th5uGetAdjacentGroupIdEvent = procedure(Sender: TObject; const AContext: Th5uAdjacentGroupIdContext; var AGroupId: TValue; var AAvailable: Boolean) of object;
 
   Th5uAdjacentGroupStateChangedContext = record
     Grid: TObject;
@@ -257,10 +238,7 @@ type
     Collapsed: Boolean;
   end;
 
-  Th5uAdjacentGroupStateChangedEvent = procedure(
-    Sender: TObject;
-    const AContext: Th5uAdjacentGroupStateChangedContext
-  ) of object;
+  Th5uAdjacentGroupStateChangedEvent = procedure(Sender: TObject; const AContext: Th5uAdjacentGroupStateChangedContext) of object;
 
   Th5uGridTheme = (
     ApplicationStyle,
@@ -389,10 +367,7 @@ type
     EndRowIndex: Int64;
     StartColumnIndex: Integer;
     EndColumnIndex: Integer;
-    class function Create(
-      AStartRow, AEndRow: Int64;
-      AStartColumn, AEndColumn: Integer
-    ): Th5uCellRange; static;
+    class function Create(AStartRow, AEndRow: Int64; AStartColumn, AEndColumn: Integer): Th5uCellRange; static;
     procedure Normalize;
     function Contains(ARowIndex: Int64; AColumnIndex: Integer): Boolean;
   end;
@@ -420,18 +395,12 @@ type
     procedure Clear;
   end;
 
-function h5uColorFromArgb(
-  AAlpha, ARed, AGreen, ABlue: Byte
-): Th5uColor; inline;
-function h5uColorFromRgb(
-  ARed, AGreen, ABlue: Byte
-): Th5uColor; inline;
+function h5uColorFromArgb(AAlpha, ARed, AGreen, ABlue: Byte): Th5uColor; inline;
+function h5uColorFromRgb(ARed, AGreen, ABlue: Byte): Th5uColor; inline;
 
 implementation
 
-function h5uColorFromArgb(
-  AAlpha, ARed, AGreen, ABlue: Byte
-): Th5uColor;
+function h5uColorFromArgb(AAlpha, ARed, AGreen, ABlue: Byte): Th5uColor;
 begin
   Result := Th5uColor(
     (Cardinal(AAlpha) shl 24) or
@@ -441,23 +410,19 @@ begin
   );
 end;
 
-function h5uColorFromRgb(
-  ARed, AGreen, ABlue: Byte
-): Th5uColor;
+function h5uColorFromRgb(ARed, AGreen, ABlue: Byte): Th5uColor;
 begin
   Result := h5uColorFromArgb($FF, ARed, AGreen, ABlue);
 end;
 
 { Th5uRowKey }
 
-class operator Th5uRowKey.Equal(
-  const ALeft, ARight: Th5uRowKey): Boolean;
+class operator Th5uRowKey.Equal(const ALeft, ARight: Th5uRowKey): Boolean;
 begin
   Result := ALeft.FValue = ARight.FValue;
 end;
 
-class operator Th5uRowKey.NotEqual(
-  const ALeft, ARight: Th5uRowKey): Boolean;
+class operator Th5uRowKey.NotEqual(const ALeft, ARight: Th5uRowKey): Boolean;
 begin
   Result := not (ALeft = ARight);
 end;
@@ -489,10 +454,7 @@ end;
 
 { Th5uFactoryContext }
 
-class function Th5uFactoryContext.Create(
-  AGrid, AView, AController: TObject;
-  const AClassId: Th5uClassId;
-  AElementKind: Th5uElementKind): Th5uFactoryContext;
+class function Th5uFactoryContext.Create(AGrid, AView, AController: TObject; const AClassId: Th5uClassId; AElementKind: Th5uElementKind): Th5uFactoryContext;
 begin
   Result := Default(Th5uFactoryContext);
   Result.Grid := AGrid;
@@ -528,8 +490,7 @@ end;
 
 { Th5uCellRange }
 
-function Th5uCellRange.Contains(
-  ARowIndex: Int64; AColumnIndex: Integer): Boolean;
+function Th5uCellRange.Contains(ARowIndex: Int64; AColumnIndex: Integer): Boolean;
 var
   LRange: Th5uCellRange;
 begin
@@ -542,9 +503,7 @@ begin
     (AColumnIndex <= LRange.EndColumnIndex);
 end;
 
-class function Th5uCellRange.Create(
-  AStartRow, AEndRow: Int64;
-  AStartColumn, AEndColumn: Integer): Th5uCellRange;
+class function Th5uCellRange.Create(AStartRow, AEndRow: Int64; AStartColumn, AEndColumn: Integer): Th5uCellRange;
 begin
   Result.StartRowIndex := AStartRow;
   Result.EndRowIndex := AEndRow;

@@ -1,7 +1,7 @@
 # Build- und Prüfstatus
 
-**Stand:** 1. September 2026  
-**Prototypversion:** 0.1.3
+**Stand:** 2. September 2026  
+**Prototypversion:** 0.1.4
 
 ## Umfang
 
@@ -11,7 +11,21 @@
 - Spacing-, Separator- und Farb-API in VCL und FMX,
 - Tree-Ast-Abschlussleiste mit Level-Column-/Event-Erkennung, eigenem Style und per Grid austauschbarer Factory-Zelle,
 - Adjacent-Group-Folding für unmittelbar aufeinanderfolgende gleiche IDs mit unabhängigen Wiederholungen,
-- Plus-/Minus-Faltzeichen und alternative Abschlussleiste mit den Modi `Never`, `CollapsedOnly`, `ExpandedOnly` und `Always`.
+- Plus-/Minus-Faltzeichen und alternative Abschlussleiste mit den Modi `Never`, `CollapsedOnly`, `ExpandedOnly` und `Always`,
+- Pascal-Quellformat mit einer maximalen Zeilenlänge von 180 Zeichen.
+
+## Quellformatierung
+
+Property-Deklarationen, prozedurale Eventtypen sowie Methoden- und Funktionssignaturen bleiben einzeilig, solange sie einschließlich Einrückung höchstens 180 Zeichen lang sind. Längere Signaturen werden an Parametergrenzen fortgesetzt.
+
+Der mitgelieferte Formatter verändert ausschließlich diese Deklarationsblöcke:
+
+```text
+python Build\format_pascal.py
+python Build\format_pascal.py --check
+```
+
+Die ursprünglichen und formatierten Pascal-Quellen wurden zusätzlich lexikalisch verglichen. Außerhalb von Whitespace gab es keine Tokenänderung.
 
 ## Durchgeführte Prüfungen
 
@@ -20,6 +34,8 @@
 - PowerShell-Buildskript referenziert alle enthaltenen Packages und Demo-DPRs,
 - DFM-/FMX-Ressourcen und Eventhandler,
 - h5u-Namenskonventionen und Plattformtrennung,
+- maximale Pascal-Zeilenlänge von 180 Zeichen und keine verfrüht umgebrochenen Deklarationsblöcke,
+- fünf fokussierte Semantiktests für Property-, Eventtyp- und Methodensignaturformatierung,
 - Factory-IDs, Optionen, Kontexte und öffentliche API des Adjacent-Group-Foldings,
 - lokale Factory-Erzeugung von Faltzeichen und Abschlussleiste in VCL und FMX,
 - sichtbare View-zu-Controller-Abbildung ohne Änderung der Quellreihenfolge,
@@ -49,6 +65,7 @@ Die statischen Prüfungen ersetzen insbesondere keine Prüfung versionsabhängig
 ## Reproduzierbare Prüfungen
 
 ```text
+python Build\format_pascal.py --check
 python Build\source_audit.py
 python Build\test_tree_branch_end.py
 python Build\test_adjacent_group_folding.py

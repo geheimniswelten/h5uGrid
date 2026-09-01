@@ -51,53 +51,27 @@ type
     function GetDataSet: TDataSet;
     function ReadFieldValue(AField: TField): TValue;
     procedure WriteFieldValue(AField: TField; const AValue: TValue);
-    function CreateSnapshot(
-      ASourceRowIndex: Int64
-    ): Th5uDataRowSnapshot;
-    function GetSnapshot(
-      ASourceRowIndex: Int64
-    ): Th5uDataRowSnapshot;
+    function CreateSnapshot(ASourceRowIndex: Int64): Th5uDataRowSnapshot;
+    function GetSnapshot(ASourceRowIndex: Int64): Th5uDataRowSnapshot;
     procedure ClearSnapshotCache;
     function GoToSourceRow(ASourceRowIndex: Int64): Boolean;
   protected
-    procedure Notification(
-      AComponent: TComponent;
-      Operation: TOperation
-    ); override;
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     function GetSourceRowCount: Int64; override;
-    function GetSourceRowKey(
-      ASourceRowIndex: Int64
-    ): Th5uRowKey; override;
-    function GetSourceValue(
-      ASourceRowIndex: Int64;
-      const AFieldName: string
-    ): TValue; override;
-    procedure SetSourceValue(
-      ASourceRowIndex: Int64;
-      const AFieldName: string;
-      const AValue: TValue
-    ); override;
-    function GetSourceCanEdit(
-      ASourceRowIndex: Int64;
-      const AFieldName: string
-    ): Boolean; override;
+    function GetSourceRowKey(ASourceRowIndex: Int64): Th5uRowKey; override;
+    function GetSourceValue(ASourceRowIndex: Int64; const AFieldName: string): TValue; override;
+    procedure SetSourceValue(ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue); override;
+    function GetSourceCanEdit(ASourceRowIndex: Int64; const AFieldName: string): Boolean; override;
     procedure DoCacheOptionsChanged; override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-    procedure PrepareRange(
-      AFirstViewRow, ACount: Int64
-    ); override;
-    procedure DataSetChanged(
-      AKind: Th5uDataChangeKind;
-      AField: TField = nil
-    );
+    procedure PrepareRange(AFirstViewRow, ACount: Int64); override;
+    procedure DataSetChanged(AKind: Th5uDataChangeKind; AField: TField = nil);
     property DataSet: TDataSet read GetDataSet;
   published
-    property DataSource: TDataSource
-      read FDataSource write SetDataSource;
-    property KeyFieldName: string
-      read FKeyFieldName write FKeyFieldName;
+    property DataSource: TDataSource read FDataSource write SetDataSource;
+    property KeyFieldName: string read FKeyFieldName write FKeyFieldName;
   end;
 
 implementation
@@ -170,8 +144,7 @@ begin
   Cache.Mode := Th5uCacheMode.Viewport;
 end;
 
-function Th5uDataSetController.CreateSnapshot(
-  ASourceRowIndex: Int64): Th5uDataRowSnapshot;
+function Th5uDataSetController.CreateSnapshot(ASourceRowIndex: Int64): Th5uDataRowSnapshot;
 var
   LDataSet: TDataSet;
   LBookmark: TBookmark;
@@ -231,8 +204,7 @@ begin
   end;
 end;
 
-procedure Th5uDataSetController.DataSetChanged(
-  AKind: Th5uDataChangeKind; AField: TField);
+procedure Th5uDataSetController.DataSetChanged(AKind: Th5uDataChangeKind; AField: TField);
 var
   LChange: Th5uDataChange;
 begin
@@ -266,8 +238,7 @@ begin
     Result := nil;
 end;
 
-function Th5uDataSetController.GetSnapshot(
-  ASourceRowIndex: Int64): Th5uDataRowSnapshot;
+function Th5uDataSetController.GetSnapshot(ASourceRowIndex: Int64): Th5uDataRowSnapshot;
 begin
   if not FSnapshotCache.TryGetValue(ASourceRowIndex, Result) then
   begin
@@ -276,8 +247,7 @@ begin
   end;
 end;
 
-function Th5uDataSetController.GetSourceCanEdit(
-  ASourceRowIndex: Int64; const AFieldName: string): Boolean;
+function Th5uDataSetController.GetSourceCanEdit(ASourceRowIndex: Int64; const AFieldName: string): Boolean;
 var
   LField: TField;
 begin
@@ -299,8 +269,7 @@ begin
     Result := 0;
 end;
 
-function Th5uDataSetController.GetSourceRowKey(
-  ASourceRowIndex: Int64): Th5uRowKey;
+function Th5uDataSetController.GetSourceRowKey(ASourceRowIndex: Int64): Th5uRowKey;
 var
   LSnapshot: Th5uDataRowSnapshot;
 begin
@@ -313,8 +282,7 @@ begin
   Result := inherited GetSourceRowKey(ASourceRowIndex);
 end;
 
-function Th5uDataSetController.GetSourceValue(
-  ASourceRowIndex: Int64; const AFieldName: string): TValue;
+function Th5uDataSetController.GetSourceValue(ASourceRowIndex: Int64; const AFieldName: string): TValue;
 var
   LSnapshot: Th5uDataRowSnapshot;
   LDataSet: TDataSet;
@@ -361,8 +329,7 @@ begin
   end;
 end;
 
-function Th5uDataSetController.GoToSourceRow(
-  ASourceRowIndex: Int64): Boolean;
+function Th5uDataSetController.GoToSourceRow(ASourceRowIndex: Int64): Boolean;
 var
   LDataSet: TDataSet;
 begin
@@ -384,16 +351,14 @@ begin
   end;
 end;
 
-procedure Th5uDataSetController.Notification(
-  AComponent: TComponent; Operation: TOperation);
+procedure Th5uDataSetController.Notification(AComponent: TComponent; Operation: TOperation);
 begin
   inherited Notification(AComponent, Operation);
   if (Operation = opRemove) and (AComponent = FDataSource) then
     DataSource := nil;
 end;
 
-procedure Th5uDataSetController.PrepareRange(
-  AFirstViewRow, ACount: Int64);
+procedure Th5uDataSetController.PrepareRange(AFirstViewRow, ACount: Int64);
 var
   LViewIndex: Int64;
   LSourceIndex: Int64;
@@ -454,8 +419,7 @@ begin
   end;
 end;
 
-function Th5uDataSetController.ReadFieldValue(
-  AField: TField): TValue;
+function Th5uDataSetController.ReadFieldValue(AField: TField): TValue;
 var
   LStream: TMemoryStream;
   LBytes: TBytes;
@@ -464,27 +428,19 @@ begin
     Exit(TValue.Empty);
 
   case AField.DataType of
-    ftSmallint, ftInteger, ftWord, ftAutoInc, ftShortint, ftByte:
-      Result := TValue.From<Integer>(AField.AsInteger);
+    ftSmallint, ftInteger, ftWord, ftAutoInc, ftShortint, ftByte: Result := TValue.From<Integer>(AField.AsInteger);
 
-    ftLargeint:
-      Result := TValue.From<Int64>(AField.AsLargeInt);
+    ftLargeint: Result := TValue.From<Int64>(AField.AsLargeInt);
 
-    ftBoolean:
-      Result := TValue.From<Boolean>(AField.AsBoolean);
+    ftBoolean: Result := TValue.From<Boolean>(AField.AsBoolean);
 
-    ftFloat, ftSingle, ftExtended:
-      Result := TValue.From<Double>(AField.AsFloat);
+    ftFloat, ftSingle, ftExtended: Result := TValue.From<Double>(AField.AsFloat);
 
-    ftCurrency, ftBCD, ftFMTBcd:
-      Result := TValue.From<Currency>(AField.AsCurrency);
+    ftCurrency, ftBCD, ftFMTBcd: Result := TValue.From<Currency>(AField.AsCurrency);
 
-    ftDate, ftTime, ftDateTime, ftTimeStamp:
-      Result := TValue.From<TDateTime>(AField.AsDateTime);
+    ftDate, ftTime, ftDateTime, ftTimeStamp: Result := TValue.From<TDateTime>(AField.AsDateTime);
 
-    ftBlob, ftGraphic, ftOraBlob:
-      begin
-        LStream := TMemoryStream.Create;
+    ftBlob, ftGraphic, ftOraBlob: begin LStream := TMemoryStream.Create;
         try
           TBlobField(AField).SaveToStream(LStream);
           SetLength(LBytes, LStream.Size);
@@ -504,8 +460,7 @@ begin
   end;
 end;
 
-procedure Th5uDataSetController.SetDataSource(
-  const AValue: TDataSource);
+procedure Th5uDataSetController.SetDataSource(const AValue: TDataSource);
 begin
   if FDataSource = AValue then
     Exit;
@@ -523,10 +478,7 @@ begin
   Invalidate;
 end;
 
-procedure Th5uDataSetController.SetSourceValue(
-  ASourceRowIndex: Int64;
-  const AFieldName: string;
-  const AValue: TValue);
+procedure Th5uDataSetController.SetSourceValue(ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue);
 var
   LDataSet: TDataSet;
   LField: TField;
@@ -549,8 +501,7 @@ begin
   NotifyDataChanged(Th5uDataChange.ResetAll);
 end;
 
-procedure Th5uDataSetController.WriteFieldValue(
-  AField: TField; const AValue: TValue);
+procedure Th5uDataSetController.WriteFieldValue(AField: TField; const AValue: TValue);
 var
   LBytes: TBytes;
   LStream: TBytesStream;
@@ -574,23 +525,17 @@ begin
   end;
 
   case AField.DataType of
-    ftSmallint, ftInteger, ftWord, ftAutoInc, ftShortint, ftByte:
-      AField.AsInteger := AValue.AsInteger;
+    ftSmallint, ftInteger, ftWord, ftAutoInc, ftShortint, ftByte: AField.AsInteger := AValue.AsInteger;
 
-    ftLargeint:
-      AField.AsLargeInt := AValue.AsInt64;
+    ftLargeint: AField.AsLargeInt := AValue.AsInt64;
 
-    ftBoolean:
-      AField.AsBoolean := AValue.AsBoolean;
+    ftBoolean: AField.AsBoolean := AValue.AsBoolean;
 
-    ftFloat, ftSingle, ftExtended:
-      AField.AsFloat := AValue.AsExtended;
+    ftFloat, ftSingle, ftExtended: AField.AsFloat := AValue.AsExtended;
 
-    ftCurrency, ftBCD, ftFMTBcd:
-      AField.AsCurrency := AValue.AsType<Currency>;
+    ftCurrency, ftBCD, ftFMTBcd: AField.AsCurrency := AValue.AsType<Currency>;
 
-    ftDate, ftTime, ftDateTime, ftTimeStamp:
-      AField.AsDateTime := AValue.AsType<TDateTime>;
+    ftDate, ftTime, ftDateTime, ftTimeStamp: AField.AsDateTime := AValue.AsType<TDateTime>;
 
   else
     AField.AsString := AValue.ToString;

@@ -21,10 +21,7 @@ type
     constructor Create(const AKey: Th5uRowKey);
     destructor Destroy; override;
     function GetValue(const AFieldName: string): TValue;
-    procedure SetValue(
-      const AFieldName: string;
-      const AValue: TValue
-    );
+    procedure SetValue(const AFieldName: string; const AValue: TValue);
     property Key: Th5uRowKey read FKey write FKey;
   end;
 
@@ -34,31 +31,16 @@ type
     FNextKey: Int64;
   protected
     function GetSourceRowCount: Int64; override;
-    function GetSourceRowKey(
-      ASourceRowIndex: Int64
-    ): Th5uRowKey; override;
-    function GetSourceValue(
-      ASourceRowIndex: Int64;
-      const AFieldName: string
-    ): TValue; override;
-    procedure SetSourceValue(
-      ASourceRowIndex: Int64;
-      const AFieldName: string;
-      const AValue: TValue
-    ); override;
-    function GetSourceCanEdit(
-      ASourceRowIndex: Int64;
-      const AFieldName: string
-    ): Boolean; override;
+    function GetSourceRowKey(ASourceRowIndex: Int64): Th5uRowKey; override;
+    function GetSourceValue(ASourceRowIndex: Int64; const AFieldName: string): TValue; override;
+    procedure SetSourceValue(ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue); override;
+    function GetSourceCanEdit(ASourceRowIndex: Int64; const AFieldName: string): Boolean; override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
     function AppendRow: Th5uMemoryRow;
-    function AppendValues(
-      const AFieldNames: array of string;
-      const AValues: array of TValue
-    ): Th5uMemoryRow;
+    function AppendValues(const AFieldNames: array of string; const AValues: array of TValue): Th5uMemoryRow;
     procedure DeleteRow(AIndex: Integer);
     procedure Clear;
     function Row(AIndex: Integer): Th5uMemoryRow;
@@ -87,8 +69,7 @@ begin
     Result := TValue.Empty;
 end;
 
-procedure Th5uMemoryRow.SetValue(
-  const AFieldName: string; const AValue: TValue);
+procedure Th5uMemoryRow.SetValue(const AFieldName: string; const AValue: TValue);
 begin
   FValues.AddOrSetValue(AFieldName.ToUpperInvariant, AValue);
 end;
@@ -112,9 +93,7 @@ begin
   NotifyDataChanged(LChange);
 end;
 
-function Th5uMemoryController.AppendValues(
-  const AFieldNames: array of string;
-  const AValues: array of TValue): Th5uMemoryRow;
+function Th5uMemoryController.AppendValues(const AFieldNames: array of string; const AValues: array of TValue): Th5uMemoryRow;
 var
   I: Integer;
 begin
@@ -168,8 +147,7 @@ begin
   inherited Destroy;
 end;
 
-function Th5uMemoryController.GetSourceCanEdit(
-  ASourceRowIndex: Int64; const AFieldName: string): Boolean;
+function Th5uMemoryController.GetSourceCanEdit(ASourceRowIndex: Int64; const AFieldName: string): Boolean;
 begin
   Result := (ASourceRowIndex >= 0) and
     (ASourceRowIndex < FRows.Count);
@@ -180,8 +158,7 @@ begin
   Result := FRows.Count;
 end;
 
-function Th5uMemoryController.GetSourceRowKey(
-  ASourceRowIndex: Int64): Th5uRowKey;
+function Th5uMemoryController.GetSourceRowKey(ASourceRowIndex: Int64): Th5uRowKey;
 begin
   if (ASourceRowIndex >= 0) and
      (ASourceRowIndex < FRows.Count) then
@@ -190,8 +167,7 @@ begin
     Result := Th5uRowKey.Empty;
 end;
 
-function Th5uMemoryController.GetSourceValue(
-  ASourceRowIndex: Int64; const AFieldName: string): TValue;
+function Th5uMemoryController.GetSourceValue(ASourceRowIndex: Int64; const AFieldName: string): TValue;
 begin
   if (ASourceRowIndex < 0) or
      (ASourceRowIndex >= FRows.Count) then
@@ -204,10 +180,7 @@ begin
   Result := FRows[AIndex];
 end;
 
-procedure Th5uMemoryController.SetSourceValue(
-  ASourceRowIndex: Int64;
-  const AFieldName: string;
-  const AValue: TValue);
+procedure Th5uMemoryController.SetSourceValue(ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue);
 var
   LChange: Th5uDataChange;
 begin

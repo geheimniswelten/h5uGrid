@@ -22,42 +22,17 @@ type
     FRttiContext: TRttiContext;
     FPropertyCache: TDictionary<string, TRttiProperty>;
     FValueCache: TDictionary<string, TValue>;
-    function ResolveProperty(
-      AObject: TObject;
-      const APropertyName: string
-    ): TRttiProperty;
-    function ReadPropertyPath(
-      AObject: TObject;
-      const APath: string
-    ): TValue;
-    procedure WritePropertyPath(
-      AObject: TObject;
-      const APath: string;
-      const AValue: TValue
-    );
-    function ValueCacheKey(
-      ASourceRowIndex: Int64;
-      const AFieldName: string
-    ): string;
+    function ResolveProperty(AObject: TObject; const APropertyName: string): TRttiProperty;
+    function ReadPropertyPath(AObject: TObject; const APath: string): TValue;
+    procedure WritePropertyPath(AObject: TObject; const APath: string; const AValue: TValue);
+    function ValueCacheKey(ASourceRowIndex: Int64; const AFieldName: string): string;
     procedure ClearValueCache;
   protected
     function GetSourceRowCount: Int64; override;
-    function GetSourceRowKey(
-      ASourceRowIndex: Int64
-    ): Th5uRowKey; override;
-    function GetSourceValue(
-      ASourceRowIndex: Int64;
-      const AFieldName: string
-    ): TValue; override;
-    procedure SetSourceValue(
-      ASourceRowIndex: Int64;
-      const AFieldName: string;
-      const AValue: TValue
-    ); override;
-    function GetSourceCanEdit(
-      ASourceRowIndex: Int64;
-      const AFieldName: string
-    ): Boolean; override;
+    function GetSourceRowKey(ASourceRowIndex: Int64): Th5uRowKey; override;
+    function GetSourceValue(ASourceRowIndex: Int64; const AFieldName: string): TValue; override;
+    procedure SetSourceValue(ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue); override;
+    function GetSourceCanEdit(ASourceRowIndex: Int64; const AFieldName: string): Boolean; override;
     procedure DoCacheOptionsChanged; override;
   public
     constructor Create(AOwner: TComponent); override;
@@ -67,19 +42,14 @@ type
     procedure Insert(AIndex: Integer; AObject: TObject);
     procedure Delete(AIndex: Integer);
     procedure Clear;
-    procedure NotifyObjectChanged(
-      AObject: TObject;
-      const APropertyName: string = ''
-    );
+    procedure NotifyObjectChanged(AObject: TObject; const APropertyName: string = '');
     function Item(AIndex: Integer): TObject;
 
     function GetCount: Integer;
     property Count: Integer read GetCount;
   published
-    property OwnsObjects: Boolean
-      read FOwnsObjects write FOwnsObjects default False;
-    property KeyPropertyName: string
-      read FKeyPropertyName write FKeyPropertyName;
+    property OwnsObjects: Boolean read FOwnsObjects write FOwnsObjects default False;
+    property KeyPropertyName: string read FKeyPropertyName write FKeyPropertyName;
   end;
 
 implementation
@@ -168,8 +138,7 @@ begin
   ClearValueCache;
 end;
 
-function Th5uObjectListController.GetSourceCanEdit(
-  ASourceRowIndex: Int64; const AFieldName: string): Boolean;
+function Th5uObjectListController.GetSourceCanEdit(ASourceRowIndex: Int64; const AFieldName: string): Boolean;
 var
   LObject: TObject;
   LParts: TArray<string>;
@@ -209,8 +178,7 @@ begin
   Result := FItems.Count;
 end;
 
-function Th5uObjectListController.GetSourceRowKey(
-  ASourceRowIndex: Int64): Th5uRowKey;
+function Th5uObjectListController.GetSourceRowKey(ASourceRowIndex: Int64): Th5uRowKey;
 var
   LValue: TValue;
 begin
@@ -229,8 +197,7 @@ begin
   Result := inherited GetSourceRowKey(ASourceRowIndex);
 end;
 
-function Th5uObjectListController.GetSourceValue(
-  ASourceRowIndex: Int64; const AFieldName: string): TValue;
+function Th5uObjectListController.GetSourceValue(ASourceRowIndex: Int64; const AFieldName: string): TValue;
 var
   LCacheKey: string;
 begin
@@ -252,8 +219,7 @@ begin
     FValueCache.AddOrSetValue(LCacheKey, Result);
 end;
 
-procedure Th5uObjectListController.Insert(
-  AIndex: Integer; AObject: TObject);
+procedure Th5uObjectListController.Insert(AIndex: Integer; AObject: TObject);
 var
   LChange: Th5uDataChange;
 begin
@@ -275,8 +241,7 @@ begin
   Result := FItems[AIndex];
 end;
 
-procedure Th5uObjectListController.NotifyObjectChanged(
-  AObject: TObject; const APropertyName: string);
+procedure Th5uObjectListController.NotifyObjectChanged(AObject: TObject; const APropertyName: string);
 var
   LIndex: Integer;
   LChange: Th5uDataChange;
@@ -300,8 +265,7 @@ begin
   NotifyDataChanged(LChange);
 end;
 
-function Th5uObjectListController.ReadPropertyPath(
-  AObject: TObject; const APath: string): TValue;
+function Th5uObjectListController.ReadPropertyPath(AObject: TObject; const APath: string): TValue;
 var
   LParts: TArray<string>;
   LPart: string;
@@ -330,9 +294,7 @@ begin
   end;
 end;
 
-function Th5uObjectListController.ResolveProperty(
-  AObject: TObject;
-  const APropertyName: string): TRttiProperty;
+function Th5uObjectListController.ResolveProperty(AObject: TObject; const APropertyName: string): TRttiProperty;
 var
   LKey: string;
   LRttiType: TRttiType;
@@ -352,10 +314,7 @@ begin
   FPropertyCache.AddOrSetValue(LKey, Result);
 end;
 
-procedure Th5uObjectListController.SetSourceValue(
-  ASourceRowIndex: Int64;
-  const AFieldName: string;
-  const AValue: TValue);
+procedure Th5uObjectListController.SetSourceValue(ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue);
 var
   LObject: TObject;
 begin
@@ -368,17 +327,13 @@ begin
   NotifyObjectChanged(LObject, AFieldName);
 end;
 
-function Th5uObjectListController.ValueCacheKey(
-  ASourceRowIndex: Int64; const AFieldName: string): string;
+function Th5uObjectListController.ValueCacheKey(ASourceRowIndex: Int64; const AFieldName: string): string;
 begin
   Result := IntToStr(ASourceRowIndex) + '|' +
     AFieldName.ToUpperInvariant;
 end;
 
-procedure Th5uObjectListController.WritePropertyPath(
-  AObject: TObject;
-  const APath: string;
-  const AValue: TValue);
+procedure Th5uObjectListController.WritePropertyPath(AObject: TObject; const APath: string; const AValue: TValue);
 var
   LParts: TArray<string>;
   I: Integer;

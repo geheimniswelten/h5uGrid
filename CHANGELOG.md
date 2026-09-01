@@ -1,5 +1,18 @@
 ﻿# Changelog
 
+## 0.1.4 – 2026-09-02
+
+### Delphi-Quellformatierung
+
+- maximale Zeilenlänge für Pascal-Quellen auf 180 Zeichen festgelegt,
+- Property-Deklarationen bleiben bis zu dieser Grenze einzeilig,
+- Methoden- und Funktionssignaturen werden in Deklaration und `implementation` erst bei Überschreitung der Grenze umgebrochen,
+- prozedurale Eventtypen und einfache geteilte Felddeklarationen wurden entsprechend zusammengeführt,
+- längere Signaturen werden an Parametergrenzen kompakt fortgesetzt,
+- `.editorconfig` dokumentiert Einrückung, Encoding und Zeilenlänge,
+- `Build/format_pascal.py` formatiert die betroffenen Deklarationsblöcke konservativ und unterstützt einen reinen Prüfmodus,
+- Release- und statischer Audit prüfen die 180-Zeichen-Grenze und vorzeitig umgebrochene Deklarationen.
+
 ## 0.1.3 – 2026-09-01
 
 ### Adjacent-Group-Folding

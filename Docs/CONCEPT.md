@@ -497,3 +497,9 @@ Die aktuelle Implementierung konzentriert sich auf den vertikalen Testpfad. Der 
 - Aggregate und Backend-Summaries
 - LiveBindings-Adapter
 - Export, Druck und Accessibility-Ausbau
+
+## 19. Quellformat und Wartbarkeit
+
+Der h5u-Quellstil erlaubt 180 Zeichen pro Pascal-Zeile. Die großzügige Grenze hält vor allem Property-Deklarationen und Implementationssignaturen kompakt, ohne komplexe APIs künstlich über viele kurze Zeilen zu verteilen. Erst beim Überschreiten der Grenze wird an Parameter- oder Property-Klauselgrenzen umgebrochen.
+
+Ein konservativer Formatter und der Release-Audit prüfen diese Regel reproduzierbar. Ausführbare Anweisungen werden nicht automatisch umgebaut, damit semantisch gruppierte Ausdrücke und bewusst gestaltete Kontrollflüsse erhalten bleiben.

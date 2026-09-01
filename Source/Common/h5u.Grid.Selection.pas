@@ -40,63 +40,39 @@ type
     procedure ClearColumns;
     procedure ClearCellRanges;
 
-    procedure SelectRow(
-      const ARowKey: Th5uRowKey;
-      AAdd: Boolean = False
-    );
+    procedure SelectRow(const ARowKey: Th5uRowKey; AAdd: Boolean = False);
     procedure ToggleRow(const ARowKey: Th5uRowKey);
     procedure SelectAllRows;
     procedure ExcludeRow(const ARowKey: Th5uRowKey);
     function IsRowSelected(const ARowKey: Th5uRowKey): Boolean;
 
-    procedure SelectColumn(
-      const AColumnId: string;
-      AAdd: Boolean = False
-    );
+    procedure SelectColumn(const AColumnId: string; AAdd: Boolean = False);
     procedure ToggleColumn(const AColumnId: string);
     function IsColumnSelected(const AColumnId: string): Boolean;
 
-    procedure AddCellRange(
-      const ARange: Th5uCellRange;
-      AAdd: Boolean = False
-    );
-    function IsCellSelected(
-      ARowIndex: Int64;
-      AColumnIndex: Integer
-    ): Boolean;
+    procedure AddCellRange(const ARange: Th5uCellRange; AAdd: Boolean = False);
+    function IsCellSelected(ARowIndex: Int64; AColumnIndex: Integer): Boolean;
 
-    procedure SetFocus(
-      const ACell: Th5uCellAddress;
-      AUpdateAnchor: Boolean
-    );
+    procedure SetFocus(const ACell: Th5uCellAddress; AUpdateAnchor: Boolean);
 
     property CellRanges: TList<Th5uCellRange> read FCellRanges;
     property FocusedCell: Th5uCellAddress read FFocusedCell;
     property AnchorCell: Th5uCellAddress read FAnchorCell;
     property AllRowsSelected: Boolean read FAllRowsSelected;
-    property OnChanged: Th5uSelectionChangedEvent
-      read FOnChanged write FOnChanged;
+    property OnChanged: Th5uSelectionChangedEvent read FOnChanged write FOnChanged;
   published
-    property AllowedKinds: Th5uSelectionKinds
-      read FAllowedKinds write SetAllowedKinds;
-    property CombinationMode: Th5uSelectionCombinationMode
-      read FCombinationMode write FCombinationMode
-      default Th5uSelectionCombinationMode.Mixed;
-    property Scope: Th5uSelectionScope
-      read FScope write FScope
-      default Th5uSelectionScope.CurrentQuery;
-    property MultiRange: Boolean
-      read FMultiRange write FMultiRange default True;
-    property KeepAcrossPages: Boolean
-      read FKeepAcrossPages write FKeepAcrossPages default True;
+    property AllowedKinds: Th5uSelectionKinds read FAllowedKinds write SetAllowedKinds;
+    property CombinationMode: Th5uSelectionCombinationMode read FCombinationMode write FCombinationMode default Th5uSelectionCombinationMode.Mixed;
+    property Scope: Th5uSelectionScope read FScope write FScope default Th5uSelectionScope.CurrentQuery;
+    property MultiRange: Boolean read FMultiRange write FMultiRange default True;
+    property KeepAcrossPages: Boolean read FKeepAcrossPages write FKeepAcrossPages default True;
   end;
 
 implementation
 
 { Th5uGridSelection }
 
-procedure Th5uGridSelection.AddCellRange(
-  const ARange: Th5uCellRange; AAdd: Boolean);
+procedure Th5uGridSelection.AddCellRange(const ARange: Th5uCellRange; AAdd: Boolean);
 var
   LRange: Th5uCellRange;
 begin
@@ -190,8 +166,7 @@ begin
   Changed;
 end;
 
-function Th5uGridSelection.IsCellSelected(
-  ARowIndex: Int64; AColumnIndex: Integer): Boolean;
+function Th5uGridSelection.IsCellSelected(ARowIndex: Int64; AColumnIndex: Integer): Boolean;
 var
   LRange: Th5uCellRange;
 begin
@@ -201,14 +176,12 @@ begin
       Exit(True);
 end;
 
-function Th5uGridSelection.IsColumnSelected(
-  const AColumnId: string): Boolean;
+function Th5uGridSelection.IsColumnSelected(const AColumnId: string): Boolean;
 begin
   Result := FSelectedColumns.ContainsKey(AColumnId);
 end;
 
-function Th5uGridSelection.IsRowSelected(
-  const ARowKey: Th5uRowKey): Boolean;
+function Th5uGridSelection.IsRowSelected(const ARowKey: Th5uRowKey): Boolean;
 begin
   if FAllRowsSelected then
     Exit(not FExcludedRows.ContainsKey(ARowKey.ToString));
@@ -233,8 +206,7 @@ begin
   Changed;
 end;
 
-procedure Th5uGridSelection.SelectColumn(
-  const AColumnId: string; AAdd: Boolean);
+procedure Th5uGridSelection.SelectColumn(const AColumnId: string; AAdd: Boolean);
 begin
   if not (Th5uSelectionKind.Columns in FAllowedKinds) then
     Exit;
@@ -252,8 +224,7 @@ begin
   Changed;
 end;
 
-procedure Th5uGridSelection.SelectRow(
-  const ARowKey: Th5uRowKey; AAdd: Boolean);
+procedure Th5uGridSelection.SelectRow(const ARowKey: Th5uRowKey; AAdd: Boolean);
 begin
   if not (Th5uSelectionKind.Rows in FAllowedKinds) then
     Exit;
@@ -272,8 +243,7 @@ begin
   Changed;
 end;
 
-procedure Th5uGridSelection.SetAllowedKinds(
-  const AValue: Th5uSelectionKinds);
+procedure Th5uGridSelection.SetAllowedKinds(const AValue: Th5uSelectionKinds);
 begin
   if FAllowedKinds = AValue then
     Exit;
@@ -289,8 +259,7 @@ begin
   Changed;
 end;
 
-procedure Th5uGridSelection.SetFocus(
-  const ACell: Th5uCellAddress; AUpdateAnchor: Boolean);
+procedure Th5uGridSelection.SetFocus(const ACell: Th5uCellAddress; AUpdateAnchor: Boolean);
 begin
   FFocusedCell := ACell;
   if AUpdateAnchor then

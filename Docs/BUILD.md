@@ -1,4 +1,4 @@
-# h5u.Grid – Build und Installation
+﻿# h5u.Grid – Build und Installation
 
 ## Voraussetzungen
 
@@ -70,6 +70,24 @@ Design-Time-Packages werden bei `Win64` bewusst übersprungen. Sie werden für d
 
 Die Komponente `Th5uSampleClientDataSet` erzeugt ihr Schema und ihre Musterdatensätze selbst. Die ClientDataSet-Demos benötigen daher weder eine Datenbank noch eine externe `.cds`-Datei.
 
+## Quellformatierung
+
+Für Delphi-Quellen gilt eine maximale Zeilenlänge von 180 Zeichen. Property-Deklarationen, prozedurale Eventtypen sowie Methoden- und Funktionssignaturen werden erst beim Überschreiten dieser Grenze umgebrochen.
+
+Formatierung anwenden:
+
+```powershell
+python Build\format_pascal.py
+```
+
+Nur prüfen:
+
+```powershell
+python Build\format_pascal.py --check
+```
+
+Der Formatter verändert bewusst keine ausführbaren Anweisungen. Die vollständige Regel steht in [CODING-STYLE.md](CODING-STYLE.md).
+
 ## Statischer Audit
 
 Unter Windows:
@@ -81,6 +99,7 @@ Build\run-static-audit.cmd
 Direkt mit Python:
 
 ```powershell
+python Build\format_pascal.py --check
 python Build\source_audit.py
 python Build\release_audit.py
 ```

@@ -176,6 +176,11 @@ def check_balanced_delimiters(
 
 def check_pascal_file(path: Path, root: Path, findings: list[Finding]) -> None:
     text = path.read_text(encoding="utf-8-sig")
+    for line_number, line in enumerate(text.splitlines(), 1):
+        if len(line) > 180:
+            findings.append(Finding("error", rel(path, root), line_number, f"line has {len(line)} characters; maximum is 180"))
+        if "\t" in line:
+            findings.append(Finding("error", rel(path, root), line_number, "tab character in Pascal source"))
     match = UNIT_RE.search(text)
     if path.suffix.lower() == ".pas":
         if not match:

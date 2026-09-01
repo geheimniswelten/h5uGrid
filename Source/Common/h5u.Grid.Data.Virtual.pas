@@ -13,44 +13,17 @@ uses
   h5u.Grid.Types;
 
 type
-  Th5uVirtualGetRowCountEvent = procedure(
-    Sender: TObject;
-    var ARowCount: Int64
-  ) of object;
+  Th5uVirtualGetRowCountEvent = procedure(Sender: TObject; var ARowCount: Int64) of object;
 
-  Th5uVirtualGetRowKeyEvent = procedure(
-    Sender: TObject;
-    ASourceRowIndex: Int64;
-    var ARowKey: Th5uRowKey
-  ) of object;
+  Th5uVirtualGetRowKeyEvent = procedure(Sender: TObject; ASourceRowIndex: Int64; var ARowKey: Th5uRowKey) of object;
 
-  Th5uVirtualGetValueEvent = procedure(
-    Sender: TObject;
-    ASourceRowIndex: Int64;
-    const AFieldName: string;
-    var AValue: TValue
-  ) of object;
+  Th5uVirtualGetValueEvent = procedure(Sender: TObject; ASourceRowIndex: Int64; const AFieldName: string; var AValue: TValue) of object;
 
-  Th5uVirtualSetValueEvent = procedure(
-    Sender: TObject;
-    ASourceRowIndex: Int64;
-    const AFieldName: string;
-    const AValue: TValue;
-    var AHandled: Boolean
-  ) of object;
+  Th5uVirtualSetValueEvent = procedure(Sender: TObject; ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue; var AHandled: Boolean) of object;
 
-  Th5uVirtualCanEditEvent = procedure(
-    Sender: TObject;
-    ASourceRowIndex: Int64;
-    const AFieldName: string;
-    var ACanEdit: Boolean
-  ) of object;
+  Th5uVirtualCanEditEvent = procedure(Sender: TObject; ASourceRowIndex: Int64; const AFieldName: string; var ACanEdit: Boolean) of object;
 
-  Th5uVirtualPrepareRangeEvent = procedure(
-    Sender: TObject;
-    AFirstSourceRow, ACount: Int64;
-    AQueryGeneration: Int64
-  ) of object;
+  Th5uVirtualPrepareRangeEvent = procedure(Sender: TObject; AFirstSourceRow, ACount: Int64; AQueryGeneration: Int64) of object;
 
   Th5uVirtualController = class(Th5uCustomDataController)
   private
@@ -62,65 +35,35 @@ type
     FOnPrepareRange: Th5uVirtualPrepareRangeEvent;
     FValueCache: TDictionary<string, TValue>;
     FQueryGeneration: Int64;
-    function CacheKey(
-      ASourceRowIndex: Int64;
-      const AFieldName: string
-    ): string;
+    function CacheKey(ASourceRowIndex: Int64; const AFieldName: string): string;
     procedure ClearValueCache;
   protected
     function GetSourceRowCount: Int64; override;
-    function GetSourceRowKey(
-      ASourceRowIndex: Int64
-    ): Th5uRowKey; override;
-    function GetSourceValue(
-      ASourceRowIndex: Int64;
-      const AFieldName: string
-    ): TValue; override;
-    procedure SetSourceValue(
-      ASourceRowIndex: Int64;
-      const AFieldName: string;
-      const AValue: TValue
-    ); override;
-    function GetSourceCanEdit(
-      ASourceRowIndex: Int64;
-      const AFieldName: string
-    ): Boolean; override;
+    function GetSourceRowKey(ASourceRowIndex: Int64): Th5uRowKey; override;
+    function GetSourceValue(ASourceRowIndex: Int64; const AFieldName: string): TValue; override;
+    procedure SetSourceValue(ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue); override;
+    function GetSourceCanEdit(ASourceRowIndex: Int64; const AFieldName: string): Boolean; override;
     procedure DoCacheOptionsChanged; override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
-    procedure PrepareRange(
-      AFirstViewRow, ACount: Int64
-    ); override;
+    procedure PrepareRange(AFirstViewRow, ACount: Int64); override;
 
     procedure NotifyReset;
-    procedure NotifyRowsInserted(
-      AFirstSourceRow, ACount: Int64
-    );
-    procedure NotifyRowsDeleted(
-      AFirstSourceRow, ACount: Int64
-    );
-    procedure NotifyRowChanged(
-      ASourceRowIndex: Int64;
-      const AColumnId: string = ''
-    );
+    procedure NotifyRowsInserted(AFirstSourceRow, ACount: Int64);
+    procedure NotifyRowsDeleted(AFirstSourceRow, ACount: Int64);
+    procedure NotifyRowChanged(ASourceRowIndex: Int64; const AColumnId: string = '');
 
     procedure BeginNewQuery;
     property QueryGeneration: Int64 read FQueryGeneration;
   published
-    property OnGetRowCount: Th5uVirtualGetRowCountEvent
-      read FOnGetRowCount write FOnGetRowCount;
-    property OnGetRowKey: Th5uVirtualGetRowKeyEvent
-      read FOnGetRowKey write FOnGetRowKey;
-    property OnGetValue: Th5uVirtualGetValueEvent
-      read FOnGetValue write FOnGetValue;
-    property OnSetValue: Th5uVirtualSetValueEvent
-      read FOnSetValue write FOnSetValue;
-    property OnCanEdit: Th5uVirtualCanEditEvent
-      read FOnCanEdit write FOnCanEdit;
-    property OnPrepareRange: Th5uVirtualPrepareRangeEvent
-      read FOnPrepareRange write FOnPrepareRange;
+    property OnGetRowCount: Th5uVirtualGetRowCountEvent read FOnGetRowCount write FOnGetRowCount;
+    property OnGetRowKey: Th5uVirtualGetRowKeyEvent read FOnGetRowKey write FOnGetRowKey;
+    property OnGetValue: Th5uVirtualGetValueEvent read FOnGetValue write FOnGetValue;
+    property OnSetValue: Th5uVirtualSetValueEvent read FOnSetValue write FOnSetValue;
+    property OnCanEdit: Th5uVirtualCanEditEvent read FOnCanEdit write FOnCanEdit;
+    property OnPrepareRange: Th5uVirtualPrepareRangeEvent read FOnPrepareRange write FOnPrepareRange;
   end;
 
 implementation
@@ -134,8 +77,7 @@ begin
   Invalidate;
 end;
 
-function Th5uVirtualController.CacheKey(
-  ASourceRowIndex: Int64; const AFieldName: string): string;
+function Th5uVirtualController.CacheKey(ASourceRowIndex: Int64; const AFieldName: string): string;
 begin
   Result := IntToStr(FQueryGeneration) + '|' +
     IntToStr(ASourceRowIndex) + '|' +
@@ -167,8 +109,7 @@ begin
   ClearValueCache;
 end;
 
-function Th5uVirtualController.GetSourceCanEdit(
-  ASourceRowIndex: Int64; const AFieldName: string): Boolean;
+function Th5uVirtualController.GetSourceCanEdit(ASourceRowIndex: Int64; const AFieldName: string): Boolean;
 begin
   Result := Assigned(FOnSetValue);
   if Assigned(FOnCanEdit) then
@@ -184,16 +125,14 @@ begin
     Result := 0;
 end;
 
-function Th5uVirtualController.GetSourceRowKey(
-  ASourceRowIndex: Int64): Th5uRowKey;
+function Th5uVirtualController.GetSourceRowKey(ASourceRowIndex: Int64): Th5uRowKey;
 begin
   Result := inherited GetSourceRowKey(ASourceRowIndex);
   if Assigned(FOnGetRowKey) then
     FOnGetRowKey(Self, ASourceRowIndex, Result);
 end;
 
-function Th5uVirtualController.GetSourceValue(
-  ASourceRowIndex: Int64; const AFieldName: string): TValue;
+function Th5uVirtualController.GetSourceValue(ASourceRowIndex: Int64; const AFieldName: string): TValue;
 var
   LKey: string;
 begin
@@ -216,8 +155,7 @@ begin
   NotifyDataChanged(Th5uDataChange.ResetAll);
 end;
 
-procedure Th5uVirtualController.NotifyRowChanged(
-  ASourceRowIndex: Int64; const AColumnId: string);
+procedure Th5uVirtualController.NotifyRowChanged(ASourceRowIndex: Int64; const AColumnId: string);
 var
   LChange: Th5uDataChange;
   LKeyPrefix: string;
@@ -243,8 +181,7 @@ begin
   NotifyDataChanged(LChange);
 end;
 
-procedure Th5uVirtualController.NotifyRowsDeleted(
-  AFirstSourceRow, ACount: Int64);
+procedure Th5uVirtualController.NotifyRowsDeleted(AFirstSourceRow, ACount: Int64);
 var
   LChange: Th5uDataChange;
 begin
@@ -256,8 +193,7 @@ begin
   NotifyDataChanged(LChange);
 end;
 
-procedure Th5uVirtualController.NotifyRowsInserted(
-  AFirstSourceRow, ACount: Int64);
+procedure Th5uVirtualController.NotifyRowsInserted(AFirstSourceRow, ACount: Int64);
 var
   LChange: Th5uDataChange;
 begin
@@ -269,8 +205,7 @@ begin
   NotifyDataChanged(LChange);
 end;
 
-procedure Th5uVirtualController.PrepareRange(
-  AFirstViewRow, ACount: Int64);
+procedure Th5uVirtualController.PrepareRange(AFirstViewRow, ACount: Int64);
 var
   LFirstSource: Int64;
 begin
@@ -285,10 +220,7 @@ begin
     );
 end;
 
-procedure Th5uVirtualController.SetSourceValue(
-  ASourceRowIndex: Int64;
-  const AFieldName: string;
-  const AValue: TValue);
+procedure Th5uVirtualController.SetSourceValue(ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue);
 var
   LHandled: Boolean;
 begin

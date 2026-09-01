@@ -29,10 +29,7 @@ type
     procedure SetBytes(const AValue: TBytes);
   public
     constructor Create(AOwner: TComponent); override;
-    class function Execute(
-      AOwner: TComponent;
-      var ABytes: TBytes
-    ): Boolean;
+    class function Execute(AOwner: TComponent; var ABytes: TBytes): Boolean;
   end;
 
 implementation
@@ -106,8 +103,7 @@ begin
   FImage.Stretch := True;
 end;
 
-class function Th5uVclImageEditForm.Execute(
-  AOwner: TComponent; var ABytes: TBytes): Boolean;
+class function Th5uVclImageEditForm.Execute(AOwner: TComponent; var ABytes: TBytes): Boolean;
 var
   LForm: Th5uVclImageEditForm;
 begin

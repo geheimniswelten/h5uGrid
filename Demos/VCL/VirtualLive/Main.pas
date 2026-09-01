@@ -48,33 +48,11 @@ type
     procedure ClearButtonClick(Sender: TObject);
     procedure OptionClick(Sender: TObject);
     procedure NextPageButtonClick(Sender: TObject);
-    procedure VirtualControllerGetRowCount(
-      Sender: TObject;
-      var ARowCount: Int64
-    );
-    procedure VirtualControllerGetRowKey(
-      Sender: TObject;
-      ASourceRowIndex: Int64;
-      var ARowKey: Th5uRowKey
-    );
-    procedure VirtualControllerGetValue(
-      Sender: TObject;
-      ASourceRowIndex: Int64;
-      const AFieldName: string;
-      var AValue: TValue
-    );
-    procedure VirtualControllerSetValue(
-      Sender: TObject;
-      ASourceRowIndex: Int64;
-      const AFieldName: string;
-      const AValue: TValue;
-      var AHandled: Boolean
-    );
-    procedure VirtualControllerPrepareRange(
-      Sender: TObject;
-      AFirstSourceRow, ACount: Int64;
-      AQueryGeneration: Int64
-    );
+    procedure VirtualControllerGetRowCount(Sender: TObject; var ARowCount: Int64);
+    procedure VirtualControllerGetRowKey(Sender: TObject; ASourceRowIndex: Int64; var ARowKey: Th5uRowKey);
+    procedure VirtualControllerGetValue(Sender: TObject; ASourceRowIndex: Int64; const AFieldName: string; var AValue: TValue);
+    procedure VirtualControllerSetValue(Sender: TObject; ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue; var AHandled: Boolean);
+    procedure VirtualControllerPrepareRange(Sender: TObject; AFirstSourceRow, ACount: Int64; AQueryGeneration: Int64);
   private
     FRows: TObjectList<TLiveRow>;
     FNextId: Int64;
@@ -220,27 +198,19 @@ begin
   ApplyOptions;
 end;
 
-procedure TMainForm.VirtualControllerGetRowCount(
-  Sender: TObject; var ARowCount: Int64);
+procedure TMainForm.VirtualControllerGetRowCount(Sender: TObject; var ARowCount: Int64);
 begin
   ARowCount := FRows.Count;
 end;
 
-procedure TMainForm.VirtualControllerGetRowKey(
-  Sender: TObject;
-  ASourceRowIndex: Int64;
-  var ARowKey: Th5uRowKey);
+procedure TMainForm.VirtualControllerGetRowKey(Sender: TObject; ASourceRowIndex: Int64; var ARowKey: Th5uRowKey);
 begin
   if (ASourceRowIndex >= 0) and
      (ASourceRowIndex < FRows.Count) then
     ARowKey := Th5uRowKey.FromInt64(FRows[ASourceRowIndex].Id);
 end;
 
-procedure TMainForm.VirtualControllerGetValue(
-  Sender: TObject;
-  ASourceRowIndex: Int64;
-  const AFieldName: string;
-  var AValue: TValue);
+procedure TMainForm.VirtualControllerGetValue(Sender: TObject; ASourceRowIndex: Int64; const AFieldName: string; var AValue: TValue);
 var
   LRow: TLiveRow;
 begin
@@ -263,10 +233,7 @@ begin
     AValue := TValue.From<Boolean>(LRow.Acknowledged);
 end;
 
-procedure TMainForm.VirtualControllerPrepareRange(
-  Sender: TObject;
-  AFirstSourceRow, ACount: Int64;
-  AQueryGeneration: Int64);
+procedure TMainForm.VirtualControllerPrepareRange(Sender: TObject; AFirstSourceRow, ACount: Int64; AQueryGeneration: Int64);
 begin
   StatusLabel.Caption := Format(
     'Viewport-Anfrage: %d..%d, QueryGeneration %d, Gesamt %d',
@@ -279,12 +246,7 @@ begin
   );
 end;
 
-procedure TMainForm.VirtualControllerSetValue(
-  Sender: TObject;
-  ASourceRowIndex: Int64;
-  const AFieldName: string;
-  const AValue: TValue;
-  var AHandled: Boolean);
+procedure TMainForm.VirtualControllerSetValue(Sender: TObject; ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue; var AHandled: Boolean);
 var
   LRow: TLiveRow;
 begin

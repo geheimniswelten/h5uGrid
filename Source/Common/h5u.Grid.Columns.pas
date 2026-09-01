@@ -14,10 +14,7 @@ type
   Th5uGridColumn = class;
   Th5uGridColumns = class;
 
-  Th5uColumnChangedEvent = procedure(
-    Sender: TObject;
-    AColumn: Th5uGridColumn
-  ) of object;
+  Th5uColumnChangedEvent = procedure(Sender: TObject; AColumn: Th5uGridColumn) of object;
 
   Th5uGridColumn = class(TCollectionItem)
   private
@@ -78,56 +75,31 @@ type
     property MinWidth: Integer read FMinWidth write FMinWidth default 24;
     property MaxWidth: Integer read FMaxWidth write FMaxWidth default 1000;
     property Visible: Boolean read FVisible write SetVisible default True;
-    property VisibleIndex: Integer
-      read FVisibleIndex write SetVisibleIndex default -1;
-    property FixedKind: Th5uFixedKind
-      read FFixedKind write SetFixedKind default Th5uFixedKind.None;
-    property ReadOnly: Boolean
-      read FReadOnly write FReadOnly default False;
-    property DataType: Th5uColumnDataType
-      read FDataType write FDataType default Th5uColumnDataType.Auto;
-    property EditorKind: Th5uColumnEditorKind
-      read FEditorKind write FEditorKind
-      default Th5uColumnEditorKind.Automatic;
-    property WordWrap: Boolean
-      read FWordWrap write FWordWrap default False;
-    property AutoHeight: Boolean
-      read FAutoHeight write FAutoHeight default False;
-    property MaxAutoHeight: Integer
-      read FMaxAutoHeight write FMaxAutoHeight default 160;
-    property MaxLines: Integer
-      read FMaxLines write FMaxLines default 0;
-    property DisplayFormat: string
-      read FDisplayFormat write FDisplayFormat;
-    property ScrollHintText: string
-      read FScrollHintText write FScrollHintText;
+    property VisibleIndex: Integer read FVisibleIndex write SetVisibleIndex default -1;
+    property FixedKind: Th5uFixedKind read FFixedKind write SetFixedKind default Th5uFixedKind.None;
+    property ReadOnly: Boolean read FReadOnly write FReadOnly default False;
+    property DataType: Th5uColumnDataType read FDataType write FDataType default Th5uColumnDataType.Auto;
+    property EditorKind: Th5uColumnEditorKind read FEditorKind write FEditorKind default Th5uColumnEditorKind.Automatic;
+    property WordWrap: Boolean read FWordWrap write FWordWrap default False;
+    property AutoHeight: Boolean read FAutoHeight write FAutoHeight default False;
+    property MaxAutoHeight: Integer read FMaxAutoHeight write FMaxAutoHeight default 160;
+    property MaxLines: Integer read FMaxLines write FMaxLines default 0;
+    property DisplayFormat: string read FDisplayFormat write FDisplayFormat;
+    property ScrollHintText: string read FScrollHintText write FScrollHintText;
     property StyleName: string read FStyleName write FStyleName;
-    property HeaderStyleName: string
-      read FHeaderStyleName write FHeaderStyleName;
-    property Highlighted: Boolean
-      read FHighlighted write FHighlighted default False;
-    property RightSpacing: Integer
-      read FRightSpacing write SetRightSpacing default -1;
-    property Color: Th5uColor
-      read FColor write SetColor default h5uColorDefault;
+    property HeaderStyleName: string read FHeaderStyleName write FHeaderStyleName;
+    property Highlighted: Boolean read FHighlighted write FHighlighted default False;
+    property RightSpacing: Integer read FRightSpacing write SetRightSpacing default -1;
+    property Color: Th5uColor read FColor write SetColor default h5uColorDefault;
     property ClassId: Th5uClassId read FClassId write FClassId;
-    property CellClassId: Th5uClassId
-      read FCellClassId write FCellClassId;
-    property HeaderCellClassId: Th5uClassId
-      read FHeaderCellClassId write FHeaderCellClassId;
-    property CanMove: Boolean
-      read FCanMove write FCanMove default True;
-    property CanHide: Boolean
-      read FCanHide write FCanHide default True;
-    property CanResize: Boolean
-      read FCanResize write FCanResize default True;
-    property CanSelect: Boolean
-      read FCanSelect write FCanSelect default True;
-    property ShowInColumnChooser: Boolean
-      read FShowInColumnChooser write FShowInColumnChooser default True;
-    property ImagePreserveAspectRatio: Boolean
-      read FImagePreserveAspectRatio write FImagePreserveAspectRatio
-      default True;
+    property CellClassId: Th5uClassId read FCellClassId write FCellClassId;
+    property HeaderCellClassId: Th5uClassId read FHeaderCellClassId write FHeaderCellClassId;
+    property CanMove: Boolean read FCanMove write FCanMove default True;
+    property CanHide: Boolean read FCanHide write FCanHide default True;
+    property CanResize: Boolean read FCanResize write FCanResize default True;
+    property CanSelect: Boolean read FCanSelect write FCanSelect default True;
+    property ShowInColumnChooser: Boolean read FShowInColumnChooser write FShowInColumnChooser default True;
+    property ImagePreserveAspectRatio: Boolean read FImagePreserveAspectRatio write FImagePreserveAspectRatio default True;
   end;
 
   Th5uGridColumns = class(TOwnedCollection)
@@ -145,10 +117,8 @@ type
     function VisibleColumns: TArray<Th5uGridColumn>;
     procedure NormalizeVisibleIndexes;
     procedure MoveColumn(AColumn: Th5uGridColumn; ANewVisibleIndex: Integer);
-    property Items[AIndex: Integer]: Th5uGridColumn
-      read GetItem write SetItem; default;
-    property OnChanged: Th5uColumnChangedEvent
-      read FOnChanged write FOnChanged;
+    property Items[AIndex: Integer]: Th5uGridColumn read GetItem write SetItem; default;
+    property OnChanged: Th5uColumnChangedEvent read FOnChanged write FOnChanged;
   end;
 
   Th5uHeaderLayoutCell = class(TCollectionItem)
@@ -170,13 +140,10 @@ type
     property Id: string read FId write FId;
     property Caption: string read FCaption write FCaption;
     property ColumnId: string read FColumnId write FColumnId;
-    property LayoutRow: Integer
-      read FLayoutRow write FLayoutRow default 0;
-    property LayoutColumn: Integer
-      read FLayoutColumn write FLayoutColumn default 0;
+    property LayoutRow: Integer read FLayoutRow write FLayoutRow default 0;
+    property LayoutColumn: Integer read FLayoutColumn write FLayoutColumn default 0;
     property RowSpan: Integer read FRowSpan write FRowSpan default 1;
-    property ColumnSpan: Integer
-      read FColumnSpan write FColumnSpan default 1;
+    property ColumnSpan: Integer read FColumnSpan write FColumnSpan default 1;
     property StyleName: string read FStyleName write FStyleName;
     property ClassId: Th5uClassId read FClassId write FClassId;
   end;
@@ -187,8 +154,7 @@ type
   public
     constructor Create(AOwner: TPersistent);
     function Add: Th5uHeaderLayoutCell;
-    property Items[AIndex: Integer]: Th5uHeaderLayoutCell
-      read GetItem; default;
+    property Items[AIndex: Integer]: Th5uHeaderLayoutCell read GetItem; default;
   end;
 
   Th5uHeaderLayout = class(TPersistent)
@@ -228,14 +194,12 @@ type
     constructor Create(AOwner: TPersistent);
     function Add: Th5uRowStyleMapping;
     function FindStyle(AValue: Integer; out AStyleName: string): Boolean;
-    property Items[AIndex: Integer]: Th5uRowStyleMapping
-      read GetItem; default;
+    property Items[AIndex: Integer]: Th5uRowStyleMapping read GetItem; default;
   end;
 
 implementation
 
-function CompareVisibleColumns(
-  const ALeft, ARight: Th5uGridColumn): Integer;
+function CompareVisibleColumns(const ALeft, ARight: Th5uGridColumn): Integer;
 begin
   if ALeft.FixedKind <> ARight.FixedKind then
   begin
@@ -444,8 +408,7 @@ begin
   inherited Create(AOwner, Th5uGridColumn);
 end;
 
-function Th5uGridColumns.FindByFieldName(
-  const AFieldName: string): Th5uGridColumn;
+function Th5uGridColumns.FindByFieldName(const AFieldName: string): Th5uGridColumn;
 var
   I: Integer;
 begin
@@ -470,8 +433,7 @@ begin
   Result := Th5uGridColumn(inherited GetItem(AIndex));
 end;
 
-procedure Th5uGridColumns.MoveColumn(
-  AColumn: Th5uGridColumn; ANewVisibleIndex: Integer);
+procedure Th5uGridColumns.MoveColumn(AColumn: Th5uGridColumn; ANewVisibleIndex: Integer);
 var
   LColumns: TArray<Th5uGridColumn>;
   LList: TList<Th5uGridColumn>;
@@ -515,8 +477,7 @@ begin
   Changed(False);
 end;
 
-procedure Th5uGridColumns.SetItem(
-  AIndex: Integer; const AValue: Th5uGridColumn);
+procedure Th5uGridColumns.SetItem(AIndex: Integer; const AValue: Th5uGridColumn);
 begin
   inherited SetItem(AIndex, AValue);
 end;
@@ -578,8 +539,7 @@ begin
   inherited Create(AOwner, Th5uHeaderLayoutCell);
 end;
 
-function Th5uHeaderLayoutCells.GetItem(
-  AIndex: Integer): Th5uHeaderLayoutCell;
+function Th5uHeaderLayoutCells.GetItem(AIndex: Integer): Th5uHeaderLayoutCell;
 begin
   Result := Th5uHeaderLayoutCell(inherited GetItem(AIndex));
 end;
@@ -645,8 +605,7 @@ begin
   inherited Create(AOwner, Th5uRowStyleMapping);
 end;
 
-function Th5uRowStyleMappings.FindStyle(
-  AValue: Integer; out AStyleName: string): Boolean;
+function Th5uRowStyleMappings.FindStyle(AValue: Integer; out AStyleName: string): Boolean;
 var
   I: Integer;
 begin
@@ -661,8 +620,7 @@ begin
   Result := False;
 end;
 
-function Th5uRowStyleMappings.GetItem(
-  AIndex: Integer): Th5uRowStyleMapping;
+function Th5uRowStyleMappings.GetItem(AIndex: Integer): Th5uRowStyleMapping;
 begin
   Result := Th5uRowStyleMapping(inherited GetItem(AIndex));
 end;

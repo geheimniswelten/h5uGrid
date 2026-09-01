@@ -60,17 +60,8 @@ type
     FPendingRun: Th5uAdjacentGroupRun;
     procedure FinalizePendingRun;
     procedure RebuildVisibleRows;
-    function BuildComparisonKey(
-      const AGroupId: TValue;
-      AControllerRowIndex: Int64;
-      AAvailable: Boolean;
-      out AKey: string
-    ): Boolean;
-    function BuildStateKey(
-      const ARowKey: Th5uRowKey;
-      AControllerRowIndex: Int64;
-      const AComparisonKey: string
-    ): string;
+    function BuildComparisonKey(const AGroupId: TValue; AControllerRowIndex: Int64; AAvailable: Boolean; out AKey: string): Boolean;
+    function BuildStateKey(const ARowKey: Th5uRowKey; AControllerRowIndex: Int64; const AComparisonKey: string): string;
     function GetRun(AIndex: Integer): Th5uAdjacentGroupRun;
     function GetRunCount: Integer;
   public
@@ -79,29 +70,14 @@ type
 
     procedure Clear(AClearStates: Boolean = False);
     procedure ResetStates;
-    procedure BeginBuild(
-      AInitialState: Th5uAdjacentGroupInitialState;
-      ACaseSensitive: Boolean;
-      AGroupEmptyValues: Boolean
-    );
-    procedure AddRow(
-      AControllerRowIndex: Int64;
-      const ARowKey: Th5uRowKey;
-      const AGroupId: TValue;
-      AAvailable: Boolean
-    );
+    procedure BeginBuild(AInitialState: Th5uAdjacentGroupInitialState; ACaseSensitive: Boolean; AGroupEmptyValues: Boolean);
+    procedure AddRow(AControllerRowIndex: Int64; const ARowKey: Th5uRowKey; const AGroupId: TValue; AAvailable: Boolean);
     procedure EndBuild;
 
     function GetVisibleRowCount: Int64;
     function MapViewToController(AViewRowIndex: Int64): Int64;
-    function TryGetRowInfo(
-      AViewRowIndex: Int64;
-      out AInfo: Th5uAdjacentGroupRowInfo
-    ): Boolean;
-    function SetCollapsedAtViewRow(
-      AViewRowIndex: Int64;
-      ACollapsed: Boolean
-    ): Boolean;
+    function TryGetRowInfo(AViewRowIndex: Int64; out AInfo: Th5uAdjacentGroupRowInfo): Boolean;
+    function SetCollapsedAtViewRow(AViewRowIndex: Int64; ACollapsed: Boolean): Boolean;
     function ToggleAtViewRow(AViewRowIndex: Int64): Boolean;
     function ExpandAll: Boolean;
     function CollapseAll: Boolean;
@@ -129,10 +105,8 @@ begin
   end;
 
   case AValue.Kind of
-    tkInteger, tkInt64, tkEnumeration:
-      Result := IntToStr(AValue.AsOrdinal);
-    tkFloat:
-      Result := FloatToStr(AValue.AsExtended);
+    tkInteger, tkInt64, tkEnumeration: Result := IntToStr(AValue.AsOrdinal);
+    tkFloat: Result := FloatToStr(AValue.AsExtended);
   else
     Result := AValue.ToString;
   end;
@@ -147,8 +121,7 @@ end;
 
 { Th5uAdjacentGroupRowInfo }
 
-class function Th5uAdjacentGroupRowInfo.Empty:
-  Th5uAdjacentGroupRowInfo;
+class function Th5uAdjacentGroupRowInfo.Empty: Th5uAdjacentGroupRowInfo;
 begin
   Result := Default(Th5uAdjacentGroupRowInfo);
   Result.ViewRowIndex := -1;
@@ -160,11 +133,7 @@ end;
 
 { Th5uAdjacentGroupMap }
 
-procedure Th5uAdjacentGroupMap.AddRow(
-  AControllerRowIndex: Int64;
-  const ARowKey: Th5uRowKey;
-  const AGroupId: TValue;
-  AAvailable: Boolean);
+procedure Th5uAdjacentGroupMap.AddRow(AControllerRowIndex: Int64; const ARowKey: Th5uRowKey; const AGroupId: TValue; AAvailable: Boolean);
 var
   LComparisonKey: string;
   LCanGroup: Boolean;
@@ -201,10 +170,7 @@ begin
   FHasPendingRun := True;
 end;
 
-procedure Th5uAdjacentGroupMap.BeginBuild(
-  AInitialState: Th5uAdjacentGroupInitialState;
-  ACaseSensitive: Boolean;
-  AGroupEmptyValues: Boolean);
+procedure Th5uAdjacentGroupMap.BeginBuild(AInitialState: Th5uAdjacentGroupInitialState; ACaseSensitive: Boolean; AGroupEmptyValues: Boolean);
 begin
   FRuns.Clear;
   FVisibleControllerRows.Clear;
@@ -218,11 +184,7 @@ begin
   FActive := True;
 end;
 
-function Th5uAdjacentGroupMap.BuildComparisonKey(
-  const AGroupId: TValue;
-  AControllerRowIndex: Int64;
-  AAvailable: Boolean;
-  out AKey: string): Boolean;
+function Th5uAdjacentGroupMap.BuildComparisonKey(const AGroupId: TValue; AControllerRowIndex: Int64; AAvailable: Boolean; out AKey: string): Boolean;
 var
   LText: string;
   LTypeName: string;
@@ -252,10 +214,7 @@ begin
   AKey := LTypeName + ':' + LText;
 end;
 
-function Th5uAdjacentGroupMap.BuildStateKey(
-  const ARowKey: Th5uRowKey;
-  AControllerRowIndex: Int64;
-  const AComparisonKey: string): string;
+function Th5uAdjacentGroupMap.BuildStateKey(const ARowKey: Th5uRowKey; AControllerRowIndex: Int64; const AComparisonKey: string): string;
 begin
   if not ARowKey.IsEmpty then
     Result := 'row:' + ARowKey.ToString + '|id:' + AComparisonKey
@@ -367,8 +326,7 @@ begin
   FPendingRun := Default(Th5uAdjacentGroupRun);
 end;
 
-function Th5uAdjacentGroupMap.GetRun(
-  AIndex: Integer): Th5uAdjacentGroupRun;
+function Th5uAdjacentGroupMap.GetRun(AIndex: Integer): Th5uAdjacentGroupRun;
 begin
   Result := FRuns[AIndex];
 end;
@@ -383,8 +341,7 @@ begin
   Result := FVisibleControllerRows.Count;
 end;
 
-function Th5uAdjacentGroupMap.MapViewToController(
-  AViewRowIndex: Int64): Int64;
+function Th5uAdjacentGroupMap.MapViewToController(AViewRowIndex: Int64): Int64;
 begin
   if (AViewRowIndex < 0) or
      (AViewRowIndex >= FVisibleControllerRows.Count) then
@@ -425,9 +382,7 @@ begin
   FCollapsedStates.Clear;
 end;
 
-function Th5uAdjacentGroupMap.SetCollapsedAtViewRow(
-  AViewRowIndex: Int64;
-  ACollapsed: Boolean): Boolean;
+function Th5uAdjacentGroupMap.SetCollapsedAtViewRow(AViewRowIndex: Int64; ACollapsed: Boolean): Boolean;
 var
   LInfo: Th5uAdjacentGroupRowInfo;
   LRun: Th5uAdjacentGroupRun;
@@ -448,8 +403,7 @@ begin
   Result := True;
 end;
 
-function Th5uAdjacentGroupMap.ToggleAtViewRow(
-  AViewRowIndex: Int64): Boolean;
+function Th5uAdjacentGroupMap.ToggleAtViewRow(AViewRowIndex: Int64): Boolean;
 var
   LInfo: Th5uAdjacentGroupRowInfo;
 begin
@@ -461,9 +415,7 @@ begin
   );
 end;
 
-function Th5uAdjacentGroupMap.TryGetRowInfo(
-  AViewRowIndex: Int64;
-  out AInfo: Th5uAdjacentGroupRowInfo): Boolean;
+function Th5uAdjacentGroupMap.TryGetRowInfo(AViewRowIndex: Int64; out AInfo: Th5uAdjacentGroupRowInfo): Boolean;
 var
   LIndex: Integer;
   LRun: Th5uAdjacentGroupRun;

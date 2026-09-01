@@ -29,12 +29,9 @@ type
     procedure RecreateSampleData;
     procedure EnsureSampleData;
   published
-    property AutoCreateSampleData: Boolean
-      read FAutoCreateSampleData write SetAutoCreateSampleData default True;
-    property IncludeImages: Boolean
-      read FIncludeImages write SetIncludeImages default True;
-    property SampleRowCount: Integer
-      read FSampleRowCount write SetSampleRowCount default 25;
+    property AutoCreateSampleData: Boolean read FAutoCreateSampleData write SetAutoCreateSampleData default True;
+    property IncludeImages: Boolean read FIncludeImages write SetIncludeImages default True;
+    property SampleRowCount: Integer read FSampleRowCount write SetSampleRowCount default 25;
   end;
 
 implementation
@@ -67,8 +64,7 @@ begin
   EnsureSampleData;
 end;
 
-procedure Th5uSampleClientDataSet.SetAutoCreateSampleData(
-  const AValue: Boolean);
+procedure Th5uSampleClientDataSet.SetAutoCreateSampleData(const AValue: Boolean);
 begin
   if FAutoCreateSampleData = AValue then
     Exit;
@@ -191,9 +187,7 @@ begin
   end;
 end;
 
-procedure Th5uSampleClientDataSet.WriteSampleImage(
-  AField: TField;
-  AIndex: Integer);
+procedure Th5uSampleClientDataSet.WriteSampleImage(AField: TField; AIndex: Integer);
 var
   LBytes: TBytes;
   LStream: TBytesStream;

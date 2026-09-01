@@ -24,10 +24,7 @@ uses
 type
   TPriorityDemoCell = class(Th5uVclDataCell)
   protected
-    procedure PaintDefault(
-      AGrid: Th5uVclGrid;
-      ACanvas: TCanvas
-    ); override;
+    procedure PaintDefault(AGrid: Th5uVclGrid; ACanvas: TCanvas); override;
   end;
 
   TMainForm = class(TForm)
@@ -58,18 +55,8 @@ type
     procedure NextPageButtonClick(Sender: TObject);
     procedure MoveNameButtonClick(Sender: TObject);
     procedure ToggleGroupsButtonClick(Sender: TObject);
-    procedure GridGetRowHeight(
-      Sender: TObject;
-      const AContext: Th5uGetRowHeightContext;
-      var AHeight: Integer;
-      var ACacheResult: Boolean
-    );
-    procedure GridGetThumbHint(
-      Sender: TObject;
-      const AContext: Th5uThumbHintContext;
-      var AText: string;
-      var AVisible: Boolean
-    );
+    procedure GridGetRowHeight(Sender: TObject; const AContext: Th5uGetRowHeightContext; var AHeight: Integer; var ACacheResult: Boolean);
+    procedure GridGetThumbHint(Sender: TObject; const AContext: Th5uThumbHintContext; var AText: string; var AVisible: Boolean);
   private
     FAllAdjacentGroupsCollapsed: Boolean;
     procedure ApplyOptions;
@@ -90,8 +77,7 @@ uses
 
 { TPriorityDemoCell }
 
-procedure TPriorityDemoCell.PaintDefault(
-  AGrid: Th5uVclGrid; ACanvas: TCanvas);
+procedure TPriorityDemoCell.PaintDefault(AGrid: Th5uVclGrid; ACanvas: TCanvas);
 var
   LPriority: Integer;
   LRect: TRect;
@@ -276,22 +262,14 @@ begin
   ApplyOptions;
 end;
 
-procedure TMainForm.GridGetRowHeight(
-  Sender: TObject;
-  const AContext: Th5uGetRowHeightContext;
-  var AHeight: Integer;
-  var ACacheResult: Boolean);
+procedure TMainForm.GridGetRowHeight(Sender: TObject; const AContext: Th5uGetRowHeightContext; var AHeight: Integer; var ACacheResult: Boolean);
 begin
   // Demonstrates the proposed value as a var parameter.
   if ((AContext.ViewRowIndex + 1) mod 9) = 0 then
     Inc(AHeight, 8);
 end;
 
-procedure TMainForm.GridGetThumbHint(
-  Sender: TObject;
-  const AContext: Th5uThumbHintContext;
-  var AText: string;
-  var AVisible: Boolean);
+procedure TMainForm.GridGetThumbHint(Sender: TObject; const AContext: Th5uThumbHintContext; var AText: string; var AVisible: Boolean);
 begin
   if AContext.Axis = Th5uScrollAxis.Vertical then
     AText := 'Datensatz: ' + AText;

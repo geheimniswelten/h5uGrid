@@ -42,27 +42,17 @@ type
     constructor Create;
     procedure Assign(Source: TPersistent); override;
     procedure SetAllSeparators(const ASize: Integer);
-    property OnChanged: Th5uOptionsChangedEvent
-      read FOnChanged write FOnChanged;
+    property OnChanged: Th5uOptionsChangedEvent read FOnChanged write FOnChanged;
   published
     property Left: Integer read FLeft write SetLeft default 1;
     property Top: Integer read FTop write SetTop default 1;
     property Right: Integer read FRight write SetRight default 1;
     property Bottom: Integer read FBottom write SetBottom default 1;
-    property RowSpacing: Integer
-      read FRowSpacing write SetRowSpacing default 1;
-    property DefaultColumnRightSpacing: Integer
-      read FDefaultColumnRightSpacing
-      write SetDefaultColumnRightSpacing default 1;
-    property RowSpacingColor: Th5uColor
-      read FRowSpacingColor write SetRowSpacingColor
-      default h5uColorLightGray;
-    property ColumnSpacingColor: Th5uColor
-      read FColumnSpacingColor write SetColumnSpacingColor
-      default h5uColorLightGray;
-    property ContentPaddingColor: Th5uColor
-      read FContentPaddingColor write SetContentPaddingColor
-      default h5uColorLightGray;
+    property RowSpacing: Integer read FRowSpacing write SetRowSpacing default 1;
+    property DefaultColumnRightSpacing: Integer read FDefaultColumnRightSpacing write SetDefaultColumnRightSpacing default 1;
+    property RowSpacingColor: Th5uColor read FRowSpacingColor write SetRowSpacingColor default h5uColorLightGray;
+    property ColumnSpacingColor: Th5uColor read FColumnSpacingColor write SetColumnSpacingColor default h5uColorLightGray;
+    property ContentPaddingColor: Th5uColor read FContentPaddingColor write SetContentPaddingColor default h5uColorLightGray;
   end;
 
   Th5uGridAppearanceOptions = class(TPersistent)
@@ -74,12 +64,9 @@ type
   public
     constructor Create;
     procedure Assign(Source: TPersistent); override;
-    property OnChanged: Th5uOptionsChangedEvent
-      read FOnChanged write FOnChanged;
+    property OnChanged: Th5uOptionsChangedEvent read FOnChanged write FOnChanged;
   published
-    property DefaultCellColor: Th5uColor
-      read FDefaultCellColor write SetDefaultCellColor
-      default h5uColorDefault;
+    property DefaultCellColor: Th5uColor read FDefaultCellColor write SetDefaultCellColor default h5uColorDefault;
   end;
 
   // When a flattened tree leaves one or more child levels, this band replaces
@@ -102,19 +89,13 @@ type
   public
     constructor Create;
     procedure Assign(Source: TPersistent); override;
-    property OnChanged: Th5uOptionsChangedEvent
-      read FOnChanged write FOnChanged;
+    property OnChanged: Th5uOptionsChangedEvent read FOnChanged write FOnChanged;
   published
-    property Enabled: Boolean
-      read FEnabled write SetEnabled default False;
-    property Height: Integer
-      read FHeight write SetHeight default 6;
-    property Color: Th5uColor
-      read FColor write SetColor default h5uColorDefault;
-    property StyleName: string
-      read FStyleName write SetStyleName;
-    property IncludeEndOfData: Boolean
-      read FIncludeEndOfData write SetIncludeEndOfData default True;
+    property Enabled: Boolean read FEnabled write SetEnabled default False;
+    property Height: Integer read FHeight write SetHeight default 6;
+    property Color: Th5uColor read FColor write SetColor default h5uColorDefault;
+    property StyleName: string read FStyleName write SetStyleName;
+    property IncludeEndOfData: Boolean read FIncludeEndOfData write SetIncludeEndOfData default True;
   end;
 
   Th5uTreeOptions = class(TPersistent)
@@ -125,25 +106,19 @@ type
     FOnChanged: Th5uOptionsChangedEvent;
     procedure Changed;
     procedure ChildChanged(Sender: TObject);
-    procedure SetBranchEndBand(
-      const AValue: Th5uTreeBranchEndBandOptions
-    );
+    procedure SetBranchEndBand(const AValue: Th5uTreeBranchEndBandOptions);
     procedure SetEnabled(const AValue: Boolean);
     procedure SetLevelColumnId(const AValue: string);
   public
     constructor Create;
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
-    property OnChanged: Th5uOptionsChangedEvent
-      read FOnChanged write FOnChanged;
+    property OnChanged: Th5uOptionsChangedEvent read FOnChanged write FOnChanged;
   published
-    property Enabled: Boolean
-      read FEnabled write SetEnabled default False;
+    property Enabled: Boolean read FEnabled write SetEnabled default False;
     // May name a Column.Id, Column.FieldName or a controller field directly.
-    property LevelColumnId: string
-      read FLevelColumnId write SetLevelColumnId;
-    property BranchEndBand: Th5uTreeBranchEndBandOptions
-      read FBranchEndBand write SetBranchEndBand;
+    property LevelColumnId: string read FLevelColumnId write SetLevelColumnId;
+    property BranchEndBand: Th5uTreeBranchEndBandOptions read FBranchEndBand write SetBranchEndBand;
   end;
 
   // Optional separator after one contiguous run of equal IDs. It replaces
@@ -159,24 +134,16 @@ type
     procedure SetColor(const AValue: Th5uColor);
     procedure SetHeight(const AValue: Integer);
     procedure SetStyleName(const AValue: string);
-    procedure SetVisibility(
-      const AValue: Th5uAdjacentGroupEndBandVisibility
-    );
+    procedure SetVisibility(const AValue: Th5uAdjacentGroupEndBandVisibility);
   public
     constructor Create;
     procedure Assign(Source: TPersistent); override;
-    property OnChanged: Th5uOptionsChangedEvent
-      read FOnChanged write FOnChanged;
+    property OnChanged: Th5uOptionsChangedEvent read FOnChanged write FOnChanged;
   published
-    property Visibility: Th5uAdjacentGroupEndBandVisibility
-      read FVisibility write SetVisibility
-      default Th5uAdjacentGroupEndBandVisibility.Never;
-    property Height: Integer
-      read FHeight write SetHeight default 6;
-    property Color: Th5uColor
-      read FColor write SetColor default h5uColorDefault;
-    property StyleName: string
-      read FStyleName write SetStyleName;
+    property Visibility: Th5uAdjacentGroupEndBandVisibility read FVisibility write SetVisibility default Th5uAdjacentGroupEndBandVisibility.Never;
+    property Height: Integer read FHeight write SetHeight default 6;
+    property Color: Th5uColor read FColor write SetColor default h5uColorDefault;
+    property StyleName: string read FStyleName write SetStyleName;
   end;
 
   // Adjacent-group folding keeps the controller's current order intact. Only
@@ -197,42 +164,27 @@ type
     procedure ChildChanged(Sender: TObject);
     procedure SetCaseSensitive(const AValue: Boolean);
     procedure SetEnabled(const AValue: Boolean);
-    procedure SetEndBand(
-      const AValue: Th5uAdjacentGroupEndBandOptions
-    );
+    procedure SetEndBand(const AValue: Th5uAdjacentGroupEndBandOptions);
     procedure SetGroupEmptyValues(const AValue: Boolean);
     procedure SetIdColumnId(const AValue: string);
-    procedure SetInitialState(
-      const AValue: Th5uAdjacentGroupInitialState
-    );
+    procedure SetInitialState(const AValue: Th5uAdjacentGroupInitialState);
     procedure SetPreserveStateOnDataChange(const AValue: Boolean);
     procedure SetShowFoldGlyph(const AValue: Boolean);
   public
     constructor Create;
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
-    property OnChanged: Th5uOptionsChangedEvent
-      read FOnChanged write FOnChanged;
+    property OnChanged: Th5uOptionsChangedEvent read FOnChanged write FOnChanged;
   published
-    property Enabled: Boolean
-      read FEnabled write SetEnabled default False;
+    property Enabled: Boolean read FEnabled write SetEnabled default False;
     // May name a Column.Id, Column.FieldName or controller field directly.
-    property IdColumnId: string
-      read FIdColumnId write SetIdColumnId;
-    property InitialState: Th5uAdjacentGroupInitialState
-      read FInitialState write SetInitialState
-      default Th5uAdjacentGroupInitialState.Expanded;
-    property ShowFoldGlyph: Boolean
-      read FShowFoldGlyph write SetShowFoldGlyph default True;
-    property CaseSensitive: Boolean
-      read FCaseSensitive write SetCaseSensitive default True;
-    property GroupEmptyValues: Boolean
-      read FGroupEmptyValues write SetGroupEmptyValues default True;
-    property PreserveStateOnDataChange: Boolean
-      read FPreserveStateOnDataChange
-      write SetPreserveStateOnDataChange default True;
-    property EndBand: Th5uAdjacentGroupEndBandOptions
-      read FEndBand write SetEndBand;
+    property IdColumnId: string read FIdColumnId write SetIdColumnId;
+    property InitialState: Th5uAdjacentGroupInitialState read FInitialState write SetInitialState default Th5uAdjacentGroupInitialState.Expanded;
+    property ShowFoldGlyph: Boolean read FShowFoldGlyph write SetShowFoldGlyph default True;
+    property CaseSensitive: Boolean read FCaseSensitive write SetCaseSensitive default True;
+    property GroupEmptyValues: Boolean read FGroupEmptyValues write SetGroupEmptyValues default True;
+    property PreserveStateOnDataChange: Boolean read FPreserveStateOnDataChange write SetPreserveStateOnDataChange default True;
+    property EndBand: Th5uAdjacentGroupEndBandOptions read FEndBand write SetEndBand;
   end;
 
   Th5uRowHeightOptions = class(TPersistent)
@@ -253,22 +205,14 @@ type
   public
     constructor Create;
     procedure Assign(Source: TPersistent); override;
-    property OnChanged: Th5uOptionsChangedEvent
-      read FOnChanged write FOnChanged;
+    property OnChanged: Th5uOptionsChangedEvent read FOnChanged write FOnChanged;
   published
-    property Mode: Th5uRowHeightMode
-      read FMode write SetMode default Th5uRowHeightMode.Fixed;
-    property FixedHeight: Integer
-      read FFixedHeight write SetFixedHeight default 24;
-    property MinHeight: Integer
-      read FMinHeight write SetMinHeight default 20;
-    property MaxHeight: Integer
-      read FMaxHeight write SetMaxHeight default 180;
-    property EstimatedHeight: Integer
-      read FEstimatedHeight write SetEstimatedHeight default 24;
-    property MeasureScope: Th5uAutoHeightMeasureScope
-      read FMeasureScope write FMeasureScope
-      default Th5uAutoHeightMeasureScope.ExplicitContributorColumns;
+    property Mode: Th5uRowHeightMode read FMode write SetMode default Th5uRowHeightMode.Fixed;
+    property FixedHeight: Integer read FFixedHeight write SetFixedHeight default 24;
+    property MinHeight: Integer read FMinHeight write SetMinHeight default 20;
+    property MaxHeight: Integer read FMaxHeight write SetMaxHeight default 180;
+    property EstimatedHeight: Integer read FEstimatedHeight write SetEstimatedHeight default 24;
+    property MeasureScope: Th5uAutoHeightMeasureScope read FMeasureScope write FMeasureScope default Th5uAutoHeightMeasureScope.ExplicitContributorColumns;
   end;
 
   Th5uScrollingOptions = class(TPersistent)
@@ -283,21 +227,13 @@ type
   public
     constructor Create;
     procedure Assign(Source: TPersistent); override;
-    property OnChanged: Th5uOptionsChangedEvent
-      read FOnChanged write FOnChanged;
+    property OnChanged: Th5uOptionsChangedEvent read FOnChanged write FOnChanged;
   published
-    property VerticalMode: Th5uVerticalScrollMode
-      read FVerticalMode write FVerticalMode
-      default Th5uVerticalScrollMode.Pixel;
-    property HorizontalMode: Th5uHorizontalScrollMode
-      read FHorizontalMode write FHorizontalMode
-      default Th5uHorizontalScrollMode.Pixel;
-    property OverscanRows: Integer
-      read FOverscanRows write FOverscanRows default 2;
-    property SnapDelay: Integer
-      read FSnapDelay write FSnapDelay default 120;
-    property WheelRows: Integer
-      read FWheelRows write FWheelRows default 3;
+    property VerticalMode: Th5uVerticalScrollMode read FVerticalMode write FVerticalMode default Th5uVerticalScrollMode.Pixel;
+    property HorizontalMode: Th5uHorizontalScrollMode read FHorizontalMode write FHorizontalMode default Th5uHorizontalScrollMode.Pixel;
+    property OverscanRows: Integer read FOverscanRows write FOverscanRows default 2;
+    property SnapDelay: Integer read FSnapDelay write FSnapDelay default 120;
+    property WheelRows: Integer read FWheelRows write FWheelRows default 3;
   end;
 
   Th5uScrollHintOptions = class(TPersistent)
@@ -311,18 +247,13 @@ type
   public
     constructor Create;
     procedure Assign(Source: TPersistent); override;
-    property OnChanged: Th5uOptionsChangedEvent
-      read FOnChanged write FOnChanged;
+    property OnChanged: Th5uOptionsChangedEvent read FOnChanged write FOnChanged;
   published
     property Enabled: Boolean read FEnabled write FEnabled default True;
-    property Triggers: Th5uScrollHintTriggers
-      read FTriggers write FTriggers;
-    property VerticalColumnId: string
-      read FVerticalColumnId write FVerticalColumnId;
-    property ShowRowPosition: Boolean
-      read FShowRowPosition write FShowRowPosition default True;
-    property UseHeaderPath: Boolean
-      read FUseHeaderPath write FUseHeaderPath default True;
+    property Triggers: Th5uScrollHintTriggers read FTriggers write FTriggers;
+    property VerticalColumnId: string read FVerticalColumnId write FVerticalColumnId;
+    property ShowRowPosition: Boolean read FShowRowPosition write FShowRowPosition default True;
+    property UseHeaderPath: Boolean read FUseHeaderPath write FUseHeaderPath default True;
   end;
 
   Th5uPaginationOptions = class(TPersistent)
@@ -337,16 +268,11 @@ type
   public
     constructor Create;
     procedure Assign(Source: TPersistent); override;
-    property OnChanged: Th5uOptionsChangedEvent
-      read FOnChanged write FOnChanged;
+    property OnChanged: Th5uOptionsChangedEvent read FOnChanged write FOnChanged;
   published
-    property Mode: Th5uPaginationMode
-      read FMode write FMode
-      default Th5uPaginationMode.Continuous;
-    property PageSize: Integer
-      read FPageSize write SetPageSize default 100;
-    property PageIndex: Integer
-      read FPageIndex write SetPageIndex default 0;
+    property Mode: Th5uPaginationMode read FMode write FMode default Th5uPaginationMode.Continuous;
+    property PageSize: Integer read FPageSize write SetPageSize default 100;
+    property PageIndex: Integer read FPageIndex write SetPageIndex default 0;
   end;
 
   Th5uCacheOptions = class(TPersistent)
@@ -362,21 +288,14 @@ type
   public
     constructor Create;
     procedure Assign(Source: TPersistent); override;
-    property OnChanged: Th5uOptionsChangedEvent
-      read FOnChanged write FOnChanged;
+    property OnChanged: Th5uOptionsChangedEvent read FOnChanged write FOnChanged;
   published
-    property Mode: Th5uCacheMode
-      read FMode write FMode default Th5uCacheMode.Viewport;
-    property PageSize: Integer
-      read FPageSize write FPageSize default 200;
-    property MaxCachedPages: Integer
-      read FMaxCachedPages write FMaxCachedPages default 8;
-    property PrefetchPagesBefore: Integer
-      read FPrefetchPagesBefore write FPrefetchPagesBefore default 1;
-    property PrefetchPagesAfter: Integer
-      read FPrefetchPagesAfter write FPrefetchPagesAfter default 2;
-    property MaxMemoryBytes: Int64
-      read FMaxMemoryBytes write FMaxMemoryBytes;
+    property Mode: Th5uCacheMode read FMode write FMode default Th5uCacheMode.Viewport;
+    property PageSize: Integer read FPageSize write FPageSize default 200;
+    property MaxCachedPages: Integer read FMaxCachedPages write FMaxCachedPages default 8;
+    property PrefetchPagesBefore: Integer read FPrefetchPagesBefore write FPrefetchPagesBefore default 1;
+    property PrefetchPagesAfter: Integer read FPrefetchPagesAfter write FPrefetchPagesAfter default 2;
+    property MaxMemoryBytes: Int64 read FMaxMemoryBytes write FMaxMemoryBytes;
   end;
 
   Th5uRowStyleOptions = class(TPersistent)
@@ -396,32 +315,18 @@ type
     constructor Create;
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
-    function ResolveStyle(
-      AViewRowIndex: Int64;
-      AStyleKey: Integer;
-      AHasStyleKey: Boolean
-    ): string;
-    property OnChanged: Th5uOptionsChangedEvent
-      read FOnChanged write FOnChanged;
+    function ResolveStyle(AViewRowIndex: Int64; AStyleKey: Integer; AHasStyleKey: Boolean): string;
+    property OnChanged: Th5uOptionsChangedEvent read FOnChanged write FOnChanged;
   published
-    property StripePeriod: Integer
-      read FStripePeriod write FStripePeriod default 2;
-    property StripeOffset: Integer
-      read FStripeOffset write FStripeOffset default 1;
-    property StripeStyleName: string
-      read FStripeStyleName write FStripeStyleName;
-    property OddStyleName: string
-      read FOddStyleName write FOddStyleName;
-    property EvenStyleName: string
-      read FEvenStyleName write FEvenStyleName;
-    property StyleKeyColumnId: string
-      read FStyleKeyColumnId write FStyleKeyColumnId;
-    property Mappings: Th5uRowStyleMappings
-      read FMappings write SetMappings;
-    property RestartAtGroup: Boolean
-      read FRestartAtGroup write FRestartAtGroup default False;
-    property RestartAtPage: Boolean
-      read FRestartAtPage write FRestartAtPage default False;
+    property StripePeriod: Integer read FStripePeriod write FStripePeriod default 2;
+    property StripeOffset: Integer read FStripeOffset write FStripeOffset default 1;
+    property StripeStyleName: string read FStripeStyleName write FStripeStyleName;
+    property OddStyleName: string read FOddStyleName write FOddStyleName;
+    property EvenStyleName: string read FEvenStyleName write FEvenStyleName;
+    property StyleKeyColumnId: string read FStyleKeyColumnId write FStyleKeyColumnId;
+    property Mappings: Th5uRowStyleMappings read FMappings write SetMappings;
+    property RestartAtGroup: Boolean read FRestartAtGroup write FRestartAtGroup default False;
+    property RestartAtPage: Boolean read FRestartAtPage write FRestartAtPage default False;
   end;
 
   Th5uCustomizationOptions = class(TPersistent)
@@ -434,14 +339,10 @@ type
     constructor Create;
     procedure Assign(Source: TPersistent); override;
   published
-    property AllowColumnMoving: Boolean
-      read FAllowColumnMoving write FAllowColumnMoving default True;
-    property AllowColumnHiding: Boolean
-      read FAllowColumnHiding write FAllowColumnHiding default True;
-    property AllowColumnResizing: Boolean
-      read FAllowColumnResizing write FAllowColumnResizing default True;
-    property ShowColumnChooser: Boolean
-      read FShowColumnChooser write FShowColumnChooser default True;
+    property AllowColumnMoving: Boolean read FAllowColumnMoving write FAllowColumnMoving default True;
+    property AllowColumnHiding: Boolean read FAllowColumnHiding write FAllowColumnHiding default True;
+    property AllowColumnResizing: Boolean read FAllowColumnResizing write FAllowColumnResizing default True;
+    property ShowColumnChooser: Boolean read FShowColumnChooser write FShowColumnChooser default True;
   end;
 
 implementation
@@ -499,8 +400,7 @@ begin
   Changed;
 end;
 
-procedure Th5uGridSpacingOptions.SetColumnSpacingColor(
-  const AValue: Th5uColor);
+procedure Th5uGridSpacingOptions.SetColumnSpacingColor(const AValue: Th5uColor);
 begin
   if FColumnSpacingColor = AValue then
     Exit;
@@ -508,8 +408,7 @@ begin
   Changed;
 end;
 
-procedure Th5uGridSpacingOptions.SetContentPaddingColor(
-  const AValue: Th5uColor);
+procedure Th5uGridSpacingOptions.SetContentPaddingColor(const AValue: Th5uColor);
 begin
   if FContentPaddingColor = AValue then
     Exit;
@@ -517,8 +416,7 @@ begin
   Changed;
 end;
 
-procedure Th5uGridSpacingOptions.SetDefaultColumnRightSpacing(
-  const AValue: Integer);
+procedure Th5uGridSpacingOptions.SetDefaultColumnRightSpacing(const AValue: Integer);
 begin
   if FDefaultColumnRightSpacing = AValue then
     Exit;
@@ -534,8 +432,7 @@ begin
   Changed;
 end;
 
-procedure Th5uGridSpacingOptions.SetAllSeparators(
-  const ASize: Integer);
+procedure Th5uGridSpacingOptions.SetAllSeparators(const ASize: Integer);
 var
   LSize: Integer;
 begin
@@ -567,8 +464,7 @@ begin
   Changed;
 end;
 
-procedure Th5uGridSpacingOptions.SetRowSpacing(
-  const AValue: Integer);
+procedure Th5uGridSpacingOptions.SetRowSpacing(const AValue: Integer);
 begin
   if FRowSpacing = AValue then
     Exit;
@@ -576,8 +472,7 @@ begin
   Changed;
 end;
 
-procedure Th5uGridSpacingOptions.SetRowSpacingColor(
-  const AValue: Th5uColor);
+procedure Th5uGridSpacingOptions.SetRowSpacingColor(const AValue: Th5uColor);
 begin
   if FRowSpacingColor = AValue then
     Exit;
@@ -619,8 +514,7 @@ begin
   FDefaultCellColor := h5uColorDefault;
 end;
 
-procedure Th5uGridAppearanceOptions.SetDefaultCellColor(
-  const AValue: Th5uColor);
+procedure Th5uGridAppearanceOptions.SetDefaultCellColor(const AValue: Th5uColor);
 begin
   if FDefaultCellColor = AValue then
     Exit;
@@ -664,8 +558,7 @@ begin
   FIncludeEndOfData := True;
 end;
 
-procedure Th5uTreeBranchEndBandOptions.SetColor(
-  const AValue: Th5uColor);
+procedure Th5uTreeBranchEndBandOptions.SetColor(const AValue: Th5uColor);
 begin
   if FColor = AValue then
     Exit;
@@ -673,8 +566,7 @@ begin
   Changed;
 end;
 
-procedure Th5uTreeBranchEndBandOptions.SetEnabled(
-  const AValue: Boolean);
+procedure Th5uTreeBranchEndBandOptions.SetEnabled(const AValue: Boolean);
 begin
   if FEnabled = AValue then
     Exit;
@@ -682,8 +574,7 @@ begin
   Changed;
 end;
 
-procedure Th5uTreeBranchEndBandOptions.SetHeight(
-  const AValue: Integer);
+procedure Th5uTreeBranchEndBandOptions.SetHeight(const AValue: Integer);
 begin
   if FHeight = AValue then
     Exit;
@@ -691,8 +582,7 @@ begin
   Changed;
 end;
 
-procedure Th5uTreeBranchEndBandOptions.SetIncludeEndOfData(
-  const AValue: Boolean);
+procedure Th5uTreeBranchEndBandOptions.SetIncludeEndOfData(const AValue: Boolean);
 begin
   if FIncludeEndOfData = AValue then
     Exit;
@@ -700,8 +590,7 @@ begin
   Changed;
 end;
 
-procedure Th5uTreeBranchEndBandOptions.SetStyleName(
-  const AValue: string);
+procedure Th5uTreeBranchEndBandOptions.SetStyleName(const AValue: string);
 begin
   if FStyleName = AValue then
     Exit;
@@ -752,8 +641,7 @@ begin
   inherited Destroy;
 end;
 
-procedure Th5uTreeOptions.SetBranchEndBand(
-  const AValue: Th5uTreeBranchEndBandOptions);
+procedure Th5uTreeOptions.SetBranchEndBand(const AValue: Th5uTreeBranchEndBandOptions);
 begin
   if Assigned(AValue) then
     FBranchEndBand.Assign(AValue);
@@ -809,8 +697,7 @@ begin
   FStyleName := '';
 end;
 
-procedure Th5uAdjacentGroupEndBandOptions.SetColor(
-  const AValue: Th5uColor);
+procedure Th5uAdjacentGroupEndBandOptions.SetColor(const AValue: Th5uColor);
 begin
   if FColor = AValue then
     Exit;
@@ -818,8 +705,7 @@ begin
   Changed;
 end;
 
-procedure Th5uAdjacentGroupEndBandOptions.SetHeight(
-  const AValue: Integer);
+procedure Th5uAdjacentGroupEndBandOptions.SetHeight(const AValue: Integer);
 begin
   if FHeight = AValue then
     Exit;
@@ -827,8 +713,7 @@ begin
   Changed;
 end;
 
-procedure Th5uAdjacentGroupEndBandOptions.SetStyleName(
-  const AValue: string);
+procedure Th5uAdjacentGroupEndBandOptions.SetStyleName(const AValue: string);
 begin
   if FStyleName = AValue then
     Exit;
@@ -836,8 +721,7 @@ begin
   Changed;
 end;
 
-procedure Th5uAdjacentGroupEndBandOptions.SetVisibility(
-  const AValue: Th5uAdjacentGroupEndBandVisibility);
+procedure Th5uAdjacentGroupEndBandOptions.SetVisibility(const AValue: Th5uAdjacentGroupEndBandVisibility);
 begin
   if FVisibility = AValue then
     Exit;
@@ -898,8 +782,7 @@ begin
   inherited Destroy;
 end;
 
-procedure Th5uAdjacentGroupFoldingOptions.SetCaseSensitive(
-  const AValue: Boolean);
+procedure Th5uAdjacentGroupFoldingOptions.SetCaseSensitive(const AValue: Boolean);
 begin
   if FCaseSensitive = AValue then
     Exit;
@@ -907,8 +790,7 @@ begin
   Changed;
 end;
 
-procedure Th5uAdjacentGroupFoldingOptions.SetEnabled(
-  const AValue: Boolean);
+procedure Th5uAdjacentGroupFoldingOptions.SetEnabled(const AValue: Boolean);
 begin
   if FEnabled = AValue then
     Exit;
@@ -916,15 +798,13 @@ begin
   Changed;
 end;
 
-procedure Th5uAdjacentGroupFoldingOptions.SetEndBand(
-  const AValue: Th5uAdjacentGroupEndBandOptions);
+procedure Th5uAdjacentGroupFoldingOptions.SetEndBand(const AValue: Th5uAdjacentGroupEndBandOptions);
 begin
   if Assigned(AValue) then
     FEndBand.Assign(AValue);
 end;
 
-procedure Th5uAdjacentGroupFoldingOptions.SetGroupEmptyValues(
-  const AValue: Boolean);
+procedure Th5uAdjacentGroupFoldingOptions.SetGroupEmptyValues(const AValue: Boolean);
 begin
   if FGroupEmptyValues = AValue then
     Exit;
@@ -932,8 +812,7 @@ begin
   Changed;
 end;
 
-procedure Th5uAdjacentGroupFoldingOptions.SetIdColumnId(
-  const AValue: string);
+procedure Th5uAdjacentGroupFoldingOptions.SetIdColumnId(const AValue: string);
 begin
   if FIdColumnId = AValue then
     Exit;
@@ -941,8 +820,7 @@ begin
   Changed;
 end;
 
-procedure Th5uAdjacentGroupFoldingOptions.SetInitialState(
-  const AValue: Th5uAdjacentGroupInitialState);
+procedure Th5uAdjacentGroupFoldingOptions.SetInitialState(const AValue: Th5uAdjacentGroupInitialState);
 begin
   if FInitialState = AValue then
     Exit;
@@ -950,8 +828,7 @@ begin
   Changed;
 end;
 
-procedure Th5uAdjacentGroupFoldingOptions.SetPreserveStateOnDataChange(
-  const AValue: Boolean);
+procedure Th5uAdjacentGroupFoldingOptions.SetPreserveStateOnDataChange(const AValue: Boolean);
 begin
   if FPreserveStateOnDataChange = AValue then
     Exit;
@@ -959,8 +836,7 @@ begin
   Changed;
 end;
 
-procedure Th5uAdjacentGroupFoldingOptions.SetShowFoldGlyph(
-  const AValue: Boolean);
+procedure Th5uAdjacentGroupFoldingOptions.SetShowFoldGlyph(const AValue: Boolean);
 begin
   if FShowFoldGlyph = AValue then
     Exit;
@@ -1226,10 +1102,7 @@ begin
   inherited Destroy;
 end;
 
-function Th5uRowStyleOptions.ResolveStyle(
-  AViewRowIndex: Int64;
-  AStyleKey: Integer;
-  AHasStyleKey: Boolean): string;
+function Th5uRowStyleOptions.ResolveStyle(AViewRowIndex: Int64; AStyleKey: Integer; AHasStyleKey: Boolean): string;
 var
   LIndex: Int64;
 begin
@@ -1249,8 +1122,7 @@ begin
     Result := FEvenStyleName;
 end;
 
-procedure Th5uRowStyleOptions.SetMappings(
-  const AValue: Th5uRowStyleMappings);
+procedure Th5uRowStyleOptions.SetMappings(const AValue: Th5uRowStyleMappings);
 begin
   FMappings.Assign(AValue);
 end;

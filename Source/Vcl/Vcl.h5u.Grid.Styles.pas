@@ -46,8 +46,7 @@ implementation
 uses
   Winapi.Windows;
 
-function h5uBlendColor(
-  AColor1, AColor2: TColor; AWeight: Byte): TColor;
+function h5uBlendColor(AColor1, AColor2: TColor; AWeight: Byte): TColor;
 var
   LColor1: Cardinal;
   LColor2: Cardinal;

@@ -98,6 +98,10 @@ def check_layout() -> None:
         "VERSION.txt",
         "Build/test_tree_branch_end.py",
         "Build/test_adjacent_group_folding.py",
+        "Build/format_pascal.py",
+        "Build/test_pascal_format.py",
+        "Docs/CODING-STYLE.md",
+        ".editorconfig",
     ]
     for rel in required:
         if not (ROOT / rel).is_file():
@@ -431,12 +435,12 @@ def check_placeholders_and_version() -> None:
         for match in re.finditer(r"\b(?:TODO-COMPILE|FIXME-COMPILE|NotImplemented|<UNRESOLVED>)\b", value, re.I):
             add("error", name, path, f"Nicht aufgelöster Platzhalter: {match.group(0)}", line_no(value, match.start()))
     version = read(ROOT / "VERSION.txt").strip() if (ROOT / "VERSION.txt").exists() else ""
-    if version != "0.1.3":
-        add("error", name, ROOT / "VERSION.txt", f"Erwartete Version 0.1.3, gefunden {version!r}")
+    if version != "0.1.4":
+        add("error", name, ROOT / "VERSION.txt", f"Erwartete Version 0.1.4, gefunden {version!r}")
     for rel in ("README.md", "CHANGELOG.md", "Build/BUILD_STATUS.md"):
         path = ROOT / rel
-        if path.exists() and "0.1.3" not in read(path):
-            add("error", name, path, "Version 0.1.3 wird nicht genannt")
+        if path.exists() and "0.1.4" not in read(path):
+            add("error", name, path, "Version 0.1.4 wird nicht genannt")
     finish(name, before)
 
 
@@ -576,6 +580,49 @@ def check_adjacent_group_folding_semantics() -> None:
         add("error", name, script, f"Semantischer Folgegruppen-Test fehlgeschlagen: {detail}")
     finish(name, before, (result.stdout or "").strip() or None)
 
+def check_pascal_formatter_semantics() -> None:
+    name = "pascal-formatter-semantics"
+    before = len(findings)
+    script = BUILD / "test_pascal_format.py"
+    if not script.is_file():
+        add("error", name, script, "Semantiktest für den Pascal-Formatter fehlt")
+        finish(name, before)
+        return
+    result = subprocess.run(
+        [sys.executable, str(script)],
+        cwd=BUILD,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        detail = (result.stderr or result.stdout or "unbekannter Fehler").strip()
+        add("error", name, script, f"Formatter-Semantiktest fehlgeschlagen: {detail}")
+    finish(name, before, (result.stdout or "").strip() or None)
+
+
+def check_pascal_formatting() -> None:
+    name = "pascal-formatting-180"
+    before = len(findings)
+    formatter = BUILD / "format_pascal.py"
+    if not formatter.is_file():
+        add("error", name, formatter, "Pascal-Formatter fehlt")
+        finish(name, before)
+        return
+    result = subprocess.run(
+        [sys.executable, str(formatter), "--check", "--max-line-length", "180"],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        detail = (result.stdout or result.stderr or "unbekannter Fehler").strip()
+        add("error", name, formatter, f"Formatprüfung fehlgeschlagen: {detail}")
+    status = (result.stdout or "").strip() or None
+    finish(name, before, status)
+
+
 def check_optional_parser() -> None:
     name = "tree-sitter-pascal"
     before = len(findings)
@@ -599,7 +646,7 @@ def write_reports() -> int:
     errors = sum(item.severity == "error" for item in findings)
     warnings = sum(item.severity == "warning" for item in findings)
     payload = {
-        "date": "2026-09-01",
+        "date": "2026-09-02",
         "version": read(ROOT / "VERSION.txt").strip(),
         "source_units": len(list(SOURCE.rglob("*.pas"))),
         "demo_projects": len(list(DEMOS.rglob("*.dpr"))),
@@ -613,7 +660,7 @@ def write_reports() -> int:
     lines = [
         "# Reproduzierbarer Release-Audit",
         "",
-        "**Stand:** 1. September 2026  ",
+        "**Stand:** 2. September 2026  ",
         f"**Version:** {payload['version']}",
         "",
         f"- Source-Units: **{payload['source_units']}**",
@@ -654,6 +701,8 @@ def main() -> int:
     check_demo_sample_contract()
     check_tree_branch_end_semantics()
     check_adjacent_group_folding_semantics()
+    check_pascal_formatter_semantics()
+    check_pascal_formatting()
     check_optional_parser()
     return write_reports()
 

@@ -3,9 +3,11 @@ setlocal
 pushd "%~dp0\.."
 where py >nul 2>nul
 if not errorlevel 1 (
+  py -3 Build\format_pascal.py --check || goto :error
   py -3 Build\source_audit.py || goto :error
   py -3 Build\release_audit.py || goto :error
 ) else (
+  python Build\format_pascal.py --check || goto :error
   python Build\source_audit.py || goto :error
   python Build\release_audit.py || goto :error
 )
