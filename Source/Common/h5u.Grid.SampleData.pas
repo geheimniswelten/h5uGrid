@@ -124,6 +124,16 @@ begin
     Required := True;
   end;
 
+  // Used by the adjacent-group-folding demos. Equal values are deliberately
+  // repeated in separate, non-adjacent runs to demonstrate that every
+  // contiguous run has its own fold state.
+  with FieldDefs.AddFieldDef do
+  begin
+    Name := 'FOLD_GROUP';
+    DataType := ftInteger;
+    Required := True;
+  end;
+
   with FieldDefs.AddFieldDef do
   begin
     Name := 'NAME';
@@ -231,6 +241,24 @@ var
       Result := 2;
     end;
   end;
+
+  function FoldGroupForRow(const AIndex: Integer): Integer;
+  begin
+    // 1,1,1 | 2 | 3,3 | 1,1,1 | 4
+    // The second run with ID 1 is intentionally independent from the first.
+    case (AIndex - 1) mod 10 of
+      0, 1, 2:
+        Result := 1;
+      3:
+        Result := 2;
+      4, 5:
+        Result := 3;
+      6, 7, 8:
+        Result := 1;
+    else
+      Result := 4;
+    end;
+  end;
 begin
   DisableControls;
   try
@@ -240,6 +268,7 @@ begin
       FieldByName('ID').AsInteger := I;
       LTreeLevel := TreeLevelForRow(I);
       FieldByName('TREE_LEVEL').AsInteger := LTreeLevel;
+      FieldByName('FOLD_GROUP').AsInteger := FoldGroupForRow(I);
       case LTreeLevel of
         0:
           FieldByName('NAME').AsString := Format(

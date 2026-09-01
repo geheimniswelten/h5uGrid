@@ -410,6 +410,7 @@ def main() -> int:
         "Source/Common/h5u.Grid.Columns.pas",
         "Source/Common/h5u.Grid.Selection.pas",
         "Source/Common/h5u.Grid.Options.pas",
+        "Source/Common/h5u.Grid.AdjacentGroups.pas",
         "Source/Common/h5u.Grid.Data.Core.pas",
         "Source/Common/h5u.Grid.Data.DataSet.pas",
         "Source/Common/h5u.Grid.Data.Memory.pas",

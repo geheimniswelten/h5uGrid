@@ -110,6 +110,47 @@
       Text = 'Tree-Abschlussleiste'
       OnChange = OptionClick
     end
+    object AdjacentGroupCheck: TCheckBox
+      Position.X = 202.000000000000000000
+      Position.Y = 52.000000000000000000
+      Size.Width = 184.000000000000000000
+      Size.Height = 24.000000000000000000
+      Size.PlatformDefault = False
+      IsChecked = True
+      Text = 'Folgegruppen falten'
+      OnChange = OptionClick
+    end
+    object AdjacentBandModeLabel: TLabel
+      Position.X = 392.000000000000000000
+      Position.Y = 55.000000000000000000
+      Size.Width = 104.000000000000000000
+      Size.Height = 20.000000000000000000
+      Size.PlatformDefault = False
+      Text = 'Abschlussleiste:'
+    end
+    object AdjacentBandModeCombo: TComboBox
+      Position.X = 500.000000000000000000
+      Position.Y = 48.000000000000000000
+      Size.Width = 158.000000000000000000
+      Size.Height = 30.000000000000000000
+      Size.PlatformDefault = False
+      ItemIndex = 3
+      Items.Strings = (
+        'Nie'
+        'Nur eingeklappt'
+        'Nur ausgeklappt'
+        'Immer')
+      OnChange = OptionClick
+    end
+    object ToggleGroupsButton: TButton
+      Position.X = 666.000000000000000000
+      Position.Y = 48.000000000000000000
+      Size.Width = 116.000000000000000000
+      Size.Height = 30.000000000000000000
+      Size.PlatformDefault = False
+      Text = 'Alle falten'
+      OnClick = ToggleGroupsButtonClick
+    end
   end
   object Grid: Th5uFmxGrid
     Align = Client
@@ -125,6 +166,12 @@
     Tree.BranchEndBand.Enabled = True
     Tree.BranchEndBand.Height = 7
     Tree.BranchEndBand.StyleName = 'TreeBranchEnd'
+    AdjacentGroupFolding.Enabled = True
+    AdjacentGroupFolding.IdColumnId = 'fold_group'
+    AdjacentGroupFolding.ShowFoldGlyph = True
+    AdjacentGroupFolding.EndBand.Visibility = Always
+    AdjacentGroupFolding.EndBand.Height = 7
+    AdjacentGroupFolding.EndBand.StyleName = 'AdjacentGroupEnd'
     Columns = <
       item
         Id = 'id'
@@ -221,6 +268,16 @@
         EditorKind = Image
         AutoHeight = True
         MaxAutoHeight = 90
+      end
+      item
+        Id = 'fold_group'
+        Caption = 'Faltgruppe'
+        FieldName = 'FOLD_GROUP'
+        Width = 80
+        Visible = False
+        VisibleIndex = 10
+        ReadOnly = True
+        DataType = Integer
       end>
     RowHeight.Mode = Automatic
     RowHeight.MinHeight = 26

@@ -1,4 +1,4 @@
-# h5u.Grid – Kurzhilfe für Entwickler
+﻿# h5u.Grid – Kurzhilfe für Entwickler
 
 ## 1. Benötigte Units
 
@@ -445,7 +445,122 @@ Grid1.FactoryScope.RegisterClass(
 
 Unter FMX wird entsprechend von `Th5uFmxVisualCell` abgeleitet. Die Funktion ist ein Tree-Metadatenpfad des Prototyps; Ein-/Ausklappen und ein vollständiges `TreeTableView` bleiben eine eigene Ausbaustufe.
 
-## 16. Cache und Paging
+## 16. Aufeinanderfolgende gleiche IDs falten
+
+`AdjacentGroupFolding` verändert weder die Reihenfolge im Controller noch die Sortierung. Es bildet ausschließlich aus **direkt aufeinanderfolgenden** gleichen ID-Werten einen Lauf. Taucht dieselbe ID später erneut auf, entsteht ein neuer, unabhängig faltbarer Lauf.
+
+```pascal
+Grid1.AdjacentGroupFolding.Enabled := True;
+Grid1.AdjacentGroupFolding.IdColumnId := 'fold_group';
+Grid1.AdjacentGroupFolding.InitialState :=
+  Th5uAdjacentGroupInitialState.Expanded;
+Grid1.AdjacentGroupFolding.ShowFoldGlyph := True;
+Grid1.AdjacentGroupFolding.PreserveStateOnDataChange := True;
+```
+
+`IdColumnId` akzeptiert `Column.Id`, `Column.FieldName` oder direkt den Feldnamen des Controllers. Die Column darf unsichtbar sein. Nur Läufe mit mindestens zwei Rows erhalten vor ihrer ersten Row ein Plus-/Minus-Symbol. Beim Einklappen bleibt diese erste Row sichtbar; alle folgenden Rows desselben Laufs werden ausschließlich aus der sichtbaren View-Abbildung entfernt.
+
+Beispiel:
+
+```text
+ID-Folge:       1 1 1 | 2 | 3 3 | 1 1 1 | 4
+Läufe:          A     | B | C   | D     | E
+```
+
+`A` und `D` besitzen trotz derselben ID `1` getrennte Zustände, weil ihr jeweiliger erster `RowKey` den Lauf verankert.
+
+### Abschlussleiste
+
+```pascal
+Grid1.AdjacentGroupFolding.EndBand.Height := 7;
+Grid1.AdjacentGroupFolding.EndBand.Color := h5uColorDefault;
+Grid1.AdjacentGroupFolding.EndBand.StyleName :=
+  'AdjacentGroupEnd';
+Grid1.AdjacentGroupFolding.EndBand.Visibility :=
+  Th5uAdjacentGroupEndBandVisibility.Always;
+```
+
+`Visibility` bietet vier Zustände:
+
+```text
+Never          niemals
+CollapsedOnly  nur am Ende eines eingeklappten Laufs
+ExpandedOnly   nur am Ende eines ausgeklappten Laufs
+Always         in beiden Zuständen
+```
+
+Die Leiste ist eine **Alternative** zum normalen Zeilenabstand:
+
+```text
+ohne Leiste:              RowHeight + RowSpacing
+mit Abschlussleiste:      RowHeight + EndBand.Height
+                          (kein zusätzliches RowSpacing)
+```
+
+`Height = 0` unterdrückt an dieser Laufgrenze auch das normale `RowSpacing`. Einzelzeilen erhalten keine Abschlussleiste, auch nicht bei `Always`.
+
+### Steuerung im Code
+
+```pascal
+Grid1.ToggleAdjacentGroup(AViewRowIndex);
+Grid1.SetAdjacentGroupCollapsed(AViewRowIndex, True);
+Grid1.CollapseAllAdjacentGroups;
+Grid1.ExpandAllAdjacentGroups;
+Grid1.ResetAdjacentGroupStates;
+
+if Grid1.IsAdjacentGroupCollapsed(AViewRowIndex) then
+  ...;
+```
+
+Die angegebene View-Row darf eine beliebige sichtbare Row des Laufs sein. Das Symbol wird nur auf der ersten Row dargestellt.
+
+### ID und Zustandsänderung per Event
+
+```pascal
+procedure TForm1.GridGetAdjacentGroupId(
+  Sender: TObject;
+  const AContext: Th5uAdjacentGroupIdContext;
+  var AGroupId: TValue;
+  var AAvailable: Boolean);
+begin
+  // Vorgabe aus IdColumnId übernehmen, verändern oder vollständig liefern.
+end;
+
+procedure TForm1.GridAdjacentGroupStateChanged(
+  Sender: TObject;
+  const AContext: Th5uAdjacentGroupStateChangedContext);
+begin
+  // AContext.GroupId, AnchorRowKey, RowCount und Collapsed auswerten.
+end;
+```
+
+Factory- und CustomDraw-Kontext enthalten unter anderem:
+
+```text
+AdjacentGroupIndex
+AdjacentGroupId
+AdjacentGroupAnchorRowKey
+AdjacentGroupRowCount
+AdjacentGroupCollapsed
+AdjacentGroupFirstRow
+AdjacentGroupLastVisibleRow
+```
+
+Die austauschbaren Elemente heißen:
+
+```pascal
+h5uClassIdGridAdjacentGroupFoldGlyph
+h5uClassIdGridAdjacentGroupEndBand
+
+Th5uElementKind.AdjacentGroupFoldGlyph
+Th5uElementKind.AdjacentGroupEndBand
+```
+
+Die Abschlussleiste hat Vorrang vor einer Tree-Abschlussleiste, falls beide an derselben sichtbaren Grenze liegen. Auch dann wird nur genau eine alternative Leiste verwendet.
+
+Bei nummerierter Pagination werden Läufe im aktuellen Controller-View beziehungsweise auf der aktuellen Seite gebildet. Ein vollständiges serverseitiges Folding über noch nicht geladene Seiten erfordert, dass die VirtualSource die Laufgrenzen beziehungsweise eine entsprechend vorbereitete View liefert.
+
+## 17. Cache und Paging
 
 ```pascal
 DataSetController1.Cache.Mode := Th5uCacheMode.Paged;
@@ -460,7 +575,7 @@ DataSetController1.Pagination.PageIndex := 0;
 
 Cache-Seiten sind interne Ladeeinheiten. Sichtbare Pagination ist eine UI-/Queryentscheidung; beides darf unabhängig konfiguriert werden.
 
-## 17. Bildwerte
+## 18. Bildwerte
 
 Akzeptiert werden im Prototyp insbesondere:
 
@@ -470,7 +585,7 @@ Akzeptiert werden im Prototyp insbesondere:
 
 Der Plattformrenderer dekodiert das Bild erst für sichtbare Zellen. Der echte `TImage`-Editor wird nur für die aktive Bearbeitung erzeugt.
 
-## 18. Aktualisierung nach Datenänderungen
+## 19. Aktualisierung nach Datenänderungen
 
 Je genauer die Benachrichtigung, desto weniger Arbeit:
 
@@ -482,7 +597,7 @@ Query geändert          neue Generation und betroffene Pages verwerfen
 kompletter Reset        Controller.Refresh
 ```
 
-## 19. Diagnose
+## 20. Diagnose
 
 Bei unerwartetem Verhalten zuerst prüfen:
 

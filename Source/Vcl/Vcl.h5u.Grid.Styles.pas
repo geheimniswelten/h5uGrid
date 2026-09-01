@@ -30,6 +30,7 @@ type
     ErrorBackground: TColor;
     WarningBackground: TColor;
     TreeBranchEndBackground: TColor;
+    AdjacentGroupEndBackground: TColor;
     DisabledText: TColor;
     ThumbHintBackground: TColor;
     ThumbHintText: TColor;
@@ -114,6 +115,7 @@ begin
         Result.ErrorBackground := $00D7D7FF;
         Result.WarningBackground := $00D6F4FF;
         Result.TreeBranchEndBackground := $00D6DCE3;
+        Result.AdjacentGroupEndBackground := $00CAD4DE;
         Result.DisabledText := clGrayText;
         Result.ThumbHintBackground := clInfoBk;
         Result.ThumbHintText := clInfoText;
@@ -139,6 +141,7 @@ begin
         Result.ErrorBackground := $004D3038;
         Result.WarningBackground := $00473F2B;
         Result.TreeBranchEndBackground := $00414B55;
+        Result.AdjacentGroupEndBackground := $00495561;
         Result.DisabledText := $00888888;
         Result.ThumbHintBackground := $00404040;
         Result.ThumbHintText := clWhite;
@@ -164,6 +167,7 @@ begin
         Result.ErrorBackground := $00E7E7FF;
         Result.WarningBackground := $00DDF5FF;
         Result.TreeBranchEndBackground := $00D8E2EB;
+        Result.AdjacentGroupEndBackground := $00CBD9E5;
         Result.DisabledText := $00808080;
         Result.ThumbHintBackground := $00383838;
         Result.ThumbHintText := clWhite;
@@ -199,6 +203,8 @@ begin
         h5uBlendColor(LWindow, clYellow, 45);
       Result.TreeBranchEndBackground :=
         h5uBlendColor(LWindow, LHighlight, 20);
+      Result.AdjacentGroupEndBackground :=
+        h5uBlendColor(LWindow, LHighlight, 28);
       Result.DisabledText := StyleServices.GetSystemColor(clGrayText);
       Result.ThumbHintBackground :=
         StyleServices.GetSystemColor(clInfoBk);

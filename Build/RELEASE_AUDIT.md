@@ -1,9 +1,9 @@
 # Reproduzierbarer Release-Audit
 
 **Stand:** 1. September 2026  
-**Version:** 0.1.2
+**Version:** 0.1.3
 
-- Source-Units: **20**
+- Source-Units: **21**
 - Demo-Projekte: **6**
 - Harte Befunde: **0**
 - Warnungen: **0**
@@ -20,6 +20,7 @@
 - `declaration-implementation-consistency`: 0 Fehler, 0 Warnungen
 - `clientdataset-demo-contract`: 0 Fehler, 0 Warnungen
 - `tree-branch-end-semantics`: 0 Fehler, 0 Warnungen – Tree branch-end semantic checks: 12 passed
+- `adjacent-group-folding-semantics`: 0 Fehler, 0 Warnungen – Adjacent-group-folding semantic checks: 16 passed
 - `tree-sitter-pascal`: 0 Fehler, 0 Warnungen – optionale Abhängigkeit nicht installiert
 
 ## Befunde

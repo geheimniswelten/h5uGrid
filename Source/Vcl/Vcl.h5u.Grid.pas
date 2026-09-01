@@ -1,4 +1,4 @@
-unit Vcl.h5u.Grid;
+﻿unit Vcl.h5u.Grid;
 
 interface
 
@@ -21,6 +21,7 @@ uses
   Vcl.Graphics,
   Vcl.Menus,
   Vcl.StdCtrls,
+  h5u.Grid.AdjacentGroups,
   h5u.Grid.Columns,
   h5u.Grid.Data.Core,
   h5u.Grid.Factory,
@@ -43,7 +44,8 @@ type
     None,
     Header,
     RowIndicator,
-    DataCell
+    DataCell,
+    AdjacentGroupGlyph
   );
 
   Th5uGetRowHeightContext = record
@@ -215,6 +217,16 @@ type
 
   Th5uVclFixedCell = class(Th5uVclDataCell);
 
+  // Plus/minus glyph used for one contiguous run of equal adjacent IDs.
+  // The class is resolved through the per-grid FactoryScope.
+  Th5uVclAdjacentGroupGlyphCell = class(Th5uVclVisualCell)
+  protected
+    procedure PaintDefault(
+      AGrid: Th5uVclGrid;
+      ACanvas: TCanvas
+    ); override;
+  end;
+
   Th5uVclGrid = class(TCustomControl)
   private
     FColumns: Th5uGridColumns;
@@ -233,6 +245,9 @@ type
     FSpacing: Th5uGridSpacingOptions;
     FAppearance: Th5uGridAppearanceOptions;
     FTree: Th5uTreeOptions;
+    FAdjacentGroupFolding: Th5uAdjacentGroupFoldingOptions;
+    FAdjacentGroupMap: Th5uAdjacentGroupMap;
+    FAdjacentGroupMapDirty: Boolean;
 
     FTheme: Th5uGridTheme;
     FHeaderRowHeight: Integer;
@@ -273,6 +288,9 @@ type
     FOnCustomDraw: Th5uVclCustomDrawEvent;
     FOnGetTreeLevel: Th5uGetTreeLevelEvent;
     FOnGetTreeBranchEnd: Th5uGetTreeBranchEndEvent;
+    FOnGetAdjacentGroupId: Th5uGetAdjacentGroupIdEvent;
+    FOnAdjacentGroupStateChanged:
+      Th5uAdjacentGroupStateChangedEvent;
 
     procedure ColumnsChanged(Sender: TObject; AColumn: Th5uGridColumn);
     procedure DataChanged(Sender: TObject; const AChange: Th5uDataChange);
@@ -291,6 +309,9 @@ type
     procedure SetSpacing(const AValue: Th5uGridSpacingOptions);
     procedure SetAppearance(const AValue: Th5uGridAppearanceOptions);
     procedure SetTree(const AValue: Th5uTreeOptions);
+    procedure SetAdjacentGroupFolding(
+      const AValue: Th5uAdjacentGroupFoldingOptions
+    );
     procedure SetSelection(const AValue: Th5uGridSelection);
     procedure SetGridLines(const AValue: Boolean);
     procedure SetHeaderRowHeight(const AValue: Integer);
@@ -326,6 +347,58 @@ type
     function GetEffectiveColumnRightSpacing(
       AColumn: Th5uGridColumn
     ): Integer;
+    procedure InvalidateAdjacentGroupMap(
+      AClearStates: Boolean = False
+    );
+    procedure EnsureAdjacentGroupMap;
+    function ResolveAdjacentGroupFieldName: string;
+    function TryGetAdjacentGroupIdForControllerRow(
+      AControllerRowIndex: Int64;
+      out AGroupId: TValue
+    ): Boolean;
+    function GetViewRowCount: Int64;
+    function MapViewToControllerRowIndex(
+      AViewRowIndex: Int64;
+      AAllowLookAhead: Boolean = False
+    ): Int64;
+    function GetViewSourceRowIndex(AViewRowIndex: Int64): Int64;
+    function GetViewRowKey(AViewRowIndex: Int64): Th5uRowKey;
+    function GetViewValue(
+      AViewRowIndex: Int64;
+      const AFieldName: string
+    ): TValue;
+    procedure SetViewValue(
+      AViewRowIndex: Int64;
+      const AFieldName: string;
+      const AValue: TValue
+    );
+    function CanEditViewValue(
+      AViewRowIndex: Int64;
+      const AFieldName: string
+    ): Boolean;
+    function GetViewDisplayText(
+      AViewRowIndex: Int64;
+      const AFieldName, ADisplayFormat: string
+    ): string;
+    function IsViewRowAvailable(AViewRowIndex: Int64): Boolean;
+    procedure PrepareViewRange(
+      AFirstViewRow, ACount: Int64
+    );
+    function TryGetAdjacentGroupRowInfo(
+      AViewRowIndex: Int64;
+      out AInfo: Th5uAdjacentGroupRowInfo
+    ): Boolean;
+    procedure PopulateAdjacentGroupContext(
+      var AContext: Th5uFactoryContext;
+      AViewRowIndex: Int64
+    );
+    function GetAdjacentGroupEndBandInfo(
+      AViewRowIndex: Int64;
+      out AInfo: Th5uAdjacentGroupRowInfo
+    ): Boolean;
+    procedure DoAdjacentGroupStateChanged(
+      const AInfo: Th5uAdjacentGroupRowInfo
+    );
     function GetRowSpacingFor(
       AViewRowIndex: Int64;
       const ARowKey: Th5uRowKey
@@ -363,6 +436,10 @@ type
       AViewRowIndex: Int64;
       const ARowKey: Th5uRowKey
     ): TColor;
+    function ResolveAdjacentGroupEndColor(
+      AViewRowIndex: Int64;
+      const ARowKey: Th5uRowKey
+    ): TColor;
     function GetEstimatedTotalRowHeight: Int64;
     procedure LayoutScrollBars;
     procedure UpdateScrollBars;
@@ -390,6 +467,13 @@ type
     procedure DrawDefaultHeaders;
     procedure DrawCustomHeaderLayout;
     procedure DrawRowIndicator(
+      const ARowInfo: Th5uVisibleRowInfo;
+      ASelected: Boolean
+    );
+    function GetAdjacentGroupGlyphRect(
+      const ARowInfo: Th5uVisibleRowInfo
+    ): TRect;
+    procedure DrawAdjacentGroupGlyph(
       const ARowInfo: Th5uVisibleRowInfo;
       ASelected: Boolean
     );
@@ -523,6 +607,17 @@ type
     procedure AutoCreateColumnsFromDataSet(
       AClearExisting: Boolean = True
     );
+    procedure ToggleAdjacentGroup(AViewRowIndex: Int64);
+    procedure SetAdjacentGroupCollapsed(
+      AViewRowIndex: Int64;
+      ACollapsed: Boolean
+    );
+    procedure ExpandAllAdjacentGroups;
+    procedure CollapseAllAdjacentGroups;
+    procedure ResetAdjacentGroupStates;
+    function IsAdjacentGroupCollapsed(
+      AViewRowIndex: Int64
+    ): Boolean;
 
     property FactoryScope: Th5uFactoryScope read FFactoryScope;
     property HorizontalOffset: Integer read FHorizontalOffset;
@@ -567,6 +662,8 @@ type
       read FAppearance write SetAppearance;
     property Tree: Th5uTreeOptions
       read FTree write SetTree;
+    property AdjacentGroupFolding: Th5uAdjacentGroupFoldingOptions
+      read FAdjacentGroupFolding write SetAdjacentGroupFolding;
 
     property Theme: Th5uGridTheme
       read FTheme write SetTheme
@@ -608,6 +705,12 @@ type
       read FOnGetTreeLevel write FOnGetTreeLevel;
     property OnGetTreeBranchEnd: Th5uGetTreeBranchEndEvent
       read FOnGetTreeBranchEnd write FOnGetTreeBranchEnd;
+    property OnGetAdjacentGroupId: Th5uGetAdjacentGroupIdEvent
+      read FOnGetAdjacentGroupId write FOnGetAdjacentGroupId;
+    property OnAdjacentGroupStateChanged:
+      Th5uAdjacentGroupStateChangedEvent
+      read FOnAdjacentGroupStateChanged
+      write FOnAdjacentGroupStateChanged;
     property OnClick;
     property OnDblClick;
     property OnEnter;
@@ -754,6 +857,43 @@ begin
   ACanvas.Brush.Style := bsSolid;
   ACanvas.Brush.Color := h5uColorToVcl(Appearance.Background);
   ACanvas.FillRect(Bounds);
+end;
+
+{ Th5uVclAdjacentGroupGlyphCell }
+
+procedure Th5uVclAdjacentGroupGlyphCell.PaintDefault(
+  AGrid: Th5uVclGrid; ACanvas: TCanvas);
+var
+  LPalette: Th5uVclPalette;
+  LRect: TRect;
+  LMidX: Integer;
+  LMidY: Integer;
+begin
+  LPalette := h5uGetVclPalette(AGrid.Theme);
+  LRect := Bounds;
+
+  ACanvas.Brush.Style := bsSolid;
+  ACanvas.Brush.Color := EffectiveBackground(AGrid);
+  ACanvas.FillRect(LRect);
+
+  InflateRect(LRect, -1, -1);
+  if (LRect.Width < 7) or (LRect.Height < 7) then
+    Exit;
+
+  ACanvas.Brush.Color := LPalette.CellBackground;
+  ACanvas.Pen.Color := LPalette.CellText;
+  ACanvas.Pen.Width := 1;
+  ACanvas.Rectangle(LRect);
+
+  LMidX := (LRect.Left + LRect.Right) div 2;
+  LMidY := (LRect.Top + LRect.Bottom) div 2;
+  ACanvas.MoveTo(LRect.Left + 2, LMidY);
+  ACanvas.LineTo(LRect.Right - 2, LMidY);
+  if Context.AdjacentGroupCollapsed then
+  begin
+    ACanvas.MoveTo(LMidX, LRect.Top + 2);
+    ACanvas.LineTo(LMidX, LRect.Bottom - 2);
+  end;
 end;
 
 destructor Th5uVclDataCell.Destroy;
@@ -1118,7 +1258,7 @@ begin
   if AAxis = Th5uScrollAxis.Vertical then
   begin
     if not Assigned(FDataController) or
-       (FDataController.GetRowCount = 0) then
+       (GetViewRowCount = 0) then
       Exit;
 
     LRowIndex := FindFirstVisibleRow(FVerticalOffset, LTop);
@@ -1128,7 +1268,7 @@ begin
     AContext.ScrollOffset := FVerticalOffset;
     AContext.ScrollRange := FVScrollBar.Max;
     AContext.ViewRowIndex := LRowIndex;
-    AContext.RowKey := FDataController.GetRowKey(LRowIndex);
+    AContext.RowKey := GetViewRowKey(LRowIndex);
 
     LColumn := FColumns.FindById(
       FScrollHints.VerticalColumnId
@@ -1143,11 +1283,11 @@ begin
     AContext.Column := LColumn;
     if Assigned(LColumn) then
     begin
-      AContext.Value := FDataController.GetValue(
+      AContext.Value := GetViewValue(
         LRowIndex,
         LColumn.FieldName
       );
-      AContext.DisplayText := FDataController.GetDisplayText(
+      AContext.DisplayText := GetViewDisplayText(
         LRowIndex,
         LColumn.FieldName,
         LColumn.DisplayFormat
@@ -1162,7 +1302,7 @@ begin
         Result := Result + ' — ';
       Result := Result + Format(
         'Zeile %d von %d',
-        [LRowIndex + 1, FDataController.GetRowCount]
+        [LRowIndex + 1, GetViewRowCount]
       );
     end;
   end
@@ -1338,6 +1478,7 @@ end;
 procedure Th5uVclGrid.ColumnsChanged(
   Sender: TObject; AColumn: Th5uGridColumn);
 begin
+  InvalidateAdjacentGroupMap(False);
   RebuildAfterLayoutChange;
 end;
 
@@ -1354,7 +1495,7 @@ begin
   try
     try
       LValue := ParseEditorValue(FEditColumn, FEditor.Text);
-      FDataController.SetValue(
+      SetViewValue(
         FEditRowIndex,
         FEditColumn.FieldName,
         LValue
@@ -1407,6 +1548,16 @@ begin
     Th5uVclVisualCell,
     Th5uVclHeaderCell
   );
+  FFactoryScope.RegisterClass(
+    h5uClassIdGridAdjacentGroupFoldGlyph,
+    Th5uVclVisualCell,
+    Th5uVclAdjacentGroupGlyphCell
+  );
+  FFactoryScope.RegisterClass(
+    h5uClassIdGridAdjacentGroupEndBand,
+    Th5uVclVisualCell,
+    Th5uVclSpacingCell
+  );
 
   FColumns := Th5uGridColumns.Create(Self);
   FColumns.OnChanged := ColumnsChanged;
@@ -1430,6 +1581,10 @@ begin
   FAppearance.OnChanged := OptionsChanged;
   FTree := Th5uTreeOptions.Create;
   FTree.OnChanged := OptionsChanged;
+  FAdjacentGroupFolding := Th5uAdjacentGroupFoldingOptions.Create;
+  FAdjacentGroupFolding.OnChanged := OptionsChanged;
+  FAdjacentGroupMap := Th5uAdjacentGroupMap.Create;
+  FAdjacentGroupMapDirty := True;
 
   FDataLink := Th5uDataControllerLink.Create;
   FDataLink.OnChanged := DataChanged;
@@ -1481,6 +1636,9 @@ procedure Th5uVclGrid.DataChanged(
   Sender: TObject; const AChange: Th5uDataChange);
 begin
   CancelEditor;
+  InvalidateAdjacentGroupMap(
+    not FAdjacentGroupFolding.PreserveStateOnDataChange
+  );
   InvalidateAllRowHeights;
   UpdateScrollBars;
   Invalidate;
@@ -1489,6 +1647,8 @@ end;
 destructor Th5uVclGrid.Destroy;
 begin
   FDataLink.Controller := nil;
+  FAdjacentGroupMap.Free;
+  FAdjacentGroupFolding.Free;
   FRowHeightCache.Free;
   FCellPool.Free;
   FDataLink.Free;
@@ -1988,7 +2148,13 @@ begin
   );
   LContext.RowKey := ARowInfo.RowKey;
   LContext.ViewRowIndex := ARowInfo.RowIndex;
+  LContext.SourceRowIndex :=
+    GetViewSourceRowIndex(ARowInfo.RowIndex);
   LContext.ElementFlags := [Th5uElementFlag.FixedColumn];
+  PopulateAdjacentGroupContext(
+    LContext,
+    ARowInfo.RowIndex
+  );
   if ASelected then
     Include(LContext.ElementFlags, Th5uElementFlag.Selected);
 
@@ -2040,6 +2206,98 @@ begin
   end;
 end;
 
+function Th5uVclGrid.GetAdjacentGroupGlyphRect(
+  const ARowInfo: Th5uVisibleRowInfo): TRect;
+var
+  LInfo: Th5uAdjacentGroupRowInfo;
+  LLeft: Integer;
+  LTop: Integer;
+  LSize: Integer;
+begin
+  Result := Rect(0, 0, 0, 0);
+  if not FAdjacentGroupFolding.Enabled or
+     not FAdjacentGroupFolding.ShowFoldGlyph or
+     not TryGetAdjacentGroupRowInfo(ARowInfo.RowIndex, LInfo) or
+     not LInfo.IsFoldable or not LInfo.IsFirstRow then
+    Exit;
+
+  LSize := EnsureRange(ARowInfo.Bounds.Height - 8, 9, 13);
+  LTop := ARowInfo.Bounds.Top +
+    (ARowInfo.Bounds.Height - LSize) div 2;
+
+  if FShowRowIndicator then
+    LLeft := GetViewportRect.Left + 4
+  else if Length(FVisibleColumns) > 0 then
+    LLeft := Max(
+      GetDataViewportRect.Left + 3,
+      FVisibleColumns[0].Bounds.Left + 3
+    )
+  else
+    Exit;
+
+  Result := Rect(
+    LLeft,
+    LTop,
+    LLeft + LSize,
+    LTop + LSize
+  );
+  IntersectRect(Result, Result, GetDataViewportRect);
+end;
+
+procedure Th5uVclGrid.DrawAdjacentGroupGlyph(
+  const ARowInfo: Th5uVisibleRowInfo;
+  ASelected: Boolean);
+var
+  LBounds: TRect;
+  LContext: Th5uFactoryContext;
+  LAppearance: Th5uResolvedAppearance;
+  LCell: Th5uVclVisualCell;
+begin
+  LBounds := GetAdjacentGroupGlyphRect(ARowInfo);
+  if IsRectEmpty(LBounds) then
+    Exit;
+
+  LContext := Th5uFactoryContext.Create(
+    Self,
+    Self,
+    FDataController,
+    h5uClassIdGridAdjacentGroupFoldGlyph,
+    Th5uElementKind.AdjacentGroupFoldGlyph
+  );
+  LContext.RowKey := ARowInfo.RowKey;
+  LContext.ViewRowIndex := ARowInfo.RowIndex;
+  LContext.SourceRowIndex :=
+    GetViewSourceRowIndex(ARowInfo.RowIndex);
+  PopulateAdjacentGroupContext(
+    LContext,
+    ARowInfo.RowIndex
+  );
+  if ASelected then
+    Include(LContext.ElementFlags, Th5uElementFlag.Selected);
+
+  LAppearance.Clear;
+  if ASelected then
+  begin
+    LAppearance.HasBackground := True;
+    LAppearance.Background := h5uVclToColor(
+      h5uGetVclPalette(FTheme).SelectedBackground
+    );
+  end;
+
+  LCell := AcquireVisualCell(
+    LContext,
+    Th5uVclAdjacentGroupGlyphCell
+  );
+  LCell.BindCell(
+    LContext,
+    LBounds,
+    TValue.Empty,
+    '',
+    LAppearance
+  );
+  LCell.Paint(Self, Canvas);
+end;
+
 procedure Th5uVclGrid.DrawRows;
 var
   LDataRect: TRect;
@@ -2082,7 +2340,7 @@ begin
   end;
 
   LDataRect := GetDataViewportRect;
-  LRowCount := FDataController.GetRowCount;
+  LRowCount := GetViewRowCount;
   if LRowCount <= 0 then
   begin
     FVisibleRows := nil;
@@ -2093,7 +2351,7 @@ begin
   if LRowIndex < 0 then
     Exit;
 
-  FDataController.PrepareRange(
+  PrepareViewRange(
     Max(0, LRowIndex - FScrolling.OverscanRows),
     64
   );
@@ -2107,7 +2365,7 @@ begin
     while (LRowIndex < LRowCount) and
           (LTop < LOverscanBottom) do
     begin
-      LRowKey := FDataController.GetRowKey(LRowIndex);
+      LRowKey := GetViewRowKey(LRowIndex);
       LHeight := GetRowHeightFor(LRowIndex, LRowKey);
       LRowSpacing := GetEffectiveRowSeparatorFor(
         LRowIndex,
@@ -2142,6 +2400,8 @@ begin
         );
 
         DrawRowIndicator(LRowInfo, LRowSelected);
+        if FShowRowIndicator then
+          DrawAdjacentGroupGlyph(LRowInfo, LRowSelected);
 
         for LColumnInfo in FVisibleColumns do
         begin
@@ -2183,8 +2443,13 @@ begin
             LContext.Column := LColumnInfo.Column;
             LContext.RowKey := LRowKey;
             LContext.ViewRowIndex := LRowIndex;
-            LContext.SourceRowIndex := LRowIndex;
+            LContext.SourceRowIndex :=
+              GetViewSourceRowIndex(LRowIndex);
             LContext.RowStyleKey := LStyleKey;
+            PopulateAdjacentGroupContext(
+              LContext,
+              LRowIndex
+            );
 
             if LColumnInfo.Column.FixedKind <>
                Th5uFixedKind.None then
@@ -2225,12 +2490,12 @@ begin
                 Th5uElementFlag.ReadOnly
               );
 
-            LValue := FDataController.GetValue(
+            LValue := GetViewValue(
               LRowIndex,
               LColumnInfo.Column.FieldName
             );
             LContext.Value := LValue;
-            LDisplayText := FDataController.GetDisplayText(
+            LDisplayText := GetViewDisplayText(
               LRowIndex,
               LColumnInfo.Column.FieldName,
               LColumnInfo.Column.DisplayFormat
@@ -2281,6 +2546,8 @@ begin
               );
           end;
         end;
+        if not FShowRowIndicator then
+          DrawAdjacentGroupGlyph(LRowInfo, LRowSelected);
       end;
 
       if LRowSpacing > 0 then
@@ -2342,6 +2609,8 @@ begin
       LClassId := h5uClassIdGridColumnSpacing;
     Th5uElementKind.TreeBranchEndBand:
       LClassId := h5uClassIdGridTreeBranchEndBand;
+    Th5uElementKind.AdjacentGroupEndBand:
+      LClassId := h5uClassIdGridAdjacentGroupEndBand;
   else
     LClassId := h5uClassIdGridContentPadding;
   end;
@@ -2356,17 +2625,27 @@ begin
   LFactoryContext.Column := AColumn;
   LFactoryContext.ViewRowIndex := AViewRowIndex;
   if Assigned(FDataController) and (AViewRowIndex >= 0) then
-    LFactoryContext.SourceRowIndex :=
-      FDataController.GetSourceRowIndex(AViewRowIndex)
+    LFactoryContext.SourceRowIndex := GetViewSourceRowIndex(
+      AViewRowIndex
+    )
   else
     LFactoryContext.SourceRowIndex := AViewRowIndex;
   LFactoryContext.RowKey := ARowKey;
+  PopulateAdjacentGroupContext(
+    LFactoryContext,
+    AViewRowIndex
+  );
   LFactoryContext.TreeLevel := ATreeLevel;
   LFactoryContext.ClosedTreeLevels := AClosedTreeLevels;
   if AElementKind = Th5uElementKind.TreeBranchEndBand then
     Include(
       LFactoryContext.ElementFlags,
       Th5uElementFlag.TreeBranchEnd
+    );
+  if AElementKind = Th5uElementKind.AdjacentGroupEndBand then
+    Include(
+      LFactoryContext.ElementFlags,
+      Th5uElementFlag.AdjacentGroupEnd
     );
 
   LAppearance.Clear;
@@ -2435,13 +2714,13 @@ begin
   if not Assigned(FDataController) then
     Exit;
 
-  LCount := FDataController.GetRowCount;
+  LCount := GetViewRowCount;
   LRemaining := Max(0, AOffset);
   LIndex := 0;
 
   while LIndex < LCount do
   begin
-    LKey := FDataController.GetRowKey(LIndex);
+    LKey := GetViewRowKey(LIndex);
     LHeight := GetRowHeightFor(LIndex, LKey, LCount <= 5000);
     LSpacing := GetEffectiveRowSeparatorFor(
       LIndex,
@@ -2495,10 +2774,13 @@ begin
   if not Assigned(FDataController) then
     Exit;
 
-  LCount := FDataController.GetRowCount;
+  LCount := GetViewRowCount;
   if (FRowHeight.Mode = Th5uRowHeightMode.Fixed) and
      not Assigned(FOnGetRowSpacing) and
-     not (FTree.Enabled and FTree.BranchEndBand.Enabled) then
+     not (FTree.Enabled and FTree.BranchEndBand.Enabled) and
+     not (FAdjacentGroupFolding.Enabled and
+       (FAdjacentGroupFolding.EndBand.Visibility <>
+        Th5uAdjacentGroupEndBandVisibility.Never)) then
     Exit(
       LCount *
       (FRowHeight.FixedHeight + FSpacing.RowSpacing)
@@ -2506,10 +2788,10 @@ begin
 
   if LCount <= 5000 then
   begin
-    FDataController.PrepareRange(0, LCount);
+    PrepareViewRange(0, LCount);
     for LIndex := 0 to LCount - 1 do
     begin
-      LKey := FDataController.GetRowKey(LIndex);
+      LKey := GetViewRowKey(LIndex);
       if FRowHeight.Mode = Th5uRowHeightMode.Fixed then
         LHeight := FRowHeight.FixedHeight
       else
@@ -2631,7 +2913,7 @@ begin
     LContext.DataController := FDataController;
     LContext.RowKey := ARowKey;
     LContext.ViewRowIndex := AViewRowIndex;
-    LContext.SourceRowIndex := AViewRowIndex;
+    LContext.SourceRowIndex := GetViewSourceRowIndex(AViewRowIndex);
     LContext.IsEstimated := not AAllowMeasure;
     FOnGetRowHeight(
       Self,
@@ -2670,7 +2952,7 @@ begin
 
     if Assigned(LColumn) then
     begin
-      AStyleKey := FDataController.GetValue(
+      AStyleKey := GetViewValue(
         AViewRowIndex,
         LColumn.FieldName
       );
@@ -2694,6 +2976,374 @@ begin
     Result := FSpacing.DefaultColumnRightSpacing;
 end;
 
+procedure Th5uVclGrid.InvalidateAdjacentGroupMap(
+  AClearStates: Boolean);
+begin
+  if AClearStates then
+    FAdjacentGroupMap.ResetStates;
+  FAdjacentGroupMapDirty := True;
+end;
+
+procedure Th5uVclGrid.EnsureAdjacentGroupMap;
+var
+  LControllerRowIndex: Int64;
+  LControllerRowCount: Int64;
+  LGroupId: TValue;
+  LAvailable: Boolean;
+begin
+  if not Assigned(FDataController) or
+     not FAdjacentGroupFolding.Enabled then
+  begin
+    FAdjacentGroupMap.Clear(False);
+    FAdjacentGroupMapDirty := False;
+    Exit;
+  end;
+
+  if not FAdjacentGroupMapDirty then
+    Exit;
+
+  FAdjacentGroupMap.BeginBuild(
+    FAdjacentGroupFolding.InitialState,
+    FAdjacentGroupFolding.CaseSensitive,
+    FAdjacentGroupFolding.GroupEmptyValues
+  );
+  LControllerRowCount := FDataController.GetRowCount;
+  if LControllerRowCount > 0 then
+    FDataController.PrepareRange(0, LControllerRowCount);
+
+  for LControllerRowIndex := 0 to LControllerRowCount - 1 do
+  begin
+    LAvailable := TryGetAdjacentGroupIdForControllerRow(
+      LControllerRowIndex,
+      LGroupId
+    );
+    FAdjacentGroupMap.AddRow(
+      LControllerRowIndex,
+      FDataController.GetRowKey(LControllerRowIndex),
+      LGroupId,
+      LAvailable
+    );
+  end;
+  FAdjacentGroupMap.EndBuild;
+  FAdjacentGroupMapDirty := False;
+end;
+
+function Th5uVclGrid.ResolveAdjacentGroupFieldName: string;
+var
+  LColumn: Th5uGridColumn;
+begin
+  Result := Trim(FAdjacentGroupFolding.IdColumnId);
+  if Result = '' then
+    Exit;
+
+  LColumn := FColumns.FindById(Result);
+  if not Assigned(LColumn) then
+    LColumn := FColumns.FindByFieldName(Result);
+  if Assigned(LColumn) then
+    Result := LColumn.FieldName;
+end;
+
+function Th5uVclGrid.TryGetAdjacentGroupIdForControllerRow(
+  AControllerRowIndex: Int64;
+  out AGroupId: TValue): Boolean;
+var
+  LContext: Th5uAdjacentGroupIdContext;
+  LFieldName: string;
+begin
+  AGroupId := TValue.Empty;
+  Result := False;
+  if not Assigned(FDataController) or
+     not FDataController.IsRowAvailable(AControllerRowIndex) then
+    Exit;
+
+  LFieldName := ResolveAdjacentGroupFieldName;
+  if LFieldName <> '' then
+  begin
+    AGroupId := FDataController.GetValue(
+      AControllerRowIndex,
+      LFieldName
+    );
+    Result := True;
+  end;
+
+  if Assigned(FOnGetAdjacentGroupId) then
+  begin
+    LContext := Default(Th5uAdjacentGroupIdContext);
+    LContext.Grid := Self;
+    LContext.DataController := FDataController;
+    LContext.RowKey := FDataController.GetRowKey(AControllerRowIndex);
+    LContext.ControllerRowIndex := AControllerRowIndex;
+    LContext.SourceRowIndex :=
+      FDataController.GetSourceRowIndex(AControllerRowIndex);
+    FOnGetAdjacentGroupId(
+      Self,
+      LContext,
+      AGroupId,
+      Result
+    );
+  end;
+end;
+
+function Th5uVclGrid.GetViewRowCount: Int64;
+begin
+  if not Assigned(FDataController) then
+    Exit(0);
+  EnsureAdjacentGroupMap;
+  if FAdjacentGroupMap.Active then
+    Result := FAdjacentGroupMap.GetVisibleRowCount
+  else
+    Result := FDataController.GetRowCount;
+end;
+
+function Th5uVclGrid.MapViewToControllerRowIndex(
+  AViewRowIndex: Int64;
+  AAllowLookAhead: Boolean): Int64;
+begin
+  Result := -1;
+  if not Assigned(FDataController) or (AViewRowIndex < 0) then
+    Exit;
+
+  EnsureAdjacentGroupMap;
+  if not FAdjacentGroupMap.Active then
+    Exit(AViewRowIndex);
+
+  Result := FAdjacentGroupMap.MapViewToController(AViewRowIndex);
+  if (Result < 0) and AAllowLookAhead and
+     (AViewRowIndex = FAdjacentGroupMap.GetVisibleRowCount) then
+    Result := FDataController.GetRowCount;
+end;
+
+function Th5uVclGrid.GetViewSourceRowIndex(
+  AViewRowIndex: Int64): Int64;
+var
+  LControllerRowIndex: Int64;
+begin
+  Result := -1;
+  if not Assigned(FDataController) then
+    Exit;
+  LControllerRowIndex := MapViewToControllerRowIndex(
+    AViewRowIndex,
+    True
+  );
+  if LControllerRowIndex >= 0 then
+    Result := FDataController.GetSourceRowIndex(LControllerRowIndex);
+end;
+
+function Th5uVclGrid.GetViewRowKey(
+  AViewRowIndex: Int64): Th5uRowKey;
+var
+  LControllerRowIndex: Int64;
+begin
+  Result := Th5uRowKey.Empty;
+  if not Assigned(FDataController) then
+    Exit;
+  LControllerRowIndex := MapViewToControllerRowIndex(
+    AViewRowIndex,
+    True
+  );
+  if LControllerRowIndex >= 0 then
+    Result := FDataController.GetRowKey(LControllerRowIndex);
+end;
+
+function Th5uVclGrid.GetViewValue(
+  AViewRowIndex: Int64;
+  const AFieldName: string): TValue;
+var
+  LControllerRowIndex: Int64;
+begin
+  Result := TValue.Empty;
+  if not Assigned(FDataController) then
+    Exit;
+  LControllerRowIndex := MapViewToControllerRowIndex(AViewRowIndex);
+  if LControllerRowIndex >= 0 then
+    Result := FDataController.GetValue(
+      LControllerRowIndex,
+      AFieldName
+    );
+end;
+
+procedure Th5uVclGrid.SetViewValue(
+  AViewRowIndex: Int64;
+  const AFieldName: string;
+  const AValue: TValue);
+var
+  LControllerRowIndex: Int64;
+begin
+  if not Assigned(FDataController) then
+    Exit;
+  LControllerRowIndex := MapViewToControllerRowIndex(AViewRowIndex);
+  if LControllerRowIndex >= 0 then
+    FDataController.SetValue(
+      LControllerRowIndex,
+      AFieldName,
+      AValue
+    );
+end;
+
+function Th5uVclGrid.CanEditViewValue(
+  AViewRowIndex: Int64;
+  const AFieldName: string): Boolean;
+var
+  LControllerRowIndex: Int64;
+begin
+  Result := False;
+  if not Assigned(FDataController) then
+    Exit;
+  LControllerRowIndex := MapViewToControllerRowIndex(AViewRowIndex);
+  if LControllerRowIndex >= 0 then
+    Result := FDataController.CanEdit(
+      LControllerRowIndex,
+      AFieldName
+    );
+end;
+
+function Th5uVclGrid.GetViewDisplayText(
+  AViewRowIndex: Int64;
+  const AFieldName, ADisplayFormat: string): string;
+var
+  LControllerRowIndex: Int64;
+begin
+  Result := '';
+  if not Assigned(FDataController) then
+    Exit;
+  LControllerRowIndex := MapViewToControllerRowIndex(AViewRowIndex);
+  if LControllerRowIndex >= 0 then
+    Result := FDataController.GetDisplayText(
+      LControllerRowIndex,
+      AFieldName,
+      ADisplayFormat
+    );
+end;
+
+function Th5uVclGrid.IsViewRowAvailable(
+  AViewRowIndex: Int64): Boolean;
+var
+  LControllerRowIndex: Int64;
+begin
+  Result := False;
+  if not Assigned(FDataController) then
+    Exit;
+  LControllerRowIndex := MapViewToControllerRowIndex(
+    AViewRowIndex,
+    True
+  );
+  Result := (LControllerRowIndex >= 0) and
+    FDataController.IsRowAvailable(LControllerRowIndex);
+end;
+
+procedure Th5uVclGrid.PrepareViewRange(
+  AFirstViewRow, ACount: Int64);
+var
+  LFirstControllerRow: Int64;
+  LLastControllerRow: Int64;
+  LLastViewRow: Int64;
+begin
+  if not Assigned(FDataController) or (ACount <= 0) then
+    Exit;
+
+  LFirstControllerRow := MapViewToControllerRowIndex(AFirstViewRow);
+  LLastViewRow := Min(
+    GetViewRowCount - 1,
+    AFirstViewRow + ACount - 1
+  );
+  LLastControllerRow := MapViewToControllerRowIndex(LLastViewRow);
+  if (LFirstControllerRow < 0) or (LLastControllerRow < 0) then
+    Exit;
+
+  FDataController.PrepareRange(
+    LFirstControllerRow,
+    LLastControllerRow - LFirstControllerRow + 1
+  );
+end;
+
+function Th5uVclGrid.TryGetAdjacentGroupRowInfo(
+  AViewRowIndex: Int64;
+  out AInfo: Th5uAdjacentGroupRowInfo): Boolean;
+begin
+  EnsureAdjacentGroupMap;
+  Result := FAdjacentGroupMap.Active and
+    FAdjacentGroupMap.TryGetRowInfo(AViewRowIndex, AInfo);
+end;
+
+procedure Th5uVclGrid.PopulateAdjacentGroupContext(
+  var AContext: Th5uFactoryContext;
+  AViewRowIndex: Int64);
+var
+  LInfo: Th5uAdjacentGroupRowInfo;
+begin
+  if not TryGetAdjacentGroupRowInfo(AViewRowIndex, LInfo) then
+    Exit;
+
+  AContext.AdjacentGroupIndex := LInfo.GroupIndex;
+  AContext.AdjacentGroupId := LInfo.GroupId;
+  AContext.AdjacentGroupAnchorRowKey := LInfo.AnchorRowKey;
+  AContext.AdjacentGroupRowCount := LInfo.RowCount;
+  AContext.AdjacentGroupCollapsed := LInfo.Collapsed;
+  AContext.AdjacentGroupFirstRow := LInfo.IsFirstRow;
+  AContext.AdjacentGroupLastVisibleRow := LInfo.IsLastVisibleRow;
+
+  if LInfo.IsFirstRow then
+    Include(
+      AContext.ElementFlags,
+      Th5uElementFlag.AdjacentGroupFirst
+    );
+  if LInfo.IsLastVisibleRow then
+    Include(
+      AContext.ElementFlags,
+      Th5uElementFlag.AdjacentGroupLast
+    );
+  if LInfo.Collapsed then
+    Include(
+      AContext.ElementFlags,
+      Th5uElementFlag.AdjacentGroupCollapsed
+    )
+  else
+    Include(
+      AContext.ElementFlags,
+      Th5uElementFlag.AdjacentGroupExpanded
+    );
+end;
+
+function Th5uVclGrid.GetAdjacentGroupEndBandInfo(
+  AViewRowIndex: Int64;
+  out AInfo: Th5uAdjacentGroupRowInfo): Boolean;
+begin
+  Result := TryGetAdjacentGroupRowInfo(AViewRowIndex, AInfo) and
+    AInfo.IsFoldable and AInfo.IsLastVisibleRow;
+  if not Result then
+    Exit;
+
+  case FAdjacentGroupFolding.EndBand.Visibility of
+    Th5uAdjacentGroupEndBandVisibility.Never:
+      Result := False;
+    Th5uAdjacentGroupEndBandVisibility.CollapsedOnly:
+      Result := AInfo.Collapsed;
+    Th5uAdjacentGroupEndBandVisibility.ExpandedOnly:
+      Result := not AInfo.Collapsed;
+    Th5uAdjacentGroupEndBandVisibility.Always:
+      Result := True;
+  end;
+end;
+
+procedure Th5uVclGrid.DoAdjacentGroupStateChanged(
+  const AInfo: Th5uAdjacentGroupRowInfo);
+var
+  LContext: Th5uAdjacentGroupStateChangedContext;
+begin
+  if not Assigned(FOnAdjacentGroupStateChanged) then
+    Exit;
+  LContext := Default(Th5uAdjacentGroupStateChangedContext);
+  LContext.Grid := Self;
+  LContext.DataController := FDataController;
+  LContext.GroupId := AInfo.GroupId;
+  LContext.AnchorRowKey := AInfo.AnchorRowKey;
+  LContext.FirstControllerRowIndex :=
+    AInfo.ControllerRowIndex - AInfo.GroupOffset;
+  LContext.RowCount := AInfo.RowCount;
+  LContext.Collapsed := AInfo.Collapsed;
+  FOnAdjacentGroupStateChanged(Self, LContext);
+end;
+
 function Th5uVclGrid.GetRowSpacingFor(
   AViewRowIndex: Int64;
   const ARowKey: Th5uRowKey): Integer;
@@ -2707,7 +3357,7 @@ begin
     LContext.DataController := FDataController;
     LContext.RowKey := ARowKey;
     LContext.ViewRowIndex := AViewRowIndex;
-    LContext.SourceRowIndex := AViewRowIndex;
+    LContext.SourceRowIndex := GetViewSourceRowIndex(AViewRowIndex);
     LContext.IsEstimated := False;
     FOnGetRowSpacing(Self, LContext, Result);
   end;
@@ -2738,7 +3388,7 @@ begin
     if Assigned(LColumn) then
       LFieldName := LColumn.FieldName;
 
-    LValue := FDataController.GetValue(
+    LValue := GetViewValue(
       AViewRowIndex,
       LFieldName
     );
@@ -2752,9 +3402,7 @@ begin
     LContext.DataController := FDataController;
     LContext.RowKey := ARowKey;
     LContext.ViewRowIndex := AViewRowIndex;
-    LContext.SourceRowIndex := FDataController.GetSourceRowIndex(
-      AViewRowIndex
-    );
+    LContext.SourceRowIndex := GetViewSourceRowIndex(AViewRowIndex);
     FOnGetTreeLevel(Self, LContext, ALevel, Result);
   end;
 
@@ -2792,11 +3440,11 @@ begin
   LNextKey := Th5uRowKey.Empty;
   LNextLevel := ATreeLevel;
   LNextAvailable := False;
-  LHasNextRow := FDataController.IsRowAvailable(LNextIndex);
+  LHasNextRow := IsViewRowAvailable(LNextIndex);
 
   if LHasNextRow then
   begin
-    LNextKey := FDataController.GetRowKey(LNextIndex);
+    LNextKey := GetViewRowKey(LNextIndex);
     LNextAvailable := TryGetTreeLevelFor(
       LNextIndex,
       LNextKey,
@@ -2827,9 +3475,7 @@ begin
     LContext.RowKey := ARowKey;
     LContext.NextRowKey := LNextKey;
     LContext.ViewRowIndex := AViewRowIndex;
-    LContext.SourceRowIndex := FDataController.GetSourceRowIndex(
-      AViewRowIndex
-    );
+    LContext.SourceRowIndex := GetViewSourceRowIndex(AViewRowIndex);
     LContext.CurrentLevel := ATreeLevel;
     LContext.NextLevel := LNextLevel;
     LContext.IsEndOfData := not LHasNextRow;
@@ -2853,12 +3499,33 @@ function Th5uVclGrid.GetEffectiveRowSeparatorFor(
   out AStyleName: string;
   out ATreeLevel: Integer;
   out AClosedTreeLevels: Integer): Integer;
+var
+  LAdjacentInfo: Th5uAdjacentGroupRowInfo;
 begin
   AElementKind := Th5uElementKind.RowSpacing;
   AColor := ResolveRowSpacingColor;
   AStyleName := '';
   ATreeLevel := -1;
   AClosedTreeLevels := 0;
+
+  if FAdjacentGroupFolding.Enabled and
+     GetAdjacentGroupEndBandInfo(
+       AViewRowIndex,
+       LAdjacentInfo
+     ) then
+  begin
+    // The adjacent-run end band has precedence over the ordinary row
+    // separator and over a tree branch-end band at the same boundary. It is
+    // an alternative separator, never an additional one.
+    Result := FAdjacentGroupFolding.EndBand.Height;
+    AElementKind := Th5uElementKind.AdjacentGroupEndBand;
+    AColor := ResolveAdjacentGroupEndColor(
+      AViewRowIndex,
+      ARowKey
+    );
+    AStyleName := FAdjacentGroupFolding.EndBand.StyleName;
+    Exit;
+  end;
 
   if FTree.Enabled and
      FTree.BranchEndBand.Enabled and
@@ -3013,6 +3680,38 @@ begin
   Result := ResolveRowSpacingColor;
 end;
 
+function Th5uVclGrid.ResolveAdjacentGroupEndColor(
+  AViewRowIndex: Int64;
+  const ARowKey: Th5uRowKey): TColor;
+var
+  LAppearance: Th5uResolvedAppearance;
+begin
+  if FAdjacentGroupFolding.EndBand.Color <> h5uColorDefault then
+    Exit(ResolveColor(
+      FAdjacentGroupFolding.EndBand.Color,
+      ResolveRowSpacingColor
+    ));
+
+  if SameText(
+       FAdjacentGroupFolding.EndBand.StyleName,
+       'AdjacentGroupEnd'
+     ) then
+    Exit(h5uGetVclPalette(FTheme).AdjacentGroupEndBackground);
+
+  if FAdjacentGroupFolding.EndBand.StyleName <> '' then
+  begin
+    LAppearance := ResolveRowAppearance(
+      AViewRowIndex,
+      ARowKey,
+      FAdjacentGroupFolding.EndBand.StyleName
+    );
+    if LAppearance.HasBackground then
+      Exit(h5uColorToVcl(LAppearance.Background));
+  end;
+
+  Result := ResolveRowSpacingColor;
+end;
+
 function Th5uVclGrid.GetVisualCellClass(
   const AContext: Th5uFactoryContext;
   ADefaultClass: Th5uVclVisualCellClass): Th5uVclVisualCellClass;
@@ -3033,6 +3732,7 @@ function Th5uVclGrid.HitTest(X, Y: Integer): Th5uHitTestInfo;
 var
   LColumnInfo: Th5uVisibleColumnInfo;
   LRowInfo: Th5uVisibleRowInfo;
+  LGlyphRect: TRect;
 begin
   Result := Th5uHitTestInfo.Empty;
 
@@ -3056,6 +3756,15 @@ begin
   Result.RowIndex := LRowInfo.RowIndex;
   Result.RowKey := LRowInfo.RowKey;
   Result.Bounds := LRowInfo.Bounds;
+
+  LGlyphRect := GetAdjacentGroupGlyphRect(LRowInfo);
+  if not IsRectEmpty(LGlyphRect) and
+     PtInRect(LGlyphRect, Point(X, Y)) then
+  begin
+    Result.Kind := Th5uHitKind.AdjacentGroupGlyph;
+    Result.Bounds := LGlyphRect;
+    Exit;
+  end;
 
   if FShowRowIndicator and
      (X < GetViewportRect.Left + FRowIndicatorWidth) then
@@ -3145,7 +3854,7 @@ begin
 
   if AColumn.DataType = Th5uColumnDataType.Image then
   begin
-    LValue := FDataController.GetValue(
+    LValue := GetViewValue(
       AViewRowIndex,
       AColumn.FieldName
     );
@@ -3161,7 +3870,7 @@ begin
   if not AColumn.AutoHeight then
     Exit;
 
-  LText := FDataController.GetDisplayText(
+  LText := GetViewDisplayText(
     AViewRowIndex,
     AColumn.FieldName,
     AColumn.DisplayFormat
@@ -3218,6 +3927,12 @@ begin
 
   if Button <> mbLeft then
     Exit;
+
+  if FMouseDownHit.Kind = Th5uHitKind.AdjacentGroupGlyph then
+  begin
+    ToggleAdjacentGroup(FMouseDownHit.RowIndex);
+    Exit;
+  end;
 
   if FMouseDownHit.Kind = Th5uHitKind.Header then
   begin
@@ -3354,6 +4069,158 @@ begin
   RebuildAfterLayoutChange;
 end;
 
+procedure Th5uVclGrid.ToggleAdjacentGroup(
+  AViewRowIndex: Int64);
+var
+  LInfo: Th5uAdjacentGroupRowInfo;
+begin
+  EnsureAdjacentGroupMap;
+  if not FAdjacentGroupMap.TryGetRowInfo(AViewRowIndex, LInfo) or
+     not LInfo.IsFoldable then
+    Exit;
+
+  if FAdjacentGroupMap.ToggleAtViewRow(AViewRowIndex) then
+  begin
+    LInfo.Collapsed := not LInfo.Collapsed;
+    DoAdjacentGroupStateChanged(LInfo);
+    CancelEditor;
+    InvalidateAllRowHeights;
+    FVerticalOffset := EnsureRange(
+      FVerticalOffset,
+      0,
+      h5uClampInt64ToInteger(GetEstimatedTotalRowHeight)
+    );
+    UpdateScrollBars;
+    Invalidate;
+  end;
+end;
+
+procedure Th5uVclGrid.SetAdjacentGroupCollapsed(
+  AViewRowIndex: Int64;
+  ACollapsed: Boolean);
+var
+  LInfo: Th5uAdjacentGroupRowInfo;
+begin
+  EnsureAdjacentGroupMap;
+  if not FAdjacentGroupMap.TryGetRowInfo(AViewRowIndex, LInfo) or
+     not LInfo.IsFoldable then
+    Exit;
+
+  if FAdjacentGroupMap.SetCollapsedAtViewRow(
+       AViewRowIndex,
+       ACollapsed
+     ) then
+  begin
+    LInfo.Collapsed := ACollapsed;
+    DoAdjacentGroupStateChanged(LInfo);
+    CancelEditor;
+    InvalidateAllRowHeights;
+    UpdateScrollBars;
+    Invalidate;
+  end;
+end;
+
+procedure Th5uVclGrid.ExpandAllAdjacentGroups;
+var
+  I: Integer;
+  LRun: Th5uAdjacentGroupRun;
+  LChangedRuns: TList<Th5uAdjacentGroupRun>;
+  LInfo: Th5uAdjacentGroupRowInfo;
+begin
+  EnsureAdjacentGroupMap;
+  LChangedRuns := TList<Th5uAdjacentGroupRun>.Create;
+  try
+    for I := 0 to FAdjacentGroupMap.RunCount - 1 do
+    begin
+      LRun := FAdjacentGroupMap.Runs[I];
+      if LRun.IsFoldable and LRun.Collapsed then
+        LChangedRuns.Add(LRun);
+    end;
+
+    if not FAdjacentGroupMap.ExpandAll then
+      Exit;
+
+    for LRun in LChangedRuns do
+    begin
+      LInfo := Th5uAdjacentGroupRowInfo.Empty;
+      LInfo.ControllerRowIndex := LRun.FirstControllerRowIndex;
+      LInfo.GroupOffset := 0;
+      LInfo.GroupId := LRun.GroupId;
+      LInfo.AnchorRowKey := LRun.AnchorRowKey;
+      LInfo.RowCount := LRun.RowCount;
+      LInfo.Collapsed := False;
+      DoAdjacentGroupStateChanged(LInfo);
+    end;
+  finally
+    LChangedRuns.Free;
+  end;
+
+  CancelEditor;
+  InvalidateAllRowHeights;
+  UpdateScrollBars;
+  Invalidate;
+end;
+
+procedure Th5uVclGrid.CollapseAllAdjacentGroups;
+var
+  I: Integer;
+  LRun: Th5uAdjacentGroupRun;
+  LChangedRuns: TList<Th5uAdjacentGroupRun>;
+  LInfo: Th5uAdjacentGroupRowInfo;
+begin
+  EnsureAdjacentGroupMap;
+  LChangedRuns := TList<Th5uAdjacentGroupRun>.Create;
+  try
+    for I := 0 to FAdjacentGroupMap.RunCount - 1 do
+    begin
+      LRun := FAdjacentGroupMap.Runs[I];
+      if LRun.IsFoldable and not LRun.Collapsed then
+        LChangedRuns.Add(LRun);
+    end;
+
+    if not FAdjacentGroupMap.CollapseAll then
+      Exit;
+
+    for LRun in LChangedRuns do
+    begin
+      LInfo := Th5uAdjacentGroupRowInfo.Empty;
+      LInfo.ControllerRowIndex := LRun.FirstControllerRowIndex;
+      LInfo.GroupOffset := 0;
+      LInfo.GroupId := LRun.GroupId;
+      LInfo.AnchorRowKey := LRun.AnchorRowKey;
+      LInfo.RowCount := LRun.RowCount;
+      LInfo.Collapsed := True;
+      DoAdjacentGroupStateChanged(LInfo);
+    end;
+  finally
+    LChangedRuns.Free;
+  end;
+
+  CancelEditor;
+  InvalidateAllRowHeights;
+  UpdateScrollBars;
+  Invalidate;
+end;
+
+procedure Th5uVclGrid.ResetAdjacentGroupStates;
+begin
+  FAdjacentGroupMap.ResetStates;
+  InvalidateAdjacentGroupMap(False);
+  CancelEditor;
+  InvalidateAllRowHeights;
+  UpdateScrollBars;
+  Invalidate;
+end;
+
+function Th5uVclGrid.IsAdjacentGroupCollapsed(
+  AViewRowIndex: Int64): Boolean;
+var
+  LInfo: Th5uAdjacentGroupRowInfo;
+begin
+  Result := TryGetAdjacentGroupRowInfo(AViewRowIndex, LInfo) and
+    LInfo.IsFoldable and LInfo.Collapsed;
+end;
+
 procedure Th5uVclGrid.Notification(
   AComponent: TComponent; Operation: TOperation);
 begin
@@ -3369,6 +4236,8 @@ end;
 
 procedure Th5uVclGrid.OptionsChanged(Sender: TObject);
 begin
+  if Sender = FAdjacentGroupFolding then
+    InvalidateAdjacentGroupMap(False);
   RebuildAfterLayoutChange;
 end;
 
@@ -3670,6 +4539,13 @@ begin
     FTree.Assign(AValue);
 end;
 
+procedure Th5uVclGrid.SetAdjacentGroupFolding(
+  const AValue: Th5uAdjacentGroupFoldingOptions);
+begin
+  if Assigned(AValue) then
+    FAdjacentGroupFolding.Assign(AValue);
+end;
+
 procedure Th5uVclGrid.SetGridLines(const AValue: Boolean);
 begin
   if AValue then
@@ -3701,6 +4577,7 @@ begin
     FDataController.FreeNotification(Self);
 
   FVerticalOffset := 0;
+  InvalidateAdjacentGroupMap(True);
   InvalidateAllRowHeights;
   UpdateScrollBars;
   Invalidate;
@@ -3937,7 +4814,7 @@ var
 begin
   if not FAllowEditing or not Assigned(FDataController) or
      not Assigned(AHit.Column) or AHit.Column.ReadOnly or
-     not FDataController.CanEdit(
+     not CanEditViewValue(
        AHit.RowIndex,
        AHit.Column.FieldName
      ) then
@@ -3966,18 +4843,18 @@ begin
   case LEditorKind of
     Th5uColumnEditorKind.Boolean:
       begin
-        LValue := FDataController.GetValue(
+        LValue := GetViewValue(
           AHit.RowIndex,
           AHit.Column.FieldName
         );
         if LValue.IsEmpty then
-          FDataController.SetValue(
+          SetViewValue(
             AHit.RowIndex,
             AHit.Column.FieldName,
             TValue.From<Boolean>(True)
           )
         else
-          FDataController.SetValue(
+          SetViewValue(
             AHit.RowIndex,
             AHit.Column.FieldName,
             TValue.From<Boolean>(not LValue.AsBoolean)
@@ -3986,7 +4863,7 @@ begin
 
     Th5uColumnEditorKind.Image:
       begin
-        LValue := FDataController.GetValue(
+        LValue := GetViewValue(
           AHit.RowIndex,
           AHit.Column.FieldName
         );
@@ -3996,7 +4873,7 @@ begin
           LBytes := nil;
 
         if Th5uVclImageEditForm.Execute(GetParentForm(Self), LBytes) then
-          FDataController.SetValue(
+          SetViewValue(
             AHit.RowIndex,
             AHit.Column.FieldName,
             TValue.From<TBytes>(LBytes)
@@ -4007,7 +4884,7 @@ begin
     begin
       FEditRowIndex := AHit.RowIndex;
       FEditColumn := AHit.Column;
-      FEditor.Text := FDataController.GetDisplayText(
+      FEditor.Text := GetViewDisplayText(
         AHit.RowIndex,
         AHit.Column.FieldName,
         AHit.Column.DisplayFormat

@@ -82,6 +82,7 @@ def check_layout() -> None:
         "Source/Common/h5u.Grid.Factory.pas",
         "Source/Common/h5u.Grid.Columns.pas",
         "Source/Common/h5u.Grid.Options.pas",
+        "Source/Common/h5u.Grid.AdjacentGroups.pas",
         "Source/Common/h5u.Grid.Selection.pas",
         "Source/Common/h5u.Grid.Data.Core.pas",
         "Source/Common/h5u.Grid.Data.DataSet.pas",
@@ -96,6 +97,7 @@ def check_layout() -> None:
         "Docs/FEATURE-MATRIX.md",
         "VERSION.txt",
         "Build/test_tree_branch_end.py",
+        "Build/test_adjacent_group_folding.py",
     ]
     for rel in required:
         if not (ROOT / rel).is_file():
@@ -244,6 +246,13 @@ def check_factory_and_features() -> None:
         (r"TreeLevel\s*:\s*Integer.*?ClosedTreeLevels\s*:\s*Integer", "Tree-Metadaten im Factory-Kontext"),
         (r"Th5uGetTreeLevelEvent", "Tree-Level-Event"),
         (r"Th5uGetTreeBranchEndEvent", "Tree-Astende-Event"),
+        (r"h5uClassIdGridAdjacentGroupFoldGlyph.*?h5u\.grid\.visual\.adjacent-group-fold-glyph", "Factory-ID des Folgegruppen-Faltzeichens"),
+        (r"h5uClassIdGridAdjacentGroupEndBand.*?h5u\.grid\.spacing\.adjacent-group-end", "Factory-ID der Folgegruppen-Abschlussleiste"),
+        (r"AdjacentGroupFoldGlyph.*?AdjacentGroupEndBand", "Folgegruppen-Elementarten"),
+        (r"Th5uAdjacentGroupEndBandVisibility\s*=.*?Never.*?CollapsedOnly.*?ExpandedOnly.*?Always", "vier Folgegruppen-Abschlussleistenmodi"),
+        (r"Th5uGetAdjacentGroupIdEvent", "Folgegruppen-ID-Event"),
+        (r"Th5uAdjacentGroupStateChangedEvent", "Folgegruppen-Zustandsereignis"),
+        (r"AdjacentGroupAnchorRowKey\s*:\s*Th5uRowKey.*?AdjacentGroupRowCount\s*:\s*Int64", "Folgegruppen-Metadaten im Factory-Kontext"),
         (r"h5uColorLightGray\s*=\s*Th5uColor\(\$FFD3D3D3\)", "hellgrauer Defaultfarbwert"),
     ])
     require_patterns(name, "Source/Common/h5u.Grid.Factory.pas", [
@@ -276,6 +285,25 @@ def check_factory_and_features() -> None:
         (r"Th5uTreeOptions\s*=\s*class", "Tree-Optionen"),
         (r"property\s+LevelColumnId", "Tree-Level-Column"),
         (r"property\s+BranchEndBand", "Tree-Abschlussleisten-Property"),
+        (r"Th5uAdjacentGroupEndBandOptions\s*=\s*class", "Folgegruppen-Abschlussleistenoptionen"),
+        (r"property\s+Visibility:.*?default\s+Th5uAdjacentGroupEndBandVisibility\.Never", "Folgegruppen-Abschlussleisten-Default Never"),
+        (r"property\s+Height:.*?default\s+6", "Folgegruppen-Abschlussleistenhöhe"),
+        (r"Th5uAdjacentGroupFoldingOptions\s*=\s*class", "Folgegruppen-Faltungsoptionen"),
+        (r"property\s+IdColumnId", "Folgegruppen-ID-Column"),
+        (r"property\s+InitialState:.*?default\s+Th5uAdjacentGroupInitialState\.Expanded", "Folgegruppen-Initialzustand"),
+        (r"property\s+ShowFoldGlyph:.*?default\s+True", "Faltzeichen-Option"),
+        (r"property\s+PreserveStateOnDataChange:.*?default\s+True", "Zustandserhalt über Datenänderungen"),
+        (r"property\s+EndBand:.*?Th5uAdjacentGroupEndBandOptions", "Folgegruppen-Abschlussleisten-Property"),
+    ])
+    require_patterns(name, "Source/Common/h5u.Grid.AdjacentGroups.pas", [
+        (r"Th5uAdjacentGroupMap\s*=\s*class", "sichtbare Folgegruppen-View-Abbildung"),
+        (r"StateKey: string.*?AnchorRowKey: Th5uRowKey", "laufbezogener Zustandsanker"),
+        (r"function\s+BuildStateKey.*?row:.*?\|id:", "Zustandsschlüssel aus Anchor-RowKey und ID"),
+        (r"if\s+FHasPendingRun\s+and\s+LCanGroup.*?FPendingRun\.ComparisonKey\s*=\s*LComparisonKey", "nur benachbarte IDs werden zusammengefasst"),
+        (r"if\s+LRun\.Collapsed\s+then\s+Continue", "eingeklappt blendet Folgezeilen aus"),
+        (r"function\s+SetCollapsedAtViewRow", "einzelnen Lauf falten"),
+        (r"function\s+ExpandAll", "alle Läufe öffnen"),
+        (r"function\s+CollapseAll", "alle Läufe falten"),
     ])
     require_patterns(name, "Source/Common/h5u.Grid.Columns.pas", [
         (r"property\s+RightSpacing:.*?default\s+-1", "RightSpacing mit Vererbungswert -1"),
@@ -309,6 +337,18 @@ def check_factory_and_features() -> None:
             (r"Th5u(?:Vcl|Fmx)SpacingCell\s*=\s*class", "gepoolte Separator-/Abschlusszelle"),
             (r"DrawSpacingRect.*?AcquireVisualCell", "Separatoren durchlaufen den lokalen Factory-Scope"),
             (r"ClosedTreeLevels", "Anzahl geschlossener Tree-Ebenen im Zeichenkontext"),
+            (r"property\s+AdjacentGroupFolding:\s*Th5uAdjacentGroupFoldingOptions", "Folgegruppen-Faltung am Grid"),
+            (r"OnGetAdjacentGroupId", "Folgegruppen-ID-Event am Grid"),
+            (r"OnAdjacentGroupStateChanged", "Folgegruppen-Zustandsereignis am Grid"),
+            (r"EnsureAdjacentGroupMap", "sichtbare Folgegruppen-Abbildung"),
+            (r"MapViewToControllerRowIndex", "View-zu-Controller-Abbildung"),
+            (r"GetAdjacentGroupEndBandInfo.*?CollapsedOnly.*?ExpandedOnly.*?Always", "vier Abschlussleistenmodi im Renderer"),
+            (r"GetEffectiveRowSeparatorFor.*?Th5uElementKind\.AdjacentGroupEndBand.*?EndBand\.Height", "Folgegruppen-Abschlussleiste ersetzt RowSpacing"),
+            (r"h5uClassIdGridAdjacentGroupFoldGlyph", "Factory-Erzeugung des Faltzeichens"),
+            (r"h5uClassIdGridAdjacentGroupEndBand", "Factory-Erzeugung der Abschlussleiste"),
+            (r"ToggleAdjacentGroup", "einzelnen Folgegruppenlauf umschalten"),
+            (r"CollapseAllAdjacentGroups", "alle Folgegruppenläufe falten"),
+            (r"ExpandAllAdjacentGroups", "alle Folgegruppenläufe öffnen"),
             (r"FactoryScope", "Factory-Scope pro Grid"),
             (r"AcquireVisualCell", "gepoolte sichtbare Zellobjekte"),
         ])
@@ -319,6 +359,10 @@ def check_factory_and_features() -> None:
         (r"\.Color\s*:=\s*h5uColorFromRgb", "VCL Column-Farbe"),
         (r"Grid\.Tree\.Enabled\s*:=\s*TreeEndBandCheck\.Checked", "VCL Tree-Abschluss-Schalter"),
         (r"Tree\.BranchEndBand\.Enabled", "VCL Tree-Abschlussoption"),
+        (r"Grid\.AdjacentGroupFolding\.Enabled\s*:=\s*AdjacentGroupCheck\.Checked", "VCL Folgegruppen-Schalter"),
+        (r"AdjacentGroupFolding\.IdColumnId\s*:=\s*'fold_group'", "VCL Folgegruppen-ID"),
+        (r"CollapsedOnly.*?ExpandedOnly.*?Always", "VCL vier Abschlussleistenmodi"),
+        (r"CollapseAllAdjacentGroups.*?ExpandAllAdjacentGroups|ExpandAllAdjacentGroups.*?CollapseAllAdjacentGroups", "VCL Alle-falten/-öffnen"),
     ])
     require_patterns(name, "Demos/FMX/ClientDataSet/Main.pas", [
         (r"Grid\.GridLines\s*:=\s*SeparatorsCheck\.IsChecked", "FMX Separator-Schalter"),
@@ -327,10 +371,17 @@ def check_factory_and_features() -> None:
         (r"\.Color\s*:=\s*h5uColorFromRgb", "FMX Column-Farbe"),
         (r"Grid\.Tree\.Enabled\s*:=\s*TreeEndBandCheck\.IsChecked", "FMX Tree-Abschluss-Schalter"),
         (r"Tree\.BranchEndBand\.Enabled", "FMX Tree-Abschlussoption"),
+        (r"Grid\.AdjacentGroupFolding\.Enabled\s*:=\s*AdjacentGroupCheck\.IsChecked", "FMX Folgegruppen-Schalter"),
+        (r"AdjacentGroupFolding\.IdColumnId\s*:=\s*'fold_group'", "FMX Folgegruppen-ID"),
+        (r"CollapsedOnly.*?ExpandedOnly.*?Always", "FMX vier Abschlussleistenmodi"),
+        (r"CollapseAllAdjacentGroups.*?ExpandAllAdjacentGroups|ExpandAllAdjacentGroups.*?CollapseAllAdjacentGroups", "FMX Alle-falten/-öffnen"),
     ])
     require_patterns(name, "Source/Common/h5u.Grid.SampleData.pas", [
         (r"Name\s*:=\s*'TREE_LEVEL'", "TREE_LEVEL-Feld in den Designer-Musterdaten"),
         (r"FieldByName\('TREE_LEVEL'\)\.AsInteger", "TREE_LEVEL-Werte in den Musterdaten"),
+        (r"Name\s*:=\s*'FOLD_GROUP'", "FOLD_GROUP-Feld in den Designer-Musterdaten"),
+        (r"FieldByName\('FOLD_GROUP'\)\.AsInteger", "FOLD_GROUP-Werte in den Musterdaten"),
+        (r"case\s+\(AIndex\s*-\s*1\)\s+mod\s+10.*?0,\s*1,\s*2:.*?6,\s*7,\s*8:", "getrennte Wiederholung derselben Folgegruppen-ID"),
     ])
     require_patterns(name, "Source/Common/h5u.Grid.Data.Core.pas", [
         (r"function\s+IsRowAvailable", "seitenübergreifender Tree-Lookahead"),
@@ -364,6 +415,11 @@ def check_documented_api() -> None:
         (r"ObjectController1\.Add\s*\(", "reale ObjectList-API"),
         (r"ASourceRowIndex\s*:\s*Int64", "reale VirtualController-Signatur"),
         (r"Spacing\.SetAllSeparators\s*\(1\)", "Separator-Komfortmethode"),
+        (r"AdjacentGroupFolding\.IdColumnId", "Folgegruppen-ID-API"),
+        (r"CollapsedOnly", "Abschlussleiste nur eingeklappt"),
+        (r"ExpandedOnly", "Abschlussleiste nur ausgeklappt"),
+        (r"CollapseAllAdjacentGroups", "alle Folgegruppen falten"),
+        (r"ExpandAllAdjacentGroups", "alle Folgegruppen öffnen"),
     ])
     finish(name, before)
 
@@ -375,12 +431,12 @@ def check_placeholders_and_version() -> None:
         for match in re.finditer(r"\b(?:TODO-COMPILE|FIXME-COMPILE|NotImplemented|<UNRESOLVED>)\b", value, re.I):
             add("error", name, path, f"Nicht aufgelöster Platzhalter: {match.group(0)}", line_no(value, match.start()))
     version = read(ROOT / "VERSION.txt").strip() if (ROOT / "VERSION.txt").exists() else ""
-    if version != "0.1.2":
-        add("error", name, ROOT / "VERSION.txt", f"Erwartete Version 0.1.2, gefunden {version!r}")
+    if version != "0.1.3":
+        add("error", name, ROOT / "VERSION.txt", f"Erwartete Version 0.1.3, gefunden {version!r}")
     for rel in ("README.md", "CHANGELOG.md", "Build/BUILD_STATUS.md"):
         path = ROOT / rel
-        if path.exists() and "0.1.2" not in read(path):
-            add("error", name, path, "Version 0.1.2 wird nicht genannt")
+        if path.exists() and "0.1.3" not in read(path):
+            add("error", name, path, "Version 0.1.3 wird nicht genannt")
     finish(name, before)
 
 
@@ -394,17 +450,22 @@ def check_method_consistency() -> None:
         ("Source/Common/h5u.Grid.Options.pas", "Th5uGridAppearanceOptions"),
         ("Source/Common/h5u.Grid.Options.pas", "Th5uTreeBranchEndBandOptions"),
         ("Source/Common/h5u.Grid.Options.pas", "Th5uTreeOptions"),
+        ("Source/Common/h5u.Grid.Options.pas", "Th5uAdjacentGroupEndBandOptions"),
+        ("Source/Common/h5u.Grid.Options.pas", "Th5uAdjacentGroupFoldingOptions"),
+        ("Source/Common/h5u.Grid.AdjacentGroups.pas", "Th5uAdjacentGroupMap"),
         ("Source/Common/h5u.Grid.Columns.pas", "Th5uGridColumn"),
         ("Source/Vcl/Vcl.h5u.Grid.pas", "Th5uVclSpacingCell"),
+        ("Source/Vcl/Vcl.h5u.Grid.pas", "Th5uVclAdjacentGroupGlyphCell"),
         ("Source/Vcl/Vcl.h5u.Grid.pas", "Th5uVclGrid"),
         ("Source/FMX/FMX.h5u.Grid.pas", "Th5uFmxSpacingCell"),
+        ("Source/FMX/FMX.h5u.Grid.pas", "Th5uFmxAdjacentGroupGlyphCell"),
         ("Source/FMX/FMX.h5u.Grid.pas", "Th5uFmxGrid"),
     ]
     for rel, class_name in targets:
         path = ROOT / rel
         value = read(path)
         start = re.search(
-            rf"(?im)^\s*{re.escape(class_name)}\s*=\s*class\s*\([^\n]+\)\s*$",
+            rf"(?im)^\s*{re.escape(class_name)}\s*=\s*class(?:\s*\([^\n]+\))?\s*$",
             value,
         )
         if not start:
@@ -467,6 +528,10 @@ def check_demo_sample_contract() -> None:
         require_patterns(name, rel, [
             (r"Tree\.LevelColumnId\s*=\s*'TREE_LEVEL'", "TREE_LEVEL im Designer"),
             (r"Tree\.BranchEndBand\.Enabled\s*=\s*True", "aktive Tree-Abschlussleiste im Designer"),
+            (r"AdjacentGroupFolding\.Enabled\s*=\s*True", "aktive Folgegruppen-Faltung im Designer"),
+            (r"AdjacentGroupFolding\.IdColumnId\s*=\s*'fold_group'", "Folgegruppen-ID im Designer"),
+            (r"AdjacentGroupFolding\.EndBand\.Visibility\s*=\s*Always", "Abschlussleistenmodus im Designer"),
+            (r"Id\s*=\s*'fold_group'.*?FieldName\s*=\s*'FOLD_GROUP'.*?Visible\s*=\s*False", "unsichtbare FOLD_GROUP-Column"),
         ])
     finish(name, before)
 
@@ -489,6 +554,26 @@ def check_tree_branch_end_semantics() -> None:
     if result.returncode != 0:
         detail = (result.stderr or result.stdout or "unbekannter Fehler").strip()
         add("error", name, script, f"Semantischer Tree-Test fehlgeschlagen: {detail}")
+    finish(name, before, (result.stdout or "").strip() or None)
+
+def check_adjacent_group_folding_semantics() -> None:
+    name = "adjacent-group-folding-semantics"
+    before = len(findings)
+    script = BUILD / "test_adjacent_group_folding.py"
+    if not script.is_file():
+        add("error", name, script, "Semantischer Folgegruppen-Test fehlt")
+        finish(name, before)
+        return
+    result = subprocess.run(
+        [sys.executable, str(script)],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        detail = (result.stderr or result.stdout or "unbekannter Fehler").strip()
+        add("error", name, script, f"Semantischer Folgegruppen-Test fehlgeschlagen: {detail}")
     finish(name, before, (result.stdout or "").strip() or None)
 
 def check_optional_parser() -> None:
@@ -568,6 +653,7 @@ def main() -> int:
     check_method_consistency()
     check_demo_sample_contract()
     check_tree_branch_end_semantics()
+    check_adjacent_group_folding_semantics()
     check_optional_parser()
     return write_reports()
 

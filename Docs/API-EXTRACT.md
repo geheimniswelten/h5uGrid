@@ -3,7 +3,7 @@
 > Automatisch aus den vollständigen `interface`-Abschnitten des ausgelieferten Quellstands erzeugt. Maßgeblich bleiben die Pascal-Units.
 
 **Erzeugt:** 1. September 2026  
-**Version:** 0.1.2
+**Version:** 0.1.3
 
 ## `FMX.h5u.Grid`
 
@@ -28,6 +28,7 @@ uses
   FMX.Objects,
   FMX.StdCtrls,
   FMX.Types,
+  h5u.Grid.AdjacentGroups,
   h5u.Grid.Columns,
   h5u.Grid.Data.Core,
   h5u.Grid.Factory,
@@ -50,7 +51,8 @@ type
     None,
     Header,
     RowIndicator,
-    DataCell
+    DataCell,
+    AdjacentGroupGlyph
   );
 
   Th5uFmxGetRowHeightContext = record
@@ -194,6 +196,14 @@ type
     ); override;
   end;
 
+  Th5uFmxAdjacentGroupGlyphCell = class(Th5uFmxVisualCell)
+  protected
+    procedure PaintDefault(
+      AGrid: Th5uFmxGrid;
+      ACanvas: TCanvas
+    ); override;
+  end;
+
   Th5uFmxGrid = class(TStyledControl)
   private
     FColumns: Th5uGridColumns;
@@ -211,6 +221,9 @@ type
     FSpacing: Th5uGridSpacingOptions;
     FAppearance: Th5uGridAppearanceOptions;
     FTree: Th5uTreeOptions;
+    FAdjacentGroupFolding: Th5uAdjacentGroupFoldingOptions;
+    FAdjacentGroupMap: Th5uAdjacentGroupMap;
+    FAdjacentGroupMapDirty: Boolean;
 
     FTheme: Th5uGridTheme;
     FHeaderRowHeight: Single;
@@ -246,6 +259,9 @@ type
     FOnCustomDraw: Th5uFmxCustomDrawEvent;
     FOnGetTreeLevel: Th5uGetTreeLevelEvent;
     FOnGetTreeBranchEnd: Th5uGetTreeBranchEndEvent;
+    FOnGetAdjacentGroupId: Th5uGetAdjacentGroupIdEvent;
+    FOnAdjacentGroupStateChanged:
+      Th5uAdjacentGroupStateChangedEvent;
 
     procedure ColumnsChanged(Sender: TObject; AColumn: Th5uGridColumn);
     procedure DataChanged(Sender: TObject; const AChange: Th5uDataChange);
@@ -273,6 +289,9 @@ type
     procedure SetSpacing(const AValue: Th5uGridSpacingOptions);
     procedure SetAppearance(const AValue: Th5uGridAppearanceOptions);
     procedure SetTree(const AValue: Th5uTreeOptions);
+    procedure SetAdjacentGroupFolding(
+      const AValue: Th5uAdjacentGroupFoldingOptions
+    );
     procedure SetSelection(const AValue: Th5uGridSelection);
     procedure SetTheme(const AValue: Th5uGridTheme);
     procedure SetGridLines(const AValue: Boolean);
@@ -294,6 +313,58 @@ type
     function GetEffectiveColumnRightSpacing(
       AColumn: Th5uGridColumn
     ): Single;
+    procedure InvalidateAdjacentGroupMap(
+      AClearStates: Boolean = False
+    );
+    procedure EnsureAdjacentGroupMap;
+    function ResolveAdjacentGroupFieldName: string;
+    function TryGetAdjacentGroupIdForControllerRow(
+      AControllerRowIndex: Int64;
+      out AGroupId: TValue
+    ): Boolean;
+    function GetViewRowCount: Int64;
+    function MapViewToControllerRowIndex(
+      AViewRowIndex: Int64;
+      AAllowLookAhead: Boolean = False
+    ): Int64;
+    function GetViewSourceRowIndex(AViewRowIndex: Int64): Int64;
+    function GetViewRowKey(AViewRowIndex: Int64): Th5uRowKey;
+    function GetViewValue(
+      AViewRowIndex: Int64;
+      const AFieldName: string
+    ): TValue;
+    procedure SetViewValue(
+      AViewRowIndex: Int64;
+      const AFieldName: string;
+      const AValue: TValue
+    );
+    function CanEditViewValue(
+      AViewRowIndex: Int64;
+      const AFieldName: string
+    ): Boolean;
+    function GetViewDisplayText(
+      AViewRowIndex: Int64;
+      const AFieldName, ADisplayFormat: string
+    ): string;
+    function IsViewRowAvailable(AViewRowIndex: Int64): Boolean;
+    procedure PrepareViewRange(
+      AFirstViewRow, ACount: Int64
+    );
+    function TryGetAdjacentGroupRowInfo(
+      AViewRowIndex: Int64;
+      out AInfo: Th5uAdjacentGroupRowInfo
+    ): Boolean;
+    procedure PopulateAdjacentGroupContext(
+      var AContext: Th5uFactoryContext;
+      AViewRowIndex: Int64
+    );
+    function GetAdjacentGroupEndBandInfo(
+      AViewRowIndex: Int64;
+      out AInfo: Th5uAdjacentGroupRowInfo
+    ): Boolean;
+    procedure DoAdjacentGroupStateChanged(
+      const AInfo: Th5uAdjacentGroupRowInfo
+    );
     function GetRowSpacingFor(
       AViewRowIndex: Int64;
       const ARowKey: Th5uRowKey
@@ -331,6 +402,10 @@ type
       AViewRowIndex: Int64;
       const ARowKey: Th5uRowKey
     ): TAlphaColor;
+    function ResolveAdjacentGroupEndColor(
+      AViewRowIndex: Int64;
+      const ARowKey: Th5uRowKey
+    ): TAlphaColor;
     function GetEstimatedTotalRowHeight: Double;
     procedure LayoutScrollBars;
     procedure UpdateScrollBars;
@@ -354,6 +429,13 @@ type
       const AStyleName: string = '';
       ATreeLevel: Integer = -1;
       AClosedTreeLevels: Integer = 0
+    );
+    function GetAdjacentGroupGlyphRect(
+      const ARowInfo: Th5uFmxVisibleRowInfo
+    ): TRectF;
+    procedure DrawAdjacentGroupGlyph(
+      const ARowInfo: Th5uFmxVisibleRowInfo;
+      ASelected: Boolean
     );
     function GetRowHeightFor(
       AViewRowIndex: Int64;
@@ -440,6 +522,17 @@ type
       AColumn: Th5uGridColumn;
       AVisible: Boolean
     );
+    procedure ToggleAdjacentGroup(AViewRowIndex: Int64);
+    procedure SetAdjacentGroupCollapsed(
+      AViewRowIndex: Int64;
+      ACollapsed: Boolean
+    );
+    procedure ExpandAllAdjacentGroups;
+    procedure CollapseAllAdjacentGroups;
+    procedure ResetAdjacentGroupStates;
+    function IsAdjacentGroupCollapsed(
+      AViewRowIndex: Int64
+    ): Boolean;
 
     property FactoryScope: Th5uFactoryScope read FFactoryScope;
   published
@@ -493,6 +586,8 @@ type
       read FAppearance write SetAppearance;
     property Tree: Th5uTreeOptions
       read FTree write SetTree;
+    property AdjacentGroupFolding: Th5uAdjacentGroupFoldingOptions
+      read FAdjacentGroupFolding write SetAdjacentGroupFolding;
     property Theme: Th5uGridTheme
       read FTheme write SetTheme
       default Th5uGridTheme.ApplicationStyle;
@@ -530,6 +625,12 @@ type
       read FOnGetTreeLevel write FOnGetTreeLevel;
     property OnGetTreeBranchEnd: Th5uGetTreeBranchEndEvent
       read FOnGetTreeBranchEnd write FOnGetTreeBranchEnd;
+    property OnGetAdjacentGroupId: Th5uGetAdjacentGroupIdEvent
+      read FOnGetAdjacentGroupId write FOnGetAdjacentGroupId;
+    property OnAdjacentGroupStateChanged:
+      Th5uAdjacentGroupStateChangedEvent
+      read FOnAdjacentGroupStateChanged
+      write FOnAdjacentGroupStateChanged;
     property OnClick;
     property OnDblClick;
     property OnDragDrop;
@@ -626,6 +727,7 @@ type
     ErrorBackground: TAlphaColor;
     WarningBackground: TAlphaColor;
     TreeBranchEndBackground: TAlphaColor;
+    AdjacentGroupEndBackground: TAlphaColor;
     DisabledText: TAlphaColor;
     ThumbHintBackground: TAlphaColor;
     ThumbHintText: TAlphaColor;
@@ -634,6 +736,121 @@ type
 function h5uGetFmxPalette(ATheme: Th5uGridTheme): Th5uFmxPalette;
 function h5uColorToFmx(const AColor: Th5uColor): TAlphaColor;
 function h5uFmxToColor(const AColor: TAlphaColor): Th5uColor;
+```
+
+## `h5u.Grid.AdjacentGroups`
+
+Quelle: `Source/Common/h5u.Grid.AdjacentGroups.pas`
+
+```pascal
+{$SCOPEDENUMS ON}
+
+uses
+  System.Generics.Collections,
+  System.Rtti,
+  System.SysUtils,
+  System.TypInfo,
+  System.Variants,
+  h5u.Grid.Types;
+
+type
+  // A run represents one contiguous block of equal adjacent IDs. The same ID
+  // may therefore occur in several independent runs when other rows lie in
+  // between. State is keyed by the first row of the run, not by the ID alone.
+  Th5uAdjacentGroupRun = record
+    StateKey: string;
+    ComparisonKey: string;
+    GroupId: TValue;
+    AnchorRowKey: Th5uRowKey;
+    FirstControllerRowIndex: Int64;
+    LastControllerRowIndex: Int64;
+    RowCount: Int64;
+    Collapsed: Boolean;
+    function IsFoldable: Boolean;
+  end;
+
+  Th5uAdjacentGroupRowInfo = record
+    ViewRowIndex: Int64;
+    ControllerRowIndex: Int64;
+    GroupIndex: Integer;
+    GroupOffset: Int64;
+    GroupId: TValue;
+    AnchorRowKey: Th5uRowKey;
+    RowCount: Int64;
+    Collapsed: Boolean;
+    IsFirstRow: Boolean;
+    IsLastSourceRow: Boolean;
+    IsLastVisibleRow: Boolean;
+    IsFoldable: Boolean;
+    class function Empty: Th5uAdjacentGroupRowInfo; static;
+  end;
+
+  // Per-grid view map. It never changes the data controller or its order; it
+  // only maps visible row indexes to the controller's current view indexes.
+  Th5uAdjacentGroupMap = class
+  private
+    FRuns: TList<Th5uAdjacentGroupRun>;
+    FVisibleControllerRows: TList<Int64>;
+    FVisibleGroupIndexes: TList<Integer>;
+    FCollapsedStates: TDictionary<string, Boolean>;
+    FActive: Boolean;
+    FInitialCollapsed: Boolean;
+    FCaseSensitive: Boolean;
+    FGroupEmptyValues: Boolean;
+    FHasPendingRun: Boolean;
+    FPendingRun: Th5uAdjacentGroupRun;
+    procedure FinalizePendingRun;
+    procedure RebuildVisibleRows;
+    function BuildComparisonKey(
+      const AGroupId: TValue;
+      AControllerRowIndex: Int64;
+      AAvailable: Boolean;
+      out AKey: string
+    ): Boolean;
+    function BuildStateKey(
+      const ARowKey: Th5uRowKey;
+      AControllerRowIndex: Int64;
+      const AComparisonKey: string
+    ): string;
+    function GetRun(AIndex: Integer): Th5uAdjacentGroupRun;
+    function GetRunCount: Integer;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    procedure Clear(AClearStates: Boolean = False);
+    procedure ResetStates;
+    procedure BeginBuild(
+      AInitialState: Th5uAdjacentGroupInitialState;
+      ACaseSensitive: Boolean;
+      AGroupEmptyValues: Boolean
+    );
+    procedure AddRow(
+      AControllerRowIndex: Int64;
+      const ARowKey: Th5uRowKey;
+      const AGroupId: TValue;
+      AAvailable: Boolean
+    );
+    procedure EndBuild;
+
+    function GetVisibleRowCount: Int64;
+    function MapViewToController(AViewRowIndex: Int64): Int64;
+    function TryGetRowInfo(
+      AViewRowIndex: Int64;
+      out AInfo: Th5uAdjacentGroupRowInfo
+    ): Boolean;
+    function SetCollapsedAtViewRow(
+      AViewRowIndex: Int64;
+      ACollapsed: Boolean
+    ): Boolean;
+    function ToggleAtViewRow(AViewRowIndex: Int64): Boolean;
+    function ExpandAll: Boolean;
+    function CollapseAll: Boolean;
+
+    property Active: Boolean read FActive;
+    property Runs[AIndex: Integer]: Th5uAdjacentGroupRun read GetRun;
+    property RunCount: Integer read GetRunCount;
+  end;
 ```
 
 ## `h5u.Grid.Columns`
@@ -1769,6 +1986,95 @@ type
       read FBranchEndBand write SetBranchEndBand;
   end;
 
+  // Optional separator after one contiguous run of equal IDs. It replaces
+  // the normal RowSpacing at that boundary; it is never added to it.
+  Th5uAdjacentGroupEndBandOptions = class(TPersistent)
+  private
+    FVisibility: Th5uAdjacentGroupEndBandVisibility;
+    FHeight: Integer;
+    FColor: Th5uColor;
+    FStyleName: string;
+    FOnChanged: Th5uOptionsChangedEvent;
+    procedure Changed;
+    procedure SetColor(const AValue: Th5uColor);
+    procedure SetHeight(const AValue: Integer);
+    procedure SetStyleName(const AValue: string);
+    procedure SetVisibility(
+      const AValue: Th5uAdjacentGroupEndBandVisibility
+    );
+  public
+    constructor Create;
+    procedure Assign(Source: TPersistent); override;
+    property OnChanged: Th5uOptionsChangedEvent
+      read FOnChanged write FOnChanged;
+  published
+    property Visibility: Th5uAdjacentGroupEndBandVisibility
+      read FVisibility write SetVisibility
+      default Th5uAdjacentGroupEndBandVisibility.Never;
+    property Height: Integer
+      read FHeight write SetHeight default 6;
+    property Color: Th5uColor
+      read FColor write SetColor default h5uColorDefault;
+    property StyleName: string
+      read FStyleName write SetStyleName;
+  end;
+
+  // Adjacent-group folding keeps the controller's current order intact. Only
+  // directly consecutive rows with equal IDs form a foldable run. A later run
+  // with the same ID is deliberately independent.
+  Th5uAdjacentGroupFoldingOptions = class(TPersistent)
+  private
+    FEnabled: Boolean;
+    FIdColumnId: string;
+    FInitialState: Th5uAdjacentGroupInitialState;
+    FShowFoldGlyph: Boolean;
+    FCaseSensitive: Boolean;
+    FGroupEmptyValues: Boolean;
+    FPreserveStateOnDataChange: Boolean;
+    FEndBand: Th5uAdjacentGroupEndBandOptions;
+    FOnChanged: Th5uOptionsChangedEvent;
+    procedure Changed;
+    procedure ChildChanged(Sender: TObject);
+    procedure SetCaseSensitive(const AValue: Boolean);
+    procedure SetEnabled(const AValue: Boolean);
+    procedure SetEndBand(
+      const AValue: Th5uAdjacentGroupEndBandOptions
+    );
+    procedure SetGroupEmptyValues(const AValue: Boolean);
+    procedure SetIdColumnId(const AValue: string);
+    procedure SetInitialState(
+      const AValue: Th5uAdjacentGroupInitialState
+    );
+    procedure SetPreserveStateOnDataChange(const AValue: Boolean);
+    procedure SetShowFoldGlyph(const AValue: Boolean);
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure Assign(Source: TPersistent); override;
+    property OnChanged: Th5uOptionsChangedEvent
+      read FOnChanged write FOnChanged;
+  published
+    property Enabled: Boolean
+      read FEnabled write SetEnabled default False;
+    // May name a Column.Id, Column.FieldName or controller field directly.
+    property IdColumnId: string
+      read FIdColumnId write SetIdColumnId;
+    property InitialState: Th5uAdjacentGroupInitialState
+      read FInitialState write SetInitialState
+      default Th5uAdjacentGroupInitialState.Expanded;
+    property ShowFoldGlyph: Boolean
+      read FShowFoldGlyph write SetShowFoldGlyph default True;
+    property CaseSensitive: Boolean
+      read FCaseSensitive write SetCaseSensitive default True;
+    property GroupEmptyValues: Boolean
+      read FGroupEmptyValues write SetGroupEmptyValues default True;
+    property PreserveStateOnDataChange: Boolean
+      read FPreserveStateOnDataChange
+      write SetPreserveStateOnDataChange default True;
+    property EndBand: Th5uAdjacentGroupEndBandOptions
+      read FEndBand write SetEndBand;
+  end;
+
   Th5uRowHeightOptions = class(TPersistent)
   private
     FMode: Th5uRowHeightMode;
@@ -2157,6 +2463,10 @@ const
   h5uClassIdGridContentPadding = Th5uClassId('h5u.grid.spacing.content-padding');
   h5uClassIdGridTreeBranchEndBand =
     Th5uClassId('h5u.grid.spacing.tree-branch-end');
+  h5uClassIdGridAdjacentGroupFoldGlyph =
+    Th5uClassId('h5u.grid.visual.adjacent-group-fold-glyph');
+  h5uClassIdGridAdjacentGroupEndBand =
+    Th5uClassId('h5u.grid.spacing.adjacent-group-end');
   h5uClassIdDataSession = Th5uClassId('h5u.grid.data.session');
   h5uClassIdDataCache = Th5uClassId('h5u.grid.data.cache');
   h5uClassIdDataPage = Th5uClassId('h5u.grid.data.page');
@@ -2199,6 +2509,8 @@ type
     ColumnSpacing,
     ContentPadding,
     TreeBranchEndBand,
+    AdjacentGroupFoldGlyph,
+    AdjacentGroupEndBand,
     DetailView,
     DataSession,
     DataCache,
@@ -2221,7 +2533,12 @@ type
     OddRow,
     EvenRow,
     PatternRow,
-    TreeBranchEnd
+    TreeBranchEnd,
+    AdjacentGroupFirst,
+    AdjacentGroupLast,
+    AdjacentGroupCollapsed,
+    AdjacentGroupExpanded,
+    AdjacentGroupEnd
   );
   Th5uElementFlags = set of Th5uElementFlag;
 
@@ -2275,6 +2592,14 @@ type
     TreeLevel: Integer;
     ClosedTreeLevels: Integer;
 
+    AdjacentGroupIndex: Integer;
+    AdjacentGroupId: TValue;
+    AdjacentGroupAnchorRowKey: Th5uRowKey;
+    AdjacentGroupRowCount: Int64;
+    AdjacentGroupCollapsed: Boolean;
+    AdjacentGroupFirstRow: Boolean;
+    AdjacentGroupLastVisibleRow: Boolean;
+
     ClassId: Th5uClassId;
     CreationReason: Th5uCreationReason;
 
@@ -2317,6 +2642,48 @@ type
     const AContext: Th5uTreeBranchEndContext;
     var AIsBranchEnd: Boolean;
     var AClosedLevels: Integer
+  ) of object;
+
+  Th5uAdjacentGroupInitialState = (
+    Expanded,
+    Collapsed
+  );
+
+  Th5uAdjacentGroupEndBandVisibility = (
+    Never,
+    CollapsedOnly,
+    ExpandedOnly,
+    Always
+  );
+
+  Th5uAdjacentGroupIdContext = record
+    Grid: TObject;
+    DataController: TObject;
+    RowKey: Th5uRowKey;
+    ControllerRowIndex: Int64;
+    SourceRowIndex: Int64;
+  end;
+
+  Th5uGetAdjacentGroupIdEvent = procedure(
+    Sender: TObject;
+    const AContext: Th5uAdjacentGroupIdContext;
+    var AGroupId: TValue;
+    var AAvailable: Boolean
+  ) of object;
+
+  Th5uAdjacentGroupStateChangedContext = record
+    Grid: TObject;
+    DataController: TObject;
+    GroupId: TValue;
+    AnchorRowKey: Th5uRowKey;
+    FirstControllerRowIndex: Int64;
+    RowCount: Int64;
+    Collapsed: Boolean;
+  end;
+
+  Th5uAdjacentGroupStateChangedEvent = procedure(
+    Sender: TObject;
+    const AContext: Th5uAdjacentGroupStateChangedContext
   ) of object;
 
   Th5uGridTheme = (
@@ -2509,6 +2876,7 @@ uses
   Vcl.Graphics,
   Vcl.Menus,
   Vcl.StdCtrls,
+  h5u.Grid.AdjacentGroups,
   h5u.Grid.Columns,
   h5u.Grid.Data.Core,
   h5u.Grid.Factory,
@@ -2531,7 +2899,8 @@ type
     None,
     Header,
     RowIndicator,
-    DataCell
+    DataCell,
+    AdjacentGroupGlyph
   );
 
   Th5uGetRowHeightContext = record
@@ -2703,6 +3072,16 @@ type
 
   Th5uVclFixedCell = class(Th5uVclDataCell);
 
+  // Plus/minus glyph used for one contiguous run of equal adjacent IDs.
+  // The class is resolved through the per-grid FactoryScope.
+  Th5uVclAdjacentGroupGlyphCell = class(Th5uVclVisualCell)
+  protected
+    procedure PaintDefault(
+      AGrid: Th5uVclGrid;
+      ACanvas: TCanvas
+    ); override;
+  end;
+
   Th5uVclGrid = class(TCustomControl)
   private
     FColumns: Th5uGridColumns;
@@ -2721,6 +3100,9 @@ type
     FSpacing: Th5uGridSpacingOptions;
     FAppearance: Th5uGridAppearanceOptions;
     FTree: Th5uTreeOptions;
+    FAdjacentGroupFolding: Th5uAdjacentGroupFoldingOptions;
+    FAdjacentGroupMap: Th5uAdjacentGroupMap;
+    FAdjacentGroupMapDirty: Boolean;
 
     FTheme: Th5uGridTheme;
     FHeaderRowHeight: Integer;
@@ -2761,6 +3143,9 @@ type
     FOnCustomDraw: Th5uVclCustomDrawEvent;
     FOnGetTreeLevel: Th5uGetTreeLevelEvent;
     FOnGetTreeBranchEnd: Th5uGetTreeBranchEndEvent;
+    FOnGetAdjacentGroupId: Th5uGetAdjacentGroupIdEvent;
+    FOnAdjacentGroupStateChanged:
+      Th5uAdjacentGroupStateChangedEvent;
 
     procedure ColumnsChanged(Sender: TObject; AColumn: Th5uGridColumn);
     procedure DataChanged(Sender: TObject; const AChange: Th5uDataChange);
@@ -2779,6 +3164,9 @@ type
     procedure SetSpacing(const AValue: Th5uGridSpacingOptions);
     procedure SetAppearance(const AValue: Th5uGridAppearanceOptions);
     procedure SetTree(const AValue: Th5uTreeOptions);
+    procedure SetAdjacentGroupFolding(
+      const AValue: Th5uAdjacentGroupFoldingOptions
+    );
     procedure SetSelection(const AValue: Th5uGridSelection);
     procedure SetGridLines(const AValue: Boolean);
     procedure SetHeaderRowHeight(const AValue: Integer);
@@ -2814,6 +3202,58 @@ type
     function GetEffectiveColumnRightSpacing(
       AColumn: Th5uGridColumn
     ): Integer;
+    procedure InvalidateAdjacentGroupMap(
+      AClearStates: Boolean = False
+    );
+    procedure EnsureAdjacentGroupMap;
+    function ResolveAdjacentGroupFieldName: string;
+    function TryGetAdjacentGroupIdForControllerRow(
+      AControllerRowIndex: Int64;
+      out AGroupId: TValue
+    ): Boolean;
+    function GetViewRowCount: Int64;
+    function MapViewToControllerRowIndex(
+      AViewRowIndex: Int64;
+      AAllowLookAhead: Boolean = False
+    ): Int64;
+    function GetViewSourceRowIndex(AViewRowIndex: Int64): Int64;
+    function GetViewRowKey(AViewRowIndex: Int64): Th5uRowKey;
+    function GetViewValue(
+      AViewRowIndex: Int64;
+      const AFieldName: string
+    ): TValue;
+    procedure SetViewValue(
+      AViewRowIndex: Int64;
+      const AFieldName: string;
+      const AValue: TValue
+    );
+    function CanEditViewValue(
+      AViewRowIndex: Int64;
+      const AFieldName: string
+    ): Boolean;
+    function GetViewDisplayText(
+      AViewRowIndex: Int64;
+      const AFieldName, ADisplayFormat: string
+    ): string;
+    function IsViewRowAvailable(AViewRowIndex: Int64): Boolean;
+    procedure PrepareViewRange(
+      AFirstViewRow, ACount: Int64
+    );
+    function TryGetAdjacentGroupRowInfo(
+      AViewRowIndex: Int64;
+      out AInfo: Th5uAdjacentGroupRowInfo
+    ): Boolean;
+    procedure PopulateAdjacentGroupContext(
+      var AContext: Th5uFactoryContext;
+      AViewRowIndex: Int64
+    );
+    function GetAdjacentGroupEndBandInfo(
+      AViewRowIndex: Int64;
+      out AInfo: Th5uAdjacentGroupRowInfo
+    ): Boolean;
+    procedure DoAdjacentGroupStateChanged(
+      const AInfo: Th5uAdjacentGroupRowInfo
+    );
     function GetRowSpacingFor(
       AViewRowIndex: Int64;
       const ARowKey: Th5uRowKey
@@ -2851,6 +3291,10 @@ type
       AViewRowIndex: Int64;
       const ARowKey: Th5uRowKey
     ): TColor;
+    function ResolveAdjacentGroupEndColor(
+      AViewRowIndex: Int64;
+      const ARowKey: Th5uRowKey
+    ): TColor;
     function GetEstimatedTotalRowHeight: Int64;
     procedure LayoutScrollBars;
     procedure UpdateScrollBars;
@@ -2878,6 +3322,13 @@ type
     procedure DrawDefaultHeaders;
     procedure DrawCustomHeaderLayout;
     procedure DrawRowIndicator(
+      const ARowInfo: Th5uVisibleRowInfo;
+      ASelected: Boolean
+    );
+    function GetAdjacentGroupGlyphRect(
+      const ARowInfo: Th5uVisibleRowInfo
+    ): TRect;
+    procedure DrawAdjacentGroupGlyph(
       const ARowInfo: Th5uVisibleRowInfo;
       ASelected: Boolean
     );
@@ -3011,6 +3462,17 @@ type
     procedure AutoCreateColumnsFromDataSet(
       AClearExisting: Boolean = True
     );
+    procedure ToggleAdjacentGroup(AViewRowIndex: Int64);
+    procedure SetAdjacentGroupCollapsed(
+      AViewRowIndex: Int64;
+      ACollapsed: Boolean
+    );
+    procedure ExpandAllAdjacentGroups;
+    procedure CollapseAllAdjacentGroups;
+    procedure ResetAdjacentGroupStates;
+    function IsAdjacentGroupCollapsed(
+      AViewRowIndex: Int64
+    ): Boolean;
 
     property FactoryScope: Th5uFactoryScope read FFactoryScope;
     property HorizontalOffset: Integer read FHorizontalOffset;
@@ -3055,6 +3517,8 @@ type
       read FAppearance write SetAppearance;
     property Tree: Th5uTreeOptions
       read FTree write SetTree;
+    property AdjacentGroupFolding: Th5uAdjacentGroupFoldingOptions
+      read FAdjacentGroupFolding write SetAdjacentGroupFolding;
 
     property Theme: Th5uGridTheme
       read FTheme write SetTheme
@@ -3096,6 +3560,12 @@ type
       read FOnGetTreeLevel write FOnGetTreeLevel;
     property OnGetTreeBranchEnd: Th5uGetTreeBranchEndEvent
       read FOnGetTreeBranchEnd write FOnGetTreeBranchEnd;
+    property OnGetAdjacentGroupId: Th5uGetAdjacentGroupIdEvent
+      read FOnGetAdjacentGroupId write FOnGetAdjacentGroupId;
+    property OnAdjacentGroupStateChanged:
+      Th5uAdjacentGroupStateChangedEvent
+      read FOnAdjacentGroupStateChanged
+      write FOnAdjacentGroupStateChanged;
     property OnClick;
     property OnDblClick;
     property OnEnter;
@@ -3189,6 +3659,7 @@ type
     ErrorBackground: TColor;
     WarningBackground: TColor;
     TreeBranchEndBackground: TColor;
+    AdjacentGroupEndBackground: TColor;
     DisabledText: TColor;
     ThumbHintBackground: TColor;
     ThumbHintText: TColor;

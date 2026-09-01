@@ -1,4 +1,4 @@
-unit h5u.Grid.Types;
+﻿unit h5u.Grid.Types;
 
 interface
 
@@ -39,6 +39,10 @@ const
   h5uClassIdGridContentPadding = Th5uClassId('h5u.grid.spacing.content-padding');
   h5uClassIdGridTreeBranchEndBand =
     Th5uClassId('h5u.grid.spacing.tree-branch-end');
+  h5uClassIdGridAdjacentGroupFoldGlyph =
+    Th5uClassId('h5u.grid.visual.adjacent-group-fold-glyph');
+  h5uClassIdGridAdjacentGroupEndBand =
+    Th5uClassId('h5u.grid.spacing.adjacent-group-end');
   h5uClassIdDataSession = Th5uClassId('h5u.grid.data.session');
   h5uClassIdDataCache = Th5uClassId('h5u.grid.data.cache');
   h5uClassIdDataPage = Th5uClassId('h5u.grid.data.page');
@@ -81,6 +85,8 @@ type
     ColumnSpacing,
     ContentPadding,
     TreeBranchEndBand,
+    AdjacentGroupFoldGlyph,
+    AdjacentGroupEndBand,
     DetailView,
     DataSession,
     DataCache,
@@ -103,7 +109,12 @@ type
     OddRow,
     EvenRow,
     PatternRow,
-    TreeBranchEnd
+    TreeBranchEnd,
+    AdjacentGroupFirst,
+    AdjacentGroupLast,
+    AdjacentGroupCollapsed,
+    AdjacentGroupExpanded,
+    AdjacentGroupEnd
   );
   Th5uElementFlags = set of Th5uElementFlag;
 
@@ -157,6 +168,14 @@ type
     TreeLevel: Integer;
     ClosedTreeLevels: Integer;
 
+    AdjacentGroupIndex: Integer;
+    AdjacentGroupId: TValue;
+    AdjacentGroupAnchorRowKey: Th5uRowKey;
+    AdjacentGroupRowCount: Int64;
+    AdjacentGroupCollapsed: Boolean;
+    AdjacentGroupFirstRow: Boolean;
+    AdjacentGroupLastVisibleRow: Boolean;
+
     ClassId: Th5uClassId;
     CreationReason: Th5uCreationReason;
 
@@ -199,6 +218,48 @@ type
     const AContext: Th5uTreeBranchEndContext;
     var AIsBranchEnd: Boolean;
     var AClosedLevels: Integer
+  ) of object;
+
+  Th5uAdjacentGroupInitialState = (
+    Expanded,
+    Collapsed
+  );
+
+  Th5uAdjacentGroupEndBandVisibility = (
+    Never,
+    CollapsedOnly,
+    ExpandedOnly,
+    Always
+  );
+
+  Th5uAdjacentGroupIdContext = record
+    Grid: TObject;
+    DataController: TObject;
+    RowKey: Th5uRowKey;
+    ControllerRowIndex: Int64;
+    SourceRowIndex: Int64;
+  end;
+
+  Th5uGetAdjacentGroupIdEvent = procedure(
+    Sender: TObject;
+    const AContext: Th5uAdjacentGroupIdContext;
+    var AGroupId: TValue;
+    var AAvailable: Boolean
+  ) of object;
+
+  Th5uAdjacentGroupStateChangedContext = record
+    Grid: TObject;
+    DataController: TObject;
+    GroupId: TValue;
+    AnchorRowKey: Th5uRowKey;
+    FirstControllerRowIndex: Int64;
+    RowCount: Int64;
+    Collapsed: Boolean;
+  end;
+
+  Th5uAdjacentGroupStateChangedEvent = procedure(
+    Sender: TObject;
+    const AContext: Th5uAdjacentGroupStateChangedContext
   ) of object;
 
   Th5uGridTheme = (
@@ -448,6 +509,9 @@ begin
   Result.ColumnSpan := 1;
   Result.TreeLevel := -1;
   Result.ClosedTreeLevels := 0;
+  Result.AdjacentGroupIndex := -1;
+  Result.AdjacentGroupAnchorRowKey := Th5uRowKey.Empty;
+  Result.AdjacentGroupRowCount := 0;
   Result.CreationReason := Th5uCreationReason.Runtime;
 end;
 

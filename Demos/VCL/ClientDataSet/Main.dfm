@@ -24,7 +24,7 @@
       Top = 76
       Width = 913
       Height = 17
-      Caption = 'Designer-Test: Grid, DataSource, Controller, Spalten und Musterdaten liegen auf dem Formular. Doppelklick editiert; Rechtsklick im Header öffnet den Column Chooser.'
+      Caption = 'Designer-Test: Musterdaten, Tree und Folgegruppen sind vorgefüllt. Das +/- im Zeilenkopf faltet nur direkt aufeinanderfolgende gleiche FOLD_GROUP-Werte.'
     end
     object AutoHeightCheck: TCheckBox
       Left = 12
@@ -132,6 +132,49 @@
       TabOrder = 11
       OnClick = OptionClick
     end
+    object AdjacentGroupCheck: TCheckBox
+      Left = 478
+      Top = 42
+      Width = 182
+      Height = 20
+      Caption = 'Folgegruppen falten'
+      Checked = True
+      State = cbChecked
+      TabOrder = 12
+      OnClick = OptionClick
+    end
+    object AdjacentBandModeLabel: TLabel
+      Left = 666
+      Top = 44
+      Width = 99
+      Height = 17
+      Caption = 'Abschlussleiste:'
+    end
+    object AdjacentBandModeCombo: TComboBox
+      Left = 770
+      Top = 39
+      Width = 150
+      Height = 25
+      Style = csDropDownList
+      ItemIndex = 3
+      TabOrder = 13
+      Text = 'Immer'
+      OnChange = OptionClick
+      Items.Strings = (
+        'Nie'
+        'Nur eingeklappt'
+        'Nur ausgeklappt'
+        'Immer')
+    end
+    object ToggleGroupsButton: TButton
+      Left = 928
+      Top = 38
+      Width = 112
+      Height = 28
+      Caption = 'Alle falten'
+      TabOrder = 14
+      OnClick = ToggleGroupsButtonClick
+    end
     object NextPageButton: TButton
       Left = 816
       Top = 8
@@ -164,6 +207,12 @@
     Tree.BranchEndBand.Enabled = True
     Tree.BranchEndBand.Height = 7
     Tree.BranchEndBand.StyleName = 'TreeBranchEnd'
+    AdjacentGroupFolding.Enabled = True
+    AdjacentGroupFolding.IdColumnId = 'fold_group'
+    AdjacentGroupFolding.ShowFoldGlyph = True
+    AdjacentGroupFolding.EndBand.Visibility = Always
+    AdjacentGroupFolding.EndBand.Height = 7
+    AdjacentGroupFolding.EndBand.StyleName = 'AdjacentGroupEnd'
     HeaderLayout.Enabled = True
     HeaderLayout.RowCount = 2
     HeaderLayout.Cells = <
@@ -349,6 +398,16 @@
         EditorKind = Image
         AutoHeight = True
         MaxAutoHeight = 90
+      end
+      item
+        Id = 'fold_group'
+        Caption = 'Faltgruppe'
+        FieldName = 'FOLD_GROUP'
+        Width = 80
+        Visible = False
+        VisibleIndex = 10
+        ReadOnly = True
+        DataType = Integer
       end>
     RowHeight.Mode = Automatic
     RowHeight.FixedHeight = 25

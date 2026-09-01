@@ -1,4 +1,4 @@
-# h5u.Grid – Konzept und Architektur
+﻿# h5u.Grid – Konzept und Architektur
 
 ## 1. Ziel
 
@@ -401,7 +401,70 @@ Die Darstellung wird in dieser Reihenfolge aufgelöst:
 
 Die Leiste erhält eine eigene Factory-ID (`h5u.grid.spacing.tree-branch-end`) und `Th5uElementKind.TreeBranchEndBand`. Sie wird – wie die übrigen Separatoren – als leichtgewichtiges, gepooltes sichtbares Element über den lokalen Factory-Scope materialisiert. Dadurch kann sie pro Gridinstanz durch eine eigene `Th5uVclVisualCell`-/`Th5uFmxVisualCell`-Nachfahrin oder durch CustomDraw anders dargestellt werden. Der Kontext transportiert Grid, Controller, RowKey, Source-/View-Index, Tree-Level und Anzahl geschlossener Ebenen. `OnGetTreeLevel` und `OnGetTreeBranchEnd` entkoppeln die Erkennung von einer bestimmten Controllerimplementierung.
 
-## 16. Cache und Pagination
+## 16. Adjacent-Group-Folding
+
+`AdjacentGroupFolding` ist bewusst von der normalen Gruppierung und vom fachlichen Tree getrennt. Es verändert weder die Sortierung noch die Reihenfolge des DataControllers. Stattdessen wird aus der aktuellen Controller-Ansicht eine sichtbare Indexabbildung erzeugt:
+
+```text
+Controller-Zeilen:  A A A B C C A A A D
+Läufe:              └─1─┘ 2 └3┘ └─4─┘ 5
+```
+
+Nur **direkt aufeinanderfolgende** gleiche ID-Werte gehören zu demselben Lauf. Tritt `A` später erneut auf, entsteht ein neuer, unabhängig faltbarer Lauf. Der Zustand wird deshalb nicht unter der ID allein, sondern unter dem ersten stabilen RowKey des Laufs und seiner Vergleichs-ID gespeichert.
+
+Die ID kommt aus einer sichtbaren oder unsichtbaren Column:
+
+```pascal
+Grid.AdjacentGroupFolding.Enabled := True;
+Grid.AdjacentGroupFolding.IdColumnId := 'fold_group';
+```
+
+Alternativ liefert `OnGetAdjacentGroupId` den Wert. `CaseSensitive` steuert Stringvergleiche, `GroupEmptyValues` das Zusammenfassen leerer Werte. Ein Lauf mit nur einer Zeile ist keine faltbare Gruppe und erhält weder Faltzeichen noch Abschlussleiste.
+
+Im ausgeklappten Zustand bleiben alle Controller-Zeilen sichtbar. Beim Einklappen bleibt die erste Zeile als Repräsentant erhalten; nur die nachfolgenden Zeilen desselben Laufs werden aus der View-Abbildung ausgeblendet. RowKeys, Quellindizes und Datenwerte bleiben unverändert. Das Plus-/Minus-Zeichen wird als gepooltes sichtbares Element über den lokalen Factory-Scope des konkreten Grids erzeugt.
+
+### Abschlussleiste
+
+Der Abschluss eines Laufs kann deutlicher als die normale Zeilentrennung dargestellt werden:
+
+```pascal
+Grid.AdjacentGroupFolding.EndBand.Height := 7;
+Grid.AdjacentGroupFolding.EndBand.StyleName := 'AdjacentGroupEnd';
+Grid.AdjacentGroupFolding.EndBand.Visibility :=
+  Th5uAdjacentGroupEndBandVisibility.Always;
+```
+
+`Visibility` besitzt vier Betriebsarten:
+
+- `Never`: keine Abschlussleiste,
+- `CollapsedOnly`: nur im eingeklappten Zustand,
+- `ExpandedOnly`: nur im ausgeklappten Zustand,
+- `Always`: in beiden Zuständen.
+
+Die Abschlussleiste ist eine **Alternative** zum normalen Row-Spacing:
+
+```text
+ohne Abschlussleiste:  RowHeight + RowSpacing
+mit Abschlussleiste:   RowHeight + EndBand.Height
+```
+
+Sie wird niemals zusätzlich addiert. `Height = 0` unterdrückt an dieser Grenze daher auch den normalen Zeilenabstand. Treffen ein Adjacent-Group-Ende und ein Tree-Astende auf dieselbe Grenze, hat die explizite Adjacent-Group-Abschlussleiste Vorrang.
+
+Für Faltzeichen und Abschlussleiste existieren eigene Factory-IDs und Elementarten:
+
+```pascal
+h5uClassIdGridAdjacentGroupFoldGlyph
+h5uClassIdGridAdjacentGroupEndBand
+
+Th5uElementKind.AdjacentGroupFoldGlyph
+Th5uElementKind.AdjacentGroupEndBand
+```
+
+Der Factory-/CustomDraw-Kontext enthält unter anderem Gruppenindex, Gruppen-ID, Anchor-RowKey, Zeilenzahl, Faltzustand sowie Kennzeichen für erste und letzte sichtbare Zeile. Damit können verschiedene Gridinstanzen dieselbe Datenquelle nutzen und trotzdem unterschiedliche Faltzeichen, Styles oder Endleisten darstellen.
+
+Der Prototyp baut die Laufabbildung über die aktuelle Controller-Ansicht beziehungsweise die aktuelle nummerierte Seite auf. Für sehr große Remotequellen ist eine spätere servergestützte Laufmetadaten-Schnittstelle sinnvoll, damit nicht die gesamte Ergebnismenge allein zur Laufbestimmung geladen werden muss.
+
+## 17. Cache und Pagination
 
 Cache und sichtbare Pagination sind voneinander getrennt.
 
@@ -421,12 +484,12 @@ Pagination:
 
 Ein kontinuierlich scrollendes Grid darf intern trotzdem seitenweise laden. Selektion, Summen und Gruppierung müssen jeweils ihren Gültigkeitsbereich ausweisen.
 
-## 17. Erweiterungsziel
+## 18. Erweiterungsziel
 
 Die aktuelle Implementierung konzentriert sich auf den vertikalen Testpfad. Der Core ist so angelegt, dass später ohne Bruch ergänzt werden können:
 
 - vollständige Sortier- und Filter-Engine
-- Gruppierung und Group-Footer
+- vollständige normale Gruppierung und Group-Footer
 - TreeTableView
 - VerticalGridView
 - CardView

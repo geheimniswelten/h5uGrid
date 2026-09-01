@@ -1,4 +1,21 @@
-# Changelog
+﻿# Changelog
+
+## 0.1.3 – 2026-09-01
+
+### Adjacent-Group-Folding
+
+- `Grid.AdjacentGroupFolding` fasst ausschließlich direkt aufeinanderfolgende Rows mit gleichem ID-Wert zu unabhängig faltbaren Läufen zusammen,
+- Sortierung, Controller-Reihenfolge und RowKeys bleiben unverändert; nur die sichtbare View-Abbildung blendet beim Einklappen alle Rows außer der ersten aus,
+- dieselbe ID kann später erneut vorkommen und erzeugt anhand des ersten RowKeys einen eigenen Faltzustand,
+- die ID kann aus einer sichtbaren oder unsichtbaren Column kommen oder über `OnGetAdjacentGroupId` geliefert werden,
+- ein über den lokalen Grid-Factory-Scope erzeugtes Plus-/Minus-Symbol erscheint vor der ersten Row jedes faltbaren Laufs,
+- Einzelzeilen sind nicht faltbar und erhalten weder Symbol noch Abschlussleiste,
+- `EndBand.Visibility` unterstützt `Never`, `CollapsedOnly`, `ExpandedOnly` und `Always`,
+- die Abschlussleiste ersetzt das normale `RowSpacing`; ihre Höhe wird nicht addiert und `Height = 0` unterdrückt an dieser Grenze auch den normalen Abstand,
+- Abschlussleiste und Falt-Symbol besitzen eigene Factory-IDs, Elementarten, Styles und vollständige Kontextinformationen,
+- VCL und FMX stellen Methoden zum einzelnen beziehungsweise gemeinsamen Ein-/Ausklappen bereit,
+- die ClientDataSet-Demos enthalten die unsichtbare Spalte `FOLD_GROUP`, getrennte Wiederholungen derselben ID sowie Schalter für Funktion und Abschlussleistenmodus,
+- ein compilerunabhängiger Semantiktest fixiert Laufbildung, unabhängige Wiederholungen, Sichtbarkeitsabbildung und alle vier Abschlussleistenmodi.
 
 ## 0.1.2 – 2026-09-01
 

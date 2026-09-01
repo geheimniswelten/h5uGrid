@@ -1,8 +1,8 @@
-# h5u.Grid – VCL-/FMX-Grid-Prototyp
+﻿# h5u.Grid – VCL-/FMX-Grid-Prototyp
 
 `h5u.Grid` ist ein quelloffener Teststand für ein erweiterbares Delphi-Grid mit gemeinsamem Daten-/Controllerkern und getrennten VCL-/FMX-Präsentationen.
 
-Das Paket dient dazu, Architektur, API, Design-Time-Verhalten und die wichtigsten Interaktionspfade früh in einer realen Delphi-Umgebung zu erproben. Es ist ausdrücklich ein **Prototyp 0.1.2** und noch keine vollständige Grid-Suite.
+Das Paket dient dazu, Architektur, API, Design-Time-Verhalten und die wichtigsten Interaktionspfade früh in einer realen Delphi-Umgebung zu erproben. Es ist ausdrücklich ein **Prototyp 0.1.3** und noch keine vollständige Grid-Suite.
 
 ## Enthaltene Testschwerpunkte
 
@@ -24,6 +24,7 @@ Das Paket dient dazu, Architektur, API, Design-Time-Verhalten und die wichtigste
 - standardmäßig 1 Pixel breite hellgraue Trennflächen zwischen Rows und Columns sowie am äußeren Inhaltsrand,
 - deaktivierbare Abstände (`0`), vererbbarer Column-Abstand (`RightSpacing = -1`) und eigene Grid-/Column-Farben,
 - Tree-Abschlussleiste nach dem letzten sichtbaren Child: größere Höhe und eigener Style ersetzen dort das normale Row-Spacing.
+- Adjacent-Group-Folding für direkt aufeinanderfolgende gleiche IDs: unabhängige Läufe, Plus-/Minus-Symbol, unveränderte Quellreihenfolge und Abschlussleiste wahlweise nie, nur eingeklappt, nur ausgeklappt oder immer.
 
 Die VCL-Ausgabe bildet im ersten Stand den umfassenderen Referenzpfad. Die FMX-Ausgabe verwendet denselben Core und dieselben Controller, besitzt aber noch nicht bei allen Komfortfunktionen vollständige Parität. Die genaue Abdeckung steht in der [Funktionsmatrix](Docs/FEATURE-MATRIX.md).
 
@@ -64,7 +65,7 @@ Es liegen sechs eigenständige Anwendungen bei:
 | FMX | ObjectList | gemeinsame Objektlisten-Anbindung unter FMX |
 | FMX | VirtualLive | Event-/VirtualSource unter FMX |
 
-Die ClientDataSet-Demos benötigen keine Datenbank und keine externe `.cds`-Datei. `Th5uSampleClientDataSet` legt Felder und Datensätze beim Laden selbst an; nach Installation des Design-Packages können dadurch bereits im Formulardesigner Inhalte erscheinen. Das Feld `TREE_LEVEL` enthält eine kleine, vorab sortierte Beispielhierarchie für die Tree-Abschlussleiste.
+Die ClientDataSet-Demos benötigen keine Datenbank und keine externe `.cds`-Datei. `Th5uSampleClientDataSet` legt Felder und Datensätze beim Laden selbst an; nach Installation des Design-Packages können dadurch bereits im Formulardesigner Inhalte erscheinen. Das Feld `TREE_LEVEL` enthält eine kleine, vorab sortierte Beispielhierarchie für die Tree-Abschlussleiste. Das ausgeblendete Feld `FOLD_GROUP` enthält zusammenhängende gleiche IDs; dieselbe ID erscheint später erneut, damit unabhängige Faltzustände direkt getestet werden können.
 
 Weitere Hinweise: [Demoübersicht](Docs/DEMOS.md).
 

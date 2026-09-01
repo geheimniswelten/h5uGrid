@@ -42,6 +42,10 @@ type
     SeparatorsCheck: TCheckBox;
     ColumnColorsCheck: TCheckBox;
     TreeEndBandCheck: TCheckBox;
+    AdjacentGroupCheck: TCheckBox;
+    AdjacentBandModeLabel: TLabel;
+    AdjacentBandModeCombo: TComboBox;
+    ToggleGroupsButton: TButton;
     NextPageButton: TButton;
     MoveNameButton: TButton;
     InfoLabel: TLabel;
@@ -53,6 +57,7 @@ type
     procedure OptionClick(Sender: TObject);
     procedure NextPageButtonClick(Sender: TObject);
     procedure MoveNameButtonClick(Sender: TObject);
+    procedure ToggleGroupsButtonClick(Sender: TObject);
     procedure GridGetRowHeight(
       Sender: TObject;
       const AContext: Th5uGetRowHeightContext;
@@ -66,6 +71,7 @@ type
       var AVisible: Boolean
     );
   private
+    FAllAdjacentGroupsCollapsed: Boolean;
     procedure ApplyOptions;
   end;
 
@@ -133,6 +139,27 @@ begin
   Grid.Tree.Enabled := TreeEndBandCheck.Checked;
   Grid.Tree.LevelColumnId := 'TREE_LEVEL';
   Grid.Tree.BranchEndBand.Enabled := TreeEndBandCheck.Checked;
+
+  Grid.AdjacentGroupFolding.Enabled := AdjacentGroupCheck.Checked;
+  Grid.AdjacentGroupFolding.IdColumnId := 'fold_group';
+  Grid.AdjacentGroupFolding.ShowFoldGlyph := True;
+  Grid.AdjacentGroupFolding.EndBand.Height := 7;
+  Grid.AdjacentGroupFolding.EndBand.StyleName := 'AdjacentGroupEnd';
+  case AdjacentBandModeCombo.ItemIndex of
+    0:
+      Grid.AdjacentGroupFolding.EndBand.Visibility :=
+        Th5uAdjacentGroupEndBandVisibility.Never;
+    1:
+      Grid.AdjacentGroupFolding.EndBand.Visibility :=
+        Th5uAdjacentGroupEndBandVisibility.CollapsedOnly;
+    2:
+      Grid.AdjacentGroupFolding.EndBand.Visibility :=
+        Th5uAdjacentGroupEndBandVisibility.ExpandedOnly;
+  else
+    Grid.AdjacentGroupFolding.EndBand.Visibility :=
+      Th5uAdjacentGroupEndBandVisibility.Always;
+  end;
+  ToggleGroupsButton.Enabled := AdjacentGroupCheck.Checked;
 
   if EveryFifthCheck.Checked then
   begin
@@ -222,6 +249,10 @@ end;
 
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
+  if AdjacentBandModeCombo.ItemIndex < 0 then
+    AdjacentBandModeCombo.ItemIndex := 3;
+  FAllAdjacentGroupsCollapsed := False;
+
   if not SampleData.Active then
     SampleData.RecreateSampleData;
 
@@ -273,6 +304,25 @@ begin
   LColumn := Grid.Columns.FindById('name');
   if Assigned(LColumn) then
     Grid.MoveColumn(LColumn, Grid.Columns.Count - 1);
+end;
+
+procedure TMainForm.ToggleGroupsButtonClick(Sender: TObject);
+begin
+  if not Grid.AdjacentGroupFolding.Enabled then
+    Exit;
+
+  if FAllAdjacentGroupsCollapsed then
+  begin
+    Grid.ExpandAllAdjacentGroups;
+    FAllAdjacentGroupsCollapsed := False;
+    ToggleGroupsButton.Caption := 'Alle falten';
+  end
+  else
+  begin
+    Grid.CollapseAllAdjacentGroups;
+    FAllAdjacentGroupsCollapsed := True;
+    ToggleGroupsButton.Caption := 'Alle öffnen';
+  end;
 end;
 
 procedure TMainForm.NextPageButtonClick(Sender: TObject);

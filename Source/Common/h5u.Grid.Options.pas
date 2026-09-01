@@ -1,4 +1,4 @@
-unit h5u.Grid.Options;
+﻿unit h5u.Grid.Options;
 
 interface
 
@@ -144,6 +144,95 @@ type
       read FLevelColumnId write SetLevelColumnId;
     property BranchEndBand: Th5uTreeBranchEndBandOptions
       read FBranchEndBand write SetBranchEndBand;
+  end;
+
+  // Optional separator after one contiguous run of equal IDs. It replaces
+  // the normal RowSpacing at that boundary; it is never added to it.
+  Th5uAdjacentGroupEndBandOptions = class(TPersistent)
+  private
+    FVisibility: Th5uAdjacentGroupEndBandVisibility;
+    FHeight: Integer;
+    FColor: Th5uColor;
+    FStyleName: string;
+    FOnChanged: Th5uOptionsChangedEvent;
+    procedure Changed;
+    procedure SetColor(const AValue: Th5uColor);
+    procedure SetHeight(const AValue: Integer);
+    procedure SetStyleName(const AValue: string);
+    procedure SetVisibility(
+      const AValue: Th5uAdjacentGroupEndBandVisibility
+    );
+  public
+    constructor Create;
+    procedure Assign(Source: TPersistent); override;
+    property OnChanged: Th5uOptionsChangedEvent
+      read FOnChanged write FOnChanged;
+  published
+    property Visibility: Th5uAdjacentGroupEndBandVisibility
+      read FVisibility write SetVisibility
+      default Th5uAdjacentGroupEndBandVisibility.Never;
+    property Height: Integer
+      read FHeight write SetHeight default 6;
+    property Color: Th5uColor
+      read FColor write SetColor default h5uColorDefault;
+    property StyleName: string
+      read FStyleName write SetStyleName;
+  end;
+
+  // Adjacent-group folding keeps the controller's current order intact. Only
+  // directly consecutive rows with equal IDs form a foldable run. A later run
+  // with the same ID is deliberately independent.
+  Th5uAdjacentGroupFoldingOptions = class(TPersistent)
+  private
+    FEnabled: Boolean;
+    FIdColumnId: string;
+    FInitialState: Th5uAdjacentGroupInitialState;
+    FShowFoldGlyph: Boolean;
+    FCaseSensitive: Boolean;
+    FGroupEmptyValues: Boolean;
+    FPreserveStateOnDataChange: Boolean;
+    FEndBand: Th5uAdjacentGroupEndBandOptions;
+    FOnChanged: Th5uOptionsChangedEvent;
+    procedure Changed;
+    procedure ChildChanged(Sender: TObject);
+    procedure SetCaseSensitive(const AValue: Boolean);
+    procedure SetEnabled(const AValue: Boolean);
+    procedure SetEndBand(
+      const AValue: Th5uAdjacentGroupEndBandOptions
+    );
+    procedure SetGroupEmptyValues(const AValue: Boolean);
+    procedure SetIdColumnId(const AValue: string);
+    procedure SetInitialState(
+      const AValue: Th5uAdjacentGroupInitialState
+    );
+    procedure SetPreserveStateOnDataChange(const AValue: Boolean);
+    procedure SetShowFoldGlyph(const AValue: Boolean);
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure Assign(Source: TPersistent); override;
+    property OnChanged: Th5uOptionsChangedEvent
+      read FOnChanged write FOnChanged;
+  published
+    property Enabled: Boolean
+      read FEnabled write SetEnabled default False;
+    // May name a Column.Id, Column.FieldName or controller field directly.
+    property IdColumnId: string
+      read FIdColumnId write SetIdColumnId;
+    property InitialState: Th5uAdjacentGroupInitialState
+      read FInitialState write SetInitialState
+      default Th5uAdjacentGroupInitialState.Expanded;
+    property ShowFoldGlyph: Boolean
+      read FShowFoldGlyph write SetShowFoldGlyph default True;
+    property CaseSensitive: Boolean
+      read FCaseSensitive write SetCaseSensitive default True;
+    property GroupEmptyValues: Boolean
+      read FGroupEmptyValues write SetGroupEmptyValues default True;
+    property PreserveStateOnDataChange: Boolean
+      read FPreserveStateOnDataChange
+      write SetPreserveStateOnDataChange default True;
+    property EndBand: Th5uAdjacentGroupEndBandOptions
+      read FEndBand write SetEndBand;
   end;
 
   Th5uRowHeightOptions = class(TPersistent)
@@ -683,6 +772,199 @@ begin
   if FLevelColumnId = AValue then
     Exit;
   FLevelColumnId := AValue;
+  Changed;
+end;
+
+{ Th5uAdjacentGroupEndBandOptions }
+
+procedure Th5uAdjacentGroupEndBandOptions.Assign(Source: TPersistent);
+var
+  LSource: Th5uAdjacentGroupEndBandOptions;
+begin
+  if Source is Th5uAdjacentGroupEndBandOptions then
+  begin
+    LSource := Th5uAdjacentGroupEndBandOptions(Source);
+    FVisibility := LSource.FVisibility;
+    FHeight := LSource.FHeight;
+    FColor := LSource.FColor;
+    FStyleName := LSource.FStyleName;
+    Changed;
+  end
+  else
+    inherited Assign(Source);
+end;
+
+procedure Th5uAdjacentGroupEndBandOptions.Changed;
+begin
+  if Assigned(FOnChanged) then
+    FOnChanged(Self);
+end;
+
+constructor Th5uAdjacentGroupEndBandOptions.Create;
+begin
+  inherited Create;
+  FVisibility := Th5uAdjacentGroupEndBandVisibility.Never;
+  FHeight := 6;
+  FColor := h5uColorDefault;
+  FStyleName := '';
+end;
+
+procedure Th5uAdjacentGroupEndBandOptions.SetColor(
+  const AValue: Th5uColor);
+begin
+  if FColor = AValue then
+    Exit;
+  FColor := AValue;
+  Changed;
+end;
+
+procedure Th5uAdjacentGroupEndBandOptions.SetHeight(
+  const AValue: Integer);
+begin
+  if FHeight = AValue then
+    Exit;
+  FHeight := EnsureRange(AValue, 0, 1000);
+  Changed;
+end;
+
+procedure Th5uAdjacentGroupEndBandOptions.SetStyleName(
+  const AValue: string);
+begin
+  if FStyleName = AValue then
+    Exit;
+  FStyleName := AValue;
+  Changed;
+end;
+
+procedure Th5uAdjacentGroupEndBandOptions.SetVisibility(
+  const AValue: Th5uAdjacentGroupEndBandVisibility);
+begin
+  if FVisibility = AValue then
+    Exit;
+  FVisibility := AValue;
+  Changed;
+end;
+
+{ Th5uAdjacentGroupFoldingOptions }
+
+procedure Th5uAdjacentGroupFoldingOptions.Assign(Source: TPersistent);
+var
+  LSource: Th5uAdjacentGroupFoldingOptions;
+begin
+  if Source is Th5uAdjacentGroupFoldingOptions then
+  begin
+    LSource := Th5uAdjacentGroupFoldingOptions(Source);
+    FEnabled := LSource.FEnabled;
+    FIdColumnId := LSource.FIdColumnId;
+    FInitialState := LSource.FInitialState;
+    FShowFoldGlyph := LSource.FShowFoldGlyph;
+    FCaseSensitive := LSource.FCaseSensitive;
+    FGroupEmptyValues := LSource.FGroupEmptyValues;
+    FPreserveStateOnDataChange := LSource.FPreserveStateOnDataChange;
+    FEndBand.Assign(LSource.FEndBand);
+    Changed;
+  end
+  else
+    inherited Assign(Source);
+end;
+
+procedure Th5uAdjacentGroupFoldingOptions.Changed;
+begin
+  if Assigned(FOnChanged) then
+    FOnChanged(Self);
+end;
+
+procedure Th5uAdjacentGroupFoldingOptions.ChildChanged(Sender: TObject);
+begin
+  Changed;
+end;
+
+constructor Th5uAdjacentGroupFoldingOptions.Create;
+begin
+  inherited Create;
+  FEnabled := False;
+  FInitialState := Th5uAdjacentGroupInitialState.Expanded;
+  FShowFoldGlyph := True;
+  FCaseSensitive := True;
+  FGroupEmptyValues := True;
+  FPreserveStateOnDataChange := True;
+  FEndBand := Th5uAdjacentGroupEndBandOptions.Create;
+  FEndBand.OnChanged := ChildChanged;
+end;
+
+destructor Th5uAdjacentGroupFoldingOptions.Destroy;
+begin
+  FEndBand.Free;
+  inherited Destroy;
+end;
+
+procedure Th5uAdjacentGroupFoldingOptions.SetCaseSensitive(
+  const AValue: Boolean);
+begin
+  if FCaseSensitive = AValue then
+    Exit;
+  FCaseSensitive := AValue;
+  Changed;
+end;
+
+procedure Th5uAdjacentGroupFoldingOptions.SetEnabled(
+  const AValue: Boolean);
+begin
+  if FEnabled = AValue then
+    Exit;
+  FEnabled := AValue;
+  Changed;
+end;
+
+procedure Th5uAdjacentGroupFoldingOptions.SetEndBand(
+  const AValue: Th5uAdjacentGroupEndBandOptions);
+begin
+  if Assigned(AValue) then
+    FEndBand.Assign(AValue);
+end;
+
+procedure Th5uAdjacentGroupFoldingOptions.SetGroupEmptyValues(
+  const AValue: Boolean);
+begin
+  if FGroupEmptyValues = AValue then
+    Exit;
+  FGroupEmptyValues := AValue;
+  Changed;
+end;
+
+procedure Th5uAdjacentGroupFoldingOptions.SetIdColumnId(
+  const AValue: string);
+begin
+  if FIdColumnId = AValue then
+    Exit;
+  FIdColumnId := AValue;
+  Changed;
+end;
+
+procedure Th5uAdjacentGroupFoldingOptions.SetInitialState(
+  const AValue: Th5uAdjacentGroupInitialState);
+begin
+  if FInitialState = AValue then
+    Exit;
+  FInitialState := AValue;
+  Changed;
+end;
+
+procedure Th5uAdjacentGroupFoldingOptions.SetPreserveStateOnDataChange(
+  const AValue: Boolean);
+begin
+  if FPreserveStateOnDataChange = AValue then
+    Exit;
+  FPreserveStateOnDataChange := AValue;
+  Changed;
+end;
+
+procedure Th5uAdjacentGroupFoldingOptions.SetShowFoldGlyph(
+  const AValue: Boolean);
+begin
+  if FShowFoldGlyph = AValue then
+    Exit;
+  FShowFoldGlyph := AValue;
   Changed;
 end;
 

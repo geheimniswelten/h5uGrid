@@ -36,6 +36,7 @@ contains
   h5u.Grid.Selection in '..\Source\Common\h5u.Grid.Selection.pas',
   h5u.Grid.Columns in '..\Source\Common\h5u.Grid.Columns.pas',
   h5u.Grid.Options in '..\Source\Common\h5u.Grid.Options.pas',
+  h5u.Grid.AdjacentGroups in '..\Source\Common\h5u.Grid.AdjacentGroups.pas',
   h5u.Grid.Data.Core in '..\Source\Common\h5u.Grid.Data.Core.pas',
   h5u.Grid.Data.DataSet in '..\Source\Common\h5u.Grid.Data.DataSet.pas',
   h5u.Grid.Data.Memory in '..\Source\Common\h5u.Grid.Data.Memory.pas',

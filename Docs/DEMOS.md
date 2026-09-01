@@ -27,6 +27,11 @@ Zweck:
 - Grid-Defaultfarbe und eigene Farben einzelner Columns
 - eigener rechter Abstand der Beschreibungs-Column
 - `TREE_LEVEL`-Musterdaten und schaltbare Tree-Abschlussleiste, die das normale Row-Spacing am Astende ersetzt
+- unsichtbare `FOLD_GROUP`-Column für aufeinanderfolgende gleiche IDs
+- wiederkehrende ID `1` in zwei getrennten Läufen, um unabhängige Faltzustände zu demonstrieren
+- schaltbares Adjacent-Group-Folding mit Plus-/Minus-Symbol
+- Abschlussleistenmodus `Nie`, `Nur eingeklappt`, `Nur ausgeklappt` oder `Immer`
+- Schaltfläche zum gemeinsamen Ein- und Ausklappen aller faltbaren Läufe
 
 Dies ist die wichtigste Referenzdemo des Prototyps.
 
@@ -79,6 +84,8 @@ Zweck:
 - schaltbare 1-Pixel-Trennflächen und Column-Farben
 - eigener rechter Column-Abstand als Layoutbeispiel
 - derselbe `TREE_LEVEL`-/Tree-Abschlussleisten-Test wie unter VCL
+- derselbe `FOLD_GROUP`-Test mit unabhängigen, aufeinanderfolgenden Läufen
+- dieselben vier Sichtbarkeitsmodi der Adjacent-Group-Abschlussleiste
 
 ## FMX ObjectList
 
@@ -112,11 +119,13 @@ Zweck:
 
 1. VCL ClientDataSet bauen und starten.
 2. RowHeight, Trennlinien, Tree-Abschlussleiste, Column-Farben, Dark Mode, Bildspalte und Paging einzeln schalten.
-3. Columns per Maus verschieben, skalieren und ausblenden.
-4. Row-, Column- und Zellbereichselektion prüfen.
-5. ObjectList-Demo mit Cache an/aus vergleichen.
-6. VirtualLive-Demo während laufender Inserts scrollen.
-7. Anschließend dieselben Datenpfade in FMX vergleichen.
+3. `Folgegruppen falten` aktivieren und die beiden getrennten Läufe mit ID `1` unabhängig öffnen und schließen.
+4. Alle vier Abschlussleistenmodi prüfen. Die Leiste muss das normale Row-Spacing ersetzen und darf nicht zusätzlich erscheinen.
+5. Columns per Maus verschieben, skalieren und ausblenden. Die ausgeblendete `FOLD_GROUP`-Column muss weiterhin funktionieren.
+6. Row-, Column- und Zellbereichselektion prüfen.
+7. ObjectList-Demo mit Cache an/aus vergleichen.
+8. VirtualLive-Demo während laufender Inserts scrollen.
+9. Anschließend dieselben Datenpfade in FMX vergleichen.
 
 ## Designer-Test
 

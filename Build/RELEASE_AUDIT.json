@@ -1,7 +1,7 @@
 {
   "date": "2026-09-01",
-  "version": "0.1.2",
-  "source_units": 20,
+  "version": "0.1.3",
+  "source_units": 21,
   "demo_projects": 6,
   "checks": {
     "required-layout": {
@@ -44,6 +44,11 @@
       "errors": 0,
       "warnings": 0,
       "status": "Tree branch-end semantic checks: 12 passed"
+    },
+    "adjacent-group-folding-semantics": {
+      "errors": 0,
+      "warnings": 0,
+      "status": "Adjacent-group-folding semantic checks: 16 passed"
     },
     "tree-sitter-pascal": {
       "errors": 0,

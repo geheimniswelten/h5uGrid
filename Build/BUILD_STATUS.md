@@ -1,7 +1,7 @@
 # Build- und Prüfstatus
 
 **Stand:** 1. September 2026  
-**Prototypversion:** 0.1.2
+**Prototypversion:** 0.1.3
 
 ## Umfang
 
@@ -9,7 +9,9 @@
 - sechs Demo-Projekte,
 - Datenpfade für `TDataSource`/`TClientDataSet`, RTTI-Objektlisten, Memory-Daten und Event-/VirtualSource,
 - Spacing-, Separator- und Farb-API in VCL und FMX,
-- Tree-Ast-Abschlussleiste mit Level-Column-/Event-Erkennung, eigenem Style und per Grid austauschbarer Factory-Zelle.
+- Tree-Ast-Abschlussleiste mit Level-Column-/Event-Erkennung, eigenem Style und per Grid austauschbarer Factory-Zelle,
+- Adjacent-Group-Folding für unmittelbar aufeinanderfolgende gleiche IDs mit unabhängigen Wiederholungen,
+- Plus-/Minus-Faltzeichen und alternative Abschlussleiste mit den Modi `Never`, `CollapsedOnly`, `ExpandedOnly` und `Always`.
 
 ## Durchgeführte Prüfungen
 
@@ -18,13 +20,15 @@
 - PowerShell-Buildskript referenziert alle enthaltenen Packages und Demo-DPRs,
 - DFM-/FMX-Ressourcen und Eventhandler,
 - h5u-Namenskonventionen und Plattformtrennung,
-- Vorhandensein der neuen Spacing-/Farb-Signaturen,
-- Standardwerte `1 px` und `h5uColorLightGray`,
-- `RightSpacing = -1` als Vererbung und `0` als Deaktivierung,
-- Demo-Verdrahtung für Trennflächen, Column-Farben und Tree-Abschlussleiste,
-- Ersetzung statt Addition von `RowSpacing` an erkannten Astenden,
-- semantischer Tree-Test mit 12 Fällen einschließlich mehrerer geschlossener Ebenen, Datenende, Höhe `0` und Pagination-Look-ahead,
-- Deklarations-/Implementierungskonsistenz der geänderten Core-, Column-, VCL- und FMX-Klassen.
+- Factory-IDs, Optionen, Kontexte und öffentliche API des Adjacent-Group-Foldings,
+- lokale Factory-Erzeugung von Faltzeichen und Abschlussleiste in VCL und FMX,
+- sichtbare View-zu-Controller-Abbildung ohne Änderung der Quellreihenfolge,
+- Zustandsanker aus erstem RowKey des jeweiligen zusammenhängenden Laufs,
+- ausgeblendete `FOLD_GROUP`-Column und getrennte Wiederholungen derselben ID in beiden ClientDataSet-Demos,
+- Ersatz statt Addition von `RowSpacing` durch Tree- und Adjacent-Group-Abschlussleisten,
+- semantischer Tree-Test mit 12 Fällen,
+- semantischer Adjacent-Group-Test mit 16 Fällen einschließlich aller vier Abschlussleistenmodi,
+- Deklarations-/Implementierungskonsistenz der geänderten Core-, Options-, VCL- und FMX-Klassen.
 
 Die aktuellen maschinellen Ergebnisse stehen in `STATIC_AUDIT.md` und `RELEASE_AUDIT.md`.
 
@@ -38,12 +42,16 @@ Die statischen Prüfungen ersetzen insbesondere keine Prüfung versionsabhängig
 
 - Die VCL-Implementierung bleibt der vollständigere Referenzpfad.
 - FMX verwendet denselben Core und dieselben Controller; einzelne Komfortfunktionen besitzen noch keine vollständige Parität.
-- Sortier-, Filter-, Gruppierungs-, vollständige TreeView-, Footer-, SubView-, VerticalGrid-, Export- und Druckmodule sind weiterhin Ausbaustufen und keine vollständig fertigen Produktmodule.
+- Adjacent-Group-Folding ist als eigenständige sichtbare Laufabbildung umgesetzt. Es ersetzt keine vollständige normale Gruppierungsengine.
+- Der aktuelle Laufindex wird aus der geladenen Controller-Ansicht beziehungsweise der aktuellen nummerierten Seite aufgebaut. Für sehr große Remotequellen ist später eine servergestützte Laufmetadaten-Schnittstelle sinnvoll.
+- Sortier-, Filter-, vollständige Gruppierungs-, vollständige TreeView-, Footer-, SubView-, VerticalGrid-, Export- und Druckmodule bleiben weitere Ausbaustufen.
 
 ## Reproduzierbare Prüfungen
 
 ```text
 python Build\source_audit.py
+python Build\test_tree_branch_end.py
+python Build\test_adjacent_group_folding.py
 python Build\release_audit.py
 Build\build-delphi.ps1 -DelphiBin "C:\Program Files (x86)\Embarcadero\Studio\<Version>\bin"
 ```

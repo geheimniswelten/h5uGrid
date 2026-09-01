@@ -26,6 +26,10 @@ Legende:
 | Column-Abstand rechts | Ja | Ja | Ja | `-1` erbt Grid-Default |
 | Row-Abstand per Event | Ja | Ja | Ja | vorgeschlagener Wert als `var`-Parameter |
 | Tree-Ast-Abschlussleiste | Ja | Ja | Ja | ersetzt RowSpacing; Level-Column oder Events |
+| Adjacent-Group-Folding | Ja | Ja | Ja | nur unmittelbar aufeinanderfolgende gleiche IDs; Reihenfolge bleibt erhalten |
+| unabhängige Wiederholungen derselben ID | Ja | Ja | Ja | Zustand über Anchor-RowKey des jeweiligen Laufs |
+| Faltzeichen pro Folgegruppe | Ja | Ja | Ja | Plus/Minus; lokaler Factory-Scope und CustomDraw |
+| Adjacent-Group-Abschlussleiste | Ja | Ja | Ja | nie/nur eingeklappt/nur ausgeklappt/immer; ersetzt RowSpacing |
 | Separator-CustomDraw | Ja | Ja | Ja | Row/Column/ContentPadding |
 | Grid-/Column-Zellfarben | Ja | Ja | Ja | plattformneutrale ARGB-Werte |
 | Textzelle | Ja | Ja | Ja | Word-Wrap |
@@ -66,8 +70,9 @@ Legende:
 
 1. Der Lieferstand wurde nicht mit DCC32/DCC64 in der Erstellungsumgebung kompiliert.
 2. FMX ist der Portabilitätsnachweis, nicht in allen Details gleich weit wie VCL.
-3. Sortierung, FilterPanel, Gruppierung, vollständiges TreeTableView, VerticalGrid und Footer-Summaries sind noch keine vollständigen Laufzeitmodule.
+3. Sortierung, FilterPanel, vollständige normale Gruppierung, vollständiges TreeTableView, VerticalGrid und Footer-Summaries sind noch keine vollständigen Laufzeitmodule. Das Adjacent-Group-Folding ist dagegen als eigenständige sichtbare Laufabbildung implementiert.
 4. Asynchroner VirtualSource-Fetch, Cancel-Tokens und echte Server-Cursor sind im Konzept vorgesehen, in den Demos aber bewusst synchron gehalten.
 5. Persistenz von Benutzerlayouts ist als ID-basiertes Format konzipiert, im Teststand jedoch noch nicht als vollständiger Layout-Migrationsdienst umgesetzt.
 6. Bildbearbeitung deckt Laden, Anzeigen und Rückschreiben ab; Zuschneiden, Drehen und Re-Encoding gehören in ein späteres Editor-Zusatzmodul.
-7. Vor produktivem Einsatz sind Belastungstests mit sehr großen Quellen, High-DPI, verschiedenen Styles, IME, Screenreadern und den konkret unterstützten Delphi-Versionen erforderlich.
+7. Das Adjacent-Group-Folding baut im Prototyp die Laufabbildung über die aktuelle Controller-Ansicht beziehungsweise Seite auf. Sehr große Remotequellen benötigen später serverseitige Laufmetadaten oder ein inkrementelles Mapping.
+8. Vor produktivem Einsatz sind Belastungstests mit sehr großen Quellen, High-DPI, verschiedenen Styles, IME, Screenreadern und den konkret unterstützten Delphi-Versionen erforderlich.

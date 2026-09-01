@@ -29,6 +29,7 @@ type
     ErrorBackground: TAlphaColor;
     WarningBackground: TAlphaColor;
     TreeBranchEndBackground: TAlphaColor;
+    AdjacentGroupEndBackground: TAlphaColor;
     DisabledText: TAlphaColor;
     ThumbHintBackground: TAlphaColor;
     ThumbHintText: TAlphaColor;
@@ -77,6 +78,7 @@ begin
         Result.ErrorBackground := $FFFFD7D7;
         Result.WarningBackground := $FFFFF4D6;
         Result.TreeBranchEndBackground := $FFD6DCE3;
+        Result.AdjacentGroupEndBackground := $FFCAD4DE;
         Result.DisabledText := $FF808080;
         Result.ThumbHintBackground := $FFFFFFE1;
         Result.ThumbHintText := $FF000000;
@@ -102,6 +104,7 @@ begin
         Result.ErrorBackground := $FF4D3038;
         Result.WarningBackground := $FF473F2B;
         Result.TreeBranchEndBackground := $FF414B55;
+        Result.AdjacentGroupEndBackground := $FF495561;
         Result.DisabledText := $FF888888;
         Result.ThumbHintBackground := $FF404040;
         Result.ThumbHintText := $FFFFFFFF;
@@ -129,6 +132,7 @@ begin
       Result.ErrorBackground := $FFFFE7E7;
       Result.WarningBackground := $FFFFF5DD;
       Result.TreeBranchEndBackground := $FFD8E2EB;
+      Result.AdjacentGroupEndBackground := $FFCBD9E5;
       Result.DisabledText := $FF808080;
       Result.ThumbHintBackground := $FF383838;
       Result.ThumbHintText := $FFFFFFFF;
