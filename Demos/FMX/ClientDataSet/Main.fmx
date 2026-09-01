@@ -10,7 +10,7 @@
   OnCreate = FormCreate
   object ToolBar: TToolBar
     Size.Width = 1100.000000000000000000
-    Size.Height = 52.000000000000000000
+    Size.Height = 84.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 0
     object AutoHeightCheck: TCheckBox
@@ -100,16 +100,31 @@
       Text = 'Spaltenfarben'
       OnChange = OptionClick
     end
+    object TreeEndBandCheck: TCheckBox
+      Position.X = 8.000000000000000000
+      Position.Y = 52.000000000000000000
+      Size.Width = 190.000000000000000000
+      Size.Height = 24.000000000000000000
+      Size.PlatformDefault = False
+      IsChecked = True
+      Text = 'Tree-Abschlussleiste'
+      OnChange = OptionClick
+    end
   end
   object Grid: Th5uFmxGrid
     Align = Client
-    Position.Y = 52.000000000000000000
+    Position.Y = 84.000000000000000000
     Size.Width = 1100.000000000000000000
-    Size.Height = 588.000000000000000000
+    Size.Height = 556.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 1
     DataController = DataController
     Appearance.DefaultCellColor = 4294835709
+    Tree.Enabled = True
+    Tree.LevelColumnId = 'TREE_LEVEL'
+    Tree.BranchEndBand.Enabled = True
+    Tree.BranchEndBand.Height = 7
+    Tree.BranchEndBand.StyleName = 'TreeBranchEnd'
     Columns = <
       item
         Id = 'id'
@@ -188,9 +203,9 @@
         Color = 4293589228
       end
       item
-        Id = 'created_at'
-        Caption = 'Erstellt'
-        FieldName = 'CREATED_AT'
+        Id = 'updated_at'
+        Caption = 'Aktualisiert'
+        FieldName = 'UPDATED_AT'
         Width = 145
         VisibleIndex = 8
         DataType = DateTime
@@ -230,8 +245,6 @@
     OnGetThumbHint = GridGetThumbHint
   end
   object SampleData: Th5uSampleClientDataSet
-    PopulateAtDesignTime = True
-    SampleRecordCount = 36
     IncludeImages = True
     Left = 32
     Top = 88

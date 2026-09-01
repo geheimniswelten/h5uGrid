@@ -1,14 +1,15 @@
 # Build- und Prüfstatus
 
 **Stand:** 1. September 2026  
-**Prototypversion:** 0.1.1
+**Prototypversion:** 0.1.2
 
 ## Umfang
 
 - gemeinsamer Delphi-Core sowie getrennte VCL-/FMX-Renderer,
 - sechs Demo-Projekte,
 - Datenpfade für `TDataSource`/`TClientDataSet`, RTTI-Objektlisten, Memory-Daten und Event-/VirtualSource,
-- neue Spacing-, Separator- und Farb-API in VCL und FMX.
+- Spacing-, Separator- und Farb-API in VCL und FMX,
+- Tree-Ast-Abschlussleiste mit Level-Column-/Event-Erkennung, eigenem Style und per Grid austauschbarer Factory-Zelle.
 
 ## Durchgeführte Prüfungen
 
@@ -20,7 +21,9 @@
 - Vorhandensein der neuen Spacing-/Farb-Signaturen,
 - Standardwerte `1 px` und `h5uColorLightGray`,
 - `RightSpacing = -1` als Vererbung und `0` als Deaktivierung,
-- Demo-Verdrahtung für Trennflächen und Column-Farben,
+- Demo-Verdrahtung für Trennflächen, Column-Farben und Tree-Abschlussleiste,
+- Ersetzung statt Addition von `RowSpacing` an erkannten Astenden,
+- semantischer Tree-Test mit 12 Fällen einschließlich mehrerer geschlossener Ebenen, Datenende, Höhe `0` und Pagination-Look-ahead,
 - Deklarations-/Implementierungskonsistenz der geänderten Core-, Column-, VCL- und FMX-Klassen.
 
 Die aktuellen maschinellen Ergebnisse stehen in `STATIC_AUDIT.md` und `RELEASE_AUDIT.md`.
@@ -35,7 +38,7 @@ Die statischen Prüfungen ersetzen insbesondere keine Prüfung versionsabhängig
 
 - Die VCL-Implementierung bleibt der vollständigere Referenzpfad.
 - FMX verwendet denselben Core und dieselben Controller; einzelne Komfortfunktionen besitzen noch keine vollständige Parität.
-- Sortier-, Filter-, Gruppierungs-, Tree-, Footer-, SubView-, VerticalGrid-, Export- und Druckmodule sind weiterhin Ausbaustufen und keine vollständig fertigen Produktmodule.
+- Sortier-, Filter-, Gruppierungs-, vollständige TreeView-, Footer-, SubView-, VerticalGrid-, Export- und Druckmodule sind weiterhin Ausbaustufen und keine vollständig fertigen Produktmodule.
 
 ## Reproduzierbare Prüfungen
 

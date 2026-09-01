@@ -1,7 +1,7 @@
 # Reproduzierbarer Release-Audit
 
 **Stand:** 1. September 2026  
-**Version:** 0.1.1
+**Version:** 0.1.2
 
 - Source-Units: **20**
 - Demo-Projekte: **6**
@@ -18,6 +18,8 @@
 - `documented-public-api`: 0 Fehler, 0 Warnungen
 - `source-placeholders-and-version`: 0 Fehler, 0 Warnungen
 - `declaration-implementation-consistency`: 0 Fehler, 0 Warnungen
+- `clientdataset-demo-contract`: 0 Fehler, 0 Warnungen
+- `tree-branch-end-semantics`: 0 Fehler, 0 Warnungen – Tree branch-end semantic checks: 12 passed
 - `tree-sitter-pascal`: 0 Fehler, 0 Warnungen – optionale Abhängigkeit nicht installiert
 
 ## Befunde

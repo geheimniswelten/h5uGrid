@@ -40,6 +40,8 @@ USES_PATH_RE = re.compile(
 )
 
 KNOWN_BAD_PATTERNS = [
+    (re.compile(r"(?m)^\s*begin\s*$\n\s*begin\s*$"),
+     "duplicate begin block is likely a Delphi syntax error"),
     (re.compile(r"\bread\s+GetCollection\s*;"), "typed property still reads TCollection.GetCollection"),
     (re.compile(r"\b(?:Max|Min|EnsureRange)\s*<\s*(?:Int64|Integer)\s*>\s*\("),
      "C++-style generic call is not valid for Delphi Math overloads"),
@@ -55,6 +57,122 @@ def line_of(text: str, offset: int) -> int:
 def rel(path: Path, root: Path) -> str:
     return path.relative_to(root).as_posix()
 
+
+
+def check_balanced_delimiters(
+    text: str,
+    path: Path,
+    root: Path,
+    findings: list[Finding],
+) -> None:
+    """Check () and [] outside Delphi strings and comments.
+
+    This deliberately stays below the level of a Pascal parser, but catches
+    common editing leftovers without depending on third-party packages.
+    """
+    stack: list[tuple[str, int]] = []
+    pairs = {")": "(", "]": "["}
+    i = 0
+    length = len(text)
+    state = "code"
+    comment_stack: list[str] = []
+
+    while i < length:
+        ch = text[i]
+        nxt = text[i + 1] if i + 1 < length else ""
+
+        if state == "string":
+            if ch == "'":
+                if nxt == "'":
+                    i += 2
+                    continue
+                state = "code"
+            i += 1
+            continue
+
+        if state == "line-comment":
+            if ch in "\r\n":
+                state = "code"
+            i += 1
+            continue
+
+        if state == "comment":
+            if ch == "{" and (not comment_stack or comment_stack[-1] == "{"):
+                comment_stack.append("{")
+                i += 1
+                continue
+            if ch == "(" and nxt == "*":
+                comment_stack.append("(*")
+                i += 2
+                continue
+            if ch == "}" and comment_stack and comment_stack[-1] == "{":
+                comment_stack.pop()
+                i += 1
+                if not comment_stack:
+                    state = "code"
+                continue
+            if ch == "*" and nxt == ")" and comment_stack and comment_stack[-1] == "(*":
+                comment_stack.pop()
+                i += 2
+                if not comment_stack:
+                    state = "code"
+                continue
+            i += 1
+            continue
+
+        if ch == "'":
+            state = "string"
+            i += 1
+            continue
+        if ch == "/" and nxt == "/":
+            state = "line-comment"
+            i += 2
+            continue
+        if ch == "{":
+            state = "comment"
+            comment_stack = ["{"]
+            i += 1
+            continue
+        if ch == "(" and nxt == "*":
+            state = "comment"
+            comment_stack = ["(*"]
+            i += 2
+            continue
+
+        if ch in "([":
+            stack.append((ch, i))
+        elif ch in ")]":
+            if not stack or stack[-1][0] != pairs[ch]:
+                findings.append(
+                    Finding(
+                        "error",
+                        rel(path, root),
+                        line_of(text, i),
+                        f"unmatched delimiter {ch!r}",
+                    )
+                )
+                return
+            stack.pop()
+        i += 1
+
+    if state == "string":
+        findings.append(
+            Finding("error", rel(path, root), len(text.splitlines()), "unterminated string literal")
+        )
+    elif state == "comment":
+        findings.append(
+            Finding("error", rel(path, root), len(text.splitlines()), "unterminated block comment")
+        )
+    if stack:
+        delimiter, offset = stack[-1]
+        findings.append(
+            Finding(
+                "error",
+                rel(path, root),
+                line_of(text, offset),
+                f"unclosed delimiter {delimiter!r}",
+            )
+        )
 
 def check_pascal_file(path: Path, root: Path, findings: list[Finding]) -> None:
     text = path.read_text(encoding="utf-8-sig")
@@ -73,6 +191,8 @@ def check_pascal_file(path: Path, root: Path, findings: list[Finding]) -> None:
                         f"unit name {unit_name!r} does not match file name {path.stem!r}",
                     )
                 )
+
+    check_balanced_delimiters(text, path, root, findings)
 
     for pattern, message in KNOWN_BAD_PATTERNS:
         for bad in pattern.finditer(text):

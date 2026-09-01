@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
 import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -94,6 +95,7 @@ def check_layout() -> None:
         "Docs/QUICKHELP.md",
         "Docs/FEATURE-MATRIX.md",
         "VERSION.txt",
+        "Build/test_tree_branch_end.py",
     ]
     for rel in required:
         if not (ROOT / rel).is_file():
@@ -237,7 +239,11 @@ def check_factory_and_features() -> None:
         (r"\bColumn\s*:\s*TObject", "Column-Zeiger im Factory-Kontext"),
         (r"\bRowKey\s*:\s*Th5uRowKey", "RowKey im Factory-Kontext"),
         (r"Th5uVerticalScrollMode\s*=.*?WholeRows.*?PixelSnap", "vertikale Scrollmodi"),
-        (r"RowSpacing.*?ColumnSpacing.*?ContentPadding", "Separator-Elementarten"),
+        (r"RowSpacing.*?ColumnSpacing.*?ContentPadding.*?TreeBranchEndBand", "Separator- und Tree-Abschlusselementarten"),
+        (r"h5uClassIdGridTreeBranchEndBand.*?h5u\.grid\.spacing\.tree-branch-end", "Factory-ID der Tree-Abschlussleiste"),
+        (r"TreeLevel\s*:\s*Integer.*?ClosedTreeLevels\s*:\s*Integer", "Tree-Metadaten im Factory-Kontext"),
+        (r"Th5uGetTreeLevelEvent", "Tree-Level-Event"),
+        (r"Th5uGetTreeBranchEndEvent", "Tree-Astende-Event"),
         (r"h5uColorLightGray\s*=\s*Th5uColor\(\$FFD3D3D3\)", "hellgrauer Defaultfarbwert"),
     ])
     require_patterns(name, "Source/Common/h5u.Grid.Factory.pas", [
@@ -263,6 +269,13 @@ def check_factory_and_features() -> None:
         (r"procedure\s+SetAllSeparators\s*\(", "gemeinsames Aktivieren/Deaktivieren"),
         (r"Th5uGridAppearanceOptions", "Grid-Appearance"),
         (r"DefaultCellColor", "Grid-Defaultfarbe"),
+        (r"Th5uTreeBranchEndBandOptions\s*=\s*class", "Tree-Abschlussleisten-Optionen"),
+        (r"property\s+Height:.*?default\s+6", "Tree-Abschlussleistenhöhe"),
+        (r"FStyleName\s*:=\s*''", "optionaler Style der Tree-Abschlussleiste"),
+        (r"property\s+IncludeEndOfData:.*?default\s+True", "Tree-Abschluss am Datenende"),
+        (r"Th5uTreeOptions\s*=\s*class", "Tree-Optionen"),
+        (r"property\s+LevelColumnId", "Tree-Level-Column"),
+        (r"property\s+BranchEndBand", "Tree-Abschlussleisten-Property"),
     ])
     require_patterns(name, "Source/Common/h5u.Grid.Columns.pas", [
         (r"property\s+RightSpacing:.*?default\s+-1", "RightSpacing mit Vererbungswert -1"),
@@ -288,6 +301,14 @@ def check_factory_and_features() -> None:
             (r"DrawSpacingRect", "Separator-Rendering"),
             (r"DrawContentPadding", "Außenrand-Rendering"),
             (r"GetEffectiveColumnRightSpacing", "Column-Vererbung"),
+            (r"property\s+Tree:\s*Th5uTreeOptions", "Tree-Optionen am Grid"),
+            (r"OnGetTreeLevel", "Tree-Level-Event am Grid"),
+            (r"OnGetTreeBranchEnd", "Tree-Astende-Event am Grid"),
+            (r"GetEffectiveRowSeparatorFor.*?Result\s*:=\s*FTree\.BranchEndBand\.Height", "Tree-Abschluss ersetzt den normalen Separator"),
+            (r"Th5uElementKind\.TreeBranchEndBand", "Tree-Abschluss-Rendering"),
+            (r"Th5u(?:Vcl|Fmx)SpacingCell\s*=\s*class", "gepoolte Separator-/Abschlusszelle"),
+            (r"DrawSpacingRect.*?AcquireVisualCell", "Separatoren durchlaufen den lokalen Factory-Scope"),
+            (r"ClosedTreeLevels", "Anzahl geschlossener Tree-Ebenen im Zeichenkontext"),
             (r"FactoryScope", "Factory-Scope pro Grid"),
             (r"AcquireVisualCell", "gepoolte sichtbare Zellobjekte"),
         ])
@@ -296,12 +317,23 @@ def check_factory_and_features() -> None:
         (r"RightSpacing\s*:=\s*8", "VCL individueller Column-Abstand"),
         (r"DefaultCellColor", "VCL Grid-Farbe"),
         (r"\.Color\s*:=\s*h5uColorFromRgb", "VCL Column-Farbe"),
+        (r"Grid\.Tree\.Enabled\s*:=\s*TreeEndBandCheck\.Checked", "VCL Tree-Abschluss-Schalter"),
+        (r"Tree\.BranchEndBand\.Enabled", "VCL Tree-Abschlussoption"),
     ])
     require_patterns(name, "Demos/FMX/ClientDataSet/Main.pas", [
         (r"Grid\.GridLines\s*:=\s*SeparatorsCheck\.IsChecked", "FMX Separator-Schalter"),
         (r"RightSpacing\s*:=\s*8", "FMX individueller Column-Abstand"),
         (r"DefaultCellColor", "FMX Grid-Farbe"),
         (r"\.Color\s*:=\s*h5uColorFromRgb", "FMX Column-Farbe"),
+        (r"Grid\.Tree\.Enabled\s*:=\s*TreeEndBandCheck\.IsChecked", "FMX Tree-Abschluss-Schalter"),
+        (r"Tree\.BranchEndBand\.Enabled", "FMX Tree-Abschlussoption"),
+    ])
+    require_patterns(name, "Source/Common/h5u.Grid.SampleData.pas", [
+        (r"Name\s*:=\s*'TREE_LEVEL'", "TREE_LEVEL-Feld in den Designer-Musterdaten"),
+        (r"FieldByName\('TREE_LEVEL'\)\.AsInteger", "TREE_LEVEL-Werte in den Musterdaten"),
+    ])
+    require_patterns(name, "Source/Common/h5u.Grid.Data.Core.pas", [
+        (r"function\s+IsRowAvailable", "seitenübergreifender Tree-Lookahead"),
     ])
     finish(name, before)
 
@@ -343,12 +375,12 @@ def check_placeholders_and_version() -> None:
         for match in re.finditer(r"\b(?:TODO-COMPILE|FIXME-COMPILE|NotImplemented|<UNRESOLVED>)\b", value, re.I):
             add("error", name, path, f"Nicht aufgelöster Platzhalter: {match.group(0)}", line_no(value, match.start()))
     version = read(ROOT / "VERSION.txt").strip() if (ROOT / "VERSION.txt").exists() else ""
-    if version != "0.1.1":
-        add("error", name, ROOT / "VERSION.txt", f"Erwartete Version 0.1.1, gefunden {version!r}")
+    if version != "0.1.2":
+        add("error", name, ROOT / "VERSION.txt", f"Erwartete Version 0.1.2, gefunden {version!r}")
     for rel in ("README.md", "CHANGELOG.md", "Build/BUILD_STATUS.md"):
         path = ROOT / rel
-        if path.exists() and "0.1.1" not in read(path):
-            add("error", name, path, "Version 0.1.1 wird nicht genannt")
+        if path.exists() and "0.1.2" not in read(path):
+            add("error", name, path, "Version 0.1.2 wird nicht genannt")
     finish(name, before)
 
 
@@ -360,8 +392,12 @@ def check_method_consistency() -> None:
     targets = [
         ("Source/Common/h5u.Grid.Options.pas", "Th5uGridSpacingOptions"),
         ("Source/Common/h5u.Grid.Options.pas", "Th5uGridAppearanceOptions"),
+        ("Source/Common/h5u.Grid.Options.pas", "Th5uTreeBranchEndBandOptions"),
+        ("Source/Common/h5u.Grid.Options.pas", "Th5uTreeOptions"),
         ("Source/Common/h5u.Grid.Columns.pas", "Th5uGridColumn"),
+        ("Source/Vcl/Vcl.h5u.Grid.pas", "Th5uVclSpacingCell"),
         ("Source/Vcl/Vcl.h5u.Grid.pas", "Th5uVclGrid"),
+        ("Source/FMX/FMX.h5u.Grid.pas", "Th5uFmxSpacingCell"),
         ("Source/FMX/FMX.h5u.Grid.pas", "Th5uFmxGrid"),
     ]
     for rel, class_name in targets:
@@ -400,6 +436,60 @@ def check_method_consistency() -> None:
         for method in sorted(implementations - declarations):
             add("error", name, path, f"Deklaration fehlt: {class_name}.{method}")
     finish(name, before)
+
+
+def check_demo_sample_contract() -> None:
+    name = "clientdataset-demo-contract"
+    before = len(findings)
+    stale = (
+        "PopulateAtDesignTime",
+        "SampleRecordCount",
+        "SampleDataKind",
+        "RebuildSampleData",
+        "CREATED_AT",
+    )
+    for rel in (
+        "Demos/VCL/ClientDataSet/Main.pas",
+        "Demos/VCL/ClientDataSet/Main.dfm",
+        "Demos/FMX/ClientDataSet/Main.pas",
+        "Demos/FMX/ClientDataSet/Main.fmx",
+    ):
+        path = ROOT / rel
+        value = read(path)
+        for token in stale:
+            match = re.search(r"\b" + re.escape(token) + r"\b", value, re.I)
+            if match:
+                add("error", name, path, f"Veraltete Demo-Signatur: {token}", line_no(value, match.start()))
+    for rel in (
+        "Demos/VCL/ClientDataSet/Main.dfm",
+        "Demos/FMX/ClientDataSet/Main.fmx",
+    ):
+        require_patterns(name, rel, [
+            (r"Tree\.LevelColumnId\s*=\s*'TREE_LEVEL'", "TREE_LEVEL im Designer"),
+            (r"Tree\.BranchEndBand\.Enabled\s*=\s*True", "aktive Tree-Abschlussleiste im Designer"),
+        ])
+    finish(name, before)
+
+
+def check_tree_branch_end_semantics() -> None:
+    name = "tree-branch-end-semantics"
+    before = len(findings)
+    script = BUILD / "test_tree_branch_end.py"
+    if not script.is_file():
+        add("error", name, script, "Semantischer Tree-Test fehlt")
+        finish(name, before)
+        return
+    result = subprocess.run(
+        [sys.executable, str(script)],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        detail = (result.stderr or result.stdout or "unbekannter Fehler").strip()
+        add("error", name, script, f"Semantischer Tree-Test fehlgeschlagen: {detail}")
+    finish(name, before, (result.stdout or "").strip() or None)
 
 def check_optional_parser() -> None:
     name = "tree-sitter-pascal"
@@ -476,6 +566,8 @@ def main() -> int:
     check_documented_api()
     check_placeholders_and_version()
     check_method_consistency()
+    check_demo_sample_contract()
+    check_tree_branch_end_semantics()
     check_optional_parser()
     return write_reports()
 

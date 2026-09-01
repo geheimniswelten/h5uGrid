@@ -37,6 +37,8 @@ const
   h5uClassIdGridRowSpacing = Th5uClassId('h5u.grid.spacing.row');
   h5uClassIdGridColumnSpacing = Th5uClassId('h5u.grid.spacing.column');
   h5uClassIdGridContentPadding = Th5uClassId('h5u.grid.spacing.content-padding');
+  h5uClassIdGridTreeBranchEndBand =
+    Th5uClassId('h5u.grid.spacing.tree-branch-end');
   h5uClassIdDataSession = Th5uClassId('h5u.grid.data.session');
   h5uClassIdDataCache = Th5uClassId('h5u.grid.data.cache');
   h5uClassIdDataPage = Th5uClassId('h5u.grid.data.page');
@@ -78,6 +80,7 @@ type
     RowSpacing,
     ColumnSpacing,
     ContentPadding,
+    TreeBranchEndBand,
     DetailView,
     DataSession,
     DataCache,
@@ -99,7 +102,8 @@ type
     ReadOnly,
     OddRow,
     EvenRow,
-    PatternRow
+    PatternRow,
+    TreeBranchEnd
   );
   Th5uElementFlags = set of Th5uElementFlag;
 
@@ -150,6 +154,8 @@ type
     LayoutColumn: Integer;
     RowSpan: Integer;
     ColumnSpan: Integer;
+    TreeLevel: Integer;
+    ClosedTreeLevels: Integer;
 
     ClassId: Th5uClassId;
     CreationReason: Th5uCreationReason;
@@ -160,6 +166,40 @@ type
       AElementKind: Th5uElementKind
     ): Th5uFactoryContext; static;
   end;
+
+  Th5uTreeLevelContext = record
+    Grid: TObject;
+    DataController: TObject;
+    RowKey: Th5uRowKey;
+    ViewRowIndex: Int64;
+    SourceRowIndex: Int64;
+  end;
+
+  Th5uGetTreeLevelEvent = procedure(
+    Sender: TObject;
+    const AContext: Th5uTreeLevelContext;
+    var ALevel: Integer;
+    var AAvailable: Boolean
+  ) of object;
+
+  Th5uTreeBranchEndContext = record
+    Grid: TObject;
+    DataController: TObject;
+    RowKey: Th5uRowKey;
+    NextRowKey: Th5uRowKey;
+    ViewRowIndex: Int64;
+    SourceRowIndex: Int64;
+    CurrentLevel: Integer;
+    NextLevel: Integer;
+    IsEndOfData: Boolean;
+  end;
+
+  Th5uGetTreeBranchEndEvent = procedure(
+    Sender: TObject;
+    const AContext: Th5uTreeBranchEndContext;
+    var AIsBranchEnd: Boolean;
+    var AClosedLevels: Integer
+  ) of object;
 
   Th5uGridTheme = (
     ApplicationStyle,
@@ -406,6 +446,8 @@ begin
   Result.LayoutColumn := -1;
   Result.RowSpan := 1;
   Result.ColumnSpan := 1;
+  Result.TreeLevel := -1;
+  Result.ClosedTreeLevels := 0;
   Result.CreationReason := Th5uCreationReason.Runtime;
 end;
 

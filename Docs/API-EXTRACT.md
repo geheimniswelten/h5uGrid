@@ -3,7 +3,638 @@
 > Automatisch aus den vollständigen `interface`-Abschnitten des ausgelieferten Quellstands erzeugt. Maßgeblich bleiben die Pascal-Units.
 
 **Erzeugt:** 1. September 2026  
-**Version:** 0.1.1
+**Version:** 0.1.2
+
+## `FMX.h5u.Grid`
+
+Quelle: `Source/FMX/FMX.h5u.Grid.pas`
+
+```pascal
+{$SCOPEDENUMS ON}
+
+uses
+  System.StrUtils,
+  System.Classes,
+  System.Generics.Collections,
+  System.Math,
+  System.Rtti,
+  System.SysUtils,
+  System.Types,
+  System.UITypes,
+  FMX.Controls,
+  FMX.Edit,
+  FMX.Graphics,
+  FMX.Layouts,
+  FMX.Objects,
+  FMX.StdCtrls,
+  FMX.Types,
+  h5u.Grid.Columns,
+  h5u.Grid.Data.Core,
+  h5u.Grid.Factory,
+  h5u.Grid.Options,
+  h5u.Grid.Selection,
+  h5u.Grid.Types,
+  FMX.h5u.Grid.Styles;
+
+type
+  Th5uFmxGrid = class;
+  Th5uFmxVisualCell = class;
+  Th5uFmxVisualCellClass = class of Th5uFmxVisualCell;
+
+  Th5uFmxCustomDrawStage = (
+    BeforeDefault,
+    AfterDefault
+  );
+
+  Th5uFmxHitKind = (
+    None,
+    Header,
+    RowIndicator,
+    DataCell
+  );
+
+  Th5uFmxGetRowHeightContext = record
+    Grid: Th5uFmxGrid;
+    DataController: Th5uCustomDataController;
+    RowKey: Th5uRowKey;
+    ViewRowIndex: Int64;
+    IsEstimated: Boolean;
+  end;
+
+  Th5uFmxGetRowHeightEvent = procedure(
+    Sender: TObject;
+    const AContext: Th5uFmxGetRowHeightContext;
+    var AHeight: Single;
+    var ACacheResult: Boolean
+  ) of object;
+
+  Th5uFmxGetRowSpacingEvent = procedure(
+    Sender: TObject;
+    const AContext: Th5uFmxGetRowHeightContext;
+    var ASpacing: Single
+  ) of object;
+
+  Th5uFmxThumbHintContext = record
+    Grid: Th5uFmxGrid;
+    DataController: Th5uCustomDataController;
+    Axis: Th5uScrollAxis;
+    RowKey: Th5uRowKey;
+    ViewRowIndex: Int64;
+    Column: Th5uGridColumn;
+    Value: TValue;
+    DisplayText: string;
+  end;
+
+  Th5uFmxGetThumbHintEvent = procedure(
+    Sender: TObject;
+    const AContext: Th5uFmxThumbHintContext;
+    var AText: string;
+    var AVisible: Boolean
+  ) of object;
+
+  Th5uFmxDrawContext = record
+    FactoryContext: Th5uFactoryContext;
+    Bounds: TRectF;
+    DisplayText: string;
+    Appearance: Th5uResolvedAppearance;
+  end;
+
+  Th5uFmxCustomDrawEvent = procedure(
+    Sender: TObject;
+    ACanvas: TCanvas;
+    const AContext: Th5uFmxDrawContext;
+    AStage: Th5uFmxCustomDrawStage;
+    var ADrawDefault: Boolean
+  ) of object;
+
+  Th5uFmxVisibleColumnInfo = record
+    Column: Th5uGridColumn;
+    VisibleIndex: Integer;
+    Bounds: TRectF;
+  end;
+
+  Th5uFmxVisibleRowInfo = record
+    RowIndex: Int64;
+    RowKey: Th5uRowKey;
+    Bounds: TRectF;
+    Height: Single;
+  end;
+
+  Th5uFmxHitTestInfo = record
+    Kind: Th5uFmxHitKind;
+    RowIndex: Int64;
+    ColumnIndex: Integer;
+    RowKey: Th5uRowKey;
+    Column: Th5uGridColumn;
+    Bounds: TRectF;
+    class function Empty: Th5uFmxHitTestInfo; static;
+  end;
+
+  Th5uFmxVisualCell = class(Th5uFactoryObject)
+  private
+    FContext: Th5uFactoryContext;
+    FBounds: TRectF;
+    FValue: TValue;
+    FDisplayText: string;
+    FAppearance: Th5uResolvedAppearance;
+    FInUse: Boolean;
+  protected
+    procedure PaintDefault(
+      AGrid: Th5uFmxGrid;
+      ACanvas: TCanvas
+    ); virtual;
+  public
+    procedure BindCell(
+      const AContext: Th5uFactoryContext;
+      const ABounds: TRectF;
+      const AValue: TValue;
+      const ADisplayText: string;
+      const AAppearance: Th5uResolvedAppearance
+    ); virtual;
+    procedure Paint(
+      AGrid: Th5uFmxGrid;
+      ACanvas: TCanvas
+    ); virtual;
+    property Context: Th5uFactoryContext read FContext;
+    property Bounds: TRectF read FBounds;
+    property Value: TValue read FValue;
+    property DisplayText: string read FDisplayText;
+    property Appearance: Th5uResolvedAppearance read FAppearance;
+  end;
+
+  // Lightweight pooled painter for row/column separators, content padding
+  // and the tree branch-end band. Its ClassId is resolved per grid instance.
+  Th5uFmxSpacingCell = class(Th5uFmxVisualCell)
+  protected
+    procedure PaintDefault(
+      AGrid: Th5uFmxGrid;
+      ACanvas: TCanvas
+    ); override;
+  end;
+
+  Th5uFmxDataCell = class(Th5uFmxVisualCell)
+  private
+    FBitmap: TBitmap;
+    FBitmapSignature: Integer;
+    procedure EnsureBitmap;
+  protected
+    procedure PaintDefault(
+      AGrid: Th5uFmxGrid;
+      ACanvas: TCanvas
+    ); override;
+  public
+    destructor Destroy; override;
+  end;
+
+  Th5uFmxHeaderCell = class(Th5uFmxVisualCell)
+  protected
+    procedure PaintDefault(
+      AGrid: Th5uFmxGrid;
+      ACanvas: TCanvas
+    ); override;
+  end;
+
+  Th5uFmxGrid = class(TStyledControl)
+  private
+    FColumns: Th5uGridColumns;
+    FHeaderLayout: Th5uHeaderLayout;
+    FDataController: Th5uCustomDataController;
+    FDataLink: Th5uDataControllerLink;
+    FFactoryScope: Th5uFactoryScope;
+    FSharedClassFactory: Th5uClassFactory;
+    FSelection: Th5uGridSelection;
+    FRowHeight: Th5uRowHeightOptions;
+    FScrolling: Th5uScrollingOptions;
+    FScrollHints: Th5uScrollHintOptions;
+    FRowStyles: Th5uRowStyleOptions;
+    FCustomization: Th5uCustomizationOptions;
+    FSpacing: Th5uGridSpacingOptions;
+    FAppearance: Th5uGridAppearanceOptions;
+    FTree: Th5uTreeOptions;
+
+    FTheme: Th5uGridTheme;
+    FHeaderRowHeight: Single;
+    FRowIndicatorWidth: Single;
+    FShowHeader: Boolean;
+    FShowRowIndicator: Boolean;
+    FAllowEditing: Boolean;
+    FTextSize: Single;
+
+    FVScrollBar: TScrollBar;
+    FHScrollBar: TScrollBar;
+    FThumbHint: TLabel;
+    FThumbHintTimer: TTimer;
+    FEditor: TEdit;
+    FImageEditor: TObject;
+    FEditRowIndex: Int64;
+    FEditColumn: Th5uGridColumn;
+    FCommittingEditor: Boolean;
+
+    FHorizontalOffset: Single;
+    FVerticalOffset: Single;
+    FAllColumns: TArray<Th5uFmxVisibleColumnInfo>;
+    FVisibleColumns: TArray<Th5uFmxVisibleColumnInfo>;
+    FVisibleRows: TArray<Th5uFmxVisibleRowInfo>;
+    FCellPool: TObjectList<Th5uFmxVisualCell>;
+    FRowHeightCache: TDictionary<string, Single>;
+    FUpdatingScrollBars: Boolean;
+    FLastMousePoint: TPointF;
+
+    FOnGetRowHeight: Th5uFmxGetRowHeightEvent;
+    FOnGetRowSpacing: Th5uFmxGetRowSpacingEvent;
+    FOnGetThumbHint: Th5uFmxGetThumbHintEvent;
+    FOnCustomDraw: Th5uFmxCustomDrawEvent;
+    FOnGetTreeLevel: Th5uGetTreeLevelEvent;
+    FOnGetTreeBranchEnd: Th5uGetTreeBranchEndEvent;
+
+    procedure ColumnsChanged(Sender: TObject; AColumn: Th5uGridColumn);
+    procedure DataChanged(Sender: TObject; const AChange: Th5uDataChange);
+    procedure OptionsChanged(Sender: TObject);
+    procedure SelectionChanged(Sender: TObject);
+    procedure ScrollChanged(Sender: TObject);
+    procedure ThumbHintTimer(Sender: TObject);
+    procedure EditorExit(Sender: TObject);
+    procedure EditorKeyDown(
+      Sender: TObject;
+      var Key: Word;
+      var KeyChar: Char;
+      Shift: TShiftState
+    );
+
+    procedure SetColumns(const AValue: Th5uGridColumns);
+    procedure SetHeaderLayout(const AValue: Th5uHeaderLayout);
+    procedure SetDataController(const AValue: Th5uCustomDataController);
+    procedure SetSharedClassFactory(const AValue: Th5uClassFactory);
+    procedure SetRowHeight(const AValue: Th5uRowHeightOptions);
+    procedure SetScrolling(const AValue: Th5uScrollingOptions);
+    procedure SetScrollHints(const AValue: Th5uScrollHintOptions);
+    procedure SetRowStyles(const AValue: Th5uRowStyleOptions);
+    procedure SetCustomization(const AValue: Th5uCustomizationOptions);
+    procedure SetSpacing(const AValue: Th5uGridSpacingOptions);
+    procedure SetAppearance(const AValue: Th5uGridAppearanceOptions);
+    procedure SetTree(const AValue: Th5uTreeOptions);
+    procedure SetSelection(const AValue: Th5uGridSelection);
+    procedure SetTheme(const AValue: Th5uGridTheme);
+    procedure SetGridLines(const AValue: Boolean);
+
+    function GetOnGetClass: Th5uGetClassEvent;
+    procedure SetOnGetClass(const AValue: Th5uGetClassEvent);
+    function GetOnCreateInstance: Th5uCreateInstanceEvent;
+    procedure SetOnCreateInstance(const AValue: Th5uCreateInstanceEvent);
+    function GetOnConfigureInstance: Th5uConfigureInstanceEvent;
+    procedure SetOnConfigureInstance(
+      const AValue: Th5uConfigureInstanceEvent
+    );
+
+    function GetUnpaddedViewportRect: TRectF;
+    function GetViewportRect: TRectF;
+    function GetDataViewportRect: TRectF;
+    function GetHeaderHeight: Single;
+    function GetTotalColumnWidth: Single;
+    function GetEffectiveColumnRightSpacing(
+      AColumn: Th5uGridColumn
+    ): Single;
+    function GetRowSpacingFor(
+      AViewRowIndex: Int64;
+      const ARowKey: Th5uRowKey
+    ): Single;
+    function TryGetTreeLevelFor(
+      AViewRowIndex: Int64;
+      const ARowKey: Th5uRowKey;
+      out ALevel: Integer
+    ): Boolean;
+    function GetTreeBranchEndInfo(
+      AViewRowIndex: Int64;
+      const ARowKey: Th5uRowKey;
+      out ATreeLevel: Integer;
+      out AClosedTreeLevels: Integer
+    ): Boolean;
+    function GetEffectiveRowSeparatorFor(
+      AViewRowIndex: Int64;
+      const ARowKey: Th5uRowKey;
+      out AElementKind: Th5uElementKind;
+      out AColor: TAlphaColor;
+      out AStyleName: string;
+      out ATreeLevel: Integer;
+      out AClosedTreeLevels: Integer
+    ): Single;
+    function GetGridLines: Boolean;
+    function ResolveColor(
+      const AColor: Th5uColor;
+      AFallback: TAlphaColor
+    ): TAlphaColor;
+    function ResolveDefaultCellColor: TAlphaColor;
+    function ResolveRowSpacingColor: TAlphaColor;
+    function ResolveColumnSpacingColor: TAlphaColor;
+    function ResolveContentPaddingColor: TAlphaColor;
+    function ResolveTreeBranchEndColor(
+      AViewRowIndex: Int64;
+      const ARowKey: Th5uRowKey
+    ): TAlphaColor;
+    function GetEstimatedTotalRowHeight: Double;
+    procedure LayoutScrollBars;
+    procedure UpdateScrollBars;
+    procedure BuildColumnLayout;
+    procedure BeginVisualPass;
+    function AcquireVisualCell(
+      const AContext: Th5uFactoryContext;
+      ADefaultClass: Th5uFmxVisualCellClass
+    ): Th5uFmxVisualCell;
+
+    procedure DrawContentPadding;
+    procedure DrawHeaders;
+    procedure DrawRows;
+    procedure DrawSpacingRect(
+      const ABounds: TRectF;
+      AElementKind: Th5uElementKind;
+      AColumn: Th5uGridColumn;
+      AViewRowIndex: Int64;
+      const ARowKey: Th5uRowKey;
+      AColor: TAlphaColor;
+      const AStyleName: string = '';
+      ATreeLevel: Integer = -1;
+      AClosedTreeLevels: Integer = 0
+    );
+    function GetRowHeightFor(
+      AViewRowIndex: Int64;
+      const ARowKey: Th5uRowKey;
+      AAllowMeasure: Boolean = True
+    ): Single;
+    function MeasureCellHeight(
+      AViewRowIndex: Int64;
+      AColumn: Th5uGridColumn
+    ): Single;
+    function FindFirstVisibleRow(
+      AOffset: Double;
+      out ATop: Single
+    ): Int64;
+    function ResolveRowBackground(
+      AViewRowIndex: Int64
+    ): TAlphaColor;
+    function ResolveCellAppearance(
+      AViewRowIndex: Int64;
+      AColumn: Th5uGridColumn;
+      ASelected, AFocused: Boolean
+    ): Th5uResolvedAppearance;
+
+    function BuildThumbHintText(
+      AAxis: Th5uScrollAxis;
+      out AContext: Th5uFmxThumbHintContext
+    ): string;
+    procedure ShowThumbHint(AAxis: Th5uScrollAxis);
+    procedure HideThumbHint;
+
+    procedure StartEdit(const AHit: Th5uFmxHitTestInfo);
+    procedure CommitEditor;
+    procedure CancelEditor;
+    procedure ImageEditorCommit(Sender: TObject);
+    procedure ImageEditorCancel(Sender: TObject);
+    function ParseEditorValue(
+      AColumn: Th5uGridColumn;
+      const AText: string
+    ): TValue;
+
+    function GetVisualCellClass(
+      const AContext: Th5uFactoryContext;
+      ADefaultClass: Th5uFmxVisualCellClass
+    ): Th5uFmxVisualCellClass; virtual;
+    procedure DoCustomDraw(
+      ACanvas: TCanvas;
+      const AContext: Th5uFmxDrawContext;
+      AStage: Th5uFmxCustomDrawStage;
+      var ADrawDefault: Boolean
+    );
+  protected
+    procedure Paint; override;
+    procedure Resize; override;
+    procedure Notification(
+      AComponent: TComponent;
+      Operation: TOperation
+    ); override;
+    procedure MouseDown(
+      Button: TMouseButton;
+      Shift: TShiftState;
+      X, Y: Single
+    ); override;
+    procedure MouseMove(
+      Shift: TShiftState;
+      X, Y: Single
+    ); override;
+    procedure DblClick; override;
+    procedure MouseWheel(
+      Shift: TShiftState;
+      WheelDelta: Integer;
+      var Handled: Boolean
+    ); override;
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+
+    function GridHitTest(X, Y: Single): Th5uFmxHitTestInfo;
+    procedure InvalidateAllRowHeights;
+    procedure MoveColumn(
+      AColumn: Th5uGridColumn;
+      ANewVisibleIndex: Integer
+    );
+    procedure SetColumnVisible(
+      AColumn: Th5uGridColumn;
+      AVisible: Boolean
+    );
+
+    property FactoryScope: Th5uFactoryScope read FFactoryScope;
+  published
+    property Align;
+    property Anchors;
+    property CanFocus;
+    property ClipChildren;
+    property ClipParent;
+    property Cursor;
+    property DragMode;
+    property Enabled;
+    property Height;
+    property HitTest;
+    property Margins;
+    property Opacity;
+    property Padding;
+    property Position;
+    property RotationAngle;
+    property RotationCenter;
+    property Scale;
+    property Size;
+    property StyleLookup;
+    property TabOrder;
+    property TabStop;
+    property Visible;
+    property Width;
+
+    property DataController: Th5uCustomDataController
+      read FDataController write SetDataController;
+    property SharedClassFactory: Th5uClassFactory
+      read FSharedClassFactory write SetSharedClassFactory;
+    property Columns: Th5uGridColumns
+      read FColumns write SetColumns;
+    property HeaderLayout: Th5uHeaderLayout
+      read FHeaderLayout write SetHeaderLayout;
+    property Selection: Th5uGridSelection
+      read FSelection write SetSelection;
+    property RowHeight: Th5uRowHeightOptions
+      read FRowHeight write SetRowHeight;
+    property Scrolling: Th5uScrollingOptions
+      read FScrolling write SetScrolling;
+    property ScrollHints: Th5uScrollHintOptions
+      read FScrollHints write SetScrollHints;
+    property RowStyles: Th5uRowStyleOptions
+      read FRowStyles write SetRowStyles;
+    property Customization: Th5uCustomizationOptions
+      read FCustomization write SetCustomization;
+    property Spacing: Th5uGridSpacingOptions
+      read FSpacing write SetSpacing;
+    property Appearance: Th5uGridAppearanceOptions
+      read FAppearance write SetAppearance;
+    property Tree: Th5uTreeOptions
+      read FTree write SetTree;
+    property Theme: Th5uGridTheme
+      read FTheme write SetTheme
+      default Th5uGridTheme.ApplicationStyle;
+    property HeaderRowHeight: Single
+      read FHeaderRowHeight write FHeaderRowHeight;
+    property RowIndicatorWidth: Single
+      read FRowIndicatorWidth write FRowIndicatorWidth;
+    property ShowHeader: Boolean
+      read FShowHeader write FShowHeader default True;
+    property ShowRowIndicator: Boolean
+      read FShowRowIndicator write FShowRowIndicator default True;
+    property AllowEditing: Boolean
+      read FAllowEditing write FAllowEditing default True;
+    // Convenience switch for all grid-wide one-pixel separators.
+    // Explicit per-column RightSpacing values remain independently configurable.
+    property GridLines: Boolean
+      read GetGridLines write SetGridLines default True;
+    property TextSize: Single read FTextSize write FTextSize;
+
+    property OnGetClass: Th5uGetClassEvent
+      read GetOnGetClass write SetOnGetClass;
+    property OnCreateInstance: Th5uCreateInstanceEvent
+      read GetOnCreateInstance write SetOnCreateInstance;
+    property OnConfigureInstance: Th5uConfigureInstanceEvent
+      read GetOnConfigureInstance write SetOnConfigureInstance;
+    property OnGetRowHeight: Th5uFmxGetRowHeightEvent
+      read FOnGetRowHeight write FOnGetRowHeight;
+    property OnGetRowSpacing: Th5uFmxGetRowSpacingEvent
+      read FOnGetRowSpacing write FOnGetRowSpacing;
+    property OnGetThumbHint: Th5uFmxGetThumbHintEvent
+      read FOnGetThumbHint write FOnGetThumbHint;
+    property OnCustomDraw: Th5uFmxCustomDrawEvent
+      read FOnCustomDraw write FOnCustomDraw;
+    property OnGetTreeLevel: Th5uGetTreeLevelEvent
+      read FOnGetTreeLevel write FOnGetTreeLevel;
+    property OnGetTreeBranchEnd: Th5uGetTreeBranchEndEvent
+      read FOnGetTreeBranchEnd write FOnGetTreeBranchEnd;
+    property OnClick;
+    property OnDblClick;
+    property OnDragDrop;
+    property OnDragOver;
+    property OnEnter;
+    property OnExit;
+    property OnKeyDown;
+    property OnKeyUp;
+    property OnMouseDown;
+    property OnMouseMove;
+    property OnMouseUp;
+    property OnMouseWheel;
+  end;
+```
+
+## `FMX.h5u.Grid.Design`
+
+Quelle: `Source/Design/FMX.h5u.Grid.Design.pas`
+
+```pascal
+procedure Register;
+```
+
+## `FMX.h5u.Grid.Editors`
+
+Quelle: `Source/FMX/FMX.h5u.Grid.Editors.pas`
+
+```pascal
+uses
+  System.Classes,
+  System.SysUtils,
+  FMX.Controls,
+  FMX.Dialogs,
+  FMX.Layouts,
+  FMX.Objects,
+  FMX.StdCtrls,
+  FMX.Types;
+
+type
+  Th5uFmxImageEditor = class(TLayout)
+  private
+    FImage: TImage;
+    FToolBar: TLayout;
+    FLoadButton: TButton;
+    FClearButton: TButton;
+    FOkButton: TButton;
+    FCancelButton: TButton;
+    FBytes: TBytes;
+    FOnCommit: TNotifyEvent;
+    FOnCancel: TNotifyEvent;
+    procedure LoadClick(Sender: TObject);
+    procedure ClearClick(Sender: TObject);
+    procedure OkClick(Sender: TObject);
+    procedure CancelClick(Sender: TObject);
+    procedure UpdatePreview;
+    procedure SetBytes(const AValue: TBytes);
+  public
+    constructor Create(AOwner: TComponent); override;
+    property Bytes: TBytes read FBytes write SetBytes;
+    property OnCommit: TNotifyEvent read FOnCommit write FOnCommit;
+    property OnCancel: TNotifyEvent read FOnCancel write FOnCancel;
+  end;
+```
+
+## `FMX.h5u.Grid.Styles`
+
+Quelle: `Source/FMX/FMX.h5u.Grid.Styles.pas`
+
+```pascal
+{$SCOPEDENUMS ON}
+
+uses
+  System.UITypes,
+  FMX.Graphics,
+  h5u.Grid.Types;
+
+type
+  Th5uFmxPalette = record
+    GridBackground: TAlphaColor;
+    EmptyArea: TAlphaColor;
+    CellBackground: TAlphaColor;
+    CellText: TAlphaColor;
+    CellBorder: TAlphaColor;
+    HeaderBackground: TAlphaColor;
+    HeaderText: TAlphaColor;
+    FixedBackground: TAlphaColor;
+    OddBackground: TAlphaColor;
+    EvenBackground: TAlphaColor;
+    StripeBackground: TAlphaColor;
+    HighlightedColumnBackground: TAlphaColor;
+    SelectedBackground: TAlphaColor;
+    SelectedText: TAlphaColor;
+    FocusBorder: TAlphaColor;
+    ErrorBackground: TAlphaColor;
+    WarningBackground: TAlphaColor;
+    TreeBranchEndBackground: TAlphaColor;
+    DisabledText: TAlphaColor;
+    ThumbHintBackground: TAlphaColor;
+    ThumbHintText: TAlphaColor;
+  end;
+
+function h5uGetFmxPalette(ATheme: Th5uGridTheme): Th5uFmxPalette;
+function h5uColorToFmx(const AColor: Th5uColor): TAlphaColor;
+function h5uFmxToColor(const AColor: TAlphaColor): Th5uColor;
+```
 
 ## `h5u.Grid.Columns`
 
@@ -366,6 +997,11 @@ type
 
     function GetRowCount: Int64;
     function GetTotalRowCount: Int64;
+    function GetSourceRowIndex(AViewRowIndex: Int64): Int64;
+    // Unlike GetRowCount (the current numbered page), this also accepts the
+    // immediately following logical view index so layout helpers can inspect
+    // a page boundary without treating it as the end of the source.
+    function IsRowAvailable(AViewRowIndex: Int64): Boolean;
     function GetRowKey(AViewRowIndex: Int64): Th5uRowKey;
     function GetValue(
       AViewRowIndex: Int64;
@@ -797,6 +1433,14 @@ type
   end;
 ```
 
+## `h5u.Grid.Design`
+
+Quelle: `Source/Design/h5u.Grid.Design.pas`
+
+```pascal
+procedure Register;
+```
+
 ## `h5u.Grid.Factory`
 
 Quelle: `Source/Common/h5u.Grid.Factory.pas`
@@ -1059,6 +1703,70 @@ type
     property DefaultCellColor: Th5uColor
       read FDefaultCellColor write SetDefaultCellColor
       default h5uColorDefault;
+  end;
+
+  // When a flattened tree leaves one or more child levels, this band replaces
+  // the normal row spacing after the last visible descendant. It is never
+  // added on top of RowSpacing.
+  Th5uTreeBranchEndBandOptions = class(TPersistent)
+  private
+    FEnabled: Boolean;
+    FHeight: Integer;
+    FColor: Th5uColor;
+    FStyleName: string;
+    FIncludeEndOfData: Boolean;
+    FOnChanged: Th5uOptionsChangedEvent;
+    procedure Changed;
+    procedure SetColor(const AValue: Th5uColor);
+    procedure SetEnabled(const AValue: Boolean);
+    procedure SetHeight(const AValue: Integer);
+    procedure SetIncludeEndOfData(const AValue: Boolean);
+    procedure SetStyleName(const AValue: string);
+  public
+    constructor Create;
+    procedure Assign(Source: TPersistent); override;
+    property OnChanged: Th5uOptionsChangedEvent
+      read FOnChanged write FOnChanged;
+  published
+    property Enabled: Boolean
+      read FEnabled write SetEnabled default False;
+    property Height: Integer
+      read FHeight write SetHeight default 6;
+    property Color: Th5uColor
+      read FColor write SetColor default h5uColorDefault;
+    property StyleName: string
+      read FStyleName write SetStyleName;
+    property IncludeEndOfData: Boolean
+      read FIncludeEndOfData write SetIncludeEndOfData default True;
+  end;
+
+  Th5uTreeOptions = class(TPersistent)
+  private
+    FEnabled: Boolean;
+    FLevelColumnId: string;
+    FBranchEndBand: Th5uTreeBranchEndBandOptions;
+    FOnChanged: Th5uOptionsChangedEvent;
+    procedure Changed;
+    procedure ChildChanged(Sender: TObject);
+    procedure SetBranchEndBand(
+      const AValue: Th5uTreeBranchEndBandOptions
+    );
+    procedure SetEnabled(const AValue: Boolean);
+    procedure SetLevelColumnId(const AValue: string);
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure Assign(Source: TPersistent); override;
+    property OnChanged: Th5uOptionsChangedEvent
+      read FOnChanged write FOnChanged;
+  published
+    property Enabled: Boolean
+      read FEnabled write SetEnabled default False;
+    // May name a Column.Id, Column.FieldName or a controller field directly.
+    property LevelColumnId: string
+      read FLevelColumnId write SetLevelColumnId;
+    property BranchEndBand: Th5uTreeBranchEndBandOptions
+      read FBranchEndBand write SetBranchEndBand;
   end;
 
   Th5uRowHeightOptions = class(TPersistent)
@@ -1447,6 +2155,8 @@ const
   h5uClassIdGridRowSpacing = Th5uClassId('h5u.grid.spacing.row');
   h5uClassIdGridColumnSpacing = Th5uClassId('h5u.grid.spacing.column');
   h5uClassIdGridContentPadding = Th5uClassId('h5u.grid.spacing.content-padding');
+  h5uClassIdGridTreeBranchEndBand =
+    Th5uClassId('h5u.grid.spacing.tree-branch-end');
   h5uClassIdDataSession = Th5uClassId('h5u.grid.data.session');
   h5uClassIdDataCache = Th5uClassId('h5u.grid.data.cache');
   h5uClassIdDataPage = Th5uClassId('h5u.grid.data.page');
@@ -1488,6 +2198,7 @@ type
     RowSpacing,
     ColumnSpacing,
     ContentPadding,
+    TreeBranchEndBand,
     DetailView,
     DataSession,
     DataCache,
@@ -1509,7 +2220,8 @@ type
     ReadOnly,
     OddRow,
     EvenRow,
-    PatternRow
+    PatternRow,
+    TreeBranchEnd
   );
   Th5uElementFlags = set of Th5uElementFlag;
 
@@ -1560,6 +2272,8 @@ type
     LayoutColumn: Integer;
     RowSpan: Integer;
     ColumnSpan: Integer;
+    TreeLevel: Integer;
+    ClosedTreeLevels: Integer;
 
     ClassId: Th5uClassId;
     CreationReason: Th5uCreationReason;
@@ -1570,6 +2284,40 @@ type
       AElementKind: Th5uElementKind
     ): Th5uFactoryContext; static;
   end;
+
+  Th5uTreeLevelContext = record
+    Grid: TObject;
+    DataController: TObject;
+    RowKey: Th5uRowKey;
+    ViewRowIndex: Int64;
+    SourceRowIndex: Int64;
+  end;
+
+  Th5uGetTreeLevelEvent = procedure(
+    Sender: TObject;
+    const AContext: Th5uTreeLevelContext;
+    var ALevel: Integer;
+    var AAvailable: Boolean
+  ) of object;
+
+  Th5uTreeBranchEndContext = record
+    Grid: TObject;
+    DataController: TObject;
+    RowKey: Th5uRowKey;
+    NextRowKey: Th5uRowKey;
+    ViewRowIndex: Int64;
+    SourceRowIndex: Int64;
+    CurrentLevel: Integer;
+    NextLevel: Integer;
+    IsEndOfData: Boolean;
+  end;
+
+  Th5uGetTreeBranchEndEvent = procedure(
+    Sender: TObject;
+    const AContext: Th5uTreeBranchEndContext;
+    var AIsBranchEnd: Boolean;
+    var AClosedLevels: Integer
+  ) of object;
 
   Th5uGridTheme = (
     ApplicationStyle,
@@ -1735,687 +2483,6 @@ function h5uColorFromArgb(
 function h5uColorFromRgb(
   ARed, AGreen, ABlue: Byte
 ): Th5uColor; inline;
-```
-
-## `FMX.h5u.Grid.Design`
-
-Quelle: `Source/Design/FMX.h5u.Grid.Design.pas`
-
-```pascal
-procedure Register;
-```
-
-## `Vcl.h5u.Grid.Design`
-
-Quelle: `Source/Design/Vcl.h5u.Grid.Design.pas`
-
-```pascal
-procedure Register;
-```
-
-## `h5u.Grid.Design`
-
-Quelle: `Source/Design/h5u.Grid.Design.pas`
-
-```pascal
-procedure Register;
-```
-
-## `FMX.h5u.Grid.Editors`
-
-Quelle: `Source/FMX/FMX.h5u.Grid.Editors.pas`
-
-```pascal
-uses
-  System.Classes,
-  System.SysUtils,
-  FMX.Controls,
-  FMX.Dialogs,
-  FMX.Layouts,
-  FMX.Objects,
-  FMX.StdCtrls,
-  FMX.Types;
-
-type
-  Th5uFmxImageEditor = class(TLayout)
-  private
-    FImage: TImage;
-    FToolBar: TLayout;
-    FLoadButton: TButton;
-    FClearButton: TButton;
-    FOkButton: TButton;
-    FCancelButton: TButton;
-    FBytes: TBytes;
-    FOnCommit: TNotifyEvent;
-    FOnCancel: TNotifyEvent;
-    procedure LoadClick(Sender: TObject);
-    procedure ClearClick(Sender: TObject);
-    procedure OkClick(Sender: TObject);
-    procedure CancelClick(Sender: TObject);
-    procedure UpdatePreview;
-    procedure SetBytes(const AValue: TBytes);
-  public
-    constructor Create(AOwner: TComponent); override;
-    property Bytes: TBytes read FBytes write SetBytes;
-    property OnCommit: TNotifyEvent read FOnCommit write FOnCommit;
-    property OnCancel: TNotifyEvent read FOnCancel write FOnCancel;
-  end;
-```
-
-## `FMX.h5u.Grid.Styles`
-
-Quelle: `Source/FMX/FMX.h5u.Grid.Styles.pas`
-
-```pascal
-{$SCOPEDENUMS ON}
-
-uses
-  System.UITypes,
-  FMX.Graphics,
-  h5u.Grid.Types;
-
-type
-  Th5uFmxPalette = record
-    GridBackground: TAlphaColor;
-    EmptyArea: TAlphaColor;
-    CellBackground: TAlphaColor;
-    CellText: TAlphaColor;
-    CellBorder: TAlphaColor;
-    HeaderBackground: TAlphaColor;
-    HeaderText: TAlphaColor;
-    FixedBackground: TAlphaColor;
-    OddBackground: TAlphaColor;
-    EvenBackground: TAlphaColor;
-    StripeBackground: TAlphaColor;
-    HighlightedColumnBackground: TAlphaColor;
-    SelectedBackground: TAlphaColor;
-    SelectedText: TAlphaColor;
-    FocusBorder: TAlphaColor;
-    ErrorBackground: TAlphaColor;
-    WarningBackground: TAlphaColor;
-    DisabledText: TAlphaColor;
-    ThumbHintBackground: TAlphaColor;
-    ThumbHintText: TAlphaColor;
-  end;
-
-function h5uGetFmxPalette(ATheme: Th5uGridTheme): Th5uFmxPalette;
-function h5uColorToFmx(const AColor: Th5uColor): TAlphaColor;
-function h5uFmxToColor(const AColor: TAlphaColor): Th5uColor;
-```
-
-## `FMX.h5u.Grid`
-
-Quelle: `Source/FMX/FMX.h5u.Grid.pas`
-
-```pascal
-{$SCOPEDENUMS ON}
-
-uses
-  System.StrUtils,
-  System.Classes,
-  System.Generics.Collections,
-  System.Math,
-  System.Rtti,
-  System.SysUtils,
-  System.Types,
-  System.UITypes,
-  FMX.Controls,
-  FMX.Edit,
-  FMX.Graphics,
-  FMX.Layouts,
-  FMX.Objects,
-  FMX.StdCtrls,
-  FMX.Types,
-  h5u.Grid.Columns,
-  h5u.Grid.Data.Core,
-  h5u.Grid.Factory,
-  h5u.Grid.Options,
-  h5u.Grid.Selection,
-  h5u.Grid.Types,
-  FMX.h5u.Grid.Styles;
-
-type
-  Th5uFmxGrid = class;
-  Th5uFmxVisualCell = class;
-  Th5uFmxVisualCellClass = class of Th5uFmxVisualCell;
-
-  Th5uFmxCustomDrawStage = (
-    BeforeDefault,
-    AfterDefault
-  );
-
-  Th5uFmxHitKind = (
-    None,
-    Header,
-    RowIndicator,
-    DataCell
-  );
-
-  Th5uFmxGetRowHeightContext = record
-    Grid: Th5uFmxGrid;
-    DataController: Th5uCustomDataController;
-    RowKey: Th5uRowKey;
-    ViewRowIndex: Int64;
-    IsEstimated: Boolean;
-  end;
-
-  Th5uFmxGetRowHeightEvent = procedure(
-    Sender: TObject;
-    const AContext: Th5uFmxGetRowHeightContext;
-    var AHeight: Single;
-    var ACacheResult: Boolean
-  ) of object;
-
-  Th5uFmxGetRowSpacingEvent = procedure(
-    Sender: TObject;
-    const AContext: Th5uFmxGetRowHeightContext;
-    var ASpacing: Single
-  ) of object;
-
-  Th5uFmxThumbHintContext = record
-    Grid: Th5uFmxGrid;
-    DataController: Th5uCustomDataController;
-    Axis: Th5uScrollAxis;
-    RowKey: Th5uRowKey;
-    ViewRowIndex: Int64;
-    Column: Th5uGridColumn;
-    Value: TValue;
-    DisplayText: string;
-  end;
-
-  Th5uFmxGetThumbHintEvent = procedure(
-    Sender: TObject;
-    const AContext: Th5uFmxThumbHintContext;
-    var AText: string;
-    var AVisible: Boolean
-  ) of object;
-
-  Th5uFmxDrawContext = record
-    FactoryContext: Th5uFactoryContext;
-    Bounds: TRectF;
-    DisplayText: string;
-    Appearance: Th5uResolvedAppearance;
-  end;
-
-  Th5uFmxCustomDrawEvent = procedure(
-    Sender: TObject;
-    ACanvas: TCanvas;
-    const AContext: Th5uFmxDrawContext;
-    AStage: Th5uFmxCustomDrawStage;
-    var ADrawDefault: Boolean
-  ) of object;
-
-  Th5uFmxVisibleColumnInfo = record
-    Column: Th5uGridColumn;
-    VisibleIndex: Integer;
-    Bounds: TRectF;
-  end;
-
-  Th5uFmxVisibleRowInfo = record
-    RowIndex: Int64;
-    RowKey: Th5uRowKey;
-    Bounds: TRectF;
-    Height: Single;
-  end;
-
-  Th5uFmxHitTestInfo = record
-    Kind: Th5uFmxHitKind;
-    RowIndex: Int64;
-    ColumnIndex: Integer;
-    RowKey: Th5uRowKey;
-    Column: Th5uGridColumn;
-    Bounds: TRectF;
-    class function Empty: Th5uFmxHitTestInfo; static;
-  end;
-
-  Th5uFmxVisualCell = class(Th5uFactoryObject)
-  private
-    FContext: Th5uFactoryContext;
-    FBounds: TRectF;
-    FValue: TValue;
-    FDisplayText: string;
-    FAppearance: Th5uResolvedAppearance;
-    FInUse: Boolean;
-  protected
-    procedure PaintDefault(
-      AGrid: Th5uFmxGrid;
-      ACanvas: TCanvas
-    ); virtual;
-  public
-    procedure BindCell(
-      const AContext: Th5uFactoryContext;
-      const ABounds: TRectF;
-      const AValue: TValue;
-      const ADisplayText: string;
-      const AAppearance: Th5uResolvedAppearance
-    ); virtual;
-    procedure Paint(
-      AGrid: Th5uFmxGrid;
-      ACanvas: TCanvas
-    ); virtual;
-    property Context: Th5uFactoryContext read FContext;
-    property Bounds: TRectF read FBounds;
-    property Value: TValue read FValue;
-    property DisplayText: string read FDisplayText;
-    property Appearance: Th5uResolvedAppearance read FAppearance;
-  end;
-
-  Th5uFmxDataCell = class(Th5uFmxVisualCell)
-  private
-    FBitmap: TBitmap;
-    FBitmapSignature: Integer;
-    procedure EnsureBitmap;
-  protected
-    procedure PaintDefault(
-      AGrid: Th5uFmxGrid;
-      ACanvas: TCanvas
-    ); override;
-  public
-    destructor Destroy; override;
-  end;
-
-  Th5uFmxHeaderCell = class(Th5uFmxVisualCell)
-  protected
-    procedure PaintDefault(
-      AGrid: Th5uFmxGrid;
-      ACanvas: TCanvas
-    ); override;
-  end;
-
-  Th5uFmxGrid = class(TStyledControl)
-  private
-    FColumns: Th5uGridColumns;
-    FHeaderLayout: Th5uHeaderLayout;
-    FDataController: Th5uCustomDataController;
-    FDataLink: Th5uDataControllerLink;
-    FFactoryScope: Th5uFactoryScope;
-    FSharedClassFactory: Th5uClassFactory;
-    FSelection: Th5uGridSelection;
-    FRowHeight: Th5uRowHeightOptions;
-    FScrolling: Th5uScrollingOptions;
-    FScrollHints: Th5uScrollHintOptions;
-    FRowStyles: Th5uRowStyleOptions;
-    FCustomization: Th5uCustomizationOptions;
-    FSpacing: Th5uGridSpacingOptions;
-    FAppearance: Th5uGridAppearanceOptions;
-
-    FTheme: Th5uGridTheme;
-    FHeaderRowHeight: Single;
-    FRowIndicatorWidth: Single;
-    FShowHeader: Boolean;
-    FShowRowIndicator: Boolean;
-    FAllowEditing: Boolean;
-    FTextSize: Single;
-
-    FVScrollBar: TScrollBar;
-    FHScrollBar: TScrollBar;
-    FThumbHint: TLabel;
-    FThumbHintTimer: TTimer;
-    FEditor: TEdit;
-    FImageEditor: TObject;
-    FEditRowIndex: Int64;
-    FEditColumn: Th5uGridColumn;
-    FCommittingEditor: Boolean;
-
-    FHorizontalOffset: Single;
-    FVerticalOffset: Single;
-    FAllColumns: TArray<Th5uFmxVisibleColumnInfo>;
-    FVisibleColumns: TArray<Th5uFmxVisibleColumnInfo>;
-    FVisibleRows: TArray<Th5uFmxVisibleRowInfo>;
-    FCellPool: TObjectList<Th5uFmxVisualCell>;
-    FRowHeightCache: TDictionary<string, Single>;
-    FUpdatingScrollBars: Boolean;
-    FLastMousePoint: TPointF;
-
-    FOnGetRowHeight: Th5uFmxGetRowHeightEvent;
-    FOnGetRowSpacing: Th5uFmxGetRowSpacingEvent;
-    FOnGetThumbHint: Th5uFmxGetThumbHintEvent;
-    FOnCustomDraw: Th5uFmxCustomDrawEvent;
-
-    procedure ColumnsChanged(Sender: TObject; AColumn: Th5uGridColumn);
-    procedure DataChanged(Sender: TObject; const AChange: Th5uDataChange);
-    procedure OptionsChanged(Sender: TObject);
-    procedure SelectionChanged(Sender: TObject);
-    procedure ScrollChanged(Sender: TObject);
-    procedure ThumbHintTimer(Sender: TObject);
-    procedure EditorExit(Sender: TObject);
-    procedure EditorKeyDown(
-      Sender: TObject;
-      var Key: Word;
-      var KeyChar: Char;
-      Shift: TShiftState
-    );
-
-    procedure SetColumns(const AValue: Th5uGridColumns);
-    procedure SetHeaderLayout(const AValue: Th5uHeaderLayout);
-    procedure SetDataController(const AValue: Th5uCustomDataController);
-    procedure SetSharedClassFactory(const AValue: Th5uClassFactory);
-    procedure SetRowHeight(const AValue: Th5uRowHeightOptions);
-    procedure SetScrolling(const AValue: Th5uScrollingOptions);
-    procedure SetScrollHints(const AValue: Th5uScrollHintOptions);
-    procedure SetRowStyles(const AValue: Th5uRowStyleOptions);
-    procedure SetCustomization(const AValue: Th5uCustomizationOptions);
-    procedure SetSpacing(const AValue: Th5uGridSpacingOptions);
-    procedure SetAppearance(const AValue: Th5uGridAppearanceOptions);
-    procedure SetSelection(const AValue: Th5uGridSelection);
-    procedure SetTheme(const AValue: Th5uGridTheme);
-    procedure SetGridLines(const AValue: Boolean);
-
-    function GetOnGetClass: Th5uGetClassEvent;
-    procedure SetOnGetClass(const AValue: Th5uGetClassEvent);
-    function GetOnCreateInstance: Th5uCreateInstanceEvent;
-    procedure SetOnCreateInstance(const AValue: Th5uCreateInstanceEvent);
-    function GetOnConfigureInstance: Th5uConfigureInstanceEvent;
-    procedure SetOnConfigureInstance(
-      const AValue: Th5uConfigureInstanceEvent
-    );
-
-    function GetUnpaddedViewportRect: TRectF;
-    function GetViewportRect: TRectF;
-    function GetDataViewportRect: TRectF;
-    function GetHeaderHeight: Single;
-    function GetTotalColumnWidth: Single;
-    function GetEffectiveColumnRightSpacing(
-      AColumn: Th5uGridColumn
-    ): Single;
-    function GetRowSpacingFor(
-      AViewRowIndex: Int64;
-      const ARowKey: Th5uRowKey
-    ): Single;
-    function GetGridLines: Boolean;
-    function ResolveColor(
-      const AColor: Th5uColor;
-      AFallback: TAlphaColor
-    ): TAlphaColor;
-    function ResolveDefaultCellColor: TAlphaColor;
-    function ResolveRowSpacingColor: TAlphaColor;
-    function ResolveColumnSpacingColor: TAlphaColor;
-    function ResolveContentPaddingColor: TAlphaColor;
-    function GetEstimatedTotalRowHeight: Double;
-    procedure LayoutScrollBars;
-    procedure UpdateScrollBars;
-    procedure BuildColumnLayout;
-    procedure BeginVisualPass;
-    function AcquireVisualCell(
-      const AContext: Th5uFactoryContext;
-      ADefaultClass: Th5uFmxVisualCellClass
-    ): Th5uFmxVisualCell;
-
-    procedure DrawContentPadding;
-    procedure DrawHeaders;
-    procedure DrawRows;
-    procedure DrawSpacingRect(
-      const ABounds: TRectF;
-      AElementKind: Th5uElementKind;
-      AColumn: Th5uGridColumn;
-      AViewRowIndex: Int64;
-      const ARowKey: Th5uRowKey;
-      AColor: TAlphaColor
-    );
-    function GetRowHeightFor(
-      AViewRowIndex: Int64;
-      const ARowKey: Th5uRowKey;
-      AAllowMeasure: Boolean = True
-    ): Single;
-    function MeasureCellHeight(
-      AViewRowIndex: Int64;
-      AColumn: Th5uGridColumn
-    ): Single;
-    function FindFirstVisibleRow(
-      AOffset: Double;
-      out ATop: Single
-    ): Int64;
-    function ResolveRowBackground(
-      AViewRowIndex: Int64
-    ): TAlphaColor;
-    function ResolveCellAppearance(
-      AViewRowIndex: Int64;
-      AColumn: Th5uGridColumn;
-      ASelected, AFocused: Boolean
-    ): Th5uResolvedAppearance;
-
-    function BuildThumbHintText(
-      AAxis: Th5uScrollAxis;
-      out AContext: Th5uFmxThumbHintContext
-    ): string;
-    procedure ShowThumbHint(AAxis: Th5uScrollAxis);
-    procedure HideThumbHint;
-
-    procedure StartEdit(const AHit: Th5uFmxHitTestInfo);
-    procedure CommitEditor;
-    procedure CancelEditor;
-    procedure ImageEditorCommit(Sender: TObject);
-    procedure ImageEditorCancel(Sender: TObject);
-    function ParseEditorValue(
-      AColumn: Th5uGridColumn;
-      const AText: string
-    ): TValue;
-
-    function GetVisualCellClass(
-      const AContext: Th5uFactoryContext;
-      ADefaultClass: Th5uFmxVisualCellClass
-    ): Th5uFmxVisualCellClass; virtual;
-    procedure DoCustomDraw(
-      ACanvas: TCanvas;
-      const AContext: Th5uFmxDrawContext;
-      AStage: Th5uFmxCustomDrawStage;
-      var ADrawDefault: Boolean
-    );
-  protected
-    procedure Paint; override;
-    procedure Resize; override;
-    procedure Notification(
-      AComponent: TComponent;
-      Operation: TOperation
-    ); override;
-    procedure MouseDown(
-      Button: TMouseButton;
-      Shift: TShiftState;
-      X, Y: Single
-    ); override;
-    procedure MouseMove(
-      Shift: TShiftState;
-      X, Y: Single
-    ); override;
-    procedure DblClick; override;
-    procedure MouseWheel(
-      Shift: TShiftState;
-      WheelDelta: Integer;
-      var Handled: Boolean
-    ); override;
-  public
-    constructor Create(AOwner: TComponent); override;
-    destructor Destroy; override;
-
-    function GridHitTest(X, Y: Single): Th5uFmxHitTestInfo;
-    procedure InvalidateAllRowHeights;
-    procedure MoveColumn(
-      AColumn: Th5uGridColumn;
-      ANewVisibleIndex: Integer
-    );
-    procedure SetColumnVisible(
-      AColumn: Th5uGridColumn;
-      AVisible: Boolean
-    );
-
-    property FactoryScope: Th5uFactoryScope read FFactoryScope;
-  published
-    property Align;
-    property Anchors;
-    property CanFocus;
-    property ClipChildren;
-    property ClipParent;
-    property Cursor;
-    property DragMode;
-    property Enabled;
-    property Height;
-    property HitTest;
-    property Margins;
-    property Opacity;
-    property Padding;
-    property Position;
-    property RotationAngle;
-    property RotationCenter;
-    property Scale;
-    property Size;
-    property StyleLookup;
-    property TabOrder;
-    property TabStop;
-    property Visible;
-    property Width;
-
-    property DataController: Th5uCustomDataController
-      read FDataController write SetDataController;
-    property SharedClassFactory: Th5uClassFactory
-      read FSharedClassFactory write SetSharedClassFactory;
-    property Columns: Th5uGridColumns
-      read FColumns write SetColumns;
-    property HeaderLayout: Th5uHeaderLayout
-      read FHeaderLayout write SetHeaderLayout;
-    property Selection: Th5uGridSelection
-      read FSelection write SetSelection;
-    property RowHeight: Th5uRowHeightOptions
-      read FRowHeight write SetRowHeight;
-    property Scrolling: Th5uScrollingOptions
-      read FScrolling write SetScrolling;
-    property ScrollHints: Th5uScrollHintOptions
-      read FScrollHints write SetScrollHints;
-    property RowStyles: Th5uRowStyleOptions
-      read FRowStyles write SetRowStyles;
-    property Customization: Th5uCustomizationOptions
-      read FCustomization write SetCustomization;
-    property Spacing: Th5uGridSpacingOptions
-      read FSpacing write SetSpacing;
-    property Appearance: Th5uGridAppearanceOptions
-      read FAppearance write SetAppearance;
-    property Theme: Th5uGridTheme
-      read FTheme write SetTheme
-      default Th5uGridTheme.ApplicationStyle;
-    property HeaderRowHeight: Single
-      read FHeaderRowHeight write FHeaderRowHeight;
-    property RowIndicatorWidth: Single
-      read FRowIndicatorWidth write FRowIndicatorWidth;
-    property ShowHeader: Boolean
-      read FShowHeader write FShowHeader default True;
-    property ShowRowIndicator: Boolean
-      read FShowRowIndicator write FShowRowIndicator default True;
-    property AllowEditing: Boolean
-      read FAllowEditing write FAllowEditing default True;
-    // Convenience switch for all grid-wide one-pixel separators.
-    // Explicit per-column RightSpacing values remain independently configurable.
-    property GridLines: Boolean
-      read GetGridLines write SetGridLines default True;
-    property TextSize: Single read FTextSize write FTextSize;
-
-    property OnGetClass: Th5uGetClassEvent
-      read GetOnGetClass write SetOnGetClass;
-    property OnCreateInstance: Th5uCreateInstanceEvent
-      read GetOnCreateInstance write SetOnCreateInstance;
-    property OnConfigureInstance: Th5uConfigureInstanceEvent
-      read GetOnConfigureInstance write SetOnConfigureInstance;
-    property OnGetRowHeight: Th5uFmxGetRowHeightEvent
-      read FOnGetRowHeight write FOnGetRowHeight;
-    property OnGetRowSpacing: Th5uFmxGetRowSpacingEvent
-      read FOnGetRowSpacing write FOnGetRowSpacing;
-    property OnGetThumbHint: Th5uFmxGetThumbHintEvent
-      read FOnGetThumbHint write FOnGetThumbHint;
-    property OnCustomDraw: Th5uFmxCustomDrawEvent
-      read FOnCustomDraw write FOnCustomDraw;
-    property OnClick;
-    property OnDblClick;
-    property OnDragDrop;
-    property OnDragOver;
-    property OnEnter;
-    property OnExit;
-    property OnKeyDown;
-    property OnKeyUp;
-    property OnMouseDown;
-    property OnMouseMove;
-    property OnMouseUp;
-    property OnMouseWheel;
-  end;
-```
-
-## `Vcl.h5u.Grid.Editors`
-
-Quelle: `Source/Vcl/Vcl.h5u.Grid.Editors.pas`
-
-```pascal
-uses
-  System.Classes,
-  System.SysUtils,
-  Vcl.Controls,
-  Vcl.ExtCtrls,
-  Vcl.Forms,
-  Vcl.Graphics,
-  Vcl.StdCtrls;
-
-type
-  Th5uVclImageEditForm = class(TForm)
-  private
-    FImage: TImage;
-    FButtonPanel: TPanel;
-    FLoadButton: TButton;
-    FPasteButton: TButton;
-    FClearButton: TButton;
-    FOkButton: TButton;
-    FCancelButton: TButton;
-    FBytes: TBytes;
-    procedure LoadClick(Sender: TObject);
-    procedure PasteClick(Sender: TObject);
-    procedure ClearClick(Sender: TObject);
-    procedure UpdatePreview;
-    procedure SetBytes(const AValue: TBytes);
-  public
-    constructor Create(AOwner: TComponent); override;
-    class function Execute(
-      AOwner: TComponent;
-      var ABytes: TBytes
-    ): Boolean;
-  end;
-```
-
-## `Vcl.h5u.Grid.Styles`
-
-Quelle: `Source/Vcl/Vcl.h5u.Grid.Styles.pas`
-
-```pascal
-{$SCOPEDENUMS ON}
-
-uses
-  System.SysUtils,
-  Vcl.Graphics,
-  Vcl.Themes,
-  h5u.Grid.Types;
-
-type
-  Th5uVclPalette = record
-    GridBackground: TColor;
-    EmptyArea: TColor;
-    CellBackground: TColor;
-    CellText: TColor;
-    CellBorder: TColor;
-    HeaderBackground: TColor;
-    HeaderText: TColor;
-    FixedBackground: TColor;
-    OddBackground: TColor;
-    EvenBackground: TColor;
-    StripeBackground: TColor;
-    HighlightedColumnBackground: TColor;
-    SelectedBackground: TColor;
-    SelectedText: TColor;
-    FocusBorder: TColor;
-    ErrorBackground: TColor;
-    WarningBackground: TColor;
-    DisabledText: TColor;
-    ThumbHintBackground: TColor;
-    ThumbHintText: TColor;
-  end;
-
-function h5uGetVclPalette(ATheme: Th5uGridTheme): Th5uVclPalette;
-function h5uBlendColor(AColor1, AColor2: TColor; AWeight: Byte): TColor;
-function h5uColorToVcl(const AColor: Th5uColor): TColor;
-function h5uVclToColor(const AColor: TColor): Th5uColor;
 ```
 
 ## `Vcl.h5u.Grid`
@@ -2602,6 +2669,16 @@ type
     property Appearance: Th5uResolvedAppearance read FAppearance;
   end;
 
+  // Lightweight pooled painter for row/column separators, content padding
+  // and the tree branch-end band. Its ClassId is resolved per grid instance.
+  Th5uVclSpacingCell = class(Th5uVclVisualCell)
+  protected
+    procedure PaintDefault(
+      AGrid: Th5uVclGrid;
+      ACanvas: TCanvas
+    ); override;
+  end;
+
   Th5uVclDataCell = class(Th5uVclVisualCell)
   private
     FPicture: TPicture;
@@ -2643,6 +2720,7 @@ type
     FCustomization: Th5uCustomizationOptions;
     FSpacing: Th5uGridSpacingOptions;
     FAppearance: Th5uGridAppearanceOptions;
+    FTree: Th5uTreeOptions;
 
     FTheme: Th5uGridTheme;
     FHeaderRowHeight: Integer;
@@ -2681,6 +2759,8 @@ type
     FOnGetRowAppearance: Th5uRowAppearanceEvent;
     FOnGetCellAppearance: Th5uCellAppearanceEvent;
     FOnCustomDraw: Th5uVclCustomDrawEvent;
+    FOnGetTreeLevel: Th5uGetTreeLevelEvent;
+    FOnGetTreeBranchEnd: Th5uGetTreeBranchEndEvent;
 
     procedure ColumnsChanged(Sender: TObject; AColumn: Th5uGridColumn);
     procedure DataChanged(Sender: TObject; const AChange: Th5uDataChange);
@@ -2698,6 +2778,7 @@ type
     procedure SetCustomization(const AValue: Th5uCustomizationOptions);
     procedure SetSpacing(const AValue: Th5uGridSpacingOptions);
     procedure SetAppearance(const AValue: Th5uGridAppearanceOptions);
+    procedure SetTree(const AValue: Th5uTreeOptions);
     procedure SetSelection(const AValue: Th5uGridSelection);
     procedure SetGridLines(const AValue: Boolean);
     procedure SetHeaderRowHeight(const AValue: Integer);
@@ -2737,6 +2818,26 @@ type
       AViewRowIndex: Int64;
       const ARowKey: Th5uRowKey
     ): Integer;
+    function TryGetTreeLevelFor(
+      AViewRowIndex: Int64;
+      const ARowKey: Th5uRowKey;
+      out ALevel: Integer
+    ): Boolean;
+    function GetTreeBranchEndInfo(
+      AViewRowIndex: Int64;
+      const ARowKey: Th5uRowKey;
+      out ATreeLevel: Integer;
+      out AClosedTreeLevels: Integer
+    ): Boolean;
+    function GetEffectiveRowSeparatorFor(
+      AViewRowIndex: Int64;
+      const ARowKey: Th5uRowKey;
+      out AElementKind: Th5uElementKind;
+      out AColor: TColor;
+      out AStyleName: string;
+      out ATreeLevel: Integer;
+      out AClosedTreeLevels: Integer
+    ): Integer;
     function GetGridLines: Boolean;
     function ResolveColor(
       const AColor: Th5uColor;
@@ -2746,6 +2847,10 @@ type
     function ResolveRowSpacingColor: TColor;
     function ResolveColumnSpacingColor: TColor;
     function ResolveContentPaddingColor: TColor;
+    function ResolveTreeBranchEndColor(
+      AViewRowIndex: Int64;
+      const ARowKey: Th5uRowKey
+    ): TColor;
     function GetEstimatedTotalRowHeight: Int64;
     procedure LayoutScrollBars;
     procedure UpdateScrollBars;
@@ -2765,7 +2870,10 @@ type
       AColumn: Th5uGridColumn;
       AViewRowIndex: Int64;
       const ARowKey: Th5uRowKey;
-      AColor: TColor
+      AColor: TColor;
+      const AStyleName: string = '';
+      ATreeLevel: Integer = -1;
+      AClosedTreeLevels: Integer = 0
     );
     procedure DrawDefaultHeaders;
     procedure DrawCustomHeaderLayout;
@@ -2945,6 +3053,8 @@ type
       read FSpacing write SetSpacing;
     property Appearance: Th5uGridAppearanceOptions
       read FAppearance write SetAppearance;
+    property Tree: Th5uTreeOptions
+      read FTree write SetTree;
 
     property Theme: Th5uGridTheme
       read FTheme write SetTheme
@@ -2982,6 +3092,10 @@ type
       read FOnGetCellAppearance write FOnGetCellAppearance;
     property OnCustomDraw: Th5uVclCustomDrawEvent
       read FOnCustomDraw write FOnCustomDraw;
+    property OnGetTreeLevel: Th5uGetTreeLevelEvent
+      read FOnGetTreeLevel write FOnGetTreeLevel;
+    property OnGetTreeBranchEnd: Th5uGetTreeBranchEndEvent
+      read FOnGetTreeBranchEnd write FOnGetTreeBranchEnd;
     property OnClick;
     property OnDblClick;
     property OnEnter;
@@ -2993,4 +3107,95 @@ type
     property OnMouseMove;
     property OnMouseUp;
   end;
+```
+
+## `Vcl.h5u.Grid.Design`
+
+Quelle: `Source/Design/Vcl.h5u.Grid.Design.pas`
+
+```pascal
+procedure Register;
+```
+
+## `Vcl.h5u.Grid.Editors`
+
+Quelle: `Source/Vcl/Vcl.h5u.Grid.Editors.pas`
+
+```pascal
+uses
+  System.Classes,
+  System.SysUtils,
+  Vcl.Controls,
+  Vcl.ExtCtrls,
+  Vcl.Forms,
+  Vcl.Graphics,
+  Vcl.StdCtrls;
+
+type
+  Th5uVclImageEditForm = class(TForm)
+  private
+    FImage: TImage;
+    FButtonPanel: TPanel;
+    FLoadButton: TButton;
+    FPasteButton: TButton;
+    FClearButton: TButton;
+    FOkButton: TButton;
+    FCancelButton: TButton;
+    FBytes: TBytes;
+    procedure LoadClick(Sender: TObject);
+    procedure PasteClick(Sender: TObject);
+    procedure ClearClick(Sender: TObject);
+    procedure UpdatePreview;
+    procedure SetBytes(const AValue: TBytes);
+  public
+    constructor Create(AOwner: TComponent); override;
+    class function Execute(
+      AOwner: TComponent;
+      var ABytes: TBytes
+    ): Boolean;
+  end;
+```
+
+## `Vcl.h5u.Grid.Styles`
+
+Quelle: `Source/Vcl/Vcl.h5u.Grid.Styles.pas`
+
+```pascal
+{$SCOPEDENUMS ON}
+
+uses
+  System.SysUtils,
+  Vcl.Graphics,
+  Vcl.Themes,
+  h5u.Grid.Types;
+
+type
+  Th5uVclPalette = record
+    GridBackground: TColor;
+    EmptyArea: TColor;
+    CellBackground: TColor;
+    CellText: TColor;
+    CellBorder: TColor;
+    HeaderBackground: TColor;
+    HeaderText: TColor;
+    FixedBackground: TColor;
+    OddBackground: TColor;
+    EvenBackground: TColor;
+    StripeBackground: TColor;
+    HighlightedColumnBackground: TColor;
+    SelectedBackground: TColor;
+    SelectedText: TColor;
+    FocusBorder: TColor;
+    ErrorBackground: TColor;
+    WarningBackground: TColor;
+    TreeBranchEndBackground: TColor;
+    DisabledText: TColor;
+    ThumbHintBackground: TColor;
+    ThumbHintText: TColor;
+  end;
+
+function h5uGetVclPalette(ATheme: Th5uGridTheme): Th5uVclPalette;
+function h5uBlendColor(AColor1, AColor2: TColor; AWeight: Byte): TColor;
+function h5uColorToVcl(const AColor: Th5uColor): TColor;
+function h5uVclToColor(const AColor: TColor): Th5uColor;
 ```

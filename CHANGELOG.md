@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.1.2 – 2026-09-01
+
+### Tree-Abschlussleiste
+
+- `Grid.Tree.LevelColumnId` liest die Ebene einer vorab in Preorder-Reihenfolge gelieferten Tree-Zeile,
+- `Grid.Tree.BranchEndBand` kennzeichnet das Ende eines Child-Astes, wenn die nächste sichtbare Zeile auf eine niedrigere Ebene wechselt,
+- `BranchEndBand.Height` ersetzt an dieser Stelle das normale `RowSpacing`; beide Werte werden nicht addiert,
+- `BranchEndBand.Color` und `StyleName` erlauben eine abweichende Darstellung; der integrierte semantische Style heißt `TreeBranchEnd`,
+- `IncludeEndOfData` steuert den Abschluss des letzten Astes am Datenende,
+- der Look-ahead berücksichtigt nummerierte Seitengrenzen und behandelt ein Seitenende nicht als Datenende,
+- `OnGetTreeLevel` und `OnGetTreeBranchEnd` erlauben alternative Datenmodelle und Sonderregeln,
+- Factory- und CustomDraw-Kontext enthalten `TreeLevel`, `ClosedTreeLevels` und `Th5uElementKind.TreeBranchEndBand`,
+- Separatoren und Tree-Abschlussleisten werden als gepoolte sichtbare Elemente über den lokalen Grid-Factory-Scope materialisiert,
+- VCL- und FMX-ClientDataSet-Demos enthalten `TREE_LEVEL`-Musterdaten und einen zuschaltbaren Test,
+- veraltete Property-/Feldnamen in den ClientDataSet-Demoformularen wurden bereinigt.
+
 ## 0.1.1 – 2026-09-01
 
 ### Trennflächen, Abstände und Farben

@@ -29,6 +29,7 @@ type
     PictureCheck: TCheckBox;
     SeparatorsCheck: TCheckBox;
     ColumnColorsCheck: TCheckBox;
+    TreeEndBandCheck: TCheckBox;
     NextPageButton: TButton;
     Grid: Th5uFmxGrid;
     SampleData: Th5uSampleClientDataSet;
@@ -69,6 +70,10 @@ begin
     Grid.RowHeight.Mode := Th5uRowHeightMode.Automatic
   else
     Grid.RowHeight.Mode := Th5uRowHeightMode.Fixed;
+
+  Grid.Tree.Enabled := TreeEndBandCheck.IsChecked;
+  Grid.Tree.LevelColumnId := 'TREE_LEVEL';
+  Grid.Tree.BranchEndBand.Enabled := TreeEndBandCheck.IsChecked;
 
   if EveryFifthCheck.IsChecked then
   begin
@@ -156,7 +161,7 @@ end;
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
   if not SampleData.Active then
-    SampleData.RebuildSampleData;
+    SampleData.RecreateSampleData;
   ApplyOptions;
 end;
 

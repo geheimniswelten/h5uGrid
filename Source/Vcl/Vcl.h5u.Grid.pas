@@ -1,4 +1,4 @@
-﻿unit Vcl.h5u.Grid;
+unit Vcl.h5u.Grid;
 
 interface
 
@@ -181,6 +181,16 @@ type
     property Appearance: Th5uResolvedAppearance read FAppearance;
   end;
 
+  // Lightweight pooled painter for row/column separators, content padding
+  // and the tree branch-end band. Its ClassId is resolved per grid instance.
+  Th5uVclSpacingCell = class(Th5uVclVisualCell)
+  protected
+    procedure PaintDefault(
+      AGrid: Th5uVclGrid;
+      ACanvas: TCanvas
+    ); override;
+  end;
+
   Th5uVclDataCell = class(Th5uVclVisualCell)
   private
     FPicture: TPicture;
@@ -222,6 +232,7 @@ type
     FCustomization: Th5uCustomizationOptions;
     FSpacing: Th5uGridSpacingOptions;
     FAppearance: Th5uGridAppearanceOptions;
+    FTree: Th5uTreeOptions;
 
     FTheme: Th5uGridTheme;
     FHeaderRowHeight: Integer;
@@ -260,6 +271,8 @@ type
     FOnGetRowAppearance: Th5uRowAppearanceEvent;
     FOnGetCellAppearance: Th5uCellAppearanceEvent;
     FOnCustomDraw: Th5uVclCustomDrawEvent;
+    FOnGetTreeLevel: Th5uGetTreeLevelEvent;
+    FOnGetTreeBranchEnd: Th5uGetTreeBranchEndEvent;
 
     procedure ColumnsChanged(Sender: TObject; AColumn: Th5uGridColumn);
     procedure DataChanged(Sender: TObject; const AChange: Th5uDataChange);
@@ -277,6 +290,7 @@ type
     procedure SetCustomization(const AValue: Th5uCustomizationOptions);
     procedure SetSpacing(const AValue: Th5uGridSpacingOptions);
     procedure SetAppearance(const AValue: Th5uGridAppearanceOptions);
+    procedure SetTree(const AValue: Th5uTreeOptions);
     procedure SetSelection(const AValue: Th5uGridSelection);
     procedure SetGridLines(const AValue: Boolean);
     procedure SetHeaderRowHeight(const AValue: Integer);
@@ -316,6 +330,26 @@ type
       AViewRowIndex: Int64;
       const ARowKey: Th5uRowKey
     ): Integer;
+    function TryGetTreeLevelFor(
+      AViewRowIndex: Int64;
+      const ARowKey: Th5uRowKey;
+      out ALevel: Integer
+    ): Boolean;
+    function GetTreeBranchEndInfo(
+      AViewRowIndex: Int64;
+      const ARowKey: Th5uRowKey;
+      out ATreeLevel: Integer;
+      out AClosedTreeLevels: Integer
+    ): Boolean;
+    function GetEffectiveRowSeparatorFor(
+      AViewRowIndex: Int64;
+      const ARowKey: Th5uRowKey;
+      out AElementKind: Th5uElementKind;
+      out AColor: TColor;
+      out AStyleName: string;
+      out ATreeLevel: Integer;
+      out AClosedTreeLevels: Integer
+    ): Integer;
     function GetGridLines: Boolean;
     function ResolveColor(
       const AColor: Th5uColor;
@@ -325,6 +359,10 @@ type
     function ResolveRowSpacingColor: TColor;
     function ResolveColumnSpacingColor: TColor;
     function ResolveContentPaddingColor: TColor;
+    function ResolveTreeBranchEndColor(
+      AViewRowIndex: Int64;
+      const ARowKey: Th5uRowKey
+    ): TColor;
     function GetEstimatedTotalRowHeight: Int64;
     procedure LayoutScrollBars;
     procedure UpdateScrollBars;
@@ -344,7 +382,10 @@ type
       AColumn: Th5uGridColumn;
       AViewRowIndex: Int64;
       const ARowKey: Th5uRowKey;
-      AColor: TColor
+      AColor: TColor;
+      const AStyleName: string = '';
+      ATreeLevel: Integer = -1;
+      AClosedTreeLevels: Integer = 0
     );
     procedure DrawDefaultHeaders;
     procedure DrawCustomHeaderLayout;
@@ -524,6 +565,8 @@ type
       read FSpacing write SetSpacing;
     property Appearance: Th5uGridAppearanceOptions
       read FAppearance write SetAppearance;
+    property Tree: Th5uTreeOptions
+      read FTree write SetTree;
 
     property Theme: Th5uGridTheme
       read FTheme write SetTheme
@@ -561,6 +604,10 @@ type
       read FOnGetCellAppearance write FOnGetCellAppearance;
     property OnCustomDraw: Th5uVclCustomDrawEvent
       read FOnCustomDraw write FOnCustomDraw;
+    property OnGetTreeLevel: Th5uGetTreeLevelEvent
+      read FOnGetTreeLevel write FOnGetTreeLevel;
+    property OnGetTreeBranchEnd: Th5uGetTreeBranchEndEvent
+      read FOnGetTreeBranchEnd write FOnGetTreeBranchEnd;
     property OnClick;
     property OnDblClick;
     property OnEnter;
@@ -695,6 +742,18 @@ begin
   // cell would double their width and would make per-column spacing impossible.
   ACanvas.Brush.Color := EffectiveBackground(AGrid);
   ACanvas.FillRect(FBounds);
+end;
+
+{ Th5uVclSpacingCell }
+
+procedure Th5uVclSpacingCell.PaintDefault(
+  AGrid: Th5uVclGrid; ACanvas: TCanvas);
+begin
+  if not Appearance.HasBackground then
+    Exit;
+  ACanvas.Brush.Style := bsSolid;
+  ACanvas.Brush.Color := h5uColorToVcl(Appearance.Background);
+  ACanvas.FillRect(Bounds);
 end;
 
 destructor Th5uVclDataCell.Destroy;
@@ -1369,6 +1428,8 @@ begin
   FSpacing.OnChanged := OptionsChanged;
   FAppearance := Th5uGridAppearanceOptions.Create;
   FAppearance.OnChanged := OptionsChanged;
+  FTree := Th5uTreeOptions.Create;
+  FTree.OnChanged := OptionsChanged;
 
   FDataLink := Th5uDataControllerLink.Create;
   FDataLink.OnChanged := DataChanged;
@@ -1431,6 +1492,7 @@ begin
   FRowHeightCache.Free;
   FCellPool.Free;
   FDataLink.Free;
+  FTree.Free;
   FAppearance.Free;
   FSpacing.Free;
   FCustomization.Free;
@@ -2007,6 +2069,11 @@ var
   LClassId: Th5uClassId;
   LOverscanBottom: Integer;
   LColumnSpacing: Integer;
+  LRowSeparatorKind: Th5uElementKind;
+  LRowSeparatorColor: TColor;
+  LRowSeparatorStyleName: string;
+  LTreeLevel: Integer;
+  LClosedTreeLevels: Integer;
 begin
   if not Assigned(FDataController) then
   begin
@@ -2042,7 +2109,15 @@ begin
     begin
       LRowKey := FDataController.GetRowKey(LRowIndex);
       LHeight := GetRowHeightFor(LRowIndex, LRowKey);
-      LRowSpacing := GetRowSpacingFor(LRowIndex, LRowKey);
+      LRowSpacing := GetEffectiveRowSeparatorFor(
+        LRowIndex,
+        LRowKey,
+        LRowSeparatorKind,
+        LRowSeparatorColor,
+        LRowSeparatorStyleName,
+        LTreeLevel,
+        LClosedTreeLevels
+      );
       LRowRect := Rect(
         LDataRect.Left,
         LTop,
@@ -2220,11 +2295,14 @@ begin
         if not IsRectEmpty(LSeparatorRect) then
           DrawSpacingRect(
             LSeparatorRect,
-            Th5uElementKind.RowSpacing,
+            LRowSeparatorKind,
             nil,
             LRowIndex,
             LRowKey,
-            ResolveRowSpacingColor
+            LRowSeparatorColor,
+            LRowSeparatorStyleName,
+            LTreeLevel,
+            LClosedTreeLevels
           );
       end;
 
@@ -2244,13 +2322,15 @@ procedure Th5uVclGrid.DrawSpacingRect(
   AColumn: Th5uGridColumn;
   AViewRowIndex: Int64;
   const ARowKey: Th5uRowKey;
-  AColor: TColor);
+  AColor: TColor;
+  const AStyleName: string;
+  ATreeLevel: Integer;
+  AClosedTreeLevels: Integer);
 var
   LClassId: Th5uClassId;
   LFactoryContext: Th5uFactoryContext;
-  LDrawContext: Th5uVclDrawContext;
   LAppearance: Th5uResolvedAppearance;
-  LDrawDefault: Boolean;
+  LCell: Th5uVclVisualCell;
 begin
   if IsRectEmpty(ABounds) then
     Exit;
@@ -2260,6 +2340,8 @@ begin
       LClassId := h5uClassIdGridRowSpacing;
     Th5uElementKind.ColumnSpacing:
       LClassId := h5uClassIdGridColumnSpacing;
+    Th5uElementKind.TreeBranchEndBand:
+      LClassId := h5uClassIdGridTreeBranchEndBand;
   else
     LClassId := h5uClassIdGridContentPadding;
   end;
@@ -2273,39 +2355,39 @@ begin
   );
   LFactoryContext.Column := AColumn;
   LFactoryContext.ViewRowIndex := AViewRowIndex;
-  LFactoryContext.SourceRowIndex := AViewRowIndex;
+  if Assigned(FDataController) and (AViewRowIndex >= 0) then
+    LFactoryContext.SourceRowIndex :=
+      FDataController.GetSourceRowIndex(AViewRowIndex)
+  else
+    LFactoryContext.SourceRowIndex := AViewRowIndex;
   LFactoryContext.RowKey := ARowKey;
+  LFactoryContext.TreeLevel := ATreeLevel;
+  LFactoryContext.ClosedTreeLevels := AClosedTreeLevels;
+  if AElementKind = Th5uElementKind.TreeBranchEndBand then
+    Include(
+      LFactoryContext.ElementFlags,
+      Th5uElementFlag.TreeBranchEnd
+    );
 
   LAppearance.Clear;
+  LAppearance.StyleName := AStyleName;
   if AColor <> clNone then
   begin
     LAppearance.HasBackground := True;
     LAppearance.Background := h5uVclToColor(AColor);
   end;
-  LDrawContext.FactoryContext := LFactoryContext;
-  LDrawContext.Bounds := ABounds;
-  LDrawContext.DisplayText := '';
-  LDrawContext.Appearance := LAppearance;
-
-  LDrawDefault := True;
-  DoCustomDraw(
-    Canvas,
-    LDrawContext,
-    Th5uCustomDrawStage.BeforeDefault,
-    LDrawDefault
+  LCell := AcquireVisualCell(
+    LFactoryContext,
+    Th5uVclSpacingCell
   );
-  if LDrawDefault and (AColor <> clNone) then
-  begin
-    Canvas.Brush.Style := bsSolid;
-    Canvas.Brush.Color := AColor;
-    Canvas.FillRect(ABounds);
-  end;
-  DoCustomDraw(
-    Canvas,
-    LDrawContext,
-    Th5uCustomDrawStage.AfterDefault,
-    LDrawDefault
+  LCell.BindCell(
+    LFactoryContext,
+    ABounds,
+    TValue.Empty,
+    '',
+    LAppearance
   );
+  LCell.Paint(Self, Canvas);
 end;
 
 procedure Th5uVclGrid.EditorExit(Sender: TObject);
@@ -2342,6 +2424,11 @@ var
   LExtent: Integer;
   LRemaining: Int64;
   LKey: Th5uRowKey;
+  LElementKind: Th5uElementKind;
+  LColor: TColor;
+  LStyleName: string;
+  LTreeLevel: Integer;
+  LClosedTreeLevels: Integer;
 begin
   Result := -1;
   ATop := GetDataViewportRect.Top;
@@ -2356,7 +2443,15 @@ begin
   begin
     LKey := FDataController.GetRowKey(LIndex);
     LHeight := GetRowHeightFor(LIndex, LKey, LCount <= 5000);
-    LSpacing := GetRowSpacingFor(LIndex, LKey);
+    LSpacing := GetEffectiveRowSeparatorFor(
+      LIndex,
+      LKey,
+      LElementKind,
+      LColor,
+      LStyleName,
+      LTreeLevel,
+      LClosedTreeLevels
+    );
     LExtent := LHeight + LSpacing;
     if LRemaining < LExtent then
     begin
@@ -2389,6 +2484,12 @@ var
   LIndex: Int64;
   LKey: Th5uRowKey;
   LHeight: Integer;
+  LSpacing: Integer;
+  LElementKind: Th5uElementKind;
+  LColor: TColor;
+  LStyleName: string;
+  LTreeLevel: Integer;
+  LClosedTreeLevels: Integer;
 begin
   Result := 0;
   if not Assigned(FDataController) then
@@ -2396,7 +2497,8 @@ begin
 
   LCount := FDataController.GetRowCount;
   if (FRowHeight.Mode = Th5uRowHeightMode.Fixed) and
-     not Assigned(FOnGetRowSpacing) then
+     not Assigned(FOnGetRowSpacing) and
+     not (FTree.Enabled and FTree.BranchEndBand.Enabled) then
     Exit(
       LCount *
       (FRowHeight.FixedHeight + FSpacing.RowSpacing)
@@ -2412,7 +2514,16 @@ begin
         LHeight := FRowHeight.FixedHeight
       else
         LHeight := GetRowHeightFor(LIndex, LKey, True);
-      Inc(Result, LHeight + GetRowSpacingFor(LIndex, LKey));
+      LSpacing := GetEffectiveRowSeparatorFor(
+        LIndex,
+        LKey,
+        LElementKind,
+        LColor,
+        LStyleName,
+        LTreeLevel,
+        LClosedTreeLevels
+      );
+      Inc(Result, LHeight + LSpacing);
     end;
   end
   else
@@ -2603,6 +2714,173 @@ begin
   Result := EnsureRange(Result, 0, 1000);
 end;
 
+function Th5uVclGrid.TryGetTreeLevelFor(
+  AViewRowIndex: Int64;
+  const ARowKey: Th5uRowKey;
+  out ALevel: Integer): Boolean;
+var
+  LColumn: Th5uGridColumn;
+  LContext: Th5uTreeLevelContext;
+  LFieldName: string;
+  LValue: TValue;
+begin
+  ALevel := 0;
+  Result := False;
+  if not FTree.Enabled or not Assigned(FDataController) then
+    Exit;
+
+  LFieldName := Trim(FTree.LevelColumnId);
+  if LFieldName <> '' then
+  begin
+    LColumn := FColumns.FindById(LFieldName);
+    if not Assigned(LColumn) then
+      LColumn := FColumns.FindByFieldName(LFieldName);
+    if Assigned(LColumn) then
+      LFieldName := LColumn.FieldName;
+
+    LValue := FDataController.GetValue(
+      AViewRowIndex,
+      LFieldName
+    );
+    Result := h5uTryValueAsInteger(LValue, ALevel);
+  end;
+
+  if Assigned(FOnGetTreeLevel) then
+  begin
+    LContext := Default(Th5uTreeLevelContext);
+    LContext.Grid := Self;
+    LContext.DataController := FDataController;
+    LContext.RowKey := ARowKey;
+    LContext.ViewRowIndex := AViewRowIndex;
+    LContext.SourceRowIndex := FDataController.GetSourceRowIndex(
+      AViewRowIndex
+    );
+    FOnGetTreeLevel(Self, LContext, ALevel, Result);
+  end;
+
+  if Result then
+    ALevel := Max(0, ALevel);
+end;
+
+function Th5uVclGrid.GetTreeBranchEndInfo(
+  AViewRowIndex: Int64;
+  const ARowKey: Th5uRowKey;
+  out ATreeLevel: Integer;
+  out AClosedTreeLevels: Integer): Boolean;
+var
+  LContext: Th5uTreeBranchEndContext;
+  LCurrentAvailable: Boolean;
+  LNextAvailable: Boolean;
+  LNextIndex: Int64;
+  LNextKey: Th5uRowKey;
+  LNextLevel: Integer;
+  LHasNextRow: Boolean;
+begin
+  Result := False;
+  ATreeLevel := 0;
+  AClosedTreeLevels := 0;
+  if not FTree.Enabled or not Assigned(FDataController) then
+    Exit;
+
+  LCurrentAvailable := TryGetTreeLevelFor(
+    AViewRowIndex,
+    ARowKey,
+    ATreeLevel
+  );
+
+  LNextIndex := AViewRowIndex + 1;
+  LNextKey := Th5uRowKey.Empty;
+  LNextLevel := ATreeLevel;
+  LNextAvailable := False;
+  LHasNextRow := FDataController.IsRowAvailable(LNextIndex);
+
+  if LHasNextRow then
+  begin
+    LNextKey := FDataController.GetRowKey(LNextIndex);
+    LNextAvailable := TryGetTreeLevelFor(
+      LNextIndex,
+      LNextKey,
+      LNextLevel
+    );
+  end;
+
+  if LCurrentAvailable and (ATreeLevel > 0) then
+  begin
+    if not LHasNextRow then
+    begin
+      Result := FTree.BranchEndBand.IncludeEndOfData;
+      if Result then
+        AClosedTreeLevels := ATreeLevel;
+    end
+    else if LNextAvailable and (LNextLevel < ATreeLevel) then
+    begin
+      Result := True;
+      AClosedTreeLevels := ATreeLevel - LNextLevel;
+    end;
+  end;
+
+  if Assigned(FOnGetTreeBranchEnd) then
+  begin
+    LContext := Default(Th5uTreeBranchEndContext);
+    LContext.Grid := Self;
+    LContext.DataController := FDataController;
+    LContext.RowKey := ARowKey;
+    LContext.NextRowKey := LNextKey;
+    LContext.ViewRowIndex := AViewRowIndex;
+    LContext.SourceRowIndex := FDataController.GetSourceRowIndex(
+      AViewRowIndex
+    );
+    LContext.CurrentLevel := ATreeLevel;
+    LContext.NextLevel := LNextLevel;
+    LContext.IsEndOfData := not LHasNextRow;
+    FOnGetTreeBranchEnd(
+      Self,
+      LContext,
+      Result,
+      AClosedTreeLevels
+    );
+  end;
+
+  if Result and (AClosedTreeLevels <= 0) then
+    AClosedTreeLevels := 1;
+end;
+
+function Th5uVclGrid.GetEffectiveRowSeparatorFor(
+  AViewRowIndex: Int64;
+  const ARowKey: Th5uRowKey;
+  out AElementKind: Th5uElementKind;
+  out AColor: TColor;
+  out AStyleName: string;
+  out ATreeLevel: Integer;
+  out AClosedTreeLevels: Integer): Integer;
+begin
+  AElementKind := Th5uElementKind.RowSpacing;
+  AColor := ResolveRowSpacingColor;
+  AStyleName := '';
+  ATreeLevel := -1;
+  AClosedTreeLevels := 0;
+
+  if FTree.Enabled and
+     FTree.BranchEndBand.Enabled and
+     GetTreeBranchEndInfo(
+       AViewRowIndex,
+       ARowKey,
+       ATreeLevel,
+       AClosedTreeLevels
+     ) then
+  begin
+    // The branch-end band replaces regular RowSpacing. It is deliberately
+    // not added to it, so a height of 0 also removes the separator entirely.
+    Result := FTree.BranchEndBand.Height;
+    AElementKind := Th5uElementKind.TreeBranchEndBand;
+    AColor := ResolveTreeBranchEndColor(AViewRowIndex, ARowKey);
+    AStyleName := FTree.BranchEndBand.StyleName;
+    Exit;
+  end;
+
+  Result := GetRowSpacingFor(AViewRowIndex, ARowKey);
+end;
+
 function Th5uVclGrid.GetGridLines: Boolean;
 begin
   // Explicit per-column RightSpacing values are intentionally independent
@@ -2701,6 +2979,38 @@ begin
     FSpacing.ContentPaddingColor,
     h5uGetVclPalette(FTheme).CellBorder
   );
+end;
+
+function Th5uVclGrid.ResolveTreeBranchEndColor(
+  AViewRowIndex: Int64;
+  const ARowKey: Th5uRowKey): TColor;
+var
+  LAppearance: Th5uResolvedAppearance;
+begin
+  if FTree.BranchEndBand.Color <> h5uColorDefault then
+    Exit(ResolveColor(
+      FTree.BranchEndBand.Color,
+      ResolveRowSpacingColor
+    ));
+
+  if SameText(
+       FTree.BranchEndBand.StyleName,
+       'TreeBranchEnd'
+     ) then
+    Exit(h5uGetVclPalette(FTheme).TreeBranchEndBackground);
+
+  if FTree.BranchEndBand.StyleName <> '' then
+  begin
+    LAppearance := ResolveRowAppearance(
+      AViewRowIndex,
+      ARowKey,
+      FTree.BranchEndBand.StyleName
+    );
+    if LAppearance.HasBackground then
+      Exit(h5uColorToVcl(LAppearance.Background));
+  end;
+
+  Result := ResolveRowSpacingColor;
 end;
 
 function Th5uVclGrid.GetVisualCellClass(
@@ -3226,6 +3536,10 @@ begin
     Result.Background := h5uVclToColor(LPalette.ErrorBackground)
   else if SameText(AStyleName, 'Warning') then
     Result.Background := h5uVclToColor(LPalette.WarningBackground)
+  else if SameText(AStyleName, 'TreeBranchEnd') then
+    Result.Background := h5uVclToColor(
+      LPalette.TreeBranchEndBackground
+    )
   else if SameText(AStyleName, 'Stripe') then
     Result.Background := h5uVclToColor(LPalette.StripeBackground)
   else if FAppearance.DefaultCellColor <> h5uColorDefault then
@@ -3347,6 +3661,13 @@ procedure Th5uVclGrid.SetAppearance(
   const AValue: Th5uGridAppearanceOptions);
 begin
   FAppearance.Assign(AValue);
+end;
+
+procedure Th5uVclGrid.SetTree(
+  const AValue: Th5uTreeOptions);
+begin
+  if Assigned(AValue) then
+    FTree.Assign(AValue);
 end;
 
 procedure Th5uVclGrid.SetGridLines(const AValue: Boolean);

@@ -1,4 +1,4 @@
-﻿unit h5u.Grid.Options;
+unit h5u.Grid.Options;
 
 interface
 
@@ -80,6 +80,70 @@ type
     property DefaultCellColor: Th5uColor
       read FDefaultCellColor write SetDefaultCellColor
       default h5uColorDefault;
+  end;
+
+  // When a flattened tree leaves one or more child levels, this band replaces
+  // the normal row spacing after the last visible descendant. It is never
+  // added on top of RowSpacing.
+  Th5uTreeBranchEndBandOptions = class(TPersistent)
+  private
+    FEnabled: Boolean;
+    FHeight: Integer;
+    FColor: Th5uColor;
+    FStyleName: string;
+    FIncludeEndOfData: Boolean;
+    FOnChanged: Th5uOptionsChangedEvent;
+    procedure Changed;
+    procedure SetColor(const AValue: Th5uColor);
+    procedure SetEnabled(const AValue: Boolean);
+    procedure SetHeight(const AValue: Integer);
+    procedure SetIncludeEndOfData(const AValue: Boolean);
+    procedure SetStyleName(const AValue: string);
+  public
+    constructor Create;
+    procedure Assign(Source: TPersistent); override;
+    property OnChanged: Th5uOptionsChangedEvent
+      read FOnChanged write FOnChanged;
+  published
+    property Enabled: Boolean
+      read FEnabled write SetEnabled default False;
+    property Height: Integer
+      read FHeight write SetHeight default 6;
+    property Color: Th5uColor
+      read FColor write SetColor default h5uColorDefault;
+    property StyleName: string
+      read FStyleName write SetStyleName;
+    property IncludeEndOfData: Boolean
+      read FIncludeEndOfData write SetIncludeEndOfData default True;
+  end;
+
+  Th5uTreeOptions = class(TPersistent)
+  private
+    FEnabled: Boolean;
+    FLevelColumnId: string;
+    FBranchEndBand: Th5uTreeBranchEndBandOptions;
+    FOnChanged: Th5uOptionsChangedEvent;
+    procedure Changed;
+    procedure ChildChanged(Sender: TObject);
+    procedure SetBranchEndBand(
+      const AValue: Th5uTreeBranchEndBandOptions
+    );
+    procedure SetEnabled(const AValue: Boolean);
+    procedure SetLevelColumnId(const AValue: string);
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure Assign(Source: TPersistent); override;
+    property OnChanged: Th5uOptionsChangedEvent
+      read FOnChanged write FOnChanged;
+  published
+    property Enabled: Boolean
+      read FEnabled write SetEnabled default False;
+    // May name a Column.Id, Column.FieldName or a controller field directly.
+    property LevelColumnId: string
+      read FLevelColumnId write SetLevelColumnId;
+    property BranchEndBand: Th5uTreeBranchEndBandOptions
+      read FBranchEndBand write SetBranchEndBand;
   end;
 
   Th5uRowHeightOptions = class(TPersistent)
@@ -472,6 +536,153 @@ begin
   if FDefaultCellColor = AValue then
     Exit;
   FDefaultCellColor := AValue;
+  Changed;
+end;
+
+{ Th5uTreeBranchEndBandOptions }
+
+procedure Th5uTreeBranchEndBandOptions.Assign(Source: TPersistent);
+var
+  LSource: Th5uTreeBranchEndBandOptions;
+begin
+  if Source is Th5uTreeBranchEndBandOptions then
+  begin
+    LSource := Th5uTreeBranchEndBandOptions(Source);
+    FEnabled := LSource.FEnabled;
+    FHeight := LSource.FHeight;
+    FColor := LSource.FColor;
+    FStyleName := LSource.FStyleName;
+    FIncludeEndOfData := LSource.FIncludeEndOfData;
+    Changed;
+  end
+  else
+    inherited Assign(Source);
+end;
+
+procedure Th5uTreeBranchEndBandOptions.Changed;
+begin
+  if Assigned(FOnChanged) then
+    FOnChanged(Self);
+end;
+
+constructor Th5uTreeBranchEndBandOptions.Create;
+begin
+  inherited Create;
+  FEnabled := False;
+  FHeight := 6;
+  FColor := h5uColorDefault;
+  FStyleName := '';
+  FIncludeEndOfData := True;
+end;
+
+procedure Th5uTreeBranchEndBandOptions.SetColor(
+  const AValue: Th5uColor);
+begin
+  if FColor = AValue then
+    Exit;
+  FColor := AValue;
+  Changed;
+end;
+
+procedure Th5uTreeBranchEndBandOptions.SetEnabled(
+  const AValue: Boolean);
+begin
+  if FEnabled = AValue then
+    Exit;
+  FEnabled := AValue;
+  Changed;
+end;
+
+procedure Th5uTreeBranchEndBandOptions.SetHeight(
+  const AValue: Integer);
+begin
+  if FHeight = AValue then
+    Exit;
+  FHeight := EnsureRange(AValue, 0, 1000);
+  Changed;
+end;
+
+procedure Th5uTreeBranchEndBandOptions.SetIncludeEndOfData(
+  const AValue: Boolean);
+begin
+  if FIncludeEndOfData = AValue then
+    Exit;
+  FIncludeEndOfData := AValue;
+  Changed;
+end;
+
+procedure Th5uTreeBranchEndBandOptions.SetStyleName(
+  const AValue: string);
+begin
+  if FStyleName = AValue then
+    Exit;
+  FStyleName := AValue;
+  Changed;
+end;
+
+{ Th5uTreeOptions }
+
+procedure Th5uTreeOptions.Assign(Source: TPersistent);
+var
+  LSource: Th5uTreeOptions;
+begin
+  if Source is Th5uTreeOptions then
+  begin
+    LSource := Th5uTreeOptions(Source);
+    FEnabled := LSource.FEnabled;
+    FLevelColumnId := LSource.FLevelColumnId;
+    FBranchEndBand.Assign(LSource.FBranchEndBand);
+    Changed;
+  end
+  else
+    inherited Assign(Source);
+end;
+
+procedure Th5uTreeOptions.Changed;
+begin
+  if Assigned(FOnChanged) then
+    FOnChanged(Self);
+end;
+
+procedure Th5uTreeOptions.ChildChanged(Sender: TObject);
+begin
+  Changed;
+end;
+
+constructor Th5uTreeOptions.Create;
+begin
+  inherited Create;
+  FEnabled := False;
+  FBranchEndBand := Th5uTreeBranchEndBandOptions.Create;
+  FBranchEndBand.OnChanged := ChildChanged;
+end;
+
+destructor Th5uTreeOptions.Destroy;
+begin
+  FBranchEndBand.Free;
+  inherited Destroy;
+end;
+
+procedure Th5uTreeOptions.SetBranchEndBand(
+  const AValue: Th5uTreeBranchEndBandOptions);
+begin
+  if Assigned(AValue) then
+    FBranchEndBand.Assign(AValue);
+end;
+
+procedure Th5uTreeOptions.SetEnabled(const AValue: Boolean);
+begin
+  if FEnabled = AValue then
+    Exit;
+  FEnabled := AValue;
+  Changed;
+end;
+
+procedure Th5uTreeOptions.SetLevelColumnId(const AValue: string);
+begin
+  if FLevelColumnId = AValue then
+    Exit;
+  FLevelColumnId := AValue;
   Changed;
 end;
 

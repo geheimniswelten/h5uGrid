@@ -1,4 +1,4 @@
-# h5u.Grid – Demoanwendungen
+﻿# h5u.Grid – Demoanwendungen
 
 ## VCL ClientDataSet
 
@@ -26,6 +26,7 @@ Zweck:
 - schaltbare 1-Pixel-Trennflächen einschließlich Außenrand
 - Grid-Defaultfarbe und eigene Farben einzelner Columns
 - eigener rechter Abstand der Beschreibungs-Column
+- `TREE_LEVEL`-Musterdaten und schaltbare Tree-Abschlussleiste, die das normale Row-Spacing am Astende ersetzt
 
 Dies ist die wichtigste Referenzdemo des Prototyps.
 
@@ -77,6 +78,7 @@ Zweck:
 - Text-, Boolean- und Bilddarstellung
 - schaltbare 1-Pixel-Trennflächen und Column-Farben
 - eigener rechter Column-Abstand als Layoutbeispiel
+- derselbe `TREE_LEVEL`-/Tree-Abschlussleisten-Test wie unter VCL
 
 ## FMX ObjectList
 
@@ -109,7 +111,7 @@ Zweck:
 ## Empfohlene Testreihenfolge
 
 1. VCL ClientDataSet bauen und starten.
-2. RowHeight, Trennlinien, Column-Farben, Dark Mode, Bildspalte und Paging einzeln schalten.
+2. RowHeight, Trennlinien, Tree-Abschlussleiste, Column-Farben, Dark Mode, Bildspalte und Paging einzeln schalten.
 3. Columns per Maus verschieben, skalieren und ausblenden.
 4. Row-, Column- und Zellbereichselektion prüfen.
 5. ObjectList-Demo mit Cache an/aus vergleichen.

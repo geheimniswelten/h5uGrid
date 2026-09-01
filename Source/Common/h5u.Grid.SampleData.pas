@@ -119,6 +119,13 @@ begin
 
   with FieldDefs.AddFieldDef do
   begin
+    Name := 'TREE_LEVEL';
+    DataType := ftInteger;
+    Required := True;
+  end;
+
+  with FieldDefs.AddFieldDef do
+  begin
     Name := 'NAME';
     DataType := ftWideString;
     Size := 80;
@@ -208,6 +215,22 @@ const
 var
   I: Integer;
   LDescription: string;
+  LTreeLevel: Integer;
+
+  function TreeLevelForRow(const AIndex: Integer): Integer;
+  begin
+    // Repeating preorder hierarchy:
+    // root, child, grandchild, grandchild, child, grandchild,
+    // grandchild, child. The following root closes the branch.
+    case (AIndex - 1) mod 8 of
+      0:
+        Result := 0;
+      1, 4, 7:
+        Result := 1;
+    else
+      Result := 2;
+    end;
+  end;
 begin
   DisableControls;
   try
@@ -215,7 +238,25 @@ begin
     begin
       Append;
       FieldByName('ID').AsInteger := I;
-      FieldByName('NAME').AsString := Format('Demoartikel %.3d', [I]);
+      LTreeLevel := TreeLevelForRow(I);
+      FieldByName('TREE_LEVEL').AsInteger := LTreeLevel;
+      case LTreeLevel of
+        0:
+          FieldByName('NAME').AsString := Format(
+            'Baugruppe %.2d',
+            [((I - 1) div 8) + 1]
+          );
+        1:
+          FieldByName('NAME').AsString := Format(
+            '  Untergruppe / Teil %.3d',
+            [I]
+          );
+      else
+        FieldByName('NAME').AsString := Format(
+          '    Bauteil %.3d',
+          [I]
+        );
+      end;
       FieldByName('CATEGORY').AsString := cCategories[(I - 1) mod Length(cCategories)];
 
       LDescription :=

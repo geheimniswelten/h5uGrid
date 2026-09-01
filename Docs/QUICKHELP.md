@@ -385,7 +385,67 @@ end;
 
 Die StyleKey-Column darf unsichtbar sein.
 
-## 15. Cache und Paging
+## 15. Tree-Abschlussleiste
+
+Für eine bereits in Preorder-Reihenfolge gelieferte, flache Tree-Datenmenge kann die Ebene aus einer Integer-Column gelesen werden:
+
+```pascal
+Grid1.Tree.Enabled := True;
+Grid1.Tree.LevelColumnId := 'TREE_LEVEL';
+
+Grid1.Tree.BranchEndBand.Enabled := True;
+Grid1.Tree.BranchEndBand.Height := 7;
+Grid1.Tree.BranchEndBand.Color := h5uColorDefault;
+Grid1.Tree.BranchEndBand.StyleName := 'TreeBranchEnd';
+Grid1.Tree.BranchEndBand.IncludeEndOfData := True;
+```
+
+Wechselt die nächste logische Zeile der aktuellen Datenmenge auf eine niedrigere Ebene, gilt die aktuelle Zeile als letzter sichtbarer Nachfahre eines Astes. Bei nummerierter Pagination schaut der Controller dafür auch über die aktuelle Seitengrenze hinaus; das Seitenende wird nicht mit dem tatsächlichen Datenende verwechselt. Die Abschlussleiste verwendet dann **anstelle** des normalen Row-Spacings `BranchEndBand.Height`:
+
+```text
+Normale Zeile:       RowHeight + RowSpacing
+Letztes Child:       RowHeight + BranchEndBand.Height
+                     (kein zusätzliches RowSpacing)
+```
+
+`Height = 0` entfernt an Astenden auch das normale Spacing. `OnGetRowSpacing` wird für eine erkannte Abschlussleiste nicht zusätzlich ausgewertet; die Tree-Option besitzt an dieser Stelle bewusst Vorrang. `StyleName = ''` mit `Color = h5uColorDefault` fällt auf die normale Separatorfarbe zurück. Der mitgelieferte semantische Style `TreeBranchEnd` besitzt in Classic, Modern und Dark eine passende Palette.
+
+Die Level-Column darf unsichtbar sein. Statt einer Column können die Werte über Events geliefert beziehungsweise korrigiert werden:
+
+```pascal
+procedure TForm1.GridGetTreeLevel(
+  Sender: TObject;
+  const AContext: Th5uTreeLevelContext;
+  var ALevel: Integer;
+  var AAvailable: Boolean);
+begin
+  // vorgeschlagenen Level übernehmen oder ersetzen
+end;
+
+procedure TForm1.GridGetTreeBranchEnd(
+  Sender: TObject;
+  const AContext: Th5uTreeBranchEndContext;
+  var AIsBranchEnd: Boolean;
+  var AClosedLevels: Integer);
+begin
+  // Standarderkennung übernehmen oder für Sonderfälle ändern
+end;
+```
+
+In `OnCustomDraw` ist die Leiste als `Th5uElementKind.TreeBranchEndBand` erkennbar. Der Factory-Kontext enthält zusätzlich `TreeLevel`, `ClosedTreeLevels` und das Flag `Th5uElementFlag.TreeBranchEnd`. Separatoren und Abschlussleisten werden als gepoolte sichtbare Elemente über den lokalen Factory-Scope erzeugt. Eine VCL-Anwendung kann deshalb beispielsweise nur für dieses Grid eine eigene Klasse einsetzen:
+
+```pascal
+Grid1.FactoryScope.RegisterClass(
+  h5uClassIdGridTreeBranchEndBand,
+  Th5uVclVisualCell,
+  TMyTreeBranchEndCell,
+  100
+);
+```
+
+Unter FMX wird entsprechend von `Th5uFmxVisualCell` abgeleitet. Die Funktion ist ein Tree-Metadatenpfad des Prototyps; Ein-/Ausklappen und ein vollständiges `TreeTableView` bleiben eine eigene Ausbaustufe.
+
+## 16. Cache und Paging
 
 ```pascal
 DataSetController1.Cache.Mode := Th5uCacheMode.Paged;
@@ -400,7 +460,7 @@ DataSetController1.Pagination.PageIndex := 0;
 
 Cache-Seiten sind interne Ladeeinheiten. Sichtbare Pagination ist eine UI-/Queryentscheidung; beides darf unabhängig konfiguriert werden.
 
-## 16. Bildwerte
+## 17. Bildwerte
 
 Akzeptiert werden im Prototyp insbesondere:
 
@@ -410,7 +470,7 @@ Akzeptiert werden im Prototyp insbesondere:
 
 Der Plattformrenderer dekodiert das Bild erst für sichtbare Zellen. Der echte `TImage`-Editor wird nur für die aktive Bearbeitung erzeugt.
 
-## 17. Aktualisierung nach Datenänderungen
+## 18. Aktualisierung nach Datenänderungen
 
 Je genauer die Benachrichtigung, desto weniger Arbeit:
 
@@ -422,7 +482,7 @@ Query geändert          neue Generation und betroffene Pages verwerfen
 kompletter Reset        Controller.Refresh
 ```
 
-## 18. Diagnose
+## 19. Diagnose
 
 Bei unerwartetem Verhalten zuerst prüfen:
 

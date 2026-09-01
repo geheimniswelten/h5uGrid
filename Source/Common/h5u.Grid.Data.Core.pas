@@ -122,6 +122,11 @@ type
 
     function GetRowCount: Int64;
     function GetTotalRowCount: Int64;
+    function GetSourceRowIndex(AViewRowIndex: Int64): Int64;
+    // Unlike GetRowCount (the current numbered page), this also accepts the
+    // immediately following logical view index so layout helpers can inspect
+    // a page boundary without treating it as the end of the source.
+    function IsRowAvailable(AViewRowIndex: Int64): Boolean;
     function GetRowKey(AViewRowIndex: Int64): Th5uRowKey;
     function GetValue(
       AViewRowIndex: Int64;
@@ -456,6 +461,20 @@ begin
   Result := LTotal - LOffset;
   if Result > FPagination.PageSize then
     Result := FPagination.PageSize;
+end;
+
+function Th5uCustomDataController.GetSourceRowIndex(
+  AViewRowIndex: Int64): Int64;
+begin
+  if not FEnabled then
+    Exit(-1);
+  Result := MapViewToSourceIndex(AViewRowIndex);
+end;
+
+function Th5uCustomDataController.IsRowAvailable(
+  AViewRowIndex: Int64): Boolean;
+begin
+  Result := GetSourceRowIndex(AViewRowIndex) >= 0;
 end;
 
 function Th5uCustomDataController.GetRowKey(

@@ -121,6 +121,17 @@
       TabOrder = 10
       OnClick = OptionClick
     end
+    object TreeEndBandCheck: TCheckBox
+      Left = 278
+      Top = 42
+      Width = 190
+      Height = 20
+      Caption = 'Tree-Abschlussleiste'
+      Checked = True
+      State = cbChecked
+      TabOrder = 11
+      OnClick = OptionClick
+    end
     object NextPageButton: TButton
       Left = 816
       Top = 8
@@ -148,6 +159,11 @@
     Align = alClient
     DataController = DataController
     Appearance.DefaultCellColor = 4294835709
+    Tree.Enabled = True
+    Tree.LevelColumnId = 'TREE_LEVEL'
+    Tree.BranchEndBand.Enabled = True
+    Tree.BranchEndBand.Height = 7
+    Tree.BranchEndBand.StyleName = 'TreeBranchEnd'
     HeaderLayout.Enabled = True
     HeaderLayout.RowCount = 2
     HeaderLayout.Cells = <
@@ -224,8 +240,8 @@
         LayoutColumn = 7
       end
       item
-        Caption = 'Erstellt'
-        ColumnId = 'created_at'
+        Caption = 'Aktualisiert'
+        ColumnId = 'updated_at'
         LayoutRow = 1
         LayoutColumn = 8
       end
@@ -315,9 +331,9 @@
         Color = 4293589228
       end
       item
-        Id = 'created_at'
-        Caption = 'Erstellt'
-        FieldName = 'CREATED_AT'
+        Id = 'updated_at'
+        Caption = 'Aktualisiert'
+        FieldName = 'UPDATED_AT'
         Width = 135
         VisibleIndex = 8
         DataType = DateTime
@@ -372,9 +388,6 @@
     OnGetThumbHint = GridGetThumbHint
   end
   object SampleData: Th5uSampleClientDataSet
-    PopulateAtDesignTime = True
-    SampleDataKind = Mixed
-    SampleRecordCount = 36
     IncludeImages = True
     Left = 40
     Top = 112

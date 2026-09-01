@@ -377,7 +377,31 @@ Odd/Even ist nur ein Spezialfall einer periodischen Regel. Konfigurierbar sind b
 
 Zusätzlich kann eine Boolean-/Integer-Column als `StyleKeyColumnId` dienen. Ein Mapping ordnet deren Werte benannten Styles zu. Die Column darf unsichtbar sein und wird vom Controller trotzdem als Datenabhängigkeit behandelt.
 
-## 15. Cache und Pagination
+## 15. Abschluss eines Tree-Astes
+
+Der erste Tree-Testpfad arbeitet mit einer flachen, bereits in Preorder-Reihenfolge gelieferten Datenmenge. `Tree.LevelColumnId` benennt eine Integer-Column oder direkt ein Controllerfeld mit der sichtbaren Verschachtelungsebene. Das vollständige Parent-/Child-Modell, Ein-/Ausklappen und Lazy Loading sind davon getrennte spätere View-Funktionen.
+
+Für jede Zeile vergleicht der Renderer die aktuelle Ebene mit der nächsten logischen Zeile der Datenmenge. Bei nummerierter Pagination erfolgt der Look-ahead über die aktuelle Seitengrenze hinweg, damit ein Seitenende nicht fälschlich als Ast- oder Datenende behandelt wird. Sinkt die Ebene, endet mindestens ein Child-Ast. `ClosedTreeLevels` enthält die Anzahl der dabei verlassenen Ebenen. Am Ende der Datenmenge kann `IncludeEndOfData` denselben Abschluss erzeugen. Root-Zeilen der Ebene `0` werden nicht allein aufgrund des Datenendes als Child-Abschluss behandelt.
+
+Die Abschlussleiste ist ein alternatives Separator-Element:
+
+```text
+normal:        RowHeight + RowSpacing
+Astende:       RowHeight + BranchEndBand.Height
+```
+
+`RowSpacing` und `BranchEndBand.Height` werden niemals addiert. Für erkannte Astenden wird deshalb auch `OnGetRowSpacing` nicht zusätzlich ausgewertet. Das ist sowohl für die Zeichnung als auch für Scrollbereich, HitTest, sichtbare Zeilenberechnung und Row-Metrics verbindlich.
+
+Die Darstellung wird in dieser Reihenfolge aufgelöst:
+
+1. explizite `BranchEndBand.Color`,
+2. semantischer `StyleName` wie `TreeBranchEnd`,
+3. normale Row-Separatorfarbe,
+4. plattformspezifisches CustomDraw.
+
+Die Leiste erhält eine eigene Factory-ID (`h5u.grid.spacing.tree-branch-end`) und `Th5uElementKind.TreeBranchEndBand`. Sie wird – wie die übrigen Separatoren – als leichtgewichtiges, gepooltes sichtbares Element über den lokalen Factory-Scope materialisiert. Dadurch kann sie pro Gridinstanz durch eine eigene `Th5uVclVisualCell`-/`Th5uFmxVisualCell`-Nachfahrin oder durch CustomDraw anders dargestellt werden. Der Kontext transportiert Grid, Controller, RowKey, Source-/View-Index, Tree-Level und Anzahl geschlossener Ebenen. `OnGetTreeLevel` und `OnGetTreeBranchEnd` entkoppeln die Erkennung von einer bestimmten Controllerimplementierung.
+
+## 16. Cache und Pagination
 
 Cache und sichtbare Pagination sind voneinander getrennt.
 
@@ -397,7 +421,7 @@ Pagination:
 
 Ein kontinuierlich scrollendes Grid darf intern trotzdem seitenweise laden. Selektion, Summen und Gruppierung müssen jeweils ihren Gültigkeitsbereich ausweisen.
 
-## 16. Erweiterungsziel
+## 17. Erweiterungsziel
 
 Die aktuelle Implementierung konzentriert sich auf den vertikalen Testpfad. Der Core ist so angelegt, dass später ohne Bruch ergänzt werden können:
 
