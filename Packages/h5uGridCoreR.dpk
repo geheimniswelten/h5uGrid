@@ -35,7 +35,7 @@ requires
   dbrtl,
   dsnap;
 
-cocontains
+contains
   h5u.Grid.Types in '..\Source\Common\h5u.Grid.Types.pas',
   h5u.Grid.Factory in '..\Source\Common\h5u.Grid.Factory.pas',
   h5u.Grid.Selection in '..\Source\Common\h5u.Grid.Selection.pas',

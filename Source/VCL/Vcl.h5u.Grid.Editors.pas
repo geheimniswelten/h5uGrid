@@ -150,13 +150,13 @@ end;
 
 procedure Th5uVclImageEditForm.PasteClick(Sender: TObject);
 var
-  LBitmap: TBitmap;
+  LBitmap: Vcl.Graphics.TBitmap;
   LStream: TMemoryStream;
 begin
   if not Clipboard.HasFormat(CF_BITMAP) then
     Exit;
 
-  LBitmap := TBitmap.Create;
+  LBitmap := Vcl.Graphics.TBitmap.Create;
   LStream := TMemoryStream.Create;
   try
     LBitmap.Assign(Clipboard);

@@ -38,7 +38,7 @@ requires
   h5uGridVclR,
   h5uGridCoreD;
 
-cocontains
+contains
   Vcl.h5u.Grid.Design in '..\Source\Design\Vcl.h5u.Grid.Design.pas';
 
 end.

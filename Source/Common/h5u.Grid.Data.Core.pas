@@ -161,7 +161,7 @@ begin
 
     tkVariant: if VarIsNull(AValue.AsVariant) or VarIsEmpty(AValue.AsVariant) then Result := '' else Result := VarToStr(AValue.AsVariant);
 
-    tkClass: if Assigned(AValue.AsObject) then Result := AValue.AsObject.ToString else Result := '';
+    tkClass: if AValue.AsObject <> nil then Result := AValue.AsObject.ToString else Result := '';
 
   else
     Result := AValue.ToString;

@@ -292,7 +292,7 @@ begin
 
       FieldByName('DESCRIPTION').AsString := LDescription;
       FieldByName('QUANTITY').AsInteger := 1 + ((I * 7) mod 43);
-      FieldByName('UNIT_PRICE').AsType<Currency> := 12.50 + (I * 3.75);
+      FieldByName('UNIT_PRICE').AsCurrency := 12.50 + (I * 3.75);
       FieldByName('ACTIVE').AsBoolean := (I mod 4) <> 0;
       FieldByName('PRIORITY').AsInteger := I mod 4;
       FieldByName('UPDATED_AT').AsDateTime := Now - (FSampleRowCount - I) / 24;

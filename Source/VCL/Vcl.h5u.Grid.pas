@@ -1428,6 +1428,7 @@ end;
 
 procedure Th5uVclGrid.DrawCustomHeaderLayout;
 var
+  LCellIndex: Integer;
   LCellDef: Th5uHeaderLayoutCell;
   LStartInfo: Th5uVisibleColumnInfo;
   LEndInfo: Th5uVisibleColumnInfo;
@@ -1443,8 +1444,9 @@ var
 begin
   LViewRect := GetViewportRect;
   LRowSpacing := FSpacing.RowSpacing;
-  for LCellDef in FHeaderLayout.Cells do
+  for LCellIndex := 0 to FHeaderLayout.Cells.Count - 1 do
   begin
+    LCellDef := FHeaderLayout.Cells[LCellIndex];
     if (LCellDef.LayoutColumn < 0) or
        (LCellDef.LayoutColumn >= Length(FAllColumns)) then
       Continue;
@@ -1542,7 +1544,7 @@ begin
         DrawSpacingRect(
           LSeparatorRect,
           Th5uElementKind.RowSpacing,
-          LContext.Column,
+          Th5uGridColumn(LContext.Column),
           -1,
           Th5uRowKey.Empty,
           ResolveRowSpacingColor

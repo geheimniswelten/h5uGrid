@@ -253,7 +253,7 @@ var
 begin
   Result := False;
   if not Assigned(DataSet) or not DataSet.Active or
-     DataSet.ReadOnly then
+     not DataSet.CanModify then
     Exit;
 
   LField := DataSet.FindField(AFieldName);

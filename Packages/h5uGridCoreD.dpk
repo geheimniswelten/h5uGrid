@@ -38,7 +38,7 @@ requires
   designide,
   h5uGridCoreR;
 
-cocontains
+contains
   h5u.Grid.Design in '..\Source\Design\h5u.Grid.Design.pas';
 
 end.

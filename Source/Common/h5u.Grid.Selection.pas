@@ -296,10 +296,12 @@ end;
 procedure Th5uGridSelection.Assign(Source: TPersistent);
 var
   LSource: Th5uGridSelection;
-  LRowKey: Th5uRowKey;
-  LColumnId: string;
+  LPair: TPair<string, Byte>;
   LRange: Th5uCellRange;
 begin
+  if Source = Self then
+    Exit;
+
   if Source is Th5uGridSelection then
   begin
     LSource := Th5uGridSelection(Source);
@@ -314,16 +316,16 @@ begin
     FAllRowsSelected := LSource.FAllRowsSelected;
 
     FSelectedRows.Clear;
-    for LRowKey in LSource.FSelectedRows do
-      FSelectedRows.Add(LRowKey);
+    for LPair in LSource.FSelectedRows do
+      FSelectedRows.Add(LPair.Key, LPair.Value);
 
     FExcludedRows.Clear;
-    for LRowKey in LSource.FExcludedRows do
-      FExcludedRows.Add(LRowKey);
+    for LPair in LSource.FExcludedRows do
+      FExcludedRows.Add(LPair.Key, LPair.Value);
 
     FSelectedColumns.Clear;
-    for LColumnId in LSource.FSelectedColumns do
-      FSelectedColumns.Add(LColumnId);
+    for LPair in LSource.FSelectedColumns do
+      FSelectedColumns.Add(LPair.Key, LPair.Value);
 
     FCellRanges.Clear;
     for LRange in LSource.FCellRanges do

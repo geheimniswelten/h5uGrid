@@ -5,6 +5,7 @@ interface
 uses
   System.Classes,
   System.SysUtils,
+  System.Types,
   FMX.Controls,
   FMX.Dialogs,
   FMX.Layouts,

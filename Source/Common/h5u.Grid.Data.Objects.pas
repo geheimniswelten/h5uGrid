@@ -8,6 +8,7 @@ interface
 uses
   System.Classes,
   System.Generics.Collections,
+  System.Math,
   System.Rtti,
   System.SysUtils,
   h5u.Grid.Data.Core,
@@ -355,7 +356,7 @@ begin
 
     LIntermediate := LProperty.GetValue(AObject);
     if not LIntermediate.IsObject or
-       not Assigned(LIntermediate.AsObject) then
+       (LIntermediate.AsObject = nil) then
       raise Eh5uDataController.CreateFmt(
         'Property path "%s" contains a nil object.',
         [APath]

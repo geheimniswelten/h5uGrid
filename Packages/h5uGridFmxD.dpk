@@ -38,7 +38,7 @@ requires
   h5uGridFmxR,
   h5uGridCoreD;
 
-cocontains
+contains
   Fmx.h5u.Grid.Design in '..\Source\Design\Fmx.h5u.Grid.Design.pas';
 
 end.

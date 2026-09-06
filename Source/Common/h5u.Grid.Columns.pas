@@ -6,7 +6,9 @@ interface
 
 uses
   System.Classes,
+  System.Generics.Defaults,
   System.Generics.Collections,
+  System.Math,
   System.SysUtils,
   h5u.Grid.Types;
 
@@ -267,8 +269,7 @@ end;
 
 procedure Th5uGridColumn.Changed;
 begin
-  if Assigned(Collection) then
-    Collection.Changed(False);
+  inherited Changed(False);
 end;
 
 constructor Th5uGridColumn.Create(Collection: TCollection);
@@ -460,7 +461,7 @@ begin
     for I := 0 to LList.Count - 1 do
       LList[I].FVisibleIndex := I;
 
-    Changed(False);
+    Changed;
   finally
     LList.Free;
   end;
@@ -474,7 +475,7 @@ begin
   LColumns := VisibleColumns;
   for I := 0 to High(LColumns) do
     LColumns[I].FVisibleIndex := I;
-  Changed(False);
+  Changed;
 end;
 
 procedure Th5uGridColumns.SetItem(AIndex: Integer; const AValue: Th5uGridColumn);
