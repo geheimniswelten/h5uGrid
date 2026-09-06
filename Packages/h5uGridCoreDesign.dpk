@@ -39,6 +39,7 @@ requires
   h5uGridCore;
 
 contains
+  h5u.Grid.SampleData in '..\Source\Common\h5u.Grid.SampleData.pas',
   h5u.Grid.Design in '..\Source\Design\h5u.Grid.Design.pas';
 
 end.

@@ -75,11 +75,10 @@
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
         <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
         <Icns_MainIcns>$(BDS)\bin\delphi_PROJECTICNS.icns</Icns_MainIcns>
-        <DCC_ExeOutput>..\..\_dcu\(Platform)_$(Config)</DCC_ExeOutput>
-        <DCC_DcuOutput>..\..\_bin</DCC_DcuOutput>
+        <DCC_ExeOutput>..\..\..\_bin</DCC_ExeOutput>
+        <DCC_DcuOutput>..\..\..\_dcu\$(Platform)_$(Config)_$(MainSource)</DCC_DcuOutput>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Android)'!=''">
-        <VerInfo_Keys>package=com.embarcadero.$(MSBuildProjectName);label=$(MSBuildProjectName);versionCode=1;versionName=1.0.0;persistent=False;restoreAnyVersion=False;installLocation=auto;largeHeap=False;theme=TitleBar;hardwareAccelerated=true;apiKey=;minSdkVersion=23;targetSdkVersion=36</VerInfo_Keys>
         <BT_BuildType>Debug</BT_BuildType>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <Android_LauncherIcon36>$(BDS)\bin\Artwork\Android\FM_LauncherIcon_36x36.png</Android_LauncherIcon36>
@@ -194,13 +193,6 @@
                 <Source>
                     <Source Name="MainSource">GridFmxObjectListDemo.dpr</Source>
                 </Source>
-                <Excluded_Packages>
-                    <Excluded_Packages Name="C:\Develop2\DAI [ungeprueft]\Build\Win32\Debug\Bpl\DAI.bpl">Datei C:\Develop2\DAI [ungeprueft]\Build\Win32\Debug\Bpl\DAI.bpl nicht gefunden</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k370.bpl">Microsoft Office 2000 Beispiele für gekapselte Komponenten für Automatisierungsserver</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp370.bpl">Microsoft Office XP Beispiele für gekapselte Komponenten für Automation Server</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\37.0\Bpl\OTADesign370.bpl">h5u OTA Designer</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dclemacseditdasfdsf370.bpl">Datei c:\program files (x86)\embarcadero\studio\37.0\bin\dclemacseditdasfdsf370.bpl nicht gefunden</Excluded_Packages>
-                </Excluded_Packages>
             </Delphi.Personality>
             <Platforms>
                 <Platform value="Android">False</Platform>

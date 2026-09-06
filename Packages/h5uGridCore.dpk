@@ -32,8 +32,7 @@
 
 requires
   rtl,
-  dbrtl,
-  dsnap;
+  dbrtl;
 
 contains
   h5u.Grid.Types in '..\Source\Common\h5u.Grid.Types.pas',
@@ -46,7 +45,6 @@ contains
   h5u.Grid.Data.DataSet in '..\Source\Common\h5u.Grid.Data.DataSet.pas',
   h5u.Grid.Data.Memory in '..\Source\Common\h5u.Grid.Data.Memory.pas',
   h5u.Grid.Data.Objects in '..\Source\Common\h5u.Grid.Data.Objects.pas',
-  h5u.Grid.Data.Virtual in '..\Source\Common\h5u.Grid.Data.Virtual.pas',
-  h5u.Grid.SampleData in '..\Source\Common\h5u.Grid.SampleData.pas';
+  h5u.Grid.Data.Virtual in '..\Source\Common\h5u.Grid.Data.Virtual.pas';
 
 end.
