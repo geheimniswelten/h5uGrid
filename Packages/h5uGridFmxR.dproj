@@ -69,9 +69,6 @@
         <DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
         <DllSuffix>$(Auto)</DllSuffix>
         <DCC_DcuOutput>..\_dcu\$(Platform)_$(Config)</DCC_DcuOutput>
-        <DCC_DcpOutput>..\_pak\$(Platform)</DCC_DcpOutput>
-        <DCC_BplOutput>..\_pak\$(Platform)</DCC_BplOutput>
-        <DCC_UnitSearchPath>$(DCC_DcpOutput);$(DCC_DcuOutput);$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Android)'!=''">
         <VerInfo_Keys>package=com.embarcadero.$(MSBuildProjectName);label=$(MSBuildProjectName);versionCode=1;versionName=1.0.0;persistent=False;restoreAnyVersion=False;installLocation=auto;largeHeap=False;theme=TitleBar;hardwareAccelerated=true;apiKey=;minSdkVersion=23;targetSdkVersion=36</VerInfo_Keys>
@@ -115,6 +112,12 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
+        <DCCReference Include="rtl.dcp"/>
+        <DCCReference Include="fmx.dcp"/>
+        <DCCReference Include="h5uGridCoreR.dcp"/>
+        <DCCReference Include="..\Source\FMX\Fmx.h5u.Grid.Styles.pas"/>
+        <DCCReference Include="..\Source\FMX\Fmx.h5u.Grid.Editors.pas"/>
+        <DCCReference Include="..\Source\FMX\Fmx.h5u.Grid.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -146,10 +149,6 @@
             <Platforms>
                 <Platform value="Android">False</Platform>
                 <Platform value="Android64">True</Platform>
-                <Platform value="iOSDevice32">False</Platform>
-                <Platform value="iOSSimulator">False</Platform>
-                <Platform value="Linux64">False</Platform>
-                <Platform value="OSX32">False</Platform>
                 <Platform value="Win32">True</Platform>
                 <Platform value="Win64">False</Platform>
                 <Platform value="Win64x">True</Platform>

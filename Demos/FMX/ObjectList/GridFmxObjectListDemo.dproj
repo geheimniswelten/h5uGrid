@@ -168,6 +168,7 @@
         <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Data.DataSet.pas"/>
         <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Data.Objects.pas"/>
         <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Data.Virtual.pas"/>
+        <DCCReference Include="..\..\..\Source\Common\h5u.Grid.AdjacentGroups.pas"/>
         <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Data.Memory.pas"/>
         <DCCReference Include="..\..\..\Source\Common\h5u.Grid.SampleData.pas"/>
         <DCCReference Include="..\..\..\Source\FMX\Fmx.h5u.Grid.Styles.pas"/>
@@ -213,4 +214,5 @@
     </ProjectExtensions>
     <Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
     <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
+    <Import Project="$(MSBuildProjectName).deployproj" Condition="Exists('$(MSBuildProjectName).deployproj')"/>
 </Project>

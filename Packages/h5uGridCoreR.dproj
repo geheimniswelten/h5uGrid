@@ -70,9 +70,6 @@
         <DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
         <DllSuffix>$(Auto)</DllSuffix>
         <DCC_DcuOutput>..\_dcu\$(Platform)_$(Config)</DCC_DcuOutput>
-        <DCC_DcpOutput>..\_pak\$(Platform)</DCC_DcpOutput>
-        <DCC_BplOutput>..\_pak\$(Platform)</DCC_BplOutput>
-        <DCC_UnitSearchPath>$(DCC_DcpOutput);$(DCC_DcuOutput);$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Android)'!=''">
         <VerInfo_Keys>package=com.embarcadero.$(MSBuildProjectName);label=$(MSBuildProjectName);versionCode=1;versionName=1.0.0;persistent=False;restoreAnyVersion=False;installLocation=auto;largeHeap=False;theme=TitleBar;hardwareAccelerated=true;apiKey=;minSdkVersion=23;targetSdkVersion=36</VerInfo_Keys>
@@ -116,6 +113,21 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
+        <DCCReference Include="rtl.dcp"/>
+        <DCCReference Include="dbrtl.dcp"/>
+        <DCCReference Include="dsnap.dcp"/>
+        <DCCReference Include="..\Source\Common\h5u.Grid.Types.pas"/>
+        <DCCReference Include="..\Source\Common\h5u.Grid.Factory.pas"/>
+        <DCCReference Include="..\Source\Common\h5u.Grid.Selection.pas"/>
+        <DCCReference Include="..\Source\Common\h5u.Grid.Columns.pas"/>
+        <DCCReference Include="..\Source\Common\h5u.Grid.Options.pas"/>
+        <DCCReference Include="..\Source\Common\h5u.Grid.AdjacentGroups.pas"/>
+        <DCCReference Include="..\Source\Common\h5u.Grid.Data.Core.pas"/>
+        <DCCReference Include="..\Source\Common\h5u.Grid.Data.DataSet.pas"/>
+        <DCCReference Include="..\Source\Common\h5u.Grid.Data.Memory.pas"/>
+        <DCCReference Include="..\Source\Common\h5u.Grid.Data.Objects.pas"/>
+        <DCCReference Include="..\Source\Common\h5u.Grid.Data.Virtual.pas"/>
+        <DCCReference Include="..\Source\Common\h5u.Grid.SampleData.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

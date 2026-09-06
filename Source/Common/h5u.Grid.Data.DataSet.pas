@@ -157,7 +157,6 @@ begin
   if not Assigned(LDataSet) or not LDataSet.Active then
     Exit;
 
-  LHasBookmark := False;
   try
     try
       LBookmark := LDataSet.Bookmark;
@@ -303,7 +302,6 @@ begin
   if not Assigned(LDataSet) or not LDataSet.Active then
     Exit;
 
-  LHasBookmark := False;
   try
     LBookmark := LDataSet.Bookmark;
     LHasBookmark := LDataSet.BookmarkValid(LBookmark);
@@ -361,7 +359,6 @@ end;
 procedure Th5uDataSetController.PrepareRange(AFirstViewRow, ACount: Int64);
 var
   LViewIndex: Int64;
-  LSourceIndex: Int64;
   LFirstSource: Int64;
   LLastSource: Int64;
   LKeys: TArray<Int64>;

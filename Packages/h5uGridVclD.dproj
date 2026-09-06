@@ -69,9 +69,6 @@
         <DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
         <DllSuffix>$(Auto)</DllSuffix>
         <DCC_DcuOutput>..\_dcu\$(Platform)_$(Config)</DCC_DcuOutput>
-        <DCC_DcpOutput>..\_pak\$(Platform)</DCC_DcpOutput>
-        <DCC_BplOutput>..\_pak\$(Platform)</DCC_BplOutput>
-        <DCC_UnitSearchPath>$(DCC_DcpOutput);$(DCC_DcuOutput);$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Android)'!=''">
         <VerInfo_Keys>package=com.embarcadero.$(MSBuildProjectName);label=$(MSBuildProjectName);versionCode=1;versionName=1.0.0;persistent=False;restoreAnyVersion=False;installLocation=auto;largeHeap=False;theme=TitleBar;hardwareAccelerated=true;apiKey=;minSdkVersion=23;targetSdkVersion=36</VerInfo_Keys>
@@ -115,6 +112,13 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
+        <DCCReference Include="rtl.dcp"/>
+        <DCCReference Include="vcl.dcp"/>
+        <DCCReference Include="designide.dcp"/>
+        <DCCReference Include="h5uGridCoreR.dcp"/>
+        <DCCReference Include="h5uGridVclR.dcp"/>
+        <DCCReference Include="h5uGridCoreD.dcp"/>
+        <DCCReference Include="..\Source\Design\Vcl.h5u.Grid.Design.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

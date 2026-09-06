@@ -8,13 +8,14 @@ uses
   System.Classes,
   System.Generics.Collections,
   System.Rtti,
+  System.Math,
   System.SysUtils,
+  h5u.Grid.Data.Virtual,
+  h5u.Grid.Types,
   Vcl.Controls,
   Vcl.ExtCtrls,
   Vcl.Forms,
   Vcl.StdCtrls,
-  h5u.Grid.Data.Virtual,
-  h5u.Grid.Types,
   Vcl.h5u.Grid;
 
 type

@@ -16,7 +16,7 @@ type
   // Valid explicit colors use ARGB values $00000000..$FFFFFFFF. Negative
   // values are reserved for semantic sentinels and therefore cannot collide
   // with an actual VCL/FMX color.
-  Th5uColor = type Int64;
+  Th5uColor = type TColor;
 
 const
   h5uColorDefault = Th5uColor(-1);

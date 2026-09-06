@@ -5,15 +5,13 @@ interface
 {$SCOPEDENUMS ON}
 
 uses
-  Vcl.Imaging.pngimage,
-  Vcl.Imaging.jpeg,
-  Vcl.Imaging.GIFImg,
   System.Classes,
   System.Generics.Collections,
   System.Math,
   System.Rtti,
   System.SysUtils,
   System.Types,
+  System.UITypes,
   Winapi.Messages,
   Winapi.Windows,
   Vcl.Controls,
@@ -21,6 +19,9 @@ uses
   Vcl.Graphics,
   Vcl.Menus,
   Vcl.StdCtrls,
+  Vcl.Imaging.pngimage,
+  Vcl.Imaging.jpeg,
+  Vcl.Imaging.GIFImg,
   h5u.Grid.AdjacentGroups,
   h5u.Grid.Columns,
   h5u.Grid.Data.Core,
