@@ -1,0 +1,6 @@
+Erstellt mit dem integrierten Imagegen-Werkzeug; ICO-Export mit Pillow.
+
+GridComponent: Blaues Tabellenraster mit cyanfarbener Kopfzeile und einer tuerkis markierten Zelle; transparente Flaeche, keine Schrift.
+GridDemo: Passendes Tabellenraster, ergaenzt um ein orangefarbenes Startsymbol mit weissem Dreieck.
+
+ICO: 32-Bit-RGBA, DIB/BMP-Eintraege in 16, 24, 32, 48, 64, 128 und 256 Pixeln. Groessen und Transparenz nach dem Export geprueft. PNG-Originale liegen bei.
