@@ -6,7 +6,7 @@
   "maximum_allowed_line_length": 180,
   "maximum_actual_line_length": 180,
   "maximum_line_location": {
-    "file": "Source/Vcl/Vcl.h5u.Grid.pas",
+    "file": "Source/VCL/Vcl.h5u.Grid.pas",
     "line": 2269
   },
   "lines_over_limit": 0,

@@ -1,13 +1,13 @@
-# h5u.Grid – öffentlicher API-Auszug
+﻿# h5u.Grid – öffentlicher API-Auszug
 
 > Automatisch aus den vollständigen `interface`-Abschnitten des ausgelieferten Quellstands erzeugt. Maßgeblich bleiben die Pascal-Units.
 
 **Erzeugt:** 2. September 2026  
 **Version:** 0.1.4
 
-## `FMX.h5u.Grid`
+## `Fmx.h5u.Grid`
 
-Quelle: `Source/FMX/FMX.h5u.Grid.pas`
+Quelle: `Source/FMX/Fmx.h5u.Grid.pas`
 
 ```pascal
 {$SCOPEDENUMS ON}
@@ -21,13 +21,13 @@ uses
   System.SysUtils,
   System.Types,
   System.UITypes,
-  FMX.Controls,
-  FMX.Edit,
-  FMX.Graphics,
-  FMX.Layouts,
-  FMX.Objects,
-  FMX.StdCtrls,
-  FMX.Types,
+  Fmx.Controls,
+  Fmx.Edit,
+  Fmx.Graphics,
+  Fmx.Layouts,
+  Fmx.Objects,
+  Fmx.StdCtrls,
+  Fmx.Types,
   h5u.Grid.AdjacentGroups,
   h5u.Grid.Columns,
   h5u.Grid.Data.Core,
@@ -35,7 +35,7 @@ uses
   h5u.Grid.Options,
   h5u.Grid.Selection,
   h5u.Grid.Types,
-  FMX.h5u.Grid.Styles;
+  Fmx.h5u.Grid.Styles;
 
 type
   Th5uFmxGrid = class;
@@ -422,28 +422,28 @@ type
   end;
 ```
 
-## `FMX.h5u.Grid.Design`
+## `Fmx.h5u.Grid.Design`
 
-Quelle: `Source/Design/FMX.h5u.Grid.Design.pas`
+Quelle: `Source/Design/Fmx.h5u.Grid.Design.pas`
 
 ```pascal
 procedure Register;
 ```
 
-## `FMX.h5u.Grid.Editors`
+## `Fmx.h5u.Grid.Editors`
 
-Quelle: `Source/FMX/FMX.h5u.Grid.Editors.pas`
+Quelle: `Source/FMX/Fmx.h5u.Grid.Editors.pas`
 
 ```pascal
 uses
   System.Classes,
   System.SysUtils,
-  FMX.Controls,
-  FMX.Dialogs,
-  FMX.Layouts,
-  FMX.Objects,
-  FMX.StdCtrls,
-  FMX.Types;
+  Fmx.Controls,
+  Fmx.Dialogs,
+  Fmx.Layouts,
+  Fmx.Objects,
+  Fmx.StdCtrls,
+  Fmx.Types;
 
 type
   Th5uFmxImageEditor = class(TLayout)
@@ -471,9 +471,9 @@ type
   end;
 ```
 
-## `FMX.h5u.Grid.Styles`
+## `Fmx.h5u.Grid.Styles`
 
-Quelle: `Source/FMX/FMX.h5u.Grid.Styles.pas`
+Quelle: `Source/FMX/Fmx.h5u.Grid.Styles.pas`
 
 ```pascal
 {$SCOPEDENUMS ON}
@@ -2177,7 +2177,7 @@ function h5uColorFromRgb(ARed, AGreen, ABlue: Byte): Th5uColor; inline;
 
 ## `Vcl.h5u.Grid`
 
-Quelle: `Source/Vcl/Vcl.h5u.Grid.pas`
+Quelle: `Source/VCL/Vcl.h5u.Grid.pas`
 
 ```pascal
 {$SCOPEDENUMS ON}

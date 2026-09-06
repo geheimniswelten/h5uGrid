@@ -21,7 +21,7 @@ uses
   h5u.Grid.Types,
   h5u.Grid.Columns,
   h5u.Grid.Data.DataSet,
-  FMX.h5u.Grid;
+  Fmx.h5u.Grid;
 ```
 
 Mit `FMX` als Unit Scope Name ebenfalls kurz als `h5u.Grid`.

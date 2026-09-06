@@ -14,7 +14,7 @@ uses
   FMX.StdCtrls,
   FMX.Types,
   h5u.Grid.Data.Objects,
-  FMX.h5u.Grid;
+  Fmx.h5u.Grid;
 
 type
   TPersonRow = class

@@ -13,6 +13,6 @@ requires
   h5uGridCoreD;
 
 contains
-  FMX.h5u.Grid.Design in '..\Source\Design\FMX.h5u.Grid.Design.pas';
+  Fmx.h5u.Grid.Design in '..\Source\Design\Fmx.h5u.Grid.Design.pas';
 
 end.

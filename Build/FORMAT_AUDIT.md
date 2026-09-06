@@ -1,4 +1,4 @@
-# Pascal-Format-Audit
+﻿# Pascal-Format-Audit
 
 **Stand:** 2. September 2026  
 **Version:** 0.1.4
@@ -6,7 +6,7 @@
 - Maximale erlaubte Zeilenlänge: **180 Zeichen**
 - Geprüfte Pascal-Projektdateien: **39**
 - Geprüfte Pascal-Zeilen: **16628**
-- Tatsächlich längste Zeile: **180 Zeichen** (`Source/Vcl/Vcl.h5u.Grid.pas:2269`)
+- Tatsächlich längste Zeile: **180 Zeichen** (`Source/VCL/Vcl.h5u.Grid.pas:2269`)
 - Zeilen über der Grenze: **0**
 - Tabulatorzeichen: **0**
 - Vorzeitig umgebrochene formatierbare Deklarationen: **0**

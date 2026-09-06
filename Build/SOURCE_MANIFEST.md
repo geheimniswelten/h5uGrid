@@ -1,4 +1,4 @@
-# h5u.Grid – Source-Manifest
+﻿# h5u.Grid – Source-Manifest
 
 **Stand:** 2. September 2026  
 **Version:** 0.1.4
@@ -32,22 +32,22 @@
 | `CHANGELOG.md` | 5771 | `635389c03af2a2337ab021e52368cdc6f386dac9264f24933e4a73e60c80defd` |
 | `Demos/FMX/ClientDataSet/Main.fmx` | 9285 | `4fbfac7bf4517e08c314a9baec98ff57ddbf8b9c9580f84a5cf793fce1cbb417` |
 | `Demos/FMX/ClientDataSet/Main.pas` | 6666 | `73043aa248566a1c32aee87cf2e53fcb220e4dc0f571a8808fd553bc91896514` |
-| `Demos/FMX/ClientDataSet/h5uGridFmxClientDataSetDemo.dpr` | 1228 | `77151d8993aaa6da2401f59b74fc56c14fdb26687329a605304a8f6d456c3cc4` |
+| `Demos/FMX/ClientDataSet/GridFmxClientDataSetDemo.dpr` | 1228 | `77151d8993aaa6da2401f59b74fc56c14fdb26687329a605304a8f6d456c3cc4` |
 | `Demos/FMX/ObjectList/Main.fmx` | 4269 | `b76168ec18a074ad512ac90362124056ea0ce873f08e32dc02521471d5f964e8` |
 | `Demos/FMX/ObjectList/Main.pas` | 3612 | `14238e8a540ecdd67ea41320d202da546089631c9043b57401cb80f16e997439` |
-| `Demos/FMX/ObjectList/h5uGridFmxObjectListDemo.dpr` | 1225 | `204df869da0ca51cac3de13c8ea75fcc2756a4cd95855e8075e506df9ba2931c` |
+| `Demos/FMX/ObjectList/GridFmxObjectListDemo.dpr` | 1225 | `204df869da0ca51cac3de13c8ea75fcc2756a4cd95855e8075e506df9ba2931c` |
 | `Demos/FMX/VirtualLive/Main.fmx` | 4342 | `f188041523cf3ac9578b0498b0baec4cf775ad13d87dfbbec9e315b2438f3ff8` |
 | `Demos/FMX/VirtualLive/Main.pas` | 5432 | `936748d0081ae2df73070171bbeade13d53365e20d0482c8677cca278a2cd1f5` |
-| `Demos/FMX/VirtualLive/h5uGridFmxVirtualLiveDemo.dpr` | 1226 | `fcc353eb53ab25b663d6df87a76adcac96401c5ce8ebf156559bfcc5925b630b` |
+| `Demos/FMX/VirtualLive/GridFmxVirtualLiveDemo.dpr` | 1226 | `fcc353eb53ab25b663d6df87a76adcac96401c5ce8ebf156559bfcc5925b630b` |
 | `Demos/VCL/ClientDataSet/Main.dfm` | 10952 | `c68ef07ca14694d792c75a0acdb0447f8893f9af707c6c5218e629677cc2fadd` |
 | `Demos/VCL/ClientDataSet/Main.pas` | 8818 | `0b2f60945ca6eda2fc439baff3c8f285ba147739eeb494dbfb20f38bed54d4ea` |
-| `Demos/VCL/ClientDataSet/h5uGridVclClientDataSetDemo.dpr` | 1247 | `d7fa79e9aba2d7ca2a4cab397c80460c0735bb54c129db42e0ec2b872a59f3e8` |
+| `Demos/VCL/ClientDataSet/GridVclClientDataSetDemo.dpr` | 1247 | `d7fa79e9aba2d7ca2a4cab397c80460c0735bb54c129db42e0ec2b872a59f3e8` |
 | `Demos/VCL/ObjectList/Main.dfm` | 4081 | `afe9e22b6aea8caee70734c714617cfb4ba0fabbe442240736c1effa1913cc35` |
 | `Demos/VCL/ObjectList/Main.pas` | 3856 | `cad498ed7ba28ad3658296329e1fdbd86af8f71edac98da5f307ca7f41da1c44` |
-| `Demos/VCL/ObjectList/h5uGridVclObjectListDemo.dpr` | 1244 | `55d59d231e83f4aaae39f1850a34a358b1b77bfd135b017d372cc5119e2fbacf` |
+| `Demos/VCL/ObjectList/GridVclObjectListDemo.dpr` | 1244 | `55d59d231e83f4aaae39f1850a34a358b1b77bfd135b017d372cc5119e2fbacf` |
 | `Demos/VCL/VirtualLive/Main.dfm` | 4483 | `d578f56cc6751656b217107980621c2feda12e64e07671f829425d6244554a93` |
 | `Demos/VCL/VirtualLive/Main.pas` | 7167 | `85236982499f8269136811b008ab4d9490de317332949f6293a0cfc6e9442f6e` |
-| `Demos/VCL/VirtualLive/h5uGridVclVirtualLiveDemo.dpr` | 1245 | `1e211f21a69a23cfe359cead513c6a8903abb513ddda1296529f687d39065b43` |
+| `Demos/VCL/VirtualLive/GridVclVirtualLiveDemo.dpr` | 1245 | `1e211f21a69a23cfe359cead513c6a8903abb513ddda1296529f687d39065b43` |
 | `Docs/API-EXTRACT.md` | 103665 | `90eae844c25f358b6492fa634628b687c439afae8d37f0fed1bf5e29a7e94953` |
 | `Docs/BUILD.md` | 4130 | `06cf1061061b7922237e567488bc60014d7d1fc4115d2d1369be96cd44156815` |
 | `Docs/CODING-STYLE.md` | 2575 | `0d7724161900a266312c8a7b734e246b45ca530ab1ede0cb28dc03f700afc19d` |
@@ -74,15 +74,15 @@
 | `Source/Common/h5u.Grid.SampleData.pas` | 8126 | `4cad6d7a98d3745273d6052460f4f1e4278970971efd9a148a798c1ee5d3f851` |
 | `Source/Common/h5u.Grid.Selection.pas` | 8896 | `a4f68bd26cf299a48e27a8a6a90863212012ce230076bc4db052d6e131dc2b92` |
 | `Source/Common/h5u.Grid.Types.pas` | 12998 | `6ff3fa1a3b0657181af3ff61ca667329491aafb50d4b57482b1d32b144c09004` |
-| `Source/Design/FMX.h5u.Grid.Design.pas` | 218 | `2091a16461635f3f0b407eb6e01ba6d156090cc217cef318cc649b3f507edeed` |
+| `Source/Design/Fmx.h5u.Grid.Design.pas` | 218 | `2091a16461635f3f0b407eb6e01ba6d156090cc217cef318cc649b3f507edeed` |
 | `Source/Design/Vcl.h5u.Grid.Design.pas` | 218 | `db95129911a77e168a697bb5af34187216aeec7927302376d995bce9a3e14da2` |
 | `Source/Design/h5u.Grid.Design.pas` | 492 | `bb581a32d8a36c69d0fc08d48d5d3f4e8e7d38a9a5cdfa38f8bfc3ad40578a92` |
-| `Source/FMX/FMX.h5u.Grid.Editors.pas` | 3898 | `01d729bd7a5dada97a4fa0339a22d033f8381ca2f56bf8978d03cc7d75a344c1` |
-| `Source/FMX/FMX.h5u.Grid.Styles.pas` | 4766 | `8c6464d30ffb9fc5ea1544b7a467895fef5b85729e4c649282c8d2622517c5cd` |
-| `Source/FMX/FMX.h5u.Grid.pas` | 105444 | `f5437a2b1f792d2a5ef28c3901604db408c839f659b44b33ccf920735d83b137` |
-| `Source/Vcl/Vcl.h5u.Grid.Editors.pas` | 4661 | `fa720302d63a09420750cad72f60de03e21b641cc52c6aefb432cc9a8f1bdb02` |
-| `Source/Vcl/Vcl.h5u.Grid.Styles.pas` | 7223 | `b60061519782e27eb9b1718787a19266e15553d1823b3ee6c89b95cadcec2f2c` |
-| `Source/Vcl/Vcl.h5u.Grid.pas` | 126310 | `519bfb2ad95ee67c09c34c2f4a1af93ffa9f31575a44f08a256bd9a8f9092303` |
+| `Source/FMX/Fmx.h5u.Grid.Editors.pas` | 3898 | `01d729bd7a5dada97a4fa0339a22d033f8381ca2f56bf8978d03cc7d75a344c1` |
+| `Source/FMX/Fmx.h5u.Grid.Styles.pas` | 4766 | `8c6464d30ffb9fc5ea1544b7a467895fef5b85729e4c649282c8d2622517c5cd` |
+| `Source/FMX/Fmx.h5u.Grid.pas` | 105444 | `f5437a2b1f792d2a5ef28c3901604db408c839f659b44b33ccf920735d83b137` |
+| `Source/VCL/Vcl.h5u.Grid.Editors.pas` | 4661 | `fa720302d63a09420750cad72f60de03e21b641cc52c6aefb432cc9a8f1bdb02` |
+| `Source/VCL/Vcl.h5u.Grid.Styles.pas` | 7223 | `b60061519782e27eb9b1718787a19266e15553d1823b3ee6c89b95cadcec2f2c` |
+| `Source/VCL/Vcl.h5u.Grid.pas` | 126310 | `519bfb2ad95ee67c09c34c2f4a1af93ffa9f31575a44f08a256bd9a8f9092303` |
 | `VERSION.txt` | 6 | `8a3dad16d348c163566a456fcf650d85d7aeeda5e53d01ee1fa8dc15212915a7` |
 
 > Das Manifest selbst ist nicht enthalten, damit seine eigene Prüfsumme keine Zirkularität erzeugt.

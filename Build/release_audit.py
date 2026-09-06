@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Reproducible, compiler-independent release audit for h5u.Grid.
 
 The audit intentionally checks only rules that can be verified reliably
@@ -90,8 +90,8 @@ def check_layout() -> None:
         "Source/Common/h5u.Grid.Data.Virtual.pas",
         "Source/Common/h5u.Grid.Data.Memory.pas",
         "Source/Common/h5u.Grid.SampleData.pas",
-        "Source/Vcl/Vcl.h5u.Grid.pas",
-        "Source/FMX/FMX.h5u.Grid.pas",
+        "Source/VCL/Vcl.h5u.Grid.pas",
+        "Source/FMX/Fmx.h5u.Grid.pas",
         "Docs/CONCEPT.md",
         "Docs/QUICKHELP.md",
         "Docs/FEATURE-MATRIX.md",
@@ -133,9 +133,9 @@ def check_units_and_paths() -> None:
         declared = match.group(1).strip()
         if declared.casefold() != path.stem.casefold():
             add("error", name, path, f"Unit {declared!r} stimmt nicht mit dem Dateinamen überein")
-        if path.parent.name == "Common" and re.search(r"\b(?:Vcl|FMX)\.", value, re.I):
+        if path.parent.name == "Common" and re.search(r"\b(?:VCL|FMX)\.", value, re.I):
             add("error", name, path, "Gemeinsame Unit referenziert einen Plattform-Namensraum")
-        if path.parent.name == "Vcl" and re.search(r"\bFMX\.", value, re.I):
+        if path.parent.name == "VCL" and re.search(r"\bFMX\.", value, re.I):
             add("error", name, path, "VCL-Unit referenziert FMX")
         if path.parent.name == "FMX" and re.search(r"\bVcl\.", value, re.I):
             add("error", name, path, "FMX-Unit referenziert VCL")
@@ -176,7 +176,7 @@ def check_naming() -> None:
         for match in re.finditer(r"\b(?:TH5u|IH5u|EH5u)[A-Za-z0-9_]*", value):
             add("error", name, path, f"Nichtkanonische Schreibweise: {match.group(0)}", line_no(value, match.start()))
     if (SOURCE / "Common" / "h5u.Grid.pas").exists():
-        add("error", name, SOURCE / "Common" / "h5u.Grid.pas", "Name ist für die Vcl./FMX.-Fassade reserviert")
+        add("error", name, SOURCE / "Common" / "h5u.Grid.pas", "Name ist für die Vcl./Fmx.-Fassade reserviert")
     finish(name, before)
 
 
@@ -319,8 +319,8 @@ def check_factory_and_features() -> None:
         (r"ColumnSpan", "Header ColumnSpan"),
     ])
     for rel, grid_class in [
-        ("Source/Vcl/Vcl.h5u.Grid.pas", "Th5uVclGrid"),
-        ("Source/FMX/FMX.h5u.Grid.pas", "Th5uFmxGrid"),
+        ("Source/VCL/Vcl.h5u.Grid.pas", "Th5uVclGrid"),
+        ("Source/FMX/Fmx.h5u.Grid.pas", "Th5uFmxGrid"),
     ]:
         require_patterns(name, rel, [
             (rf"{grid_class}\s*=\s*class", "Grid-Klasse"),
@@ -338,7 +338,7 @@ def check_factory_and_features() -> None:
             (r"OnGetTreeBranchEnd", "Tree-Astende-Event am Grid"),
             (r"GetEffectiveRowSeparatorFor.*?Result\s*:=\s*FTree\.BranchEndBand\.Height", "Tree-Abschluss ersetzt den normalen Separator"),
             (r"Th5uElementKind\.TreeBranchEndBand", "Tree-Abschluss-Rendering"),
-            (r"Th5u(?:Vcl|Fmx)SpacingCell\s*=\s*class", "gepoolte Separator-/Abschlusszelle"),
+            (r"Th5u(?:VCL|FMX)SpacingCell\s*=\s*class", "gepoolte Separator-/Abschlusszelle"),
             (r"DrawSpacingRect.*?AcquireVisualCell", "Separatoren durchlaufen den lokalen Factory-Scope"),
             (r"ClosedTreeLevels", "Anzahl geschlossener Tree-Ebenen im Zeichenkontext"),
             (r"property\s+AdjacentGroupFolding:\s*Th5uAdjacentGroupFoldingOptions", "Folgegruppen-Faltung am Grid"),
@@ -458,12 +458,12 @@ def check_method_consistency() -> None:
         ("Source/Common/h5u.Grid.Options.pas", "Th5uAdjacentGroupFoldingOptions"),
         ("Source/Common/h5u.Grid.AdjacentGroups.pas", "Th5uAdjacentGroupMap"),
         ("Source/Common/h5u.Grid.Columns.pas", "Th5uGridColumn"),
-        ("Source/Vcl/Vcl.h5u.Grid.pas", "Th5uVclSpacingCell"),
-        ("Source/Vcl/Vcl.h5u.Grid.pas", "Th5uVclAdjacentGroupGlyphCell"),
-        ("Source/Vcl/Vcl.h5u.Grid.pas", "Th5uVclGrid"),
-        ("Source/FMX/FMX.h5u.Grid.pas", "Th5uFmxSpacingCell"),
-        ("Source/FMX/FMX.h5u.Grid.pas", "Th5uFmxAdjacentGroupGlyphCell"),
-        ("Source/FMX/FMX.h5u.Grid.pas", "Th5uFmxGrid"),
+        ("Source/VCL/Vcl.h5u.Grid.pas", "Th5uVclSpacingCell"),
+        ("Source/VCL/Vcl.h5u.Grid.pas", "Th5uVclAdjacentGroupGlyphCell"),
+        ("Source/VCL/Vcl.h5u.Grid.pas", "Th5uVclGrid"),
+        ("Source/FMX/Fmx.h5u.Grid.pas", "Th5uFmxSpacingCell"),
+        ("Source/FMX/Fmx.h5u.Grid.pas", "Th5uFmxAdjacentGroupGlyphCell"),
+        ("Source/FMX/Fmx.h5u.Grid.pas", "Th5uFmxGrid"),
     ]
     for rel, class_name in targets:
         path = ROOT / rel

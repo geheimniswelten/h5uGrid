@@ -1,4 +1,4 @@
-# h5u.Grid – Formatierungsrichtlinie
+﻿# h5u.Grid – Formatierungsrichtlinie
 
 ## Maximale Zeilenlänge
 
@@ -40,7 +40,7 @@ Ausführbare Anweisungen werden vom mitgelieferten Formatter bewusst nicht autom
 - Zwei Leerzeichen je Einrückungsebene.
 - Keine Tabulatoren in Pascal-Quellen.
 - Die kanonische Markenschreibweise bleibt `h5u`, beispielsweise `Th5uVclGrid`, `Ih5uDataController` und `Eh5uFactoryError`.
-- Gemeinsame Units beginnen mit `h5u.`; Plattformfassaden heißen `Vcl.h5u...` beziehungsweise `FMX.h5u...`.
+- Gemeinsame Units beginnen mit `h5u.`; Plattformfassaden heißen `Vcl.h5u...` beziehungsweise `Fmx.h5u...`.
 
 ## Mitgelieferter Formatter
 

@@ -17,7 +17,7 @@ uses
   Data.DB,
   h5u.Grid.Data.DataSet,
   h5u.Grid.SampleData,
-  FMX.h5u.Grid;
+  Fmx.h5u.Grid;
 
 type
   TMainForm = class(TForm)

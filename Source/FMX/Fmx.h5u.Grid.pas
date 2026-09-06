@@ -1,4 +1,4 @@
-﻿unit FMX.h5u.Grid;
+﻿unit Fmx.h5u.Grid;
 
 interface
 
@@ -27,7 +27,7 @@ uses
   h5u.Grid.Options,
   h5u.Grid.Selection,
   h5u.Grid.Types,
-  FMX.h5u.Grid.Styles;
+  Fmx.h5u.Grid.Styles;
 
 type
   Th5uFmxGrid = class;
@@ -417,7 +417,7 @@ implementation
 
 uses
   FMX.Forms,
-  FMX.h5u.Grid.Editors;
+  Fmx.h5u.Grid.Editors;
 
 function h5uRectFIntersects(const A, B: TRectF): Boolean;
 begin

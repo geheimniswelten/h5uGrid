@@ -1,4 +1,4 @@
-﻿program h5uGridVclClientDataSetDemo;
+﻿program GridVclVirtualLiveDemo;
 
 uses
   Vcl.Forms,
@@ -17,6 +17,7 @@ uses
   Vcl.h5u.Grid.Styles in '..\..\..\Source\Vcl\Vcl.h5u.Grid.Styles.pas',
   Vcl.h5u.Grid.Editors in '..\..\..\Source\Vcl\Vcl.h5u.Grid.Editors.pas',
   Vcl.h5u.Grid in '..\..\..\Source\Vcl\Vcl.h5u.Grid.pas';
+
 begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;

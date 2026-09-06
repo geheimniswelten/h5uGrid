@@ -423,7 +423,7 @@ def main() -> int:
         "Source/Common/h5u.Grid.Data.Virtual.pas",
         "Source/Common/h5u.Grid.SampleData.pas",
         "Source/Vcl/Vcl.h5u.Grid.pas",
-        "Source/FMX/FMX.h5u.Grid.pas",
+        "Source/FMX/Fmx.h5u.Grid.pas",
     ]
     for expected in expected_files:
         if not (root / expected).exists():

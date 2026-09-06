@@ -1,4 +1,4 @@
-﻿unit FMX.h5u.Grid.Design;
+﻿unit Fmx.h5u.Grid.Design;
 
 interface
 
@@ -9,7 +9,7 @@ implementation
 uses
   System.Classes,
   DesignIntf,
-  FMX.h5u.Grid;
+  Fmx.h5u.Grid;
 
 procedure Register;
 begin

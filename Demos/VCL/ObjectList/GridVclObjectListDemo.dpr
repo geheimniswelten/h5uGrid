@@ -1,8 +1,7 @@
-﻿program h5uGridFmxVirtualLiveDemo;
+﻿program GridVclObjectListDemo;
 
 uses
-  System.StartUpCopy,
-  FMX.Forms,
+  Vcl.Forms,
   Main in 'Main.pas' {MainForm},
   h5u.Grid.Types in '..\..\..\Source\Common\h5u.Grid.Types.pas',
   h5u.Grid.Factory in '..\..\..\Source\Common\h5u.Grid.Factory.pas',
@@ -15,11 +14,13 @@ uses
   h5u.Grid.Data.Virtual in '..\..\..\Source\Common\h5u.Grid.Data.Virtual.pas',
   h5u.Grid.Data.Memory in '..\..\..\Source\Common\h5u.Grid.Data.Memory.pas',
   h5u.Grid.SampleData in '..\..\..\Source\Common\h5u.Grid.SampleData.pas',
-  FMX.h5u.Grid.Styles in '..\..\..\Source\FMX\FMX.h5u.Grid.Styles.pas',
-  FMX.h5u.Grid.Editors in '..\..\..\Source\FMX\FMX.h5u.Grid.Editors.pas',
-  FMX.h5u.Grid in '..\..\..\Source\FMX\FMX.h5u.Grid.pas';
+  Vcl.h5u.Grid.Styles in '..\..\..\Source\Vcl\Vcl.h5u.Grid.Styles.pas',
+  Vcl.h5u.Grid.Editors in '..\..\..\Source\Vcl\Vcl.h5u.Grid.Editors.pas',
+  Vcl.h5u.Grid in '..\..\..\Source\Vcl\Vcl.h5u.Grid.pas';
+
 begin
   Application.Initialize;
+  Application.MainFormOnTaskbar := True;
   Application.CreateForm(TMainForm, MainForm);
   Application.Run;
 end.

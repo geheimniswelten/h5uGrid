@@ -124,7 +124,7 @@ uses
   h5u.Grid;
 ```
 
-In einem VCL-Projekt wird daraus `Vcl.h5u.Grid`, in einem FMX-Projekt `FMX.h5u.Grid`. Ohne passend gesetzten Scope wird die Unit explizit angegeben:
+In einem VCL-Projekt wird daraus `Vcl.h5u.Grid`, in einem FMX-Projekt `Fmx.h5u.Grid`. Ohne passend gesetzten Scope wird die Unit explizit angegeben:
 
 ```pascal
 uses
@@ -135,7 +135,7 @@ oder:
 
 ```pascal
 uses
-  FMX.h5u.Grid;
+  Fmx.h5u.Grid;
 ```
 
 ## Erwartete erste Prüfpunkte

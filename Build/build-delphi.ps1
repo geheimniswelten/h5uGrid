@@ -140,7 +140,7 @@ if ($Clean -and (Test-Path -LiteralPath $output)) {
 
 $searchDirectories = @(
     (Join-Path $root 'Source\Common'),
-    (Join-Path $root 'Source\Vcl'),
+    (Join-Path $root 'Source\VCL'),
     (Join-Path $root 'Source\FMX'),
     (Join-Path $root 'Source\Design'),
     $dcuOutput,
@@ -161,12 +161,12 @@ $designPackages = @(
 )
 
 $demoProjects = @(
-    (Join-Path $root 'Demos\VCL\ClientDataSet\h5uGridVclClientDataSetDemo.dpr'),
-    (Join-Path $root 'Demos\VCL\ObjectList\h5uGridVclObjectListDemo.dpr'),
-    (Join-Path $root 'Demos\VCL\VirtualLive\h5uGridVclVirtualLiveDemo.dpr'),
-    (Join-Path $root 'Demos\FMX\ClientDataSet\h5uGridFmxClientDataSetDemo.dpr'),
-    (Join-Path $root 'Demos\FMX\ObjectList\h5uGridFmxObjectListDemo.dpr'),
-    (Join-Path $root 'Demos\FMX\VirtualLive\h5uGridFmxVirtualLiveDemo.dpr')
+    (Join-Path $root 'Demos\VCL\ClientDataSet\GridVclClientDataSetDemo.dpr'),
+    (Join-Path $root 'Demos\VCL\ObjectList\GridVclObjectListDemo.dpr'),
+    (Join-Path $root 'Demos\VCL\VirtualLive\GridVclVirtualLiveDemo.dpr'),
+    (Join-Path $root 'Demos\FMX\ClientDataSet\GridFmxClientDataSetDemo.dpr'),
+    (Join-Path $root 'Demos\FMX\ObjectList\GridFmxObjectListDemo.dpr'),
+    (Join-Path $root 'Demos\FMX\VirtualLive\GridFmxVirtualLiveDemo.dpr')
 )
 
 if (-not $SkipRuntimePackages) {

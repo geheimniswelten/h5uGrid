@@ -15,7 +15,7 @@ uses
   FMX.Types,
   h5u.Grid.Data.Virtual,
   h5u.Grid.Types,
-  FMX.h5u.Grid;
+  Fmx.h5u.Grid;
 
 type
   TLiveRow = class

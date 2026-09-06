@@ -48,7 +48,7 @@ Die visuellen Fassaden heißen:
 
 ```pascal
 Vcl.h5u.Grid
-FMX.h5u.Grid
+Fmx.h5u.Grid
 ```
 
 VCL und FMX teilen bewusst keine visuelle Basisklasse. `Th5uVclGrid` basiert auf einem VCL-Control; `Th5uFmxGrid` auf einem FMX-Styled-Control. Beide delegieren ihre Daten- und Factorylogik an denselben Core.

@@ -114,7 +114,7 @@ Plattformunits:
 
 ```pascal
 Vcl.h5u.Grid
-FMX.h5u.Grid
+Fmx.h5u.Grid
 ```
 
 Mit passenden Delphi Unit Scope Names kann Anwendungscode für die jeweilige Plattform einfach `h5u.Grid` in `uses` aufnehmen.
