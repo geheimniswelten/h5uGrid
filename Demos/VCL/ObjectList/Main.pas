@@ -72,25 +72,20 @@ uses
 
 function TMainForm.AddPerson: TPersonRow;
 const
-  CDepartments: array[0..4] of string = (
-    'Fertigung', 'Konstruktion', 'Einkauf', 'QS', 'Vertrieb'
-  );
+  CDepartments: array[0..4] of string = ('Fertigung', 'Konstruktion', 'Einkauf', 'QS', 'Vertrieb');
 begin
   Inc(FNextId);
   Result := TPersonRow.Create;
   Result.Id := FNextId;
   Result.Name := Format('Mitarbeiter %d', [FNextId]);
-  Result.Department :=
-    CDepartments[FNextId mod Length(CDepartments)];
+  Result.Department := CDepartments[FNextId mod Length(CDepartments)];
   Result.Active := (FNextId mod 5) <> 0;
   Result.Priority := FNextId mod 4;
   Result.Amount := 1250 + FNextId * 42.75;
   Result.UpdatedAt := IncMinute(Now, -FNextId * 3);
   if (FNextId mod 6) = 0 then
-    Result.Notes :=
-      'Dieser Eintrag demonstriert einen längeren Text aus einer ' +
-      'normalen Objektliste. Der Controller greift per RTTI auf ' +
-      'öffentliche Properties zu; der Wertcache ist optional.'
+    Result.Notes := 'Dieser Eintrag demonstriert einen längeren Text aus einer normalen Objektliste. '
+      + 'Der Controller greift per RTTI auf öffentliche Properties zu; der Wertcache ist optional.'
   else
     Result.Notes := 'Kurzer RTTI-Listeneintrag.';
   ObjectController.Add(Result);

@@ -1,0 +1,168 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{86268DAB-80A2-4DB3-B976-1765E19828EC}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="Packages\h5uGridCoreR.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Packages\h5uGridCoreD.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Packages\h5uGridVclR.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Packages\h5uGridVclD.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Packages\h5uGridFmxR.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Packages\h5uGridFmxD.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Demos\VCL\ClientDataSet\GridVclClientDataSetDemo.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Demos\FMX\ClientDataSet\GridFmxClientDataSetDemo.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Demos\VCL\ObjectList\GridVclObjectListDemo.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Demos\FMX\ObjectList\GridFmxObjectListDemo.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Demos\VCL\VirtualLive\GridVclVirtualLiveDemo.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Demos\FMX\VirtualLive\GridFmxVirtualLiveDemo.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="h5uGridCoreR">
+        <MSBuild Projects="Packages\h5uGridCoreR.dproj"/>
+    </Target>
+    <Target Name="h5uGridCoreR:Clean">
+        <MSBuild Projects="Packages\h5uGridCoreR.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="h5uGridCoreR:Make">
+        <MSBuild Projects="Packages\h5uGridCoreR.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="h5uGridCoreD">
+        <MSBuild Projects="Packages\h5uGridCoreD.dproj"/>
+    </Target>
+    <Target Name="h5uGridCoreD:Clean">
+        <MSBuild Projects="Packages\h5uGridCoreD.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="h5uGridCoreD:Make">
+        <MSBuild Projects="Packages\h5uGridCoreD.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="h5uGridVclR">
+        <MSBuild Projects="Packages\h5uGridVclR.dproj"/>
+    </Target>
+    <Target Name="h5uGridVclR:Clean">
+        <MSBuild Projects="Packages\h5uGridVclR.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="h5uGridVclR:Make">
+        <MSBuild Projects="Packages\h5uGridVclR.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="h5uGridVclD">
+        <MSBuild Projects="Packages\h5uGridVclD.dproj"/>
+    </Target>
+    <Target Name="h5uGridVclD:Clean">
+        <MSBuild Projects="Packages\h5uGridVclD.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="h5uGridVclD:Make">
+        <MSBuild Projects="Packages\h5uGridVclD.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="h5uGridFmxR">
+        <MSBuild Projects="Packages\h5uGridFmxR.dproj"/>
+    </Target>
+    <Target Name="h5uGridFmxR:Clean">
+        <MSBuild Projects="Packages\h5uGridFmxR.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="h5uGridFmxR:Make">
+        <MSBuild Projects="Packages\h5uGridFmxR.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="h5uGridFmxD">
+        <MSBuild Projects="Packages\h5uGridFmxD.dproj"/>
+    </Target>
+    <Target Name="h5uGridFmxD:Clean">
+        <MSBuild Projects="Packages\h5uGridFmxD.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="h5uGridFmxD:Make">
+        <MSBuild Projects="Packages\h5uGridFmxD.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="GridVclClientDataSetDemo">
+        <MSBuild Projects="Demos\VCL\ClientDataSet\GridVclClientDataSetDemo.dproj"/>
+    </Target>
+    <Target Name="GridVclClientDataSetDemo:Clean">
+        <MSBuild Projects="Demos\VCL\ClientDataSet\GridVclClientDataSetDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="GridVclClientDataSetDemo:Make">
+        <MSBuild Projects="Demos\VCL\ClientDataSet\GridVclClientDataSetDemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="GridFmxClientDataSetDemo">
+        <MSBuild Projects="Demos\FMX\ClientDataSet\GridFmxClientDataSetDemo.dproj"/>
+    </Target>
+    <Target Name="GridFmxClientDataSetDemo:Clean">
+        <MSBuild Projects="Demos\FMX\ClientDataSet\GridFmxClientDataSetDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="GridFmxClientDataSetDemo:Make">
+        <MSBuild Projects="Demos\FMX\ClientDataSet\GridFmxClientDataSetDemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="GridVclObjectListDemo">
+        <MSBuild Projects="Demos\VCL\ObjectList\GridVclObjectListDemo.dproj"/>
+    </Target>
+    <Target Name="GridVclObjectListDemo:Clean">
+        <MSBuild Projects="Demos\VCL\ObjectList\GridVclObjectListDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="GridVclObjectListDemo:Make">
+        <MSBuild Projects="Demos\VCL\ObjectList\GridVclObjectListDemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="GridFmxObjectListDemo">
+        <MSBuild Projects="Demos\FMX\ObjectList\GridFmxObjectListDemo.dproj"/>
+    </Target>
+    <Target Name="GridFmxObjectListDemo:Clean">
+        <MSBuild Projects="Demos\FMX\ObjectList\GridFmxObjectListDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="GridFmxObjectListDemo:Make">
+        <MSBuild Projects="Demos\FMX\ObjectList\GridFmxObjectListDemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="GridVclVirtualLiveDemo">
+        <MSBuild Projects="Demos\VCL\VirtualLive\GridVclVirtualLiveDemo.dproj"/>
+    </Target>
+    <Target Name="GridVclVirtualLiveDemo:Clean">
+        <MSBuild Projects="Demos\VCL\VirtualLive\GridVclVirtualLiveDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="GridVclVirtualLiveDemo:Make">
+        <MSBuild Projects="Demos\VCL\VirtualLive\GridVclVirtualLiveDemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="GridFmxVirtualLiveDemo">
+        <MSBuild Projects="Demos\FMX\VirtualLive\GridFmxVirtualLiveDemo.dproj"/>
+    </Target>
+    <Target Name="GridFmxVirtualLiveDemo:Clean">
+        <MSBuild Projects="Demos\FMX\VirtualLive\GridFmxVirtualLiveDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="GridFmxVirtualLiveDemo:Make">
+        <MSBuild Projects="Demos\FMX\VirtualLive\GridFmxVirtualLiveDemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="h5uGridCoreR;h5uGridCoreD;h5uGridVclR;h5uGridVclD;h5uGridFmxR;h5uGridFmxD;GridVclClientDataSetDemo;GridFmxClientDataSetDemo;GridVclObjectListDemo;GridFmxObjectListDemo;GridVclVirtualLiveDemo;GridFmxVirtualLiveDemo"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="h5uGridCoreR:Clean;h5uGridCoreD:Clean;h5uGridVclR:Clean;h5uGridVclD:Clean;h5uGridFmxR:Clean;h5uGridFmxD:Clean;GridVclClientDataSetDemo:Clean;GridFmxClientDataSetDemo:Clean;GridVclObjectListDemo:Clean;GridFmxObjectListDemo:Clean;GridVclVirtualLiveDemo:Clean;GridFmxVirtualLiveDemo:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="h5uGridCoreR:Make;h5uGridCoreD:Make;h5uGridVclR:Make;h5uGridVclD:Make;h5uGridFmxR:Make;h5uGridFmxD:Make;GridVclClientDataSetDemo:Make;GridFmxClientDataSetDemo:Make;GridVclObjectListDemo:Make;GridFmxObjectListDemo:Make;GridVclVirtualLiveDemo:Make;GridFmxVirtualLiveDemo:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

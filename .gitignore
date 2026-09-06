@@ -1,4 +1,9 @@
 # Delphi outputs
+__history/
+__recovery/
+_dcu/
+_pak/
+_bin/
 *.dcu
 *.dcp
 *.bpl
@@ -8,16 +13,9 @@
 *.identcache
 *.stat
 *.otares
-__history/
-__recovery/
-Win32/
-Win64/
-OSX32/
-OSX64/
-Android/
-Android64/
-iOSDevice32/
-iOSDevice64/
+*.dsv
+*.dsk
+*.~dsk
 
 # Generated build output
 Build/Delphi/

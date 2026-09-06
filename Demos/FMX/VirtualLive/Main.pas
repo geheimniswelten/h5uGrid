@@ -69,9 +69,7 @@ end;
 
 procedure TMainForm.AppendRow;
 const
-  CSources: array[0..3] of string = (
-    'ERP', 'Worker', 'Import', 'Interface'
-  );
+  CSources: array[0..3] of string = ('ERP', 'Worker', 'Import', 'Interface');
 var
   LRow: TLiveRow;
   LIndex: Int64;
@@ -84,9 +82,7 @@ begin
   LRow.Severity := FNextId mod 4;
   LRow.Acknowledged := False;
   if (FNextId mod 7) = 0 then
-    LRow.MessageText :=
-      'Längerer Eventtext aus OnGetValue. Der Grid-Viewport ' +
-      'materialisiert nur die sichtbaren Zeilen und Zellen.'
+    LRow.MessageText := 'Längerer Eventtext aus OnGetValue. Der Grid-Viewport materialisiert nur die sichtbaren Zeilen und Zellen.'
   else
     LRow.MessageText := Format('FMX Live-Ereignis %d', [FNextId]);
   LIndex := FRows.Count;
@@ -139,8 +135,7 @@ begin
     LIndex := Random(FRows.Count);
     FRows[LIndex].Severity := (FRows[LIndex].Severity + 1) mod 4;
     FRows[LIndex].Timestamp := Now;
-    FRows[LIndex].MessageText :=
-      FRows[LIndex].MessageText + ' *';
+    FRows[LIndex].MessageText := FRows[LIndex].MessageText + ' *';
     VirtualController.NotifyRowChanged(LIndex);
   end;
 end;
@@ -157,8 +152,7 @@ end;
 
 procedure TMainForm.VirtualGetRowKey(Sender: TObject; ASourceRowIndex: Int64; var ARowKey: Th5uRowKey);
 begin
-  if (ASourceRowIndex >= 0) and
-     (ASourceRowIndex < FRows.Count) then
+  if (ASourceRowIndex >= 0) and (ASourceRowIndex < FRows.Count) then
     ARowKey := Th5uRowKey.FromInt64(FRows[ASourceRowIndex].Id);
 end;
 
@@ -166,8 +160,7 @@ procedure TMainForm.VirtualGetValue(Sender: TObject; ASourceRowIndex: Int64; con
 var
   LRow: TLiveRow;
 begin
-  if (ASourceRowIndex < 0) or
-     (ASourceRowIndex >= FRows.Count) then
+  if (ASourceRowIndex < 0) or (ASourceRowIndex >= FRows.Count) then
     Exit;
   LRow := FRows[ASourceRowIndex];
 
@@ -188,8 +181,7 @@ end;
 procedure TMainForm.VirtualSetValue(Sender: TObject; ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue; var AHandled: Boolean);
 begin
   AHandled := False;
-  if (ASourceRowIndex < 0) or
-     (ASourceRowIndex >= FRows.Count) then
+  if (ASourceRowIndex < 0) or (ASourceRowIndex >= FRows.Count) then
     Exit;
 
   if SameText(AFieldName, 'ACK') then

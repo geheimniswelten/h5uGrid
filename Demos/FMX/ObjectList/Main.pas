@@ -69,24 +69,19 @@ uses
 
 function TMainForm.AddPerson: TPersonRow;
 const
-  CDepartments: array[0..4] of string = (
-    'Fertigung', 'Konstruktion', 'Einkauf', 'QS', 'Vertrieb'
-  );
+  CDepartments: array[0..4] of string = ('Fertigung', 'Konstruktion', 'Einkauf', 'QS', 'Vertrieb');
 begin
   Inc(FNextId);
   Result := TPersonRow.Create;
   Result.Id := FNextId;
   Result.Name := Format('Objekt %d', [FNextId]);
-  Result.Department :=
-    CDepartments[FNextId mod Length(CDepartments)];
+  Result.Department := CDepartments[FNextId mod Length(CDepartments)];
   Result.Active := (FNextId mod 5) <> 0;
   Result.Priority := FNextId mod 4;
   Result.Amount := 800 + FNextId * 31.45;
   Result.UpdatedAt := IncMinute(Now, -FNextId);
   if (FNextId mod 6) = 0 then
-    Result.Notes :=
-      'Mehrzeiliger RTTI-Inhalt. Der ObjectListController kann ' +
-      'direkt aus der Liste lesen oder Werte optional cachen.'
+    Result.Notes := 'Mehrzeiliger RTTI-Inhalt. Der ObjectListController kann direkt aus der Liste lesen oder Werte optional cachen.'
   else
     Result.Notes := 'Kurzer Objekteintrag.';
   ObjectController.Add(Result);

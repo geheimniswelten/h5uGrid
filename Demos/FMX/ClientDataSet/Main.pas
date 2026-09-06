@@ -83,18 +83,10 @@ begin
   Grid.AdjacentGroupFolding.EndBand.Height := 7;
   Grid.AdjacentGroupFolding.EndBand.StyleName := 'AdjacentGroupEnd';
   case AdjacentBandModeCombo.ItemIndex of
-    0:
-      Grid.AdjacentGroupFolding.EndBand.Visibility :=
-        Th5uAdjacentGroupEndBandVisibility.Never;
-    1:
-      Grid.AdjacentGroupFolding.EndBand.Visibility :=
-        Th5uAdjacentGroupEndBandVisibility.CollapsedOnly;
-    2:
-      Grid.AdjacentGroupFolding.EndBand.Visibility :=
-        Th5uAdjacentGroupEndBandVisibility.ExpandedOnly;
-  else
-    Grid.AdjacentGroupFolding.EndBand.Visibility :=
-      Th5uAdjacentGroupEndBandVisibility.Always;
+    0: Grid.AdjacentGroupFolding.EndBand.Visibility := Th5uAdjacentGroupEndBandVisibility.Never;
+    1: Grid.AdjacentGroupFolding.EndBand.Visibility := Th5uAdjacentGroupEndBandVisibility.CollapsedOnly;
+    2: Grid.AdjacentGroupFolding.EndBand.Visibility := Th5uAdjacentGroupEndBandVisibility.ExpandedOnly;
+    else Grid.AdjacentGroupFolding.EndBand.Visibility := Th5uAdjacentGroupEndBandVisibility.Always;
   end;
   ToggleGroupsButton.Enabled := AdjacentGroupCheck.IsChecked;
 
@@ -116,14 +108,12 @@ begin
 
   if PagedCheck.IsChecked then
   begin
-    DataController.Pagination.Mode :=
-      Th5uPaginationMode.NumberedPages;
+    DataController.Pagination.Mode := Th5uPaginationMode.NumberedPages;
     DataController.Pagination.PageSize := 10;
   end
   else
   begin
-    DataController.Pagination.Mode :=
-      Th5uPaginationMode.Continuous;
+    DataController.Pagination.Mode := Th5uPaginationMode.Continuous;
     DataController.Pagination.PageIndex := 0;
   end;
 
@@ -224,13 +214,8 @@ begin
   if DataController.Pagination.Mode <>
      Th5uPaginationMode.NumberedPages then
     Exit;
-  LPageCount := (
-    DataController.GetTotalRowCount +
-    DataController.Pagination.PageSize - 1
-  ) div DataController.Pagination.PageSize;
-  DataController.Pagination.PageIndex :=
-    (DataController.Pagination.PageIndex + 1) mod
-    Max(1, LPageCount);
+  LPageCount := (DataController.GetTotalRowCount + DataController.Pagination.PageSize - 1) div DataController.Pagination.PageSize;
+  DataController.Pagination.PageIndex := (DataController.Pagination.PageIndex + 1) mod Max(1, LPageCount);
 end;
 
 procedure TMainForm.OptionClick(Sender: TObject);

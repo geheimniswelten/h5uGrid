@@ -8,6 +8,7 @@ uses
   System.Classes,
   System.Rtti,
   System.SysUtils,
+  System.UITypes,
   System.Types;
 
 type
@@ -37,12 +38,9 @@ const
   h5uClassIdGridRowSpacing = Th5uClassId('h5u.grid.spacing.row');
   h5uClassIdGridColumnSpacing = Th5uClassId('h5u.grid.spacing.column');
   h5uClassIdGridContentPadding = Th5uClassId('h5u.grid.spacing.content-padding');
-  h5uClassIdGridTreeBranchEndBand =
-    Th5uClassId('h5u.grid.spacing.tree-branch-end');
-  h5uClassIdGridAdjacentGroupFoldGlyph =
-    Th5uClassId('h5u.grid.visual.adjacent-group-fold-glyph');
-  h5uClassIdGridAdjacentGroupEndBand =
-    Th5uClassId('h5u.grid.spacing.adjacent-group-end');
+  h5uClassIdGridTreeBranchEndBand = Th5uClassId('h5u.grid.spacing.tree-branch-end');
+  h5uClassIdGridAdjacentGroupFoldGlyph = Th5uClassId('h5u.grid.visual.adjacent-group-fold-glyph');
+  h5uClassIdGridAdjacentGroupEndBand = Th5uClassId('h5u.grid.spacing.adjacent-group-end');
   h5uClassIdDataSession = Th5uClassId('h5u.grid.data.session');
   h5uClassIdDataCache = Th5uClassId('h5u.grid.data.cache');
   h5uClassIdDataPage = Th5uClassId('h5u.grid.data.page');
@@ -406,8 +404,7 @@ begin
     (Cardinal(AAlpha) shl 24) or
     (Cardinal(ARed) shl 16) or
     (Cardinal(AGreen) shl 8) or
-    Cardinal(ABlue)
-  );
+    Cardinal(ABlue));
 end;
 
 function h5uColorFromRgb(ARed, AGreen, ABlue: Byte): Th5uColor;

@@ -74,9 +74,7 @@ end;
 
 procedure TMainForm.AppendLiveRow;
 const
-  CSources: array[0..4] of string = (
-    'Scheduler', 'Import', 'ERP', 'Worker', 'Interface'
-  );
+  CSources: array[0..4] of string = ('Scheduler', 'Import', 'ERP', 'Worker', 'Interface');
 var
   LRow: TLiveRow;
   LIndex: Int64;
@@ -94,18 +92,12 @@ begin
       'aus dem OnGetValue-Ereignis und existiert nicht als ' +
       'Grid-Datensatzobjekt.'
   else
-    LRow.MessageText := Format(
-      'Live-Ereignis Nummer %d wurde empfangen.',
-      [FNextId]
-    );
+    LRow.MessageText := Format('Live-Ereignis Nummer %d wurde empfangen.', [FNextId]);
 
   LIndex := FRows.Count;
   FRows.Add(LRow);
   VirtualController.NotifyRowsInserted(LIndex, 1);
-  StatusLabel.Caption := Format(
-    '%d Live-Datensätze; letzte ID %d',
-    [FRows.Count, FNextId]
-  );
+  StatusLabel.Caption := Format('%d Live-Datensätze; letzte ID %d', [FRows.Count, FNextId]);
 end;
 
 procedure TMainForm.ApplyOptions;
@@ -119,14 +111,12 @@ begin
 
   if PagedCheck.Checked then
   begin
-    VirtualController.Pagination.Mode :=
-      Th5uPaginationMode.NumberedPages;
+    VirtualController.Pagination.Mode := Th5uPaginationMode.NumberedPages;
     VirtualController.Pagination.PageSize := 20;
   end
   else
   begin
-    VirtualController.Pagination.Mode :=
-      Th5uPaginationMode.Continuous;
+    VirtualController.Pagination.Mode := Th5uPaginationMode.Continuous;
     VirtualController.Pagination.PageIndex := 0;
   end;
 
@@ -180,17 +170,12 @@ procedure TMainForm.NextPageButtonClick(Sender: TObject);
 var
   LPageCount: Integer;
 begin
-  if VirtualController.Pagination.Mode <>
-     Th5uPaginationMode.NumberedPages then
+  if VirtualController.Pagination.Mode <> Th5uPaginationMode.NumberedPages then
     Exit;
 
-  LPageCount := (
-    FRows.Count + VirtualController.Pagination.PageSize - 1
-  ) div VirtualController.Pagination.PageSize;
+  LPageCount := (FRows.Count + VirtualController.Pagination.PageSize - 1) div VirtualController.Pagination.PageSize;
 
-  VirtualController.Pagination.PageIndex :=
-    (VirtualController.Pagination.PageIndex + 1) mod
-    System.Math.Max(1, LPageCount);
+  VirtualController.Pagination.PageIndex := (VirtualController.Pagination.PageIndex + 1) mod System.Math.Max(1, LPageCount);
 end;
 
 procedure TMainForm.OptionClick(Sender: TObject);
@@ -205,8 +190,7 @@ end;
 
 procedure TMainForm.VirtualControllerGetRowKey(Sender: TObject; ASourceRowIndex: Int64; var ARowKey: Th5uRowKey);
 begin
-  if (ASourceRowIndex >= 0) and
-     (ASourceRowIndex < FRows.Count) then
+  if (ASourceRowIndex >= 0) and (ASourceRowIndex < FRows.Count) then
     ARowKey := Th5uRowKey.FromInt64(FRows[ASourceRowIndex].Id);
 end;
 
@@ -214,8 +198,7 @@ procedure TMainForm.VirtualControllerGetValue(Sender: TObject; ASourceRowIndex: 
 var
   LRow: TLiveRow;
 begin
-  if (ASourceRowIndex < 0) or
-     (ASourceRowIndex >= FRows.Count) then
+  if (ASourceRowIndex < 0) or (ASourceRowIndex >= FRows.Count) then
     Exit;
 
   LRow := FRows[ASourceRowIndex];
@@ -235,14 +218,8 @@ end;
 
 procedure TMainForm.VirtualControllerPrepareRange(Sender: TObject; AFirstSourceRow, ACount: Int64; AQueryGeneration: Int64);
 begin
-  StatusLabel.Caption := Format(
-    'Viewport-Anfrage: %d..%d, QueryGeneration %d, Gesamt %d',
-    [
-      AFirstSourceRow,
-      AFirstSourceRow + ACount - 1,
-      AQueryGeneration,
-      FRows.Count
-    ]
+  StatusLabel.Caption := Format('Viewport-Anfrage: %d..%d, QueryGeneration %d, Gesamt %d',
+    [AFirstSourceRow, AFirstSourceRow + ACount - 1, AQueryGeneration, FRows.Count]
   );
 end;
 
@@ -251,8 +228,7 @@ var
   LRow: TLiveRow;
 begin
   AHandled := False;
-  if (ASourceRowIndex < 0) or
-     (ASourceRowIndex >= FRows.Count) then
+  if (ASourceRowIndex < 0) or (ASourceRowIndex >= FRows.Count) then
     Exit;
   LRow := FRows[ASourceRowIndex];
 

@@ -87,20 +87,13 @@ begin
     Exit;
 
   LPriority := Value.AsInteger;
-  LRect := Rect(
-    Bounds.Left + 5,
-    Bounds.Top + (Bounds.Height - 10) div 2,
-    Bounds.Left + 15,
-    Bounds.Top + (Bounds.Height - 10) div 2 + 10
-  );
+  LRect := Rect(Bounds.Left + 5, Bounds.Top + (Bounds.Height - 10) div 2,
+    Bounds.Left + 15, Bounds.Top + (Bounds.Height - 10) div 2 + 10);
 
   case LPriority of
-    2:
-      ACanvas.Brush.Color := clYellow;
-    3:
-      ACanvas.Brush.Color := clRed;
-  else
-    ACanvas.Brush.Color := clLime;
+    2: ACanvas.Brush.Color := clYellow;
+    3: ACanvas.Brush.Color := clRed;
+    else ACanvas.Brush.Color := clLime;
   end;
   ACanvas.Pen.Color := clGray;
   ACanvas.Ellipse(LRect);
@@ -132,18 +125,10 @@ begin
   Grid.AdjacentGroupFolding.EndBand.Height := 7;
   Grid.AdjacentGroupFolding.EndBand.StyleName := 'AdjacentGroupEnd';
   case AdjacentBandModeCombo.ItemIndex of
-    0:
-      Grid.AdjacentGroupFolding.EndBand.Visibility :=
-        Th5uAdjacentGroupEndBandVisibility.Never;
-    1:
-      Grid.AdjacentGroupFolding.EndBand.Visibility :=
-        Th5uAdjacentGroupEndBandVisibility.CollapsedOnly;
-    2:
-      Grid.AdjacentGroupFolding.EndBand.Visibility :=
-        Th5uAdjacentGroupEndBandVisibility.ExpandedOnly;
-  else
-    Grid.AdjacentGroupFolding.EndBand.Visibility :=
-      Th5uAdjacentGroupEndBandVisibility.Always;
+    0: Grid.AdjacentGroupFolding.EndBand.Visibility := Th5uAdjacentGroupEndBandVisibility.Never;
+    1: Grid.AdjacentGroupFolding.EndBand.Visibility := Th5uAdjacentGroupEndBandVisibility.CollapsedOnly;
+    2: Grid.AdjacentGroupFolding.EndBand.Visibility := Th5uAdjacentGroupEndBandVisibility.ExpandedOnly;
+    else Grid.AdjacentGroupFolding.EndBand.Visibility := Th5uAdjacentGroupEndBandVisibility.Always;
   end;
   ToggleGroupsButton.Enabled := AdjacentGroupCheck.Checked;
 
@@ -160,14 +145,12 @@ begin
 
   if PagedCheck.Checked then
   begin
-    DataController.Pagination.Mode :=
-      Th5uPaginationMode.NumberedPages;
+    DataController.Pagination.Mode := Th5uPaginationMode.NumberedPages;
     DataController.Pagination.PageSize := 10;
   end
   else
   begin
-    DataController.Pagination.Mode :=
-      Th5uPaginationMode.Continuous;
+    DataController.Pagination.Mode := Th5uPaginationMode.Continuous;
     DataController.Pagination.PageIndex := 0;
   end;
 
@@ -224,10 +207,7 @@ begin
 
   LPictureColumn := Grid.Columns.FindById('picture');
   if Assigned(LPictureColumn) then
-    Grid.SetColumnVisible(
-      LPictureColumn,
-      PictureCheck.Checked
-    );
+    Grid.SetColumnVisible(LPictureColumn, PictureCheck.Checked);
 
   Grid.InvalidateAllRowHeights;
   Grid.Invalidate;
@@ -249,15 +229,10 @@ begin
     100,
     function(const AContext: Th5uFactoryContext): Boolean
     begin
-      Result :=
-        (AContext.Grid = Grid) and
-        (AContext.Column is Th5uGridColumn) and
-        SameText(
-          Th5uGridColumn(AContext.Column).Id,
-          'priority'
-        );
-    end
-  );
+      Result := (AContext.Grid = Grid)
+        and (AContext.Column is Th5uGridColumn)
+        and SameText(Th5uGridColumn(AContext.Column).Id, 'priority');
+    end);
 
   ApplyOptions;
 end;
@@ -307,18 +282,12 @@ procedure TMainForm.NextPageButtonClick(Sender: TObject);
 var
   LPageCount: Integer;
 begin
-  if DataController.Pagination.Mode <>
-     Th5uPaginationMode.NumberedPages then
+  if DataController.Pagination.Mode <> Th5uPaginationMode.NumberedPages then
     Exit;
 
-  LPageCount := (
-    DataController.GetTotalRowCount +
-    DataController.Pagination.PageSize - 1
-  ) div DataController.Pagination.PageSize;
+  LPageCount := (DataController.GetTotalRowCount + DataController.Pagination.PageSize - 1) div DataController.Pagination.PageSize;
 
-  DataController.Pagination.PageIndex :=
-    (DataController.Pagination.PageIndex + 1) mod
-    Max(1, LPageCount);
+  DataController.Pagination.PageIndex := (DataController.Pagination.PageIndex + 1) mod Max(1, LPageCount);
 end;
 
 procedure TMainForm.OptionClick(Sender: TObject);
