@@ -1,4 +1,4 @@
-﻿package h5uGridVclR;
+﻿package h5uGridFmx;
 
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
@@ -25,21 +25,19 @@
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'h5u Grid VCL runtime'}
+{$DESCRIPTION 'h5u Grid FMX runtime'}
 {$LIBSUFFIX AUTO}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
 
 requires
   rtl,
-  vcl,
-  vclx,
-  vclimg,
-  h5uGridCoreR;
+  fmx,
+  h5uGridCore;
 
 contains
-  Vcl.h5u.Grid.Styles in '..\Source\Vcl\Vcl.h5u.Grid.Styles.pas',
-  Vcl.h5u.Grid.Editors in '..\Source\Vcl\Vcl.h5u.Grid.Editors.pas',
-  Vcl.h5u.Grid in '..\Source\Vcl\Vcl.h5u.Grid.pas';
+  Fmx.h5u.Grid.Styles in '..\Source\FMX\Fmx.h5u.Grid.Styles.pas',
+  Fmx.h5u.Grid.Editors in '..\Source\FMX\Fmx.h5u.Grid.Editors.pas',
+  Fmx.h5u.Grid in '..\Source\FMX\Fmx.h5u.Grid.pas';
 
 end.

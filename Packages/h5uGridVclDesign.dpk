@@ -1,4 +1,4 @@
-﻿package h5uGridVclD;
+﻿package h5uGridVclDesign;
 
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
@@ -34,9 +34,9 @@ requires
   rtl,
   vcl,
   designide,
-  h5uGridCoreR,
-  h5uGridVclR,
-  h5uGridCoreD;
+  h5uGridCore,
+  h5uGridVcl,
+  h5uGridCoreDesign;
 
 contains
   Vcl.h5u.Grid.Design in '..\Source\Design\Vcl.h5u.Grid.Design.pas';

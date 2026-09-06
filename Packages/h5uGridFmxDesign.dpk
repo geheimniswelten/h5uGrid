@@ -1,4 +1,4 @@
-﻿package h5uGridCoreD;
+﻿package h5uGridFmxDesign;
 
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
@@ -25,20 +25,20 @@
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'h5u Grid common design-time package'}
+{$DESCRIPTION 'h5u Grid FMX design-time package'}
 {$LIBSUFFIX AUTO}
 {$DESIGNONLY}
 {$IMPLICITBUILD OFF}
 
 requires
   rtl,
-  vcl,
-  dbrtl,
-  dsnap,
+  fmx,
   designide,
-  h5uGridCoreR;
+  h5uGridCore,
+  h5uGridFmx,
+  h5uGridCoreDesign;
 
 contains
-  h5u.Grid.Design in '..\Source\Design\h5u.Grid.Design.pas';
+  Fmx.h5u.Grid.Design in '..\Source\Design\Fmx.h5u.Grid.Design.pas';
 
 end.

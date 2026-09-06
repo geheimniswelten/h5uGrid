@@ -1,4 +1,4 @@
-﻿package h5uGridCoreR;
+﻿package h5uGridCore;
 
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
