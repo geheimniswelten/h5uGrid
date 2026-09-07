@@ -12,7 +12,7 @@ uses
   DesignIntf,
   ToolsAPI,
   h5u.Grid.Factory,
-  h5u.Grid.Data.DataSet,
+  h5u.Grid.Data.Dataset,
   h5u.Grid.Data.Memory,
   h5u.Grid.Data.Objects,
   h5u.Grid.Data.Virtual,
@@ -22,8 +22,8 @@ procedure Register;
 var
   Icon: TPngImage;
 begin
-  RegisterComponents('h5u', [Th5uClassFactory, Th5uDataSetController, Th5uMemoryController, Th5uObjectListController, Th5uVirtualController,
-    Th5uSampleClientDataSet]);
+  RegisterComponents('h5u', [Th5uClassFactory, Th5uDatasetController, Th5uMemoryController, Th5uObjectListController, Th5uVirtualController,
+    Th5uSampleClientDataset]);
 
   Icon := TPngImage.Create;
   try

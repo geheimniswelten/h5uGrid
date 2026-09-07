@@ -3,7 +3,7 @@
 ## Voraussetzungen
 
 - Embarcadero Delphi mit VCL und/oder FireMonkey
-- DataSnap/DBClient für `TClientDataSet` (`dsnap`)
+- DataSnap/DBClient für `TClientDataset` (`dsnap`)
 - für die Design-Time-Packages zusätzlich `designide`
 - Python 3 nur für die mitgelieferten statischen Audits
 
@@ -68,7 +68,7 @@ Design-Time-Packages werden bei `Win64` bewusst übersprungen. Sie werden für d
 3. Die Demo-DPRs öffnen und bauen.
 4. Für den Formulardesigner zuerst das passende VCL- beziehungsweise FMX-Design-Package installieren.
 
-Die Komponente `Th5uSampleClientDataSet` erzeugt ihr Schema und ihre Musterdatensätze selbst. Die ClientDataSet-Demos benötigen daher weder eine Datenbank noch eine externe `.cds`-Datei.
+Die Komponente `Th5uSampleClientDataset` erzeugt ihr Schema und ihre Musterdatensätze selbst. Die ClientDataset-Demos benötigen daher weder eine Datenbank noch eine externe `.cds`-Datei.
 
 ## Quellformatierung
 

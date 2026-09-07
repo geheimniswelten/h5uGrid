@@ -1,16 +1,16 @@
 ﻿# h5u.Grid – Demoanwendungen
 
-## VCL ClientDataSet
+## VCL ClientDataset
 
 Pfad:
 
 ```text
-Demos\Vcl\ClientDataSet
+Demos\Vcl\ClientDataset
 ```
 
 Zweck:
 
-- `Th5uSampleClientDataSet` mit selbst erzeugtem Schema und Daten
+- `Th5uSampleClientDataset` mit selbst erzeugtem Schema und Daten
 - Anzeige bereits im Designer
 - keine externe Datenbank und keine `.cds`-Datei
 - Text, Memo, Integer, Currency, Boolean, DateTime und BLOB-Bild
@@ -67,17 +67,17 @@ Zweck:
 - optionales Paging und Cacheverhalten
 - Beispiel für Monitoring, Queue, Log und Backend-Streaming
 
-## FMX ClientDataSet
+## FMX ClientDataset
 
 Pfad:
 
 ```text
-Demos\FMX\ClientDataSet
+Demos\FMX\ClientDataset
 ```
 
 Zweck:
 
-- gleicher DataSet-Core mit FMX-Renderer
+- gleicher Dataset-Core mit FMX-Renderer
 - selbst erzeugte Designer-Daten
 - zentrale Optionen für AutoHeight, Theme, Cache und Paging
 - Text-, Boolean- und Bilddarstellung
@@ -117,7 +117,7 @@ Zweck:
 
 ## Empfohlene Testreihenfolge
 
-1. VCL ClientDataSet bauen und starten.
+1. VCL ClientDataset bauen und starten.
 2. RowHeight, Trennlinien, Tree-Abschlussleiste, Column-Farben, Dark Mode, Bildspalte und Paging einzeln schalten.
 3. `Folgegruppen falten` aktivieren und die beiden getrennten Läufe mit ID `1` unabhängig öffnen und schließen.
 4. Alle vier Abschlussleistenmodi prüfen. Die Leiste muss das normale Row-Spacing ersetzen und darf nicht zusätzlich erscheinen.
@@ -132,10 +132,10 @@ Zweck:
 Nach Installation der Design-Packages:
 
 1. Neues VCL- oder FMX-Formular erstellen.
-2. `Th5uSampleClientDataSet` aus `h5u Data` ablegen.
-3. `TDataSource` und `Th5uDataSetController` verbinden.
+2. `Th5uSampleClientDataset` aus `h5u Data` ablegen.
+3. `TDataSource` und `Th5uDatasetController` verbinden.
 4. `Th5uVclGrid` beziehungsweise `Th5uFmxGrid` aus `h5u Grid` ablegen.
 5. Controller zuordnen.
 6. Columns erzeugen beziehungsweise die Demoform als Vorlage öffnen.
 
-`Th5uSampleClientDataSet` aktiviert sich mit Beispieldaten. Ändern von `SampleRowCount` oder `IncludeImages` erzeugt die Daten erneut.
+`Th5uSampleClientDataset` aktiviert sich mit Beispieldaten. Ändern von `SampleRowCount` oder `IncludeImages` erzeugt die Daten erneut.

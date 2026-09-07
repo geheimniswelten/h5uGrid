@@ -1,4 +1,4 @@
-﻿unit Main;
+﻿unit VclVirtualDemoMain;
 
 interface
 
@@ -30,7 +30,7 @@ type
     Acknowledged: Boolean;
   end;
 
-  TMainForm = class(TForm)
+  TVclVirtualDemoForm = class(TForm)
     TopPanel: TPanel;
     PauseCheck: TCheckBox;
     CacheCheck: TCheckBox;
@@ -63,18 +63,18 @@ type
   end;
 
 var
-  MainForm: TMainForm;
+  VclVirtualDemoForm: TVclVirtualDemoForm;
 
 implementation
 
 {$R *.dfm}
 
-procedure TMainForm.AppendButtonClick(Sender: TObject);
+procedure TVclVirtualDemoForm.AppendButtonClick(Sender: TObject);
 begin
   AppendLiveRow;
 end;
 
-procedure TMainForm.AppendLiveRow;
+procedure TVclVirtualDemoForm.AppendLiveRow;
 const
   CSources: array[0..4] of string = ('Scheduler', 'Import', 'ERP', 'Worker', 'Interface');
 var
@@ -100,7 +100,7 @@ begin
   StatusLabel.Caption := Format('%d Live-Datensätze; letzte ID %d', [FRows.Count, FNextId]);
 end;
 
-procedure TMainForm.ApplyOptions;
+procedure TVclVirtualDemoForm.ApplyOptions;
 begin
   LiveTimer.Enabled := not PauseCheck.Checked;
 
@@ -126,14 +126,14 @@ begin
     Grid.Theme := Th5uGridTheme.ApplicationStyle;
 end;
 
-procedure TMainForm.ClearButtonClick(Sender: TObject);
+procedure TVclVirtualDemoForm.ClearButtonClick(Sender: TObject);
 begin
   FRows.Clear;
   VirtualController.NotifyReset;
   StatusLabel.Caption := 'Keine Live-Datensätze';
 end;
 
-procedure TMainForm.FormCreate(Sender: TObject);
+procedure TVclVirtualDemoForm.FormCreate(Sender: TObject);
 var
   I: Integer;
 begin
@@ -143,12 +143,12 @@ begin
   ApplyOptions;
 end;
 
-procedure TMainForm.FormDestroy(Sender: TObject);
+procedure TVclVirtualDemoForm.FormDestroy(Sender: TObject);
 begin
   FRows.Free;
 end;
 
-procedure TMainForm.LiveTimerTimer(Sender: TObject);
+procedure TVclVirtualDemoForm.LiveTimerTimer(Sender: TObject);
 var
   LIndex: Integer;
   LRow: TLiveRow;
@@ -166,7 +166,7 @@ begin
   end;
 end;
 
-procedure TMainForm.NextPageButtonClick(Sender: TObject);
+procedure TVclVirtualDemoForm.NextPageButtonClick(Sender: TObject);
 var
   LPageCount: Integer;
 begin
@@ -178,23 +178,23 @@ begin
   VirtualController.Pagination.PageIndex := (VirtualController.Pagination.PageIndex + 1) mod System.Math.Max(1, LPageCount);
 end;
 
-procedure TMainForm.OptionClick(Sender: TObject);
+procedure TVclVirtualDemoForm.OptionClick(Sender: TObject);
 begin
   ApplyOptions;
 end;
 
-procedure TMainForm.VirtualControllerGetRowCount(Sender: TObject; var ARowCount: Int64);
+procedure TVclVirtualDemoForm.VirtualControllerGetRowCount(Sender: TObject; var ARowCount: Int64);
 begin
   ARowCount := FRows.Count;
 end;
 
-procedure TMainForm.VirtualControllerGetRowKey(Sender: TObject; ASourceRowIndex: Int64; var ARowKey: Th5uRowKey);
+procedure TVclVirtualDemoForm.VirtualControllerGetRowKey(Sender: TObject; ASourceRowIndex: Int64; var ARowKey: Th5uRowKey);
 begin
   if (ASourceRowIndex >= 0) and (ASourceRowIndex < FRows.Count) then
     ARowKey := Th5uRowKey.FromInt64(FRows[ASourceRowIndex].Id);
 end;
 
-procedure TMainForm.VirtualControllerGetValue(Sender: TObject; ASourceRowIndex: Int64; const AFieldName: string; var AValue: TValue);
+procedure TVclVirtualDemoForm.VirtualControllerGetValue(Sender: TObject; ASourceRowIndex: Int64; const AFieldName: string; var AValue: TValue);
 var
   LRow: TLiveRow;
 begin
@@ -216,13 +216,13 @@ begin
     AValue := TValue.From<Boolean>(LRow.Acknowledged);
 end;
 
-procedure TMainForm.VirtualControllerPrepareRange(Sender: TObject; AFirstSourceRow, ACount: Int64; AQueryGeneration: Int64);
+procedure TVclVirtualDemoForm.VirtualControllerPrepareRange(Sender: TObject; AFirstSourceRow, ACount: Int64; AQueryGeneration: Int64);
 begin
   StatusLabel.Caption := Format('Viewport-Anfrage: %d..%d, QueryGeneration %d, Gesamt %d', [AFirstSourceRow, AFirstSourceRow + ACount
     - 1, AQueryGeneration, FRows.Count]);
 end;
 
-procedure TMainForm.VirtualControllerSetValue(Sender: TObject; ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue; var AHandled: Boolean);
+procedure TVclVirtualDemoForm.VirtualControllerSetValue(Sender: TObject; ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue; var AHandled: Boolean);
 var
   LRow: TLiveRow;
 begin

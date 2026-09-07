@@ -8,7 +8,7 @@ Das Paket dient dazu, Architektur, API, Design-Time-Verhalten und die wichtigste
 
 - gemeinsame Daten- und Spaltenklassen für VCL und FMX,
 - getrennte DataController für `TDataSource`, RTTI-Objektlisten, Memory-Daten und Event-/VirtualSource,
-- `Th5uSampleClientDataSet` mit selbst erzeugtem Schema und Designer-Musterdaten,
+- `Th5uSampleClientDataset` mit selbst erzeugtem Schema und Designer-Musterdaten,
 - per Gridinstanz isolierter Factory-/Registry-Scope,
 - `GetClass`-, `OnGetClass`-, `OnCreateInstance`- und `OnConfigureInstance`-Erweiterungspunkte,
 - mehrzeilige Header mit `RowSpan` und `ColumnSpan`,
@@ -41,11 +41,11 @@ Source/
 Packages/              Runtime- und Design-Time-DPKs
 Demos/
   VCL/
-    ClientDataSet/
+    ClientDataset/
     ObjectList/
     VirtualLive/
   FMX/
-    ClientDataSet/
+    ClientDataset/
     ObjectList/
     VirtualLive/
 
@@ -59,14 +59,14 @@ Es liegen sechs eigenständige Anwendungen bei:
 
 | Plattform | Demo | Zweck |
 |---|---|---|
-| VCL | ClientDataSet | Designer-Daten, viele zuschaltbare Layout-/Funktionsbeispiele |
+| VCL | ClientDataset | Designer-Daten, viele zuschaltbare Layout-/Funktionsbeispiele |
 | VCL | ObjectList | RTTI-Objektliste, optionaler Cache, Liveänderungen |
 | VCL | VirtualLive | Daten vollständig aus Events, laufende Updates, Paging/Cache |
-| FMX | ClientDataSet | gemeinsamer DataSet-Core im FMX-Control |
+| FMX | ClientDataset | gemeinsamer Dataset-Core im FMX-Control |
 | FMX | ObjectList | gemeinsame Objektlisten-Anbindung unter FMX |
 | FMX | VirtualLive | Event-/VirtualSource unter FMX |
 
-Die ClientDataSet-Demos benötigen keine Datenbank und keine externe `.cds`-Datei. `Th5uSampleClientDataSet` legt Felder und Datensätze beim Laden selbst an; nach Installation des Design-Packages können dadurch bereits im Formulardesigner Inhalte erscheinen. Das Feld `TREE_LEVEL` enthält eine kleine, vorab sortierte Beispielhierarchie für die Tree-Abschlussleiste. Das ausgeblendete Feld `FOLD_GROUP` enthält zusammenhängende gleiche IDs; dieselbe ID erscheint später erneut, damit unabhängige Faltzustände direkt getestet werden können.
+Die ClientDataset-Demos benötigen keine Datenbank und keine externe `.cds`-Datei. `Th5uSampleClientDataset` legt Felder und Datensätze beim Laden selbst an; nach Installation des Design-Packages können dadurch bereits im Formulardesigner Inhalte erscheinen. Das Feld `TREE_LEVEL` enthält eine kleine, vorab sortierte Beispielhierarchie für die Tree-Abschlussleiste. Das ausgeblendete Feld `FOLD_GROUP` enthält zusammenhängende gleiche IDs; dieselbe ID erscheint später erneut, damit unabhängige Faltzustände direkt getestet werden können.
 
 Weitere Hinweise: [Demoübersicht](Docs/DEMOS.md).
 
@@ -75,7 +75,7 @@ Weitere Hinweise: [Demoübersicht](Docs/DEMOS.md).
 1. Die Runtime-Packages in der dokumentierten Reihenfolge bauen.
 2. Für Designer-Unterstützung die passenden Design-Time-Packages bauen und installieren.
 3. Eine der sechs Demo-DPRs öffnen.
-4. Zunächst die VCL-ClientDataSet-Demo als umfassendsten Referenzfall testen.
+4. Zunächst die VCL-ClientDataset-Demo als umfassendsten Referenzfall testen.
 
 Build-Reihenfolge und Skriptparameter: [BUILD.md](Docs/BUILD.md).
 
@@ -97,7 +97,7 @@ Die Marke bleibt in Delphi-Bezeichnern kleingeschrieben:
 
 ```pascal
 Th5uVclGrid
-Th5uDataSetController
+Th5uDatasetController
 Ih5uDataController
 Eh5uFactoryError
 ```

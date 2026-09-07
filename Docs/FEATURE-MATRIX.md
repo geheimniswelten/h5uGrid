@@ -9,7 +9,7 @@ Legende:
 
 | Funktion | Core | VCL | FMX | Statushinweis |
 |---|---:|---:|---:|---|
-| DataSource/DataSet | Ja | Ja | Ja | Snapshot-/Cachepfad vorhanden |
+| DataSource/Dataset | Ja | Ja | Ja | Snapshot-/Cachepfad vorhanden |
 | Objektliste/RTTI | Ja | Ja | Ja | optionaler Value-Cache |
 | VirtualSource/Events | Ja | Ja | Ja | synchroner Demo-Fetch und Live-Notify |
 | Memory-Controller | Ja | Ja | Ja | Basisspeicher |

@@ -1,10 +1,10 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{4B292294-CB89-4807-8ECC-2D8075F6DEF2}</ProjectGuid>
-        <MainSource>GridFmxClientDataSetDemo.dpr</MainSource>
+        <MainSource>GridFmxClientDatasetDemo.dpr</MainSource>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
-        <ProjectName Condition="'$(ProjectName)'==''">GridFmxClientDataSetDemo</ProjectName>
+        <ProjectName Condition="'$(ProjectName)'==''">GridFmxClientDatasetDemo</ProjectName>
         <TargetedPlatforms>32769</TargetedPlatforms>
         <AppType>Application</AppType>
         <FrameworkType>FMX</FrameworkType>
@@ -69,7 +69,7 @@
         <DCC_N>false</DCC_N>
         <DCC_S>false</DCC_S>
         <DCC_ImageBase>00400000</DCC_ImageBase>
-        <SanitizedProjectName>GridFmxClientDataSetDemo</SanitizedProjectName>
+        <SanitizedProjectName>GridFmxClientDatasetDemo</SanitizedProjectName>
         <VerInfo_Locale>1031</VerInfo_Locale>
         <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=;CFBundleName=</VerInfo_Keys>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
@@ -159,8 +159,8 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="Main.pas">
-            <Form>MainForm</Form>
+        <DCCReference Include="FmxDatasetDemoMain.pas">
+            <Form>FmxDatasetDemoForm</Form>
         </DCCReference>
         <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Types.pas"/>
         <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Factory.pas"/>
@@ -168,7 +168,7 @@
         <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Options.pas"/>
         <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Selection.pas"/>
         <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Data.Core.pas"/>
-        <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Data.DataSet.pas"/>
+        <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Data.Dataset.pas"/>
         <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Data.Objects.pas"/>
         <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Data.Virtual.pas"/>
         <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Data.Memory.pas"/>
@@ -195,7 +195,7 @@
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">GridFmxClientDataSetDemo.dpr</Source>
+                    <Source Name="MainSource">GridFmxClientDatasetDemo.dpr</Source>
                 </Source>
             </Delphi.Personality>
             <Platforms>

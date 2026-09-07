@@ -4,8 +4,8 @@
   "errors": 0,
   "resources": [
     {
-      "resource": "Demos/FMX/ClientDataSet/Main.fmx",
-      "unit": "Demos/FMX/ClientDataSet/Main.pas",
+      "resource": "Demos/FMX/ClientDataset/Main.fmx",
+      "unit": "Demos/FMX/ClientDataset/Main.pas",
       "status": "checked"
     },
     {
@@ -19,8 +19,8 @@
       "status": "checked"
     },
     {
-      "resource": "Demos/VCL/ClientDataSet/Main.dfm",
-      "unit": "Demos/VCL/ClientDataSet/Main.pas",
+      "resource": "Demos/VCL/ClientDataset/Main.dfm",
+      "unit": "Demos/VCL/ClientDataset/Main.pas",
       "status": "checked"
     },
     {

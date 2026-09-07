@@ -1,4 +1,4 @@
-object MainForm: TMainForm
+object VclObjectDemoForm: TVclObjectDemoForm
   Left = 0
   Top = 0
   Caption = 'h5u.Grid VCL - Objektliste / RTTI'

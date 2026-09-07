@@ -1,4 +1,4 @@
-﻿unit Main;
+﻿unit FmxListDemoMain;
 
 interface
 
@@ -38,7 +38,7 @@ type
     property UpdatedAt: TDateTime read FUpdatedAt write FUpdatedAt;
   end;
 
-  TMainForm = class(TForm)
+  TFmxListDemoForm = class(TForm)
     ToolBar: TToolBar;
     AddButton: TButton;
     CacheCheck: TCheckBox;
@@ -58,7 +58,7 @@ type
   end;
 
 var
-  MainForm: TMainForm;
+  FmxListDemoForm: TFmxListDemoForm;
 
 implementation
 
@@ -67,7 +67,7 @@ implementation
 uses
   h5u.Grid.Types;
 
-function TMainForm.AddPerson: TPersonRow;
+function TFmxListDemoForm.AddPerson: TPersonRow;
 const
   CDepartments: array[0..4] of string = ('Fertigung', 'Konstruktion', 'Einkauf', 'QS', 'Vertrieb');
 begin
@@ -87,12 +87,12 @@ begin
   ObjectController.Add(Result);
 end;
 
-procedure TMainForm.AddButtonClick(Sender: TObject);
+procedure TFmxListDemoForm.AddButtonClick(Sender: TObject);
 begin
   AddPerson;
 end;
 
-procedure TMainForm.ApplyOptions;
+procedure TFmxListDemoForm.ApplyOptions;
 begin
   if CacheCheck.IsChecked then
     ObjectController.Cache.Mode := Th5uCacheMode.Viewport
@@ -107,7 +107,7 @@ begin
     Grid.Theme := Th5uGridTheme.ApplicationStyle;
 end;
 
-procedure TMainForm.FormCreate(Sender: TObject);
+procedure TFmxListDemoForm.FormCreate(Sender: TObject);
 var
   I: Integer;
 begin
@@ -122,12 +122,12 @@ begin
   ApplyOptions;
 end;
 
-procedure TMainForm.OptionChange(Sender: TObject);
+procedure TFmxListDemoForm.OptionChange(Sender: TObject);
 begin
   ApplyOptions;
 end;
 
-procedure TMainForm.UpdateTimerTimer(Sender: TObject);
+procedure TFmxListDemoForm.UpdateTimerTimer(Sender: TObject);
 var
   LIndex: Integer;
   LPerson: TPersonRow;

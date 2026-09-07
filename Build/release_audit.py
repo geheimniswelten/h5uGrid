@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Reproducible, compiler-independent release audit for h5u.Grid.
 
 The audit intentionally checks only rules that can be verified reliably
@@ -85,7 +85,7 @@ def check_layout() -> None:
         "Source/Common/h5u.Grid.AdjacentGroups.pas",
         "Source/Common/h5u.Grid.Selection.pas",
         "Source/Common/h5u.Grid.Data.Core.pas",
-        "Source/Common/h5u.Grid.Data.DataSet.pas",
+        "Source/Common/h5u.Grid.Data.Dataset.pas",
         "Source/Common/h5u.Grid.Data.Objects.pas",
         "Source/Common/h5u.Grid.Data.Virtual.pas",
         "Source/Common/h5u.Grid.Data.Memory.pas",
@@ -108,7 +108,7 @@ def check_layout() -> None:
         if not (ROOT / rel).is_file():
             add("error", name, ROOT / rel, "Erforderliche Datei fehlt")
 
-    expected = {(platform, demo) for platform in ("VCL", "FMX") for demo in ("ClientDataSet", "ObjectList", "VirtualLive")}
+    expected = {(platform, demo) for platform in ("VCL", "FMX") for demo in ("ClientDataset", "ObjectList", "VirtualLive")}
     actual: set[tuple[str, str]] = set()
     for dpr in DEMOS.rglob("*.dpr"):
         parts = dpr.relative_to(DEMOS).parts
@@ -205,7 +205,7 @@ def check_forms() -> None:
             if not re.search(r"\b" + re.escape(method) + r"\s*\(", pvalue, re.I):
                 add("error", name, resource, f"Handler {method} für {event.group(1)} fehlt", line_no(rvalue, event.start()))
         if re.search(r"^\s*FileName\s*=", rvalue, re.I | re.M):
-            add("error", name, resource, "Externe ClientDataSet-Datei eingetragen")
+            add("error", name, resource, "Externe ClientDataset-Datei eingetragen")
         resource_results.append({"resource": relative(resource), "unit": relative(pas), "status": "checked"})
 
     form_findings = [item for item in findings[before:] if item.check == name]
@@ -357,7 +357,7 @@ def check_factory_and_features() -> None:
             (r"FactoryScope", "Factory-Scope pro Grid"),
             (r"AcquireVisualCell", "gepoolte sichtbare Zellobjekte"),
         ])
-    require_patterns(name, "Demos/VCL/ClientDataSet/Main.pas", [
+    require_patterns(name, "Demos/VCL/ClientDataset/Main.pas", [
         (r"Grid\.GridLines\s*:=\s*SeparatorsCheck\.Checked", "VCL Separator-Schalter"),
         (r"RightSpacing\s*:=\s*8", "VCL individueller Column-Abstand"),
         (r"DefaultCellColor", "VCL Grid-Farbe"),
@@ -369,7 +369,7 @@ def check_factory_and_features() -> None:
         (r"CollapsedOnly.*?ExpandedOnly.*?Always", "VCL vier Abschlussleistenmodi"),
         (r"CollapseAllAdjacentGroups.*?ExpandAllAdjacentGroups|ExpandAllAdjacentGroups.*?CollapseAllAdjacentGroups", "VCL Alle-falten/-öffnen"),
     ])
-    require_patterns(name, "Demos/FMX/ClientDataSet/Main.pas", [
+    require_patterns(name, "Demos/FMX/ClientDataset/Main.pas", [
         (r"Grid\.GridLines\s*:=\s*SeparatorsCheck\.IsChecked", "FMX Separator-Schalter"),
         (r"RightSpacing\s*:=\s*8", "FMX individueller Column-Abstand"),
         (r"DefaultCellColor", "FMX Grid-Farbe"),
@@ -505,7 +505,7 @@ def check_method_consistency() -> None:
 
 
 def check_demo_sample_contract() -> None:
-    name = "clientdataset-demo-contract"
+    name = "clientDataSet-demo-contract"
     before = len(findings)
     stale = (
         "PopulateAtDesignTime",
@@ -515,10 +515,10 @@ def check_demo_sample_contract() -> None:
         "CREATED_AT",
     )
     for rel in (
-        "Demos/VCL/ClientDataSet/Main.pas",
-        "Demos/VCL/ClientDataSet/Main.dfm",
-        "Demos/FMX/ClientDataSet/Main.pas",
-        "Demos/FMX/ClientDataSet/Main.fmx",
+        "Demos/VCL/ClientDataset/Main.pas",
+        "Demos/VCL/ClientDataset/Main.dfm",
+        "Demos/FMX/ClientDataset/Main.pas",
+        "Demos/FMX/ClientDataset/Main.fmx",
     ):
         path = ROOT / rel
         value = read(path)
@@ -527,8 +527,8 @@ def check_demo_sample_contract() -> None:
             if match:
                 add("error", name, path, f"Veraltete Demo-Signatur: {token}", line_no(value, match.start()))
     for rel in (
-        "Demos/VCL/ClientDataSet/Main.dfm",
-        "Demos/FMX/ClientDataSet/Main.fmx",
+        "Demos/VCL/ClientDataset/Main.dfm",
+        "Demos/FMX/ClientDataset/Main.fmx",
     ):
         require_patterns(name, rel, [
             (r"Tree\.LevelColumnId\s*=\s*'TREE_LEVEL'", "TREE_LEVEL im Designer"),

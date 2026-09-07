@@ -29,9 +29,9 @@ wie `and not`, `not in` oder `is not` bleiben zusammen. Die folgenden
 Beispiele veranschaulichen die Position mit verkürzten Ausdrücken.
 
 ```pascal
-if Assigned(DataSet)
-  and DataSet.Active
-  and not DataSet.IsEmpty then
+if Assigned(Dataset)
+  and Dataset.Active
+  and not Dataset.IsEmpty then
   ReadCurrentRow;
 
 Result := FirstValue

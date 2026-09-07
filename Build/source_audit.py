@@ -400,7 +400,7 @@ def main() -> int:
 
         expected = None
         if "/clientdataset/" in demo_path:
-            expected = "Th5uSampleClientDataSet"
+            expected = "Th5uSampleClientDataset"
         elif "/objectlist/" in demo_path:
             expected = "Th5uObjectListController"
         elif "/virtuallive/" in demo_path:
@@ -424,7 +424,7 @@ def main() -> int:
         "Source/Common/h5u.Grid.Options.pas",
         "Source/Common/h5u.Grid.AdjacentGroups.pas",
         "Source/Common/h5u.Grid.Data.Core.pas",
-        "Source/Common/h5u.Grid.Data.DataSet.pas",
+        "Source/Common/h5u.Grid.Data.Dataset.pas",
         "Source/Common/h5u.Grid.Data.Memory.pas",
         "Source/Common/h5u.Grid.Data.Objects.pas",
         "Source/Common/h5u.Grid.Data.Virtual.pas",

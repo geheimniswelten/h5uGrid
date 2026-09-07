@@ -1,7 +1,7 @@
-﻿object MainForm: TMainForm
+﻿object FmxDatasetDemoForm: TFmxDatasetDemoForm
   Left = 0
   Top = 0
-  Caption = 'h5u.Grid FMX - TClientDataSet / Designer-Demo'
+  Caption = 'h5u.Grid FMX - TClientDataset / Designer-Demo'
   ClientHeight = 640
   ClientWidth = 1100
   FormFactor.Width = 320
@@ -301,7 +301,7 @@
     TextSize = 12.000000000000000000
     OnGetThumbHint = GridGetThumbHint
   end
-  object SampleData: Th5uSampleClientDataSet
+  object SampleData: Th5uSampleClientDataset
     IncludeImages = True
     Left = 32
     Top = 88
@@ -309,11 +309,11 @@
     SampleRowCount = 40
   end
   object DataSource: TDataSource
-    DataSet = SampleData
+    Dataset = SampleData
     Left = 104
     Top = 88
   end
-  object DataController: Th5uDataSetController
+  object DataController: Th5uDatasetController
     DataSource = DataSource
     KeyFieldName = 'ID'
     Cache.Mode = Paged

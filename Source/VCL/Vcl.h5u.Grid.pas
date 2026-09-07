@@ -377,7 +377,7 @@ type
     function HitTest(X, Y: Integer): Th5uHitTestInfo;
     procedure MoveColumn(AColumn: Th5uGridColumn; ANewVisibleIndex: Integer);
     procedure SetColumnVisible(AColumn: Th5uGridColumn; AVisible: Boolean);
-    procedure AutoCreateColumnsFromDataSet(AClearExisting: Boolean = True);
+    procedure AutoCreateColumnsFromDataset(AClearExisting: Boolean = True);
     procedure ToggleAdjacentGroup(AViewRowIndex: Int64);
     procedure SetAdjacentGroupCollapsed(AViewRowIndex: Int64; ACollapsed: Boolean);
     procedure ExpandAllAdjacentGroups;
@@ -459,7 +459,7 @@ uses
   Vcl.Dialogs,
   Vcl.Forms,
   Vcl.Themes,
-  h5u.Grid.Data.DataSet,
+  h5u.Grid.Data.Dataset,
   Vcl.h5u.Grid.Editors;
 
 type
@@ -805,17 +805,17 @@ begin
   FFactoryScope.BindInstance(AContext, Result);
 end;
 
-procedure Th5uVclGrid.AutoCreateColumnsFromDataSet(AClearExisting: Boolean);
+procedure Th5uVclGrid.AutoCreateColumnsFromDataset(AClearExisting: Boolean);
 var
-  LController: Th5uDataSetController;
+  LController: Th5uDatasetController;
   LField: TField;
   LColumn: Th5uGridColumn;
 begin
-  if not (FDataController is Th5uDataSetController) then
+  if not (FDataController is Th5uDatasetController) then
     Exit;
 
-  LController := Th5uDataSetController(FDataController);
-  if not Assigned(LController.DataSet) then
+  LController := Th5uDatasetController(FDataController);
+  if not Assigned(LController.Dataset) then
     Exit;
 
   FColumns.BeginUpdate;
@@ -823,7 +823,7 @@ begin
     if AClearExisting then
       FColumns.Clear;
 
-    for LField in LController.DataSet.Fields do
+    for LField in LController.Dataset.Fields do
     begin
       LColumn := FColumns.Add;
       LColumn.Id := LField.FieldName.ToLowerInvariant;

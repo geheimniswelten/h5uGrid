@@ -41,7 +41,7 @@
 - die Abschlussleiste ersetzt das normale `RowSpacing`; ihre Höhe wird nicht addiert und `Height = 0` unterdrückt an dieser Grenze auch den normalen Abstand,
 - Abschlussleiste und Falt-Symbol besitzen eigene Factory-IDs, Elementarten, Styles und vollständige Kontextinformationen,
 - VCL und FMX stellen Methoden zum einzelnen beziehungsweise gemeinsamen Ein-/Ausklappen bereit,
-- die ClientDataSet-Demos enthalten die unsichtbare Spalte `FOLD_GROUP`, getrennte Wiederholungen derselben ID sowie Schalter für Funktion und Abschlussleistenmodus,
+- die ClientDataset-Demos enthalten die unsichtbare Spalte `FOLD_GROUP`, getrennte Wiederholungen derselben ID sowie Schalter für Funktion und Abschlussleistenmodus,
 - ein compilerunabhängiger Semantiktest fixiert Laufbildung, unabhängige Wiederholungen, Sichtbarkeitsabbildung und alle vier Abschlussleistenmodi.
 
 ## 0.1.2 – 2026-09-01
@@ -57,8 +57,8 @@
 - `OnGetTreeLevel` und `OnGetTreeBranchEnd` erlauben alternative Datenmodelle und Sonderregeln,
 - Factory- und CustomDraw-Kontext enthalten `TreeLevel`, `ClosedTreeLevels` und `Th5uElementKind.TreeBranchEndBand`,
 - Separatoren und Tree-Abschlussleisten werden als gepoolte sichtbare Elemente über den lokalen Grid-Factory-Scope materialisiert,
-- VCL- und FMX-ClientDataSet-Demos enthalten `TREE_LEVEL`-Musterdaten und einen zuschaltbaren Test,
-- veraltete Property-/Feldnamen in den ClientDataSet-Demoformularen wurden bereinigt.
+- VCL- und FMX-ClientDataset-Demos enthalten `TREE_LEVEL`-Musterdaten und einen zuschaltbaren Test,
+- veraltete Property-/Feldnamen in den ClientDataset-Demoformularen wurden bereinigt.
 
 ## 0.1.1 – 2026-09-01
 
@@ -74,7 +74,7 @@
 - `Grid.Appearance.DefaultCellColor` und `Column.Color`,
 - plattformneutrale ARGB-Farbwerte mit `h5uColorDefault`, `h5uColorNone`, `h5uColorLightGray` und `h5uColorFromRgb`,
 - VCL- und FMX-Layout, Scrolling, HitTest und CustomDraw berücksichtigen die neuen Abstände,
-- ClientDataSet-Demos enthalten Schalter für Trennlinien und eigene Column-Farben.
+- ClientDataset-Demos enthalten Schalter für Trennlinien und eigene Column-Farben.
 - korrigierte Demo-DPR-Pfade im PowerShell-Buildskript.
 
 ## 0.1.0 – 2026-09-01
@@ -86,8 +86,8 @@ Erster testbarer Quellprototyp von `h5u.Grid`.
 - gemeinsamer Controller-, Spalten-, Options-, Selection- und Factory-Core,
 - VCL-Referenzgrid und FMX-Basisgrid,
 - per Gridinstanz isolierte Factory-/Registry-Scopes,
-- DataSet-, Objektlisten-, VirtualSource- und Memory-Controller,
-- selbstbefüllendes `Th5uSampleClientDataSet` für Design-Time-Demos,
+- Dataset-, Objektlisten-, VirtualSource- und Memory-Controller,
+- selbstbefüllendes `Th5uSampleClientDataset` für Design-Time-Demos,
 - variable Zeilenhöhen und Text-AutoHeight,
 - mehrzeilige Headerlayouts,
 - Zeilen-, Spalten- und Zellbereichsselektion,

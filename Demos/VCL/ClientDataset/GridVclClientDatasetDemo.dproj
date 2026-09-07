@@ -1,10 +1,10 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{27E8AF45-854D-492C-AFFA-1959AA20C9C2}</ProjectGuid>
-        <MainSource>GridVclClientDataSetDemo.dpr</MainSource>
+        <MainSource>GridVclClientDatasetDemo.dpr</MainSource>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
-        <ProjectName Condition="'$(ProjectName)'==''">GridVclClientDataSetDemo</ProjectName>
+        <ProjectName Condition="'$(ProjectName)'==''">GridVclClientDatasetDemo</ProjectName>
         <TargetedPlatforms>32769</TargetedPlatforms>
         <AppType>Application</AppType>
         <FrameworkType>VCL</FrameworkType>
@@ -64,7 +64,7 @@
         <DCC_N>false</DCC_N>
         <DCC_S>false</DCC_S>
         <DCC_ImageBase>00400000</DCC_ImageBase>
-        <SanitizedProjectName>GridVclClientDataSetDemo</SanitizedProjectName>
+        <SanitizedProjectName>GridVclClientDatasetDemo</SanitizedProjectName>
         <DCC_Namespace>Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
         <VerInfo_Locale>1031</VerInfo_Locale>
         <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=;CFBundleName=</VerInfo_Keys>
@@ -122,8 +122,8 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="Main.pas">
-            <Form>MainForm</Form>
+        <DCCReference Include="VclDatasetDemoMain.pas">
+            <Form>VclDatasetDemoForm</Form>
         </DCCReference>
         <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Types.pas"/>
         <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Factory.pas"/>
@@ -131,7 +131,7 @@
         <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Options.pas"/>
         <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Selection.pas"/>
         <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Data.Core.pas"/>
-        <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Data.DataSet.pas"/>
+        <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Data.Dataset.pas"/>
         <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Data.Objects.pas"/>
         <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Data.Virtual.pas"/>
         <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Data.Memory.pas"/>
@@ -158,7 +158,7 @@
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">GridVclClientDataSetDemo.dpr</Source>
+                    <Source Name="MainSource">GridVclClientDatasetDemo.dpr</Source>
                 </Source>
             </Delphi.Personality>
             <Platforms>

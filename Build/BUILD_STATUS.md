@@ -1,4 +1,4 @@
-# Build- und Prüfstatus
+﻿# Build- und Prüfstatus
 
 **Stand:** 2. September 2026  
 **Prototypversion:** 0.1.4
@@ -7,7 +7,7 @@
 
 - gemeinsamer Delphi-Core sowie getrennte VCL-/FMX-Renderer,
 - sechs Demo-Projekte,
-- Datenpfade für `TDataSource`/`TClientDataSet`, RTTI-Objektlisten, Memory-Daten und Event-/VirtualSource,
+- Datenpfade für `TDataSource`/`TClientDataset`, RTTI-Objektlisten, Memory-Daten und Event-/VirtualSource,
 - Spacing-, Separator- und Farb-API in VCL und FMX,
 - Tree-Ast-Abschlussleiste mit Level-Column-/Event-Erkennung, eigenem Style und per Grid austauschbarer Factory-Zelle,
 - Adjacent-Group-Folding für unmittelbar aufeinanderfolgende gleiche IDs mit unabhängigen Wiederholungen,
@@ -40,7 +40,7 @@ Die ursprünglichen und formatierten Pascal-Quellen wurden zusätzlich lexikalis
 - lokale Factory-Erzeugung von Faltzeichen und Abschlussleiste in VCL und FMX,
 - sichtbare View-zu-Controller-Abbildung ohne Änderung der Quellreihenfolge,
 - Zustandsanker aus erstem RowKey des jeweiligen zusammenhängenden Laufs,
-- ausgeblendete `FOLD_GROUP`-Column und getrennte Wiederholungen derselben ID in beiden ClientDataSet-Demos,
+- ausgeblendete `FOLD_GROUP`-Column und getrennte Wiederholungen derselben ID in beiden ClientDataset-Demos,
 - Ersatz statt Addition von `RowSpacing` durch Tree- und Adjacent-Group-Abschlussleisten,
 - semantischer Tree-Test mit 12 Fällen,
 - semantischer Adjacent-Group-Test mit 16 Fällen einschließlich aller vier Abschlussleistenmodi,

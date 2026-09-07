@@ -1,4 +1,4 @@
-﻿unit Main;
+﻿unit FmxVirtualDemoMain;
 
 interface
 
@@ -28,7 +28,7 @@ type
     Acknowledged: Boolean;
   end;
 
-  TMainForm = class(TForm)
+  TFmxVirtualDemoForm = class(TForm)
     ToolBar: TToolBar;
     PauseCheck: TCheckBox;
     CacheCheck: TCheckBox;
@@ -56,18 +56,18 @@ type
   end;
 
 var
-  MainForm: TMainForm;
+  FmxVirtualDemoForm: TFmxVirtualDemoForm;
 
 implementation
 
 {$R *.fmx}
 
-procedure TMainForm.AppendButtonClick(Sender: TObject);
+procedure TFmxVirtualDemoForm.AppendButtonClick(Sender: TObject);
 begin
   AppendRow;
 end;
 
-procedure TMainForm.AppendRow;
+procedure TFmxVirtualDemoForm.AppendRow;
 const
   CSources: array[0..3] of string = ('ERP', 'Worker', 'Import', 'Interface');
 var
@@ -90,7 +90,7 @@ begin
   VirtualController.NotifyRowsInserted(LIndex, 1);
 end;
 
-procedure TMainForm.ApplyOptions;
+procedure TFmxVirtualDemoForm.ApplyOptions;
 begin
   LiveTimer.Enabled := not PauseCheck.IsChecked;
   if CacheCheck.IsChecked then
@@ -103,13 +103,13 @@ begin
     Grid.Theme := Th5uGridTheme.ApplicationStyle;
 end;
 
-procedure TMainForm.ClearButtonClick(Sender: TObject);
+procedure TFmxVirtualDemoForm.ClearButtonClick(Sender: TObject);
 begin
   FRows.Clear;
   VirtualController.NotifyReset;
 end;
 
-procedure TMainForm.FormCreate(Sender: TObject);
+procedure TFmxVirtualDemoForm.FormCreate(Sender: TObject);
 var
   I: Integer;
 begin
@@ -119,12 +119,12 @@ begin
   ApplyOptions;
 end;
 
-procedure TMainForm.FormDestroy(Sender: TObject);
+procedure TFmxVirtualDemoForm.FormDestroy(Sender: TObject);
 begin
   FRows.Free;
 end;
 
-procedure TMainForm.LiveTimerTimer(Sender: TObject);
+procedure TFmxVirtualDemoForm.LiveTimerTimer(Sender: TObject);
 var
   LIndex: Integer;
 begin
@@ -140,23 +140,23 @@ begin
   end;
 end;
 
-procedure TMainForm.OptionChange(Sender: TObject);
+procedure TFmxVirtualDemoForm.OptionChange(Sender: TObject);
 begin
   ApplyOptions;
 end;
 
-procedure TMainForm.VirtualGetRowCount(Sender: TObject; var ARowCount: Int64);
+procedure TFmxVirtualDemoForm.VirtualGetRowCount(Sender: TObject; var ARowCount: Int64);
 begin
   ARowCount := FRows.Count;
 end;
 
-procedure TMainForm.VirtualGetRowKey(Sender: TObject; ASourceRowIndex: Int64; var ARowKey: Th5uRowKey);
+procedure TFmxVirtualDemoForm.VirtualGetRowKey(Sender: TObject; ASourceRowIndex: Int64; var ARowKey: Th5uRowKey);
 begin
   if (ASourceRowIndex >= 0) and (ASourceRowIndex < FRows.Count) then
     ARowKey := Th5uRowKey.FromInt64(FRows[ASourceRowIndex].Id);
 end;
 
-procedure TMainForm.VirtualGetValue(Sender: TObject; ASourceRowIndex: Int64; const AFieldName: string; var AValue: TValue);
+procedure TFmxVirtualDemoForm.VirtualGetValue(Sender: TObject; ASourceRowIndex: Int64; const AFieldName: string; var AValue: TValue);
 var
   LRow: TLiveRow;
 begin
@@ -178,7 +178,7 @@ begin
     AValue := TValue.From<Boolean>(LRow.Acknowledged);
 end;
 
-procedure TMainForm.VirtualSetValue(Sender: TObject; ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue; var AHandled: Boolean);
+procedure TFmxVirtualDemoForm.VirtualSetValue(Sender: TObject; ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue; var AHandled: Boolean);
 begin
   AHandled := False;
   if (ASourceRowIndex < 0) or (ASourceRowIndex >= FRows.Count) then

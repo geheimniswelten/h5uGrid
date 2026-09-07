@@ -1,7 +1,7 @@
-object MainForm: TMainForm
+object VclDatasetDemoForm: TVclDatasetDemoForm
   Left = 0
   Top = 0
-  Caption = 'h5u.Grid VCL - TClientDataSet / Designer-Demo'
+  Caption = 'h5u.Grid VCL - TClientDataset / Designer-Demo'
   ClientHeight = 650
   ClientWidth = 1120
   Color = clBtnFace
@@ -489,7 +489,7 @@ object MainForm: TMainForm
     OnGetRowHeight = GridGetRowHeight
     OnGetThumbHint = GridGetThumbHint
   end
-  object SampleData: Th5uSampleClientDataSet
+  object SampleData: Th5uSampleClientDataset
     IncludeImages = True
     Left = 40
     Top = 112
@@ -497,11 +497,11 @@ object MainForm: TMainForm
     SampleRowCount = 40
   end
   object DataSource: TDataSource
-    DataSet = SampleData
+    Dataset = SampleData
     Left = 120
     Top = 112
   end
-  object DataController: Th5uDataSetController
+  object DataController: Th5uDatasetController
     Cache.Mode = Paged
     Cache.PageSize = 100
     Cache.MaxMemoryBytes = 67108864

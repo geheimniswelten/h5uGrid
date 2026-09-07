@@ -8,7 +8,7 @@ VCL:
 uses
   h5u.Grid.Types,
   h5u.Grid.Columns,
-  h5u.Grid.Data.DataSet,
+  h5u.Grid.Data.Dataset,
   Vcl.h5u.Grid;
 ```
 
@@ -20,29 +20,29 @@ FMX:
 uses
   h5u.Grid.Types,
   h5u.Grid.Columns,
-  h5u.Grid.Data.DataSet,
+  h5u.Grid.Data.Dataset,
   Fmx.h5u.Grid;
 ```
 
 Mit `FMX` als Unit Scope Name ebenfalls kurz als `h5u.Grid`.
 
-## 2. DataSet verbinden
+## 2. Dataset verbinden
 
 Auf dem Formular:
 
 ```text
-Th5uSampleClientDataSet
+Th5uSampleClientDataset
 TDataSource
-Th5uDataSetController
+Th5uDatasetController
 Th5uVclGrid oder Th5uFmxGrid
 ```
 
 Verknüpfung:
 
 ```pascal
-DataSource1.DataSet := SampleClientDataSet1;
-DataSetController1.DataSource := DataSource1;
-Grid1.DataController := DataSetController1;
+DataSource1.Dataset := SampleClientDataset1;
+DatasetController1.DataSource := DataSource1;
+Grid1.DataController := DatasetController1;
 ```
 
 Automatische Columns können im Demoformular erzeugt beziehungsweise bei Bedarf explizit angelegt werden. Für stabile Layouts immer eine feste `Column.Id` vergeben.
@@ -563,14 +563,14 @@ Bei nummerierter Pagination werden Läufe im aktuellen Controller-View beziehung
 ## 17. Cache und Paging
 
 ```pascal
-DataSetController1.Cache.Mode := Th5uCacheMode.Paged;
-DataSetController1.Cache.PageSize := 100;
-DataSetController1.Cache.MaxCachedPages := 8;
+DatasetController1.Cache.Mode := Th5uCacheMode.Paged;
+DatasetController1.Cache.PageSize := 100;
+DatasetController1.Cache.MaxCachedPages := 8;
 
-DataSetController1.Pagination.Mode :=
+DatasetController1.Pagination.Mode :=
   Th5uPaginationMode.NumberedPages;
-DataSetController1.Pagination.PageSize := 50;
-DataSetController1.Pagination.PageIndex := 0;
+DatasetController1.Pagination.PageSize := 50;
+DatasetController1.Pagination.PageIndex := 0;
 ```
 
 Cache-Seiten sind interne Ladeeinheiten. Sichtbare Pagination ist eine UI-/Queryentscheidung; beides darf unabhängig konfiguriert werden.

@@ -1,4 +1,4 @@
-# h5u.Grid – öffentlicher API-Auszug
+﻿# h5u.Grid – öffentlicher API-Auszug
 
 > Automatisch aus den vollständigen `interface`-Abschnitten des ausgelieferten Quellstands erzeugt. Maßgeblich bleiben die Pascal-Units.
 
@@ -932,9 +932,9 @@ function h5uValueToDisplayText(const AValue: TValue; const ADisplayFormat: strin
 function h5uTryValueAsInteger(const AValue: TValue; out AInteger: Integer): Boolean;
 ```
 
-## `h5u.Grid.Data.DataSet`
+## `h5u.Grid.Data.Dataset`
 
-Quelle: `Source/Common/h5u.Grid.Data.DataSet.pas`
+Quelle: `Source/Common/h5u.Grid.Data.Dataset.pas`
 
 ```pascal
 {$SCOPEDENUMS ON}
@@ -949,19 +949,19 @@ uses
   h5u.Grid.Types;
 
 type
-  Th5uDataSetController = class;
+  Th5uDatasetController = class;
 
-  Th5uDataSetDataLink = class(TDataLink)
+  Th5uDatasetDataLink = class(TDataLink)
   private
-    FOwner: Th5uDataSetController;
+    FOwner: Th5uDatasetController;
   protected
     procedure ActiveChanged; override;
-    procedure DataSetChanged; override;
-    procedure DataSetScrolled(Distance: Integer); override;
+    procedure DatasetChanged; override;
+    procedure DatasetScrolled(Distance: Integer); override;
     procedure LayoutChanged; override;
     procedure RecordChanged(Field: TField); override;
   public
-    constructor Create(AOwner: Th5uDataSetController);
+    constructor Create(AOwner: Th5uDatasetController);
   end;
 
   Th5uDataRowSnapshot = class
@@ -975,15 +975,15 @@ type
     property Values: TDictionary<string, TValue> read FValues;
   end;
 
-  Th5uDataSetController = class(Th5uCustomDataController)
+  Th5uDatasetController = class(Th5uCustomDataController)
   private
     FDataSource: TDataSource;
-    FDataLink: Th5uDataSetDataLink;
+    FDataLink: Th5uDatasetDataLink;
     FKeyFieldName: string;
     FSnapshotCache: TObjectDictionary<Int64, Th5uDataRowSnapshot>;
     FCacheGeneration: Int64;
     procedure SetDataSource(const AValue: TDataSource);
-    function GetDataSet: TDataSet;
+    function GetDataset: TDataset;
     function ReadFieldValue(AField: TField): TValue;
     procedure WriteFieldValue(AField: TField; const AValue: TValue);
     function CreateSnapshot(ASourceRowIndex: Int64): Th5uDataRowSnapshot;
@@ -1002,8 +1002,8 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure PrepareRange(AFirstViewRow, ACount: Int64); override;
-    procedure DataSetChanged(AKind: Th5uDataChangeKind; AField: TField = nil);
-    property DataSet: TDataSet read GetDataSet;
+    procedure DatasetChanged(AKind: Th5uDataChangeKind; AField: TField = nil);
+    property Dataset: TDataset read GetDataset;
   published
     property DataSource: TDataSource read FDataSource write SetDataSource;
     property KeyFieldName: string read FKeyFieldName write FKeyFieldName;
@@ -1682,7 +1682,7 @@ uses
   Datasnap.DBClient;
 
 type
-  Th5uSampleClientDataSet = class(TClientDataSet)
+  Th5uSampleClientDataset = class(TClientDataset)
   private
     FAutoCreateSampleData: Boolean;
     FIncludeImages: Boolean;
@@ -2548,7 +2548,7 @@ type
     function HitTest(X, Y: Integer): Th5uHitTestInfo;
     procedure MoveColumn(AColumn: Th5uGridColumn; ANewVisibleIndex: Integer);
     procedure SetColumnVisible(AColumn: Th5uGridColumn; AVisible: Boolean);
-    procedure AutoCreateColumnsFromDataSet(AClearExisting: Boolean = True);
+    procedure AutoCreateColumnsFromDataset(AClearExisting: Boolean = True);
     procedure ToggleAdjacentGroup(AViewRowIndex: Int64);
     procedure SetAdjacentGroupCollapsed(AViewRowIndex: Int64; ACollapsed: Boolean);
     procedure ExpandAllAdjacentGroups;

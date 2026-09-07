@@ -161,10 +161,10 @@ $designPackages = @(
 )
 
 $demoProjects = @(
-    (Join-Path $root 'Demos\VCL\ClientDataSet\GridVclClientDataSetDemo.dpr'),
+    (Join-Path $root 'Demos\VCL\ClientDataset\GridVclClientDatasetDemo.dpr'),
     (Join-Path $root 'Demos\VCL\ObjectList\GridVclObjectListDemo.dpr'),
     (Join-Path $root 'Demos\VCL\VirtualLive\GridVclVirtualLiveDemo.dpr'),
-    (Join-Path $root 'Demos\FMX\ClientDataSet\GridFmxClientDataSetDemo.dpr'),
+    (Join-Path $root 'Demos\FMX\ClientDataset\GridFmxClientDatasetDemo.dpr'),
     (Join-Path $root 'Demos\FMX\ObjectList\GridFmxObjectListDemo.dpr'),
     (Join-Path $root 'Demos\FMX\VirtualLive\GridFmxVirtualLiveDemo.dpr')
 )

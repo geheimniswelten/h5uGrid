@@ -1,4 +1,4 @@
-﻿object MainForm: TMainForm
+﻿object FmxVirtualDemoForm: TFmxVirtualDemoForm
   Left = 0
   Top = 0
   Caption = 'h5u.Grid FMX - VirtualSource / Live'

@@ -10,7 +10,7 @@ Datenquelle
    ▼
 Th5uCustomDataController
    │
-   ├── DataSet
+   ├── Dataset
    ├── Objektliste
    ├── Memory
    └── Virtual/Events
@@ -66,11 +66,11 @@ Der Controller stellt mindestens bereit:
 - optionale Vorbereitungs-/Fetch-Aufrufe für sichtbare Bereiche
 - eine Capability-Beschreibung
 
-### 3.1 DataSet-Controller
+### 3.1 Dataset-Controller
 
-`Th5uDataSetController` verbindet eine `TDataSource`.
+`Th5uDatasetController` verbindet eine `TDataSource`.
 
-Bei aktivem Cache zeichnet das Grid aus Controller-Snapshots. Damit muss ein Paint-Durchlauf nicht für jede Zelle den aktuellen Datensatz des `TDataSet` umpositionieren. Editieroperationen werden an das DataSet zurückgeschrieben und der betroffene Snapshot anschließend invalidiert.
+Bei aktivem Cache zeichnet das Grid aus Controller-Snapshots. Damit muss ein Paint-Durchlauf nicht für jede Zelle den aktuellen Datensatz des `TDataset` umpositionieren. Editieroperationen werden an das Dataset zurückgeschrieben und der betroffene Snapshot anschließend invalidiert.
 
 ### 3.2 Objektlisten-Controller
 

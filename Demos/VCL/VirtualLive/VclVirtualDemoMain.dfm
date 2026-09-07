@@ -1,4 +1,4 @@
-object MainForm: TMainForm
+object VclVirtualDemoForm: TVclVirtualDemoForm
   Left = 0
   Top = 0
   Caption = 'h5u.Grid VCL - VirtualSource / Live-Ereignisse'

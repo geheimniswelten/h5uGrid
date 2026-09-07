@@ -1,4 +1,4 @@
-﻿unit Main;
+﻿unit VclObjectDemoMain;
 
 interface
 
@@ -39,7 +39,7 @@ type
     property UpdatedAt: TDateTime read FUpdatedAt write FUpdatedAt;
   end;
 
-  TMainForm = class(TForm)
+  TVclObjectDemoForm = class(TForm)
     TopPanel: TPanel;
     AddButton: TButton;
     CacheCheck: TCheckBox;
@@ -61,7 +61,7 @@ type
   end;
 
 var
-  MainForm: TMainForm;
+  VclObjectDemoForm: TVclObjectDemoForm;
 
 implementation
 
@@ -71,7 +71,7 @@ uses
   System.Rtti,
   h5u.Grid.Types;
 
-function TMainForm.AddPerson: TPersonRow;
+function TVclObjectDemoForm.AddPerson: TPersonRow;
 const
   CDepartments: array[0..4] of string = ('Fertigung', 'Konstruktion', 'Einkauf', 'QS', 'Vertrieb');
 begin
@@ -92,12 +92,12 @@ begin
   ObjectController.Add(Result);
 end;
 
-procedure TMainForm.AddButtonClick(Sender: TObject);
+procedure TVclObjectDemoForm.AddButtonClick(Sender: TObject);
 begin
   AddPerson;
 end;
 
-procedure TMainForm.CacheCheckClick(Sender: TObject);
+procedure TVclObjectDemoForm.CacheCheckClick(Sender: TObject);
 begin
   if CacheCheck.Checked then
     ObjectController.Cache.Mode := Th5uCacheMode.Viewport
@@ -105,7 +105,7 @@ begin
     ObjectController.Cache.Mode := Th5uCacheMode.None;
 end;
 
-procedure TMainForm.DarkCheckClick(Sender: TObject);
+procedure TVclObjectDemoForm.DarkCheckClick(Sender: TObject);
 begin
   if DarkCheck.Checked then
     Grid.Theme := Th5uGridTheme.Dark
@@ -113,7 +113,7 @@ begin
     Grid.Theme := Th5uGridTheme.ApplicationStyle;
 end;
 
-procedure TMainForm.FormCreate(Sender: TObject);
+procedure TVclObjectDemoForm.FormCreate(Sender: TObject);
 var
   I: Integer;
 begin
@@ -127,12 +127,12 @@ begin
   end;
 end;
 
-procedure TMainForm.LiveCheckClick(Sender: TObject);
+procedure TVclObjectDemoForm.LiveCheckClick(Sender: TObject);
 begin
   UpdateTimer.Enabled := LiveCheck.Checked;
 end;
 
-procedure TMainForm.UpdateTimerTimer(Sender: TObject);
+procedure TVclObjectDemoForm.UpdateTimerTimer(Sender: TObject);
 var
   LIndex: Integer;
   LPerson: TPersonRow;

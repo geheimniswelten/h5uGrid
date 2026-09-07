@@ -10,7 +10,7 @@ uses
   Datasnap.DBClient;
 
 type
-  Th5uSampleClientDataSet = class(TClientDataSet)
+  Th5uSampleClientDataset = class(TClientDataset)
   private
     FAutoCreateSampleData: Boolean;
     FIncludeImages: Boolean;
@@ -41,9 +41,9 @@ const
   // self-contained and independent of VCL/FMX graphics classes.
   cSamplePngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk' + 'YAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
 
-{ Th5uSampleClientDataSet }
+{ Th5uSampleClientDataset }
 
-constructor Th5uSampleClientDataSet.Create(AOwner: TComponent);
+constructor Th5uSampleClientDataset.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FAutoCreateSampleData := True;
@@ -56,13 +56,13 @@ begin
   EnsureSampleData;
 end;
 
-procedure Th5uSampleClientDataSet.Loaded;
+procedure Th5uSampleClientDataset.Loaded;
 begin
   inherited Loaded;
   EnsureSampleData;
 end;
 
-procedure Th5uSampleClientDataSet.SetAutoCreateSampleData(const AValue: Boolean);
+procedure Th5uSampleClientDataset.SetAutoCreateSampleData(const AValue: Boolean);
 begin
   if FAutoCreateSampleData = AValue then
     Exit;
@@ -72,7 +72,7 @@ begin
     EnsureSampleData;
 end;
 
-procedure Th5uSampleClientDataSet.SetIncludeImages(const AValue: Boolean);
+procedure Th5uSampleClientDataset.SetIncludeImages(const AValue: Boolean);
 begin
   if FIncludeImages = AValue then
     Exit;
@@ -82,7 +82,7 @@ begin
     RecreateSampleData;
 end;
 
-procedure Th5uSampleClientDataSet.SetSampleRowCount(const AValue: Integer);
+procedure Th5uSampleClientDataset.SetSampleRowCount(const AValue: Integer);
 var
   LValue: Integer;
 begin
@@ -100,7 +100,7 @@ begin
     RecreateSampleData;
 end;
 
-procedure Th5uSampleClientDataSet.BuildFieldDefs;
+procedure Th5uSampleClientDataset.BuildFieldDefs;
 begin
   FieldDefs.Clear;
 
@@ -185,7 +185,7 @@ begin
   end;
 end;
 
-procedure Th5uSampleClientDataSet.WriteSampleImage(AField: TField; AIndex: Integer);
+procedure Th5uSampleClientDataset.WriteSampleImage(AField: TField; AIndex: Integer);
 var
   LBytes: TBytes;
   LStream: TBytesStream;
@@ -206,7 +206,7 @@ begin
   end;
 end;
 
-procedure Th5uSampleClientDataSet.AppendSampleRows;
+procedure Th5uSampleClientDataset.AppendSampleRows;
 const
   cCategories: array[0..3] of string = ('Mechanik', 'Elektronik', 'Montage', 'Prüfung');
 var
@@ -287,7 +287,7 @@ begin
   end;
 end;
 
-procedure Th5uSampleClientDataSet.RecreateSampleData;
+procedure Th5uSampleClientDataset.RecreateSampleData;
 begin
   if FUpdatingSampleData then
     Exit;
@@ -299,7 +299,7 @@ begin
 
     FieldDefs.Clear;
     BuildFieldDefs;
-    CreateDataSet;
+    CreateDataset;
     LogChanges := False;
     AppendSampleRows;
   finally
@@ -307,7 +307,7 @@ begin
   end;
 end;
 
-procedure Th5uSampleClientDataSet.EnsureSampleData;
+procedure Th5uSampleClientDataset.EnsureSampleData;
 begin
   if not FAutoCreateSampleData or FUpdatingSampleData then
     Exit;
