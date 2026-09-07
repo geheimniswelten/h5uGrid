@@ -218,6 +218,7 @@ type
     FCellPool: TObjectList<Th5uVclVisualCell>;
     FRowHeightCache: TDictionary<string, Integer>;
     FUpdatingScrollBars: Boolean;
+    FInitialized: Boolean;
 
     FMouseDownHit: Th5uHitTestInfo;
     FSelectingRange: Boolean;
@@ -309,6 +310,7 @@ type
     function ResolveTreeBranchEndColor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey): TColor;
     function ResolveAdjacentGroupEndColor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey): TColor;
     function GetEstimatedTotalRowHeight: Int64;
+    function CanUpdateLayout: Boolean;
     procedure LayoutScrollBars;
     procedure UpdateScrollBars;
     procedure BuildColumnLayout;
@@ -354,6 +356,7 @@ type
 
     procedure DoCustomDraw(ACanvas: TCanvas; const AContext: Th5uVclDrawContext; AStage: Th5uCustomDrawStage; var ADrawDefault: Boolean);
   protected
+    procedure Loaded; override;
     procedure Paint; override;
     procedure Resize; override;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
@@ -1203,6 +1206,7 @@ begin
   FEditor.OnExit := EditorExit;
   FEditor.OnKeyDown := EditorKeyDown;
 
+  FInitialized := True;
   TabStop := True;
   DoubleBuffered := True;
   SetBounds(Left, Top, 640, 320);
@@ -1220,6 +1224,7 @@ end;
 
 destructor Th5uVclGrid.Destroy;
 begin
+  FInitialized := False;
   FDataLink.Controller := nil;
   FAdjacentGroupMap.Free;
   FAdjacentGroupFolding.Free;
@@ -2701,11 +2706,39 @@ begin
   Invalidate;
 end;
 
+function Th5uVclGrid.CanUpdateLayout: Boolean;
+var
+  LComponent: TComponent;
+begin
+  Result := False;
+  if not FInitialized then
+    Exit;
+  // A child's Loaded can run while its owning form is still loading.
+  LComponent := Self;
+  while Assigned(LComponent) do
+  begin
+    if LComponent.ComponentState * [csLoading, csReading, csDestroying] <> [] then
+      Exit;
+    LComponent := LComponent.Owner;
+  end;
+  Result := True;
+end;
+
+procedure Th5uVclGrid.Loaded;
+begin
+  inherited Loaded;
+  LayoutScrollBars;
+  // Paint refreshes data-dependent layout; FormCreate may not have run yet.
+  Invalidate;
+end;
+
 procedure Th5uVclGrid.LayoutScrollBars;
 var
   LVWidth: Integer;
   LHHeight: Integer;
 begin
+  if not CanUpdateLayout then
+    Exit;
   LVWidth := GetSystemMetrics(SM_CXVSCROLL);
   LHHeight := GetSystemMetrics(SM_CYHSCROLL);
   if LVWidth <= 0 then
@@ -3055,6 +3088,8 @@ var
   LViewRect: TRect;
   LDataRect: TRect;
 begin
+  if not CanUpdateLayout then
+    Exit;
   LPalette := h5uGetVclPalette(FTheme);
   Canvas.Brush.Color := LPalette.EmptyArea;
   Canvas.FillRect(ClientRect);
@@ -3131,6 +3166,8 @@ end;
 procedure Th5uVclGrid.Resize;
 begin
   inherited Resize;
+  if not CanUpdateLayout then
+    Exit;
   LayoutScrollBars;
   RebuildAfterLayoutChange;
 end;
@@ -3221,6 +3258,8 @@ var
   LTop: Integer;
   LRowIndex: Int64;
 begin
+  if FUpdatingScrollBars or not CanUpdateLayout then
+    Exit;
   CancelEditor;
 
   if Sender = FVScrollBar then
@@ -3612,7 +3651,7 @@ var
   LMaxHorizontal: Integer;
   LMaxVertical: Integer;
 begin
-  if FUpdatingScrollBars or (csDestroying in ComponentState) then
+  if FUpdatingScrollBars or not CanUpdateLayout then
     Exit;
 
   FUpdatingScrollBars := True;

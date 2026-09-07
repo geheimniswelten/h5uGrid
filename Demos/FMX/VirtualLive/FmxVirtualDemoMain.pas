@@ -121,7 +121,11 @@ end;
 
 procedure TFmxVirtualDemoForm.FormDestroy(Sender: TObject);
 begin
-  FRows.Free;
+  if Assigned(LiveTimer) then
+    LiveTimer.Enabled := False;
+  if Assigned(Grid) then
+    Grid.DataController := nil;
+  FreeAndNil(FRows);
 end;
 
 procedure TFmxVirtualDemoForm.LiveTimerTimer(Sender: TObject);
@@ -147,11 +151,16 @@ end;
 
 procedure TFmxVirtualDemoForm.VirtualGetRowCount(Sender: TObject; var ARowCount: Int64);
 begin
-  ARowCount := FRows.Count;
+  // Streaming/Loaded may request data before FormCreate initializes FRows.
+  ARowCount := 0;
+  if Assigned(FRows) then
+    ARowCount := FRows.Count;
 end;
 
 procedure TFmxVirtualDemoForm.VirtualGetRowKey(Sender: TObject; ASourceRowIndex: Int64; var ARowKey: Th5uRowKey);
 begin
+  if not Assigned(FRows) then
+    Exit;
   if (ASourceRowIndex >= 0) and (ASourceRowIndex < FRows.Count) then
     ARowKey := Th5uRowKey.FromInt64(FRows[ASourceRowIndex].Id);
 end;
@@ -160,6 +169,8 @@ procedure TFmxVirtualDemoForm.VirtualGetValue(Sender: TObject; ASourceRowIndex: 
 var
   LRow: TLiveRow;
 begin
+  if not Assigned(FRows) then
+    Exit;
   if (ASourceRowIndex < 0) or (ASourceRowIndex >= FRows.Count) then
     Exit;
   LRow := FRows[ASourceRowIndex];
@@ -181,6 +192,8 @@ end;
 procedure TFmxVirtualDemoForm.VirtualSetValue(Sender: TObject; ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue; var AHandled: Boolean);
 begin
   AHandled := False;
+  if not Assigned(FRows) then
+    Exit;
   if (ASourceRowIndex < 0) or (ASourceRowIndex >= FRows.Count) then
     Exit;
 

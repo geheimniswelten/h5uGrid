@@ -145,7 +145,11 @@ end;
 
 procedure TVclVirtualDemoForm.FormDestroy(Sender: TObject);
 begin
-  FRows.Free;
+  if Assigned(LiveTimer) then
+    LiveTimer.Enabled := False;
+  if Assigned(Grid) then
+    Grid.DataController := nil;
+  FreeAndNil(FRows);
 end;
 
 procedure TVclVirtualDemoForm.LiveTimerTimer(Sender: TObject);
@@ -185,11 +189,16 @@ end;
 
 procedure TVclVirtualDemoForm.VirtualControllerGetRowCount(Sender: TObject; var ARowCount: Int64);
 begin
-  ARowCount := FRows.Count;
+  // Streaming/Loaded may request data before FormCreate initializes FRows.
+  ARowCount := 0;
+  if Assigned(FRows) then
+    ARowCount := FRows.Count;
 end;
 
 procedure TVclVirtualDemoForm.VirtualControllerGetRowKey(Sender: TObject; ASourceRowIndex: Int64; var ARowKey: Th5uRowKey);
 begin
+  if not Assigned(FRows) then
+    Exit;
   if (ASourceRowIndex >= 0) and (ASourceRowIndex < FRows.Count) then
     ARowKey := Th5uRowKey.FromInt64(FRows[ASourceRowIndex].Id);
 end;
@@ -198,6 +207,8 @@ procedure TVclVirtualDemoForm.VirtualControllerGetValue(Sender: TObject; ASource
 var
   LRow: TLiveRow;
 begin
+  if not Assigned(FRows) then
+    Exit;
   if (ASourceRowIndex < 0) or (ASourceRowIndex >= FRows.Count) then
     Exit;
 
@@ -218,6 +229,8 @@ end;
 
 procedure TVclVirtualDemoForm.VirtualControllerPrepareRange(Sender: TObject; AFirstSourceRow, ACount: Int64; AQueryGeneration: Int64);
 begin
+  if not Assigned(FRows) or not Assigned(StatusLabel) then
+    Exit;
   StatusLabel.Caption := Format('Viewport-Anfrage: %d..%d, QueryGeneration %d, Gesamt %d', [AFirstSourceRow, AFirstSourceRow + ACount
     - 1, AQueryGeneration, FRows.Count]);
 end;
@@ -227,6 +240,8 @@ var
   LRow: TLiveRow;
 begin
   AHandled := False;
+  if not Assigned(FRows) then
+    Exit;
   if (ASourceRowIndex < 0) or (ASourceRowIndex >= FRows.Count) then
     Exit;
   LRow := FRows[ASourceRowIndex];

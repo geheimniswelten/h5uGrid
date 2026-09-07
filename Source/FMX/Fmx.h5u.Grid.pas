@@ -201,6 +201,7 @@ type
     FCellPool: TObjectList<Th5uFmxVisualCell>;
     FRowHeightCache: TDictionary<string, Single>;
     FUpdatingScrollBars: Boolean;
+    FInitialized: Boolean;
     FLastMousePoint: TPointF;
 
     FOnGetRowHeight: Th5uFmxGetRowHeightEvent;
@@ -283,6 +284,7 @@ type
     function ResolveTreeBranchEndColor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey): TAlphaColor;
     function ResolveAdjacentGroupEndColor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey): TAlphaColor;
     function GetEstimatedTotalRowHeight: Double;
+    function CanUpdateLayout: Boolean;
     procedure LayoutScrollBars;
     procedure UpdateScrollBars;
     procedure BuildColumnLayout;
@@ -316,6 +318,7 @@ type
     function GetVisualCellClass(const AContext: Th5uFactoryContext; ADefaultClass: Th5uFmxVisualCellClass): Th5uFmxVisualCellClass; virtual;
     procedure DoCustomDraw(ACanvas: TCanvas; const AContext: Th5uFmxDrawContext; AStage: Th5uFmxCustomDrawStage; var ADrawDefault: Boolean);
   protected
+    procedure Loaded; override;
     procedure Paint; override;
     procedure Resize; override;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
@@ -987,6 +990,7 @@ begin
   FEditor.OnKeyDown := EditorKeyDown;
 
 
+  FInitialized := True;
   CanFocus := True;
   ClipChildren := True;
   SetSize(640, 320);
@@ -1004,6 +1008,7 @@ end;
 
 destructor Th5uFmxGrid.Destroy;
 begin
+  FInitialized := False;
   FDataLink.Controller := nil;
   FAdjacentGroupMap.Free;
   FAdjacentGroupFolding.Free;
@@ -2258,10 +2263,38 @@ begin
   FRowHeightCache.Clear;
 end;
 
+function Th5uFmxGrid.CanUpdateLayout: Boolean;
+var
+  LComponent: TComponent;
+begin
+  Result := False;
+  if not FInitialized then
+    Exit;
+  // A child's Loaded can run while its owning form is still loading.
+  LComponent := Self;
+  while Assigned(LComponent) do
+  begin
+    if LComponent.ComponentState * [csLoading, csReading, csDestroying] <> [] then
+      Exit;
+    LComponent := LComponent.Owner;
+  end;
+  Result := True;
+end;
+
+procedure Th5uFmxGrid.Loaded;
+begin
+  inherited Loaded;
+  LayoutScrollBars;
+  // Paint refreshes data-dependent layout; FormCreate may not have run yet.
+  Repaint;
+end;
+
 procedure Th5uFmxGrid.LayoutScrollBars;
 const
   CScrollSize = 16;
 begin
+  if not CanUpdateLayout then
+    Exit;
   FVScrollBar.SetBounds(Width - CScrollSize, 0, CScrollSize, Height - IfThen(FHScrollBar.Visible, CScrollSize, 0));
   FHScrollBar.SetBounds(0, Height - CScrollSize, Width - IfThen(FVScrollBar.Visible, CScrollSize, 0), CScrollSize);
   FThumbHint.BringToFront;
@@ -2529,6 +2562,8 @@ var
   LPalette: Th5uFmxPalette;
   LViewport: TRectF;
 begin
+  if not CanUpdateLayout then
+    Exit;
   inherited Paint;
   LPalette := h5uGetFmxPalette(FTheme);
   Canvas.Fill.Kind := TBrushKind.Solid;
@@ -2590,6 +2625,8 @@ end;
 procedure Th5uFmxGrid.Resize;
 begin
   inherited Resize;
+  if not CanUpdateLayout then
+    Exit;
   LayoutScrollBars;
   UpdateScrollBars;
   Repaint;
@@ -2663,7 +2700,7 @@ end;
 
 procedure Th5uFmxGrid.ScrollChanged(Sender: TObject);
 begin
-  if FUpdatingScrollBars then
+  if FUpdatingScrollBars or not CanUpdateLayout then
     Exit;
 
   CancelEditor;
@@ -2966,7 +3003,7 @@ var
   LContentWidth: Single;
   LContentHeight: Double;
 begin
-  if FUpdatingScrollBars then
+  if FUpdatingScrollBars or not CanUpdateLayout then
     Exit;
   FUpdatingScrollBars := True;
   try
