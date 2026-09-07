@@ -362,8 +362,7 @@ begin
     FRight := LSource.FRight;
     FBottom := LSource.FBottom;
     FRowSpacing := LSource.FRowSpacing;
-    FDefaultColumnRightSpacing :=
-      LSource.FDefaultColumnRightSpacing;
+    FDefaultColumnRightSpacing := LSource.FDefaultColumnRightSpacing;
     FRowSpacingColor := LSource.FRowSpacingColor;
     FColumnSpacingColor := LSource.FColumnSpacingColor;
     FContentPaddingColor := LSource.FContentPaddingColor;
@@ -438,14 +437,8 @@ var
   LSize: Integer;
 begin
   LSize := EnsureRange(ASize, 0, 1000);
-  if
-    (FLeft = LSize) and
-    (FTop = LSize) and
-    (FRight = LSize) and
-    (FBottom = LSize) and
-    (FRowSpacing = LSize) and
-    (FDefaultColumnRightSpacing = LSize)
-  then
+  if (FLeft = LSize) and (FTop = LSize) and (FRight = LSize) and (FBottom = LSize) and (FRowSpacing = LSize) and (FDefaultColumnRightSpacing
+    = LSize) then
     Exit;
 
   FLeft := LSize;
@@ -495,8 +488,7 @@ procedure Th5uGridAppearanceOptions.Assign(Source: TPersistent);
 begin
   if Source is Th5uGridAppearanceOptions then
   begin
-    FDefaultCellColor :=
-      Th5uGridAppearanceOptions(Source).FDefaultCellColor;
+    FDefaultCellColor := Th5uGridAppearanceOptions(Source).FDefaultCellColor;
     Changed;
   end
   else

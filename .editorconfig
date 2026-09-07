@@ -7,7 +7,9 @@ insert_final_newline = true
 trim_trailing_whitespace = true
 indent_style = space
 indent_size = 2
-max_line_length = 180
+# Properties and routine signatures may use 180 columns.
+# The declaration exception and leading operators are checked by Build/format_pascal.py.
+max_line_length = 150
 
 [*.{md,py,ps1,cmd,json}]
 charset = utf-8

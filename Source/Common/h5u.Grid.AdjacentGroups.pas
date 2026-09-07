@@ -107,8 +107,8 @@ begin
   case AValue.Kind of
     tkInteger, tkInt64, tkEnumeration: Result := IntToStr(AValue.AsOrdinal);
     tkFloat: Result := FloatToStr(AValue.AsExtended);
-  else
-    Result := AValue.ToString;
+    else
+      Result := AValue.ToString;
   end;
 end;
 
@@ -138,15 +138,9 @@ var
   LComparisonKey: string;
   LCanGroup: Boolean;
 begin
-  LCanGroup := BuildComparisonKey(
-    AGroupId,
-    AControllerRowIndex,
-    AAvailable,
-    LComparisonKey
-  );
+  LCanGroup := BuildComparisonKey(AGroupId, AControllerRowIndex, AAvailable, LComparisonKey);
 
-  if FHasPendingRun and LCanGroup and
-     (FPendingRun.ComparisonKey = LComparisonKey) then
+  if FHasPendingRun and LCanGroup and (FPendingRun.ComparisonKey = LComparisonKey) then
   begin
     FPendingRun.LastControllerRowIndex := AControllerRowIndex;
     Inc(FPendingRun.RowCount);
@@ -162,11 +156,7 @@ begin
   FPendingRun.FirstControllerRowIndex := AControllerRowIndex;
   FPendingRun.LastControllerRowIndex := AControllerRowIndex;
   FPendingRun.RowCount := 1;
-  FPendingRun.StateKey := BuildStateKey(
-    ARowKey,
-    AControllerRowIndex,
-    LComparisonKey
-  );
+  FPendingRun.StateKey := BuildStateKey(ARowKey, AControllerRowIndex, LComparisonKey);
   FHasPendingRun := True;
 end;
 
@@ -175,8 +165,7 @@ begin
   FRuns.Clear;
   FVisibleControllerRows.Clear;
   FVisibleGroupIndexes.Clear;
-  FInitialCollapsed :=
-    AInitialState = Th5uAdjacentGroupInitialState.Collapsed;
+  FInitialCollapsed := AInitialState = Th5uAdjacentGroupInitialState.Collapsed;
   FCaseSensitive := ACaseSensitive;
   FGroupEmptyValues := AGroupEmptyValues;
   FHasPendingRun := False;
@@ -219,8 +208,7 @@ begin
   if not ARowKey.IsEmpty then
     Result := 'row:' + ARowKey.ToString + '|id:' + AComparisonKey
   else
-    Result := 'index:' + IntToStr(AControllerRowIndex) +
-      '|id:' + AComparisonKey;
+    Result := 'index:' + IntToStr(AControllerRowIndex) + '|id:' + AComparisonKey;
 end;
 
 function Th5uAdjacentGroupMap.CollapseAll: Boolean;
@@ -310,10 +298,7 @@ begin
 
   if FPendingRun.IsFoldable then
   begin
-    if FCollapsedStates.TryGetValue(
-         FPendingRun.StateKey,
-         LStoredCollapsed
-       ) then
+    if FCollapsedStates.TryGetValue(FPendingRun.StateKey, LStoredCollapsed) then
       FPendingRun.Collapsed := LStoredCollapsed
     else
       FPendingRun.Collapsed := FInitialCollapsed;
@@ -343,8 +328,7 @@ end;
 
 function Th5uAdjacentGroupMap.MapViewToController(AViewRowIndex: Int64): Int64;
 begin
-  if (AViewRowIndex < 0) or
-     (AViewRowIndex >= FVisibleControllerRows.Count) then
+  if (AViewRowIndex < 0) or (AViewRowIndex >= FVisibleControllerRows.Count) then
     Exit(-1);
   Result := FVisibleControllerRows[Integer(AViewRowIndex)];
 end;
@@ -388,8 +372,7 @@ var
   LRun: Th5uAdjacentGroupRun;
 begin
   Result := False;
-  if not TryGetRowInfo(AViewRowIndex, LInfo) or
-     not LInfo.IsFoldable then
+  if not TryGetRowInfo(AViewRowIndex, LInfo) or not LInfo.IsFoldable then
     Exit;
 
   LRun := FRuns[LInfo.GroupIndex];
@@ -409,10 +392,7 @@ var
 begin
   if not TryGetRowInfo(AViewRowIndex, LInfo) then
     Exit(False);
-  Result := SetCollapsedAtViewRow(
-    AViewRowIndex,
-    not LInfo.Collapsed
-  );
+  Result := SetCollapsedAtViewRow(AViewRowIndex, not LInfo.Collapsed);
 end;
 
 function Th5uAdjacentGroupMap.TryGetRowInfo(AViewRowIndex: Int64; out AInfo: Th5uAdjacentGroupRowInfo): Boolean;
@@ -421,9 +401,7 @@ var
   LRun: Th5uAdjacentGroupRun;
 begin
   AInfo := Th5uAdjacentGroupRowInfo.Empty;
-  Result := FActive and
-    (AViewRowIndex >= 0) and
-    (AViewRowIndex < FVisibleControllerRows.Count);
+  Result := FActive and (AViewRowIndex >= 0) and (AViewRowIndex < FVisibleControllerRows.Count);
   if not Result then
     Exit;
 
@@ -433,18 +411,14 @@ begin
   AInfo.ViewRowIndex := AViewRowIndex;
   AInfo.ControllerRowIndex := FVisibleControllerRows[LIndex];
   AInfo.GroupIndex := FVisibleGroupIndexes[LIndex];
-  AInfo.GroupOffset :=
-    AInfo.ControllerRowIndex - LRun.FirstControllerRowIndex;
+  AInfo.GroupOffset := AInfo.ControllerRowIndex - LRun.FirstControllerRowIndex;
   AInfo.GroupId := LRun.GroupId;
   AInfo.AnchorRowKey := LRun.AnchorRowKey;
   AInfo.RowCount := LRun.RowCount;
   AInfo.Collapsed := LRun.Collapsed;
   AInfo.IsFirstRow := AInfo.GroupOffset = 0;
-  AInfo.IsLastSourceRow :=
-    AInfo.ControllerRowIndex = LRun.LastControllerRowIndex;
-  AInfo.IsLastVisibleRow :=
-    (LRun.Collapsed and AInfo.IsFirstRow) or
-    (not LRun.Collapsed and AInfo.IsLastSourceRow);
+  AInfo.IsLastSourceRow := AInfo.ControllerRowIndex = LRun.LastControllerRowIndex;
+  AInfo.IsLastVisibleRow := (LRun.Collapsed and AInfo.IsFirstRow) or (not LRun.Collapsed and AInfo.IsLastSourceRow);
   AInfo.IsFoldable := LRun.IsFoldable;
 end;
 

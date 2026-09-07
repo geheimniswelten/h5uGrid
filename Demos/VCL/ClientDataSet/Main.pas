@@ -87,8 +87,7 @@ begin
     Exit;
 
   LPriority := Value.AsInteger;
-  LRect := Rect(Bounds.Left + 5, Bounds.Top + (Bounds.Height - 10) div 2,
-    Bounds.Left + 15, Bounds.Top + (Bounds.Height - 10) div 2 + 10);
+  LRect := Rect(Bounds.Left + 5, Bounds.Top + (Bounds.Height - 10) div 2, Bounds.Left + 15, Bounds.Top + (Bounds.Height - 10) div 2 + 10);
 
   case LPriority of
     2: ACanvas.Brush.Color := clYellow;
@@ -222,16 +221,10 @@ begin
   if not SampleData.Active then
     SampleData.RecreateSampleData;
 
-  Grid.FactoryScope.RegisterClass(
-    h5uClassIdGridDataCell,
-    Th5uVclVisualCell,
-    TPriorityDemoCell,
-    100,
+  Grid.FactoryScope.RegisterClass(h5uClassIdGridDataCell, Th5uVclVisualCell, TPriorityDemoCell, 100,
     function(const AContext: Th5uFactoryContext): Boolean
     begin
-      Result := (AContext.Grid = Grid)
-        and (AContext.Column is Th5uGridColumn)
-        and SameText(Th5uGridColumn(AContext.Column).Id, 'priority');
+      Result := (AContext.Grid = Grid) and (AContext.Column is Th5uGridColumn) and SameText(Th5uGridColumn(AContext.Column).Id, 'priority');
     end);
 
   ApplyOptions;

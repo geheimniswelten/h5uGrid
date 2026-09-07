@@ -140,8 +140,8 @@ begin
   case AValue.Kind of
     tkString, tkLString, tkWString, tkUString, tkChar, tkWChar: Result := AValue.ToString;
 
-    tkInteger, tkInt64, tkEnumeration: if (ADisplayFormat <> '') and (AValue.Kind <> tkEnumeration) then Result := FormatFloat(ADisplayFormat, AValue.AsInt64) else Result :=
-      AValue.ToString;
+    tkInteger, tkInt64, tkEnumeration: if (ADisplayFormat <> '') and (AValue.Kind
+      <> tkEnumeration) then Result := FormatFloat(ADisplayFormat, AValue.AsInt64) else Result := AValue.ToString;
 
     tkFloat: begin if AValue.TypeInfo = TypeInfo(TDateTime) then begin LDateTime := AValue.AsType<TDateTime>;
           if ADisplayFormat <> '' then
@@ -163,8 +163,8 @@ begin
 
     tkClass: if AValue.AsObject <> nil then Result := AValue.AsObject.ToString else Result := '';
 
-  else
-    Result := AValue.ToString;
+    else
+      Result := AValue.ToString;
   end;
 end;
 
@@ -257,8 +257,7 @@ begin
   if not FEnabled then
     Exit(False);
   LSourceIndex := MapViewToSourceIndex(AViewRowIndex);
-  Result := (LSourceIndex >= 0) and
-    GetSourceCanEdit(LSourceIndex, AFieldName);
+  Result := (LSourceIndex >= 0) and GetSourceCanEdit(LSourceIndex, AFieldName);
 end;
 
 constructor Th5uCustomDataController.Create(AOwner: TComponent);
@@ -278,23 +277,11 @@ function Th5uCustomDataController.CreateSession(AGrid, AView: TObject): Th5uData
 var
   LContext: Th5uFactoryContext;
 begin
-  LContext := Th5uFactoryContext.Create(
-    AGrid,
-    AView,
-    Self,
-    h5uClassIdDataSession,
-    Th5uElementKind.DataSession
-  );
+  LContext := Th5uFactoryContext.Create(AGrid, AView, Self, h5uClassIdDataSession, Th5uElementKind.DataSession);
   LContext.Owner := Self;
   LContext.CreationReason := Th5uCreationReason.ControllerInternal;
 
-  Result := Th5uDataViewSession(
-    FFactoryScope.CreateInstance(
-      LContext,
-      Th5uDataViewSession,
-      GetDataSessionClass(LContext)
-    )
-  );
+  Result := Th5uDataViewSession(FFactoryScope.CreateInstance(LContext, Th5uDataViewSession, GetDataSessionClass(LContext)));
 end;
 
 destructor Th5uCustomDataController.Destroy;
@@ -341,11 +328,7 @@ begin
   LSourceIndex := MapViewToSourceIndex(AViewRowIndex);
   if LSourceIndex < 0 then
     Exit('');
-  Result := GetSourceDisplayText(
-    LSourceIndex,
-    AFieldName,
-    ADisplayFormat
-  );
+  Result := GetSourceDisplayText(LSourceIndex, AFieldName, ADisplayFormat);
 end;
 
 function Th5uCustomDataController.GetRowCount: Int64;
@@ -398,10 +381,7 @@ end;
 
 function Th5uCustomDataController.GetSourceDisplayText(ASourceRowIndex: Int64; const AFieldName, ADisplayFormat: string): string;
 begin
-  Result := h5uValueToDisplayText(
-    GetSourceValue(ASourceRowIndex, AFieldName),
-    ADisplayFormat
-  );
+  Result := h5uValueToDisplayText(GetSourceValue(ASourceRowIndex, AFieldName), ADisplayFormat);
 end;
 
 function Th5uCustomDataController.GetSourceRowKey(ASourceRowIndex: Int64): Th5uRowKey;
@@ -449,8 +429,7 @@ end;
 procedure Th5uCustomDataController.Notification(AComponent: TComponent; Operation: TOperation);
 begin
   inherited Notification(AComponent, Operation);
-  if (Operation = opRemove) and
-     (AComponent = FSharedClassFactory) then
+  if (Operation = opRemove) and (AComponent = FSharedClassFactory) then
     SharedClassFactory := nil;
 end;
 
@@ -511,10 +490,7 @@ end;
 
 procedure Th5uCustomDataController.SetSourceValue(ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue);
 begin
-  raise Eh5uDataController.CreateFmt(
-    '%s does not support editing field "%s".',
-    [ClassName, AFieldName]
-  );
+  raise Eh5uDataController.CreateFmt('%s does not support editing field "%s".', [ClassName, AFieldName]);
 end;
 
 procedure Th5uCustomDataController.SetValue(AViewRowIndex: Int64; const AFieldName: string; const AValue: TValue);
@@ -526,10 +502,7 @@ begin
     Exit;
 
   if not GetSourceCanEdit(LSourceIndex, AFieldName) then
-    raise Eh5uDataController.CreateFmt(
-      'Field "%s" cannot be edited.',
-      [AFieldName]
-    );
+    raise Eh5uDataController.CreateFmt('Field "%s" cannot be edited.', [AFieldName]);
 
   SetSourceValue(LSourceIndex, AFieldName, AValue);
 end;

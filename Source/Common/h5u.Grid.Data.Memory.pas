@@ -81,9 +81,7 @@ var
   LChange: Th5uDataChange;
 begin
   Inc(FNextKey);
-  Result := Th5uMemoryRow.Create(
-    Th5uRowKey.FromInt64(FNextKey)
-  );
+  Result := Th5uMemoryRow.Create(Th5uRowKey.FromInt64(FNextKey));
   FRows.Add(Result);
 
   LChange := Default(Th5uDataChange);
@@ -98,9 +96,7 @@ var
   I: Integer;
 begin
   if Length(AFieldNames) <> Length(AValues) then
-    raise Eh5uDataController.Create(
-      'Field name and value array lengths differ.'
-    );
+    raise Eh5uDataController.Create('Field name and value array lengths differ.');
 
   BeginUpdate;
   try
@@ -149,8 +145,7 @@ end;
 
 function Th5uMemoryController.GetSourceCanEdit(ASourceRowIndex: Int64; const AFieldName: string): Boolean;
 begin
-  Result := (ASourceRowIndex >= 0) and
-    (ASourceRowIndex < FRows.Count);
+  Result := (ASourceRowIndex >= 0) and (ASourceRowIndex < FRows.Count);
 end;
 
 function Th5uMemoryController.GetSourceRowCount: Int64;
@@ -160,8 +155,7 @@ end;
 
 function Th5uMemoryController.GetSourceRowKey(ASourceRowIndex: Int64): Th5uRowKey;
 begin
-  if (ASourceRowIndex >= 0) and
-     (ASourceRowIndex < FRows.Count) then
+  if (ASourceRowIndex >= 0) and (ASourceRowIndex < FRows.Count) then
     Result := FRows[ASourceRowIndex].Key
   else
     Result := Th5uRowKey.Empty;
@@ -169,8 +163,7 @@ end;
 
 function Th5uMemoryController.GetSourceValue(ASourceRowIndex: Int64; const AFieldName: string): TValue;
 begin
-  if (ASourceRowIndex < 0) or
-     (ASourceRowIndex >= FRows.Count) then
+  if (ASourceRowIndex < 0) or (ASourceRowIndex >= FRows.Count) then
     Exit(TValue.Empty);
   Result := FRows[ASourceRowIndex].GetValue(AFieldName);
 end;
@@ -184,8 +177,7 @@ procedure Th5uMemoryController.SetSourceValue(ASourceRowIndex: Int64; const AFie
 var
   LChange: Th5uDataChange;
 begin
-  if (ASourceRowIndex < 0) or
-     (ASourceRowIndex >= FRows.Count) then
+  if (ASourceRowIndex < 0) or (ASourceRowIndex >= FRows.Count) then
     Exit;
 
   FRows[ASourceRowIndex].SetValue(AFieldName, AValue);

@@ -148,8 +148,7 @@ var
   LValue: TValue;
 begin
   Result := False;
-  if (ASourceRowIndex < 0) or
-     (ASourceRowIndex >= FItems.Count) then
+  if (ASourceRowIndex < 0) or (ASourceRowIndex >= FItems.Count) then
     Exit;
 
   LObject := FItems[ASourceRowIndex];
@@ -183,14 +182,9 @@ function Th5uObjectListController.GetSourceRowKey(ASourceRowIndex: Int64): Th5uR
 var
   LValue: TValue;
 begin
-  if (FKeyPropertyName <> '') and
-     (ASourceRowIndex >= 0) and
-     (ASourceRowIndex < FItems.Count) then
+  if (FKeyPropertyName <> '') and (ASourceRowIndex >= 0) and (ASourceRowIndex < FItems.Count) then
   begin
-    LValue := ReadPropertyPath(
-      FItems[ASourceRowIndex],
-      FKeyPropertyName
-    );
+    LValue := ReadPropertyPath(FItems[ASourceRowIndex], FKeyPropertyName);
     if not LValue.IsEmpty then
       Exit(Th5uRowKey.FromString(LValue.ToString));
   end;
@@ -202,19 +196,14 @@ function Th5uObjectListController.GetSourceValue(ASourceRowIndex: Int64; const A
 var
   LCacheKey: string;
 begin
-  if (ASourceRowIndex < 0) or
-     (ASourceRowIndex >= FItems.Count) then
+  if (ASourceRowIndex < 0) or (ASourceRowIndex >= FItems.Count) then
     Exit(TValue.Empty);
 
   LCacheKey := ValueCacheKey(ASourceRowIndex, AFieldName);
-  if (Cache.Mode <> Th5uCacheMode.None) and
-     FValueCache.TryGetValue(LCacheKey, Result) then
+  if (Cache.Mode <> Th5uCacheMode.None) and FValueCache.TryGetValue(LCacheKey, Result) then
     Exit;
 
-  Result := ReadPropertyPath(
-    FItems[ASourceRowIndex],
-    AFieldName
-  );
+  Result := ReadPropertyPath(FItems[ASourceRowIndex], AFieldName);
 
   if Cache.Mode <> Th5uCacheMode.None then
     FValueCache.AddOrSetValue(LCacheKey, Result);
@@ -319,8 +308,7 @@ procedure Th5uObjectListController.SetSourceValue(ASourceRowIndex: Int64; const 
 var
   LObject: TObject;
 begin
-  if (ASourceRowIndex < 0) or
-     (ASourceRowIndex >= FItems.Count) then
+  if (ASourceRowIndex < 0) or (ASourceRowIndex >= FItems.Count) then
     Exit;
 
   LObject := FItems[ASourceRowIndex];
@@ -330,8 +318,7 @@ end;
 
 function Th5uObjectListController.ValueCacheKey(ASourceRowIndex: Int64; const AFieldName: string): string;
 begin
-  Result := IntToStr(ASourceRowIndex) + '|' +
-    AFieldName.ToUpperInvariant;
+  Result := IntToStr(ASourceRowIndex) + '|' + AFieldName.ToUpperInvariant;
 end;
 
 procedure Th5uObjectListController.WritePropertyPath(AObject: TObject; const APath: string; const AValue: TValue);
@@ -349,31 +336,18 @@ begin
   begin
     LProperty := ResolveProperty(AObject, LParts[I]);
     if not Assigned(LProperty) or not LProperty.IsReadable then
-      raise Eh5uDataController.CreateFmt(
-        'Property "%s" is not readable.',
-        [LParts[I]]
-      );
+      raise Eh5uDataController.CreateFmt('Property "%s" is not readable.', [LParts[I]]);
 
     LIntermediate := LProperty.GetValue(AObject);
-    if not LIntermediate.IsObject or
-       (LIntermediate.AsObject = nil) then
-      raise Eh5uDataController.CreateFmt(
-        'Property path "%s" contains a nil object.',
-        [APath]
-      );
+    if not LIntermediate.IsObject or (LIntermediate.AsObject = nil) then
+      raise Eh5uDataController.CreateFmt('Property path "%s" contains a nil object.', [APath]);
 
     AObject := LIntermediate.AsObject;
   end;
 
-  LProperty := ResolveProperty(
-    AObject,
-    LParts[High(LParts)]
-  );
+  LProperty := ResolveProperty(AObject, LParts[High(LParts)]);
   if not Assigned(LProperty) or not LProperty.IsWritable then
-    raise Eh5uDataController.CreateFmt(
-      'Property "%s" is not writable.',
-      [APath]
-    );
+    raise Eh5uDataController.CreateFmt('Property "%s" is not writable.', [APath]);
 
   LProperty.SetValue(AObject, AValue);
 end;

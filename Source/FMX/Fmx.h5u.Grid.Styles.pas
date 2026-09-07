@@ -117,33 +117,33 @@ begin
         Result.ThumbHintText := $FFFFFFFF;
       end;
 
-  else
-    begin
-      // FMX controls, scrollbars and embedded editors still use the active
-      // application style. These semantic colors are the canvas fallback.
-      Result.GridBackground := $FFF5F5F5;
-      Result.EmptyArea := $FFF1F1F1;
-      Result.CellBackground := $FFFFFFFF;
-      Result.CellText := $FF252525;
-      Result.CellBorder := $FFDDDDDD;
-      Result.HeaderBackground := $FFE8E8E8;
-      Result.HeaderText := $FF202020;
-      Result.FixedBackground := $FFEEEEEE;
-      Result.OddBackground := $FFFFFFFF;
-      Result.EvenBackground := $FFFAFAFA;
-      Result.StripeBackground := $FFEEF5FB;
-      Result.HighlightedColumnBackground := $FFFFF7E3;
-      Result.SelectedBackground := $FF0078D7;
-      Result.SelectedText := $FFFFFFFF;
-      Result.FocusBorder := $FF00569E;
-      Result.ErrorBackground := $FFFFE7E7;
-      Result.WarningBackground := $FFFFF5DD;
-      Result.TreeBranchEndBackground := $FFD8E2EB;
-      Result.AdjacentGroupEndBackground := $FFCBD9E5;
-      Result.DisabledText := $FF808080;
-      Result.ThumbHintBackground := $FF383838;
-      Result.ThumbHintText := $FFFFFFFF;
-    end;
+    else
+      begin
+        // FMX controls, scrollbars and embedded editors still use the active
+        // application style. These semantic colors are the canvas fallback.
+        Result.GridBackground := $FFF5F5F5;
+        Result.EmptyArea := $FFF1F1F1;
+        Result.CellBackground := $FFFFFFFF;
+        Result.CellText := $FF252525;
+        Result.CellBorder := $FFDDDDDD;
+        Result.HeaderBackground := $FFE8E8E8;
+        Result.HeaderText := $FF202020;
+        Result.FixedBackground := $FFEEEEEE;
+        Result.OddBackground := $FFFFFFFF;
+        Result.EvenBackground := $FFFAFAFA;
+        Result.StripeBackground := $FFEEF5FB;
+        Result.HighlightedColumnBackground := $FFFFF7E3;
+        Result.SelectedBackground := $FF0078D7;
+        Result.SelectedText := $FFFFFFFF;
+        Result.FocusBorder := $FF00569E;
+        Result.ErrorBackground := $FFFFE7E7;
+        Result.WarningBackground := $FFFFF5DD;
+        Result.TreeBranchEndBackground := $FFD8E2EB;
+        Result.AdjacentGroupEndBackground := $FFCBD9E5;
+        Result.DisabledText := $FF808080;
+        Result.ThumbHintBackground := $FF383838;
+        Result.ThumbHintText := $FFFFFFFF;
+      end;
   end;
 end;
 

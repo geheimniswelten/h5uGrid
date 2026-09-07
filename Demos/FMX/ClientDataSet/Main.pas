@@ -212,8 +212,7 @@ procedure TMainForm.NextPageButtonClick(Sender: TObject);
 var
   LPageCount: Integer;
 begin
-  if DataController.Pagination.Mode <>
-     Th5uPaginationMode.NumberedPages then
+  if DataController.Pagination.Mode <> Th5uPaginationMode.NumberedPages then
     Exit;
   LPageCount := (DataController.GetTotalRowCount + DataController.Pagination.PageSize - 1) div DataController.Pagination.PageSize;
   DataController.Pagination.PageIndex := (DataController.Pagination.PageIndex + 1) mod Max(1, LPageCount);

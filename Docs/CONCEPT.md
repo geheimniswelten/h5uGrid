@@ -500,7 +500,7 @@ Die aktuelle Implementierung konzentriert sich auf den vertikalen Testpfad. Der 
 
 ## 19. Quellformat und Wartbarkeit
 
-Der h5u-Quellstil erlaubt 180 Zeichen pro Pascal-Zeile. Die großzügige Grenze hält vor allem Property-Deklarationen und Implementationssignaturen kompakt, ohne komplexe APIs künstlich über viele kurze Zeilen zu verteilen. Erst beim Überschreiten der Grenze wird an Parameter- oder Property-Klauselgrenzen umgebrochen.
+Der h5u-Quellstil begrenzt Pascal-Code auf 150 Zeichen pro Zeile. Properties und Methodensignaturen einschließlich Implementationsköpfen bleiben bis 180 Zeichen einzeilig; darüber wird an Parameter- oder Property-Klauselgrenzen umgebrochen. Operatoren stehen bei umgebrochenen Ausdrücken am Anfang der Folgezeile.
 
 Ein konservativer Formatter und der Release-Audit prüfen diese Regel reproduzierbar. Ausführbare Anweisungen werden nicht automatisch umgebaut, damit semantisch gruppierte Ausdrücke und bewusst gestaltete Kontrollflüsse erhalten bleiben.
 

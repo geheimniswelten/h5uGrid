@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Reproducible, compiler-independent release audit for h5u.Grid.
 
 The audit intentionally checks only rules that can be verified reliably
@@ -99,6 +99,7 @@ def check_layout() -> None:
         "Build/test_tree_branch_end.py",
         "Build/test_adjacent_group_folding.py",
         "Build/format_pascal.py",
+        "Build/pascal_layout.py",
         "Build/test_pascal_format.py",
         "Docs/CODING-STYLE.md",
         ".editorconfig",
@@ -602,7 +603,7 @@ def check_pascal_formatter_semantics() -> None:
 
 
 def check_pascal_formatting() -> None:
-    name = "pascal-formatting-180"
+    name = "pascal-formatting-150-180"
     before = len(findings)
     formatter = BUILD / "format_pascal.py"
     if not formatter.is_file():
@@ -610,7 +611,7 @@ def check_pascal_formatting() -> None:
         finish(name, before)
         return
     result = subprocess.run(
-        [sys.executable, str(formatter), "--check", "--max-line-length", "180"],
+        [sys.executable, str(formatter), "--check", "--max-line-length", "150", "--max-declaration-length", "180"],
         cwd=ROOT,
         text=True,
         capture_output=True,

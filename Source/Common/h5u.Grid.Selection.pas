@@ -132,11 +132,7 @@ end;
 constructor Th5uGridSelection.Create;
 begin
   inherited Create;
-  FAllowedKinds := [
-    Th5uSelectionKind.Rows,
-    Th5uSelectionKind.Columns,
-    Th5uSelectionKind.CellRanges
-  ];
+  FAllowedKinds := [Th5uSelectionKind.Rows, Th5uSelectionKind.Columns, Th5uSelectionKind.CellRanges];
   FCombinationMode := Th5uSelectionCombinationMode.Mixed;
   FScope := Th5uSelectionScope.CurrentQuery;
   FMultiRange := True;

@@ -88,10 +88,8 @@ begin
   LRow.Severity := FNextId mod 4;
   LRow.Acknowledged := False;
   if (FNextId mod 8) = 0 then
-    LRow.MessageText :=
-      'Längerer Live-Text für AutoHeight: Der Wert stammt direkt ' +
-      'aus dem OnGetValue-Ereignis und existiert nicht als ' +
-      'Grid-Datensatzobjekt.'
+    LRow.MessageText := 'Längerer Live-Text für AutoHeight: Der Wert stammt direkt ' + 'aus dem OnGetValue-Ereignis und existiert nicht als '
+      + 'Grid-Datensatzobjekt.'
   else
     LRow.MessageText := Format('Live-Ereignis Nummer %d wurde empfangen.', [FNextId]);
 
@@ -219,9 +217,8 @@ end;
 
 procedure TMainForm.VirtualControllerPrepareRange(Sender: TObject; AFirstSourceRow, ACount: Int64; AQueryGeneration: Int64);
 begin
-  StatusLabel.Caption := Format('Viewport-Anfrage: %d..%d, QueryGeneration %d, Gesamt %d',
-    [AFirstSourceRow, AFirstSourceRow + ACount - 1, AQueryGeneration, FRows.Count]
-  );
+  StatusLabel.Caption := Format('Viewport-Anfrage: %d..%d, QueryGeneration %d, Gesamt %d', [AFirstSourceRow, AFirstSourceRow + ACount
+    - 1, AQueryGeneration, FRows.Count]);
 end;
 
 procedure TMainForm.VirtualControllerSetValue(Sender: TObject; ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue; var AHandled: Boolean);

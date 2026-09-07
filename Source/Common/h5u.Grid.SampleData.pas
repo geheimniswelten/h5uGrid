@@ -39,9 +39,7 @@ implementation
 const
   // Valid 1 x 1 PNG. Keeping the image data here makes the demo completely
   // self-contained and independent of VCL/FMX graphics classes.
-  cSamplePngBase64 =
-    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk' +
-    'YAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+  cSamplePngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk' + 'YAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
 
 { Th5uSampleClientDataSet }
 
@@ -210,12 +208,7 @@ end;
 
 procedure Th5uSampleClientDataSet.AppendSampleRows;
 const
-  cCategories: array[0..3] of string = (
-    'Mechanik',
-    'Elektronik',
-    'Montage',
-    'Prüfung'
-  );
+  cCategories: array[0..3] of string = ('Mechanik', 'Elektronik', 'Montage', 'Prüfung');
 var
   I: Integer;
   LDescription: string;
@@ -231,8 +224,8 @@ var
         Result := 0;
       1, 4, 7:
         Result := 1;
-    else
-      Result := 2;
+      else
+        Result := 2;
     end;
   end;
 
@@ -249,8 +242,8 @@ var
         Result := 3;
       6, 7, 8:
         Result := 1;
-    else
-      Result := 4;
+      else
+        Result := 4;
     end;
   end;
 begin
@@ -265,30 +258,19 @@ begin
       FieldByName('FOLD_GROUP').AsInteger := FoldGroupForRow(I);
       case LTreeLevel of
         0:
-          FieldByName('NAME').AsString := Format(
-            'Baugruppe %.2d',
-            [((I - 1) div 8) + 1]
-          );
+          FieldByName('NAME').AsString := Format('Baugruppe %.2d', [((I - 1) div 8) + 1]);
         1:
-          FieldByName('NAME').AsString := Format(
-            '  Untergruppe / Teil %.3d',
-            [I]
-          );
-      else
-        FieldByName('NAME').AsString := Format(
-          '    Bauteil %.3d',
-          [I]
-        );
+          FieldByName('NAME').AsString := Format('  Untergruppe / Teil %.3d', [I]);
+        else
+          FieldByName('NAME').AsString := Format('    Bauteil %.3d', [I]);
       end;
       FieldByName('CATEGORY').AsString := cCategories[(I - 1) mod Length(cCategories)];
 
-      LDescription :=
-        Format('Dies ist Datensatz %d. Der Text demonstriert automatische ' +
-          'Zeilenhöhe, Umbruch und ein konfigurierbares Höhenlimit.', [I]);
+      LDescription := Format('Dies ist Datensatz %d. Der Text demonstriert automatische '
+        + 'Zeilenhöhe, Umbruch und ein konfigurierbares Höhenlimit.', [I]);
       if (I mod 5) = 0 then
-        LDescription := LDescription + sLineBreak +
-          'Jede fünfte Zeile enthält bewusst eine zweite Zeile und wird ' +
-          'zusätzlich über eine periodische Style-Regel hervorgehoben.';
+        LDescription := LDescription + sLineBreak + 'Jede fünfte Zeile enthält bewusst eine zweite Zeile und wird '
+          + 'zusätzlich über eine periodische Style-Regel hervorgehoben.';
 
       FieldByName('DESCRIPTION').AsString := LDescription;
       FieldByName('QUANTITY').AsInteger := 1 + ((I * 7) mod 43);

@@ -610,7 +610,7 @@ Bei unerwartetem Verhalten zuerst prüfen:
 
 ## 21. Quellformatierung
 
-Für alle Pascal-Quellen gilt eine maximale Zeilenlänge von 180 Zeichen. Properties und Methodensignaturen bleiben einzeilig, solange sie einschließlich Einrückung in diese Grenze passen. Insbesondere Implementationsköpfe werden nicht bereits bei 80 oder 100 Zeichen umgebrochen.
+Für Pascal-Quellen gelten maximal 150 Zeichen einschließlich Einrückung. Properties und Methodensignaturen einschließlich Implementationsköpfen bleiben bis 180 Zeichen einzeilig. Bei umgebrochenen Ausdrücken stehen Operatoren am Anfang der Folgezeile.
 
 ```powershell
 python Build\format_pascal.py

@@ -109,16 +109,11 @@ var
 begin
   LDialog := TOpenDialog.Create(Self);
   try
-    LDialog.Filter :=
-      'Bilder|*.png;*.jpg;*.jpeg;*.bmp;*.gif|' +
-      'Alle Dateien|*.*';
+    LDialog.Filter := 'Bilder|*.png;*.jpg;*.jpeg;*.bmp;*.gif|' + 'Alle Dateien|*.*';
     if not LDialog.Execute then
       Exit;
 
-    LStream := TFileStream.Create(
-      LDialog.FileName,
-      fmOpenRead or fmShareDenyWrite
-    );
+    LStream := TFileStream.Create(LDialog.FileName, fmOpenRead or fmShareDenyWrite);
     try
       SetLength(FBytes, LStream.Size);
       if LStream.Size > 0 then

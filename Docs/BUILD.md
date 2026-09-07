@@ -72,7 +72,7 @@ Die Komponente `Th5uSampleClientDataSet` erzeugt ihr Schema und ihre Musterdaten
 
 ## Quellformatierung
 
-Für Delphi-Quellen gilt eine maximale Zeilenlänge von 180 Zeichen. Property-Deklarationen, prozedurale Eventtypen sowie Methoden- und Funktionssignaturen werden erst beim Überschreiten dieser Grenze umgebrochen.
+Für Delphi-Quellen gelten maximal 150 Zeichen pro Zeile. Property-Deklarationen, prozedurale Eventtypen sowie Methoden- und Funktionssignaturen bleiben bis 180 Zeichen einzeilig. Operatoren stehen bei umgebrochenen Ausdrücken am Anfang der Folgezeile.
 
 Formatierung anwenden:
 
@@ -86,7 +86,7 @@ Nur prüfen:
 python Build\format_pascal.py --check
 ```
 
-Der Formatter verändert bewusst keine ausführbaren Anweisungen. Die vollständige Regel steht in [CODING-STYLE.md](CODING-STYLE.md).
+Der Formatter verändert nur Whitespace und prüft, dass Pascal-Tokens, Zeichenketten und Kommentare erhalten bleiben. Die vollständige Regel steht in [CODING-STYLE.md](CODING-STYLE.md).
 
 ## Statischer Audit
 

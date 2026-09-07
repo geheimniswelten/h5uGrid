@@ -190,22 +190,11 @@ var
   LHandled: Boolean;
 begin
   Result := nil;
-  LClass := ResolveClass(
-    AContext,
-    AExpectedBaseClass,
-    ADefaultClass,
-    LCacheScope
-  );
+  LClass := ResolveClass(AContext, AExpectedBaseClass, ADefaultClass, LCacheScope);
 
   LHandled := False;
   if Assigned(FOnCreateInstance) then
-    FOnCreateInstance(
-      FOwner,
-      AContext,
-      LClass,
-      Result,
-      LHandled
-    );
+    FOnCreateInstance(FOwner, AContext, LClass, Result, LHandled);
 
   if not LHandled then
   begin
@@ -216,10 +205,7 @@ begin
     else if LClass.InheritsFrom(TCollectionItem) then
     begin
       if not Assigned(AContext.Collection) then
-        raise Eh5uFactory.CreateFmt(
-          'Class "%s" requires a collection in the factory context.',
-          [LClass.ClassName]
-        );
+        raise Eh5uFactory.CreateFmt('Class "%s" requires a collection in the factory context.', [LClass.ClassName]);
       Result := Th5uCollectionItemClass(LClass).Create(AContext.Collection);
     end
     else
@@ -227,19 +213,13 @@ begin
   end;
 
   if not Assigned(Result) then
-    raise Eh5uFactory.CreateFmt(
-      'The factory returned no instance for "%s".',
-      [string(AContext.ClassId)]
-    );
+    raise Eh5uFactory.CreateFmt('The factory returned no instance for "%s".', [string(AContext.ClassId)]);
 
   if not Result.InheritsFrom(AExpectedBaseClass) then
   begin
     Result.Free;
     Result := nil;
-    raise Eh5uFactory.CreateFmt(
-      'Factory instance for "%s" must inherit from "%s".',
-      [string(AContext.ClassId), AExpectedBaseClass.ClassName]
-    );
+    raise Eh5uFactory.CreateFmt('Factory instance for "%s" must inherit from "%s".', [string(AContext.ClassId), AExpectedBaseClass.ClassName]);
   end;
 
   try
@@ -278,23 +258,15 @@ begin
       if LRegistration.ClassId <> AContext.ClassId then
         Continue;
 
-      if Assigned(LRegistration.ExpectedBaseClass) and
-         not AExpectedBaseClass.InheritsFrom(
-           LRegistration.ExpectedBaseClass
-         ) and
-         not LRegistration.ExpectedBaseClass.InheritsFrom(
-           AExpectedBaseClass
-         ) then
+      if Assigned(LRegistration.ExpectedBaseClass) and not AExpectedBaseClass.InheritsFrom(LRegistration.ExpectedBaseClass)
+        and not LRegistration.ExpectedBaseClass.InheritsFrom(AExpectedBaseClass) then
         Continue;
 
-      if Assigned(LRegistration.Predicate) and
-         not LRegistration.Predicate(AContext) then
+      if Assigned(LRegistration.Predicate) and not LRegistration.Predicate(AContext) then
         Continue;
 
-      if not Assigned(LBest) or
-         (LRegistration.Priority > LBest.Priority) or
-         ((LRegistration.Priority = LBest.Priority) and
-          (LRegistration.Sequence > LBest.Sequence)) then
+      if not Assigned(LBest) or (LRegistration.Priority > LBest.Priority) or ((LRegistration.Priority = LBest.Priority) and (LRegistration.Sequence
+        > LBest.Sequence)) then
         LBest := LRegistration;
     end;
 
@@ -337,12 +309,7 @@ begin
   ACacheScope := Th5uFactoryCacheScope.ClassId;
 
   if Assigned(FParent) then
-    Result := FParent.ResolveClass(
-      AContext,
-      AExpectedBaseClass,
-      ADefaultClass,
-      ACacheScope
-    )
+    Result := FParent.ResolveClass(AContext, AExpectedBaseClass, ADefaultClass, ACacheScope)
   else
     Result := ADefaultClass;
 
@@ -400,21 +367,11 @@ end;
 procedure Th5uFactoryScope.ValidateClass(const AClassId: Th5uClassId; AClass, AExpectedBaseClass: TClass);
 begin
   if not Assigned(AClass) then
-    raise Eh5uFactory.CreateFmt(
-      'No class is registered for "%s".',
-      [string(AClassId)]
-    );
+    raise Eh5uFactory.CreateFmt('No class is registered for "%s".', [string(AClassId)]);
 
-  if Assigned(AExpectedBaseClass) and
-     not AClass.InheritsFrom(AExpectedBaseClass) then
-    raise Eh5uFactory.CreateFmt(
-      'Class "%s" registered for "%s" must inherit from "%s".',
-      [
-        AClass.ClassName,
-        string(AClassId),
-        AExpectedBaseClass.ClassName
-      ]
-    );
+  if Assigned(AExpectedBaseClass) and not AClass.InheritsFrom(AExpectedBaseClass) then
+    raise Eh5uFactory.CreateFmt('Class "%s" registered for "%s" must inherit from "%s".', [AClass.ClassName, string(AClassId),
+      AExpectedBaseClass.ClassName]);
 end;
 
 { Th5uClassFactory }

@@ -452,11 +452,7 @@ begin
       LList.Add(LColumn);
 
     LList.Remove(AColumn);
-    ANewVisibleIndex := EnsureRange(
-      ANewVisibleIndex,
-      0,
-      LList.Count
-    );
+    ANewVisibleIndex := EnsureRange(ANewVisibleIndex, 0, LList.Count);
     LList.Insert(ANewVisibleIndex, AColumn);
 
     for I := 0 to LList.Count - 1 do

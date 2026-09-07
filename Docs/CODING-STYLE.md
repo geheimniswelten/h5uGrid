@@ -1,65 +1,108 @@
 ﻿# h5u.Grid – Formatierungsrichtlinie
 
-## Maximale Zeilenlänge
+## Zeilenbreite
 
-Für Delphi-Quellen gilt eine maximale Zeilenlänge von **180 Zeichen**, einschließlich Einrückung.
+Für Delphi-/Pascal-Quellen gilt eine maximale Zeilenlänge von **150 Zeichen**,
+einschließlich Einrückung.
 
-Die Grenze ist bewusst großzügig gewählt. Insbesondere folgende Deklarationen bleiben vollständig in einer Zeile, solange sie einschließlich Einrückung höchstens 180 Zeichen lang sind:
-
-- Property-Deklarationen,
-- Methoden- und Funktionsdeklarationen,
-- Methodenköpfe in der `implementation`-Sektion,
-- prozedurale Eventtypen,
-- einfache Felddeklarationen.
-
-Beispiel:
+**Property-Deklarationen und Routinen-/Methodensignaturen dürfen bis zu 180 Zeichen
+lang sein und werden innerhalb dieser Grenze nicht umgebrochen.** Die Ausnahme
+gilt für Deklarationen, Implementationsköpfe, Konstruktoren, Destruktoren,
+Operator-Methoden und prozedurale Eventtypen. Normale Felddeklarationen und
+ausführbare Anweisungen unterliegen der 150-Zeichen-Grenze.
 
 ```pascal
 property PreserveStateOnDataChange: Boolean read FPreserveStateOnDataChange write SetPreserveStateOnDataChange default True;
 ```
 
-Auch ein Methodenkopf wird erst umgebrochen, wenn die komplette Signatur die Grenze überschreitet:
+Erst über 180 Zeichen werden Signaturen an Parametergrenzen und Properties vor
+`read`, `write`, `stored`, `default` usw. fortgesetzt. Auch diese Deklarationszeilen
+dürfen höchstens 180 Zeichen enthalten. Rückgabetyp, Abschlussklammer und Direktiven
+bleiben nach Möglichkeit beim letzten Parameter.
+
+## Operatoren auf Folgezeilen
+
+Bei notwendigen Umbrüchen steht der Operator **am Anfang der Folgezeile**.
+Das gilt insbesondere für `and`, `or`, `xor`, `+`, `-`, `*`, `/`, `div`, `mod`,
+`shl`, `shr`, `in`, `is`, `as` und Vergleichsoperatoren. Zusammengehörige Folgen
+wie `and not`, `not in` oder `is not` bleiben zusammen. Die folgenden
+Beispiele veranschaulichen die Position mit verkürzten Ausdrücken.
 
 ```pascal
-procedure Th5uVclGrid.SetAdjacentGroupCollapsed(AViewRowIndex: Int64; ACollapsed: Boolean);
+if Assigned(DataSet)
+  and DataSet.Active
+  and not DataSet.IsEmpty then
+  ReadCurrentRow;
+
+Result := FirstValue
+  + SecondValue
+  - Correction;
+
+if Th5uScrollHintTrigger.ThumbTracking
+  in FScrolling.Hint.Triggers then
+  ShowThumbHint;
 ```
 
-## Umbruch längerer Signaturen
+Der Zuweisungstrenner `:=` und das `=` einer Typ-/Konstantendeklaration sind keine
+binären Ausdrucksoperatoren und dürfen vor einem Zeilenumbruch stehen.
 
-Überschreitet eine Signatur 180 Zeichen, erfolgt der Umbruch an Parametergrenzen. Auf einer Fortsetzungszeile bleiben der letzte Parameter, die schließende Klammer, der Rückgabetyp und Direktiven nach Möglichkeit zusammen.
+## ELSE im CASE
+
+Das `else` eines `case` steht auf derselben Einrückungsebene wie die Fallwerte,
+also eine Ebene innerhalb von `case` und `end`. Die Anweisungen im Standardzweig
+werden relativ dazu eine weitere Ebene eingerückt. Ein `else`, das zu einem
+`if` gehört, folgt weiterhin der Einrückung dieses `if`.
 
 ```pascal
-procedure Th5uVclGrid.DrawSpacingRect(const ABounds: TRect; AElementKind: Th5uElementKind; AColumn: Th5uGridColumn; AViewRowIndex: Int64; const ARowKey: Th5uRowKey;
-  AColor: TColor; const AStyleName: string; ATreeLevel: Integer; AClosedTreeLevels: Integer);
+case Value of
+  1:
+    HandleFirst;
+  else
+    HandleDefault;
+end;
 ```
 
-Ausführbare Anweisungen werden vom mitgelieferten Formatter bewusst nicht automatisch umgebaut. Dadurch bleibt die Formatierung komplexer Ausdrücke, Fallunterscheidungen und fluent APIs eine bewusste Entwicklerentscheidung.
+Der Formatter berücksichtigt dabei auch verschachtelte `case`- und `if`-Anweisungen.
 
 ## Einrückung und Schreibweise
 
-- Zwei Leerzeichen je Einrückungsebene.
-- Keine Tabulatoren in Pascal-Quellen.
-- Die kanonische Markenschreibweise bleibt `h5u`, beispielsweise `Th5uVclGrid`, `Ih5uDataController` und `Eh5uFactoryError`.
-- Gemeinsame Units beginnen mit `h5u.`; Plattformfassaden heißen `Vcl.h5u...` beziehungsweise `Fmx.h5u...`.
+- Zwei Leerzeichen je Einrückungsebene; keine Tabulatoren.
+- Vorhandene CRLF-Zeilenenden und die Kodierung einschließlich BOM bleiben erhalten.
+- Die Markenschreibweise ist `h5u`, beispielsweise `Th5uVclGrid` und `Ih5uDataController`.
+- Gemeinsame Units beginnen mit `h5u.`, Plattformfassaden mit `Vcl.h5u...` bzw. `Fmx.h5u...`.
 
-## Mitgelieferter Formatter
-
-Der konservative Formatter arbeitet ausschließlich auf den oben genannten Deklarationsblöcken:
+## Formatter und Prüfung
 
 ```powershell
 python Build\format_pascal.py
-```
-
-Nur prüfen, ohne Dateien zu verändern:
-
-```powershell
 python Build\format_pascal.py --check
+python Build\test_pascal_format.py
 ```
 
-Eine abweichende Grenze kann für Tests angegeben werden:
+Der Formatter formatiert Deklarationen, bricht lange Codezeilen an Token-Grenzen
+um und stellt Operatoren auf Folgezeilen voran. Vorhandene Umbrüche in
+Ausdrücken, Bedingungen und Aufrufen werden ebenfalls neu bewertet: Was in
+150 Zeichen passt, wird zusammengezogen; längere Ausdrücke werden neu verteilt.
+Blockgrenzen, Kommentar-/Direktivengrenzen, Leerzeilen sowie strukturierte
+Unit- und Aufzählungslisten bleiben erhalten. Ein unveränderter zweiter Lauf
+erzeugt keine weiteren Änderungen. Pascal-Tokens, Zeichenketteninhalte,
+Kommentare und Compiler-Direktiven werden beim Schreiben auf Erhaltung geprüft.
+Operatoren werden nicht über Compiler-Direktiven hinweg verschoben.
+
+Einzelne unteilbare Zeichenketten, Kommentare oder Bezeichner über der zulässigen
+Breite werden nicht inhaltlich verändert. Die Prüfung meldet solche Stellen zur
+manuellen Bearbeitung und liefert einen Fehlerstatus.
+
+Die aktiven `.pas`, `.dpr`, `.dpk` und `.inc` werden rekursiv berücksichtigt.
+Git-Metadaten, `__history`, `__recovery` und Build-Ausgaben sind ausgeschlossen.
+
+Beide Grenzen sind getrennt konfigurierbar:
 
 ```powershell
-python Build\format_pascal.py --check --max-line-length 180
+python Build\format_pascal.py --check --max-line-length 150 --max-declaration-length 180
 ```
 
-Der Release-Audit ruft den Check automatisch auf. Die Datei `.editorconfig` dokumentiert dieselbe Grenze für unterstützende Editoren und IDE-Erweiterungen.
+`.editorconfig` setzt die allgemeine 150-Zeichen-Grenze. Die syntaktische Ausnahme
+für Properties/Signaturen und die Operatorposition prüft der Formatter; EditorConfig
+kann diese Unterscheidung allein nicht ausdrücken. Statischer Audit und Release-Audit
+verwenden dieselben Grenzen und dieselbe Operatorregel.

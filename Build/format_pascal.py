@@ -1,16 +1,8 @@
 #!/usr/bin/env python3
-"""Conservative declaration formatter for the h5u.Grid Pascal sources.
+"""Whitespace-only Delphi formatter: 150 columns, properties/signatures 180.
 
-The formatter deliberately leaves executable statements untouched. It only
-compacts declarations covered by the h5u coding style:
-
-* property declarations,
-* routine declarations and implementation headers,
-* procedural/event type declarations,
-* simple field declarations split directly after the colon.
-
-Declarations stay on one line whenever they fit into 180 characters. Longer
-signatures are packed greedily at parameter or property-clause boundaries.
+Binary operators begin continuation lines. Literal contents, comments, compiler
+directives, BOM and existing line endings are preserved.
 """
 from __future__ import annotations
 
@@ -21,7 +13,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
-MAX_LINE_LENGTH = 180
+from pascal_layout import (
+    comment_tokens, indent_case_else, leading_operators, opaque_lines, semantic_tokens,
+    reflow_code, tokens, trailing_operator, wrap_code_line,
+)
+
+MAX_LINE_LENGTH = 150
+MAX_DECLARATION_LENGTH = 180
+WIDE_DECLARATIONS = {"property", "routine", "procedural-type"}
 PASCAL_SUFFIXES = {".pas", ".dpr", ".dpk", ".inc"}
 
 PROPERTY_START_RE = re.compile(r"^\s*(?:class\s+)?property\b", re.I)
@@ -49,7 +48,12 @@ class CandidateBlock:
 
 def iter_pascal_files(root: Path) -> Iterable[Path]:
     for path in sorted(root.rglob("*")):
-        if path.is_file() and path.suffix.lower() in PASCAL_SUFFIXES:
+        if (
+            path.is_file()
+            and path.suffix.lower() in PASCAL_SUFFIXES
+            and not any(part.lower() in {".git", "__history", "__recovery", "__pycache__", "output", "_dcu", "_bin"}
+                        for part in path.relative_to(root).parts)
+        ):
             yield path
 
 
@@ -168,6 +172,9 @@ def find_candidate(lines: list[str], start: int) -> CandidateBlock | None:
 
 
 def normalize_joined(value: str) -> str:
+    literals = [token for token in tokens(value) if token.kind == "string"]
+    for i, token in reversed(list(enumerate(literals))):
+        value = value[:token.start] + f"\x01{i}\x02" + value[token.end:]
     value = re.sub(r"[ \t]+", " ", value.strip())
     value = re.sub(r"\(\s+", "(", value)
     value = re.sub(r"\[\s+", "[", value)
@@ -176,6 +183,8 @@ def normalize_joined(value: str) -> str:
     value = re.sub(r"\s+([,;])", r"\1", value)
     value = re.sub(r"\)\s+:\s*", "): ", value)
     value = re.sub(r"\]\s+:\s*", "]: ", value)
+    for i, token in enumerate(literals):
+        value = value.replace(f"\x01{i}\x02", token.value)
     return value
 
 
@@ -254,20 +263,7 @@ def split_property_chunks(value: str) -> list[str]:
 
 
 def split_long_chunk(chunk: str, available: int) -> list[str]:
-    words = chunk.split()
-    if not words:
-        return [chunk]
-    output: list[str] = []
-    current = words[0]
-    for word in words[1:]:
-        candidate = normalize_joined(current + " " + word)
-        if len(candidate) <= available:
-            current = candidate
-        else:
-            output.append(current)
-            current = word
-    output.append(current)
-    return output
+    return [line.strip() for line in wrap_code_line(chunk, available)]
 
 
 def declaration_chunks(value: str, kind: str, available: int) -> list[str]:
@@ -291,7 +287,7 @@ def join_chunks(chunks: list[str]) -> str:
     return normalize_joined(" ".join(chunks))
 
 
-def format_block(block: list[str], kind: str, max_length: int = MAX_LINE_LENGTH) -> list[str]:
+def format_block(block: list[str], kind: str, max_length: int = MAX_DECLARATION_LENGTH) -> list[str]:
     indent = block[0][: len(block[0]) - len(block[0].lstrip())]
     continuation_indent = indent + "  "
     stripped = [line.strip() for line in block if line.strip()]
@@ -327,56 +323,83 @@ def format_block(block: list[str], kind: str, max_length: int = MAX_LINE_LENGTH)
     ]
 
 
-def format_lines(lines: list[str], max_length: int = MAX_LINE_LENGTH) -> tuple[list[str], int]:
+def wide_line_indexes(lines: list[str]) -> set[int]:
+    indexes: set[int] = set()
+    index = 0
+    blocked = opaque_lines(lines)
+    while index < len(lines):
+        candidate = None if index in blocked else find_candidate(lines, index)
+        if candidate is None:
+            index += 1
+            continue
+        if candidate.kind in WIDE_DECLARATIONS:
+            indexes.update(range(candidate.start, candidate.end + 1))
+        index = candidate.end + 1
+    return indexes
+
+
+def line_limits(
+    lines: list[str], max_length: int = MAX_LINE_LENGTH,
+    declaration_length: int = MAX_DECLARATION_LENGTH,
+) -> list[int]:
+    wide = wide_line_indexes(lines)
+    return [declaration_length if index in wide else max_length for index in range(len(lines))]
+
+
+def format_lines(
+    lines: list[str], max_length: int = MAX_LINE_LENGTH,
+    declaration_length: int = MAX_DECLARATION_LENGTH,
+) -> tuple[list[str], int]:
     result: list[str] = []
     changed_blocks = 0
     index = 0
+    blocked = opaque_lines(lines)
     while index < len(lines):
-        candidate = find_candidate(lines, index)
+        candidate = None if index in blocked else find_candidate(lines, index)
         if candidate is None:
             result.append(lines[index].rstrip())
             index += 1
             continue
-
-        original = [line.rstrip() for line in lines[candidate.start : candidate.end + 1]]
-        formatted = format_block(original, candidate.kind, max_length)
-        if original != formatted:
-            changed_blocks += 1
+        original = [line.rstrip() for line in lines[candidate.start:candidate.end + 1]]
+        limit = declaration_length if candidate.kind in WIDE_DECLARATIONS else max_length
+        formatted = format_block(original, candidate.kind, limit)
+        changed_blocks += int(original != formatted)
         result.extend(formatted)
         index = candidate.end + 1
 
-    return result, changed_blocks
+    result = indent_case_else(result)
+    protected = wide_line_indexes(result)
+    result = leading_operators(result, protected)
+    wrapped = reflow_code(result, protected, max_length)
+
+    before, after = "\n".join(lines), "\n".join(wrapped)
+    if semantic_tokens(before) != semantic_tokens(after) or comment_tokens(before) != comment_tokens(after):
+        raise ValueError("Formatting would change Pascal tokens, literal contents or comments")
+    return wrapped, changed_blocks
 
 
-def check_file(path: Path, max_length: int = MAX_LINE_LENGTH) -> list[str]:
-    text = path.read_text(encoding="utf-8-sig", errors="strict")
-    lines = text.splitlines()
+def check_file(
+    path: Path, max_length: int = MAX_LINE_LENGTH,
+    declaration_length: int = MAX_DECLARATION_LENGTH,
+) -> list[str]:
+    lines = path.read_text(encoding="utf-8-sig", errors="strict").splitlines()
     messages: list[str] = []
-
-    for index, line in enumerate(lines, 1):
-        if len(line) > max_length:
-            messages.append(f"{path}:{index}: line has {len(line)} characters (maximum {max_length})")
-
-    index = 0
-    while index < len(lines):
-        candidate = find_candidate(lines, index)
-        if candidate is None:
-            index += 1
-            continue
-        original = [line.rstrip() for line in lines[candidate.start : candidate.end + 1]]
-        proposed = format_block(original, candidate.kind, max_length)
-        if original != proposed:
-            messages.append(
-                f"{path}:{candidate.start + 1}: {candidate.kind} declaration is wrapped before the {max_length}-character limit"
-            )
-        index = candidate.end + 1
-
+    limits = line_limits(lines, max_length, declaration_length)
+    protected = wide_line_indexes(lines) | opaque_lines(lines)
+    for index, (line, limit) in enumerate(zip(lines, limits)):
+        if len(line) > limit:
+            messages.append(f"{path}:{index + 1}: line has {len(line)} characters (maximum {limit})")
+        if index not in protected and trailing_operator(line):
+            messages.append(f"{path}:{index + 1}: binary operator must begin the continuation line")
+    proposed, _ = format_lines(lines, max_length, declaration_length)
+    if proposed != lines:
+        messages.append(f"{path}: formatting differs ({max_length}/{declaration_length} limits, continuation operators or CASE/ELSE indentation)")
     return messages
 
 
-def process_file(path: Path, check: bool, max_length: int) -> tuple[bool, int, list[str]]:
+def process_file(path: Path, check: bool, max_length: int, declaration_length: int = MAX_DECLARATION_LENGTH) -> tuple[bool, int, list[str]]:
     if check:
-        messages = check_file(path, max_length)
+        messages = check_file(path, max_length, declaration_length)
         return bool(messages), 0, messages
 
     raw = path.read_bytes()
@@ -385,7 +408,7 @@ def process_file(path: Path, check: bool, max_length: int) -> tuple[bool, int, l
     newline = "\r\n" if "\r\n" in text else "\n"
     had_final_newline = text.endswith(("\n", "\r"))
     lines = text.splitlines()
-    formatted, changed_blocks = format_lines(lines, max_length)
+    formatted, changed_blocks = format_lines(lines, max_length, declaration_length)
     new_text = newline.join(formatted)
     if had_final_newline:
         new_text += newline
@@ -393,7 +416,7 @@ def process_file(path: Path, check: bool, max_length: int) -> tuple[bool, int, l
     changed = new_raw != raw
     if changed:
         path.write_bytes(new_raw)
-    return changed, changed_blocks, []
+    return changed, changed_blocks, check_file(path, max_length, declaration_length)
 
 
 def main() -> int:
@@ -401,7 +424,10 @@ def main() -> int:
     parser.add_argument("root", nargs="?", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--check", action="store_true", help="do not write files; fail when formatting differs")
     parser.add_argument("--max-line-length", type=int, default=MAX_LINE_LENGTH)
+    parser.add_argument("--max-declaration-length", type=int, default=MAX_DECLARATION_LENGTH)
     args = parser.parse_args()
+    if args.max_line_length < 20 or args.max_declaration_length < args.max_line_length:
+        parser.error("limits must satisfy 20 <= max-line-length <= max-declaration-length")
 
     root = args.root.resolve()
     changed_files = 0
@@ -409,7 +435,7 @@ def main() -> int:
     messages: list[str] = []
 
     for path in iter_pascal_files(root):
-        changed, blocks, file_messages = process_file(path, args.check, args.max_line_length)
+        changed, blocks, file_messages = process_file(path, args.check, args.max_line_length, args.max_declaration_length)
         changed_files += int(changed)
         changed_blocks += blocks
         messages.extend(file_messages)
@@ -420,10 +446,15 @@ def main() -> int:
         if messages:
             print(f"Pascal formatting check failed with {len(messages)} finding(s).", file=sys.stderr)
             return 1
-        print(f"Pascal formatting check passed (maximum {args.max_line_length} characters).")
+        print(f"Pascal formatting check passed (code {args.max_line_length}, properties/signatures {args.max_declaration_length}; leading operators).")
         return 0
 
-    print(f"Formatted {changed_blocks} declaration block(s) in {changed_files} file(s); maximum line length {args.max_line_length}.")
+    for message in messages:
+        print(message)
+    if messages:
+        print("Some lines need manual formatting; literals and directives were preserved.", file=sys.stderr)
+        return 1
+    print(f"Formatted {changed_blocks} declaration block(s) in {changed_files} file(s); code {args.max_line_length}, properties/signatures {args.max_declaration_length}; leading operators.")
     return 0
 
 

@@ -79,9 +79,7 @@ end;
 
 function Th5uVirtualController.CacheKey(ASourceRowIndex: Int64; const AFieldName: string): string;
 begin
-  Result := IntToStr(FQueryGeneration) + '|' +
-    IntToStr(ASourceRowIndex) + '|' +
-    AFieldName.ToUpperInvariant;
+  Result := IntToStr(FQueryGeneration) + '|' + IntToStr(ASourceRowIndex) + '|' + AFieldName.ToUpperInvariant;
 end;
 
 procedure Th5uVirtualController.ClearValueCache;
@@ -137,8 +135,7 @@ var
   LKey: string;
 begin
   LKey := CacheKey(ASourceRowIndex, AFieldName);
-  if (Cache.Mode <> Th5uCacheMode.None) and
-     FValueCache.TryGetValue(LKey, Result) then
+  if (Cache.Mode <> Th5uCacheMode.None) and FValueCache.TryGetValue(LKey, Result) then
     Exit;
 
   Result := TValue.Empty;
@@ -162,8 +159,7 @@ var
   LKey: string;
   LKeys: TArray<string>;
 begin
-  LKeyPrefix := IntToStr(FQueryGeneration) + '|' +
-    IntToStr(ASourceRowIndex) + '|';
+  LKeyPrefix := IntToStr(FQueryGeneration) + '|' + IntToStr(ASourceRowIndex) + '|';
   LKeys := FValueCache.Keys.ToArray;
   for LKey in LKeys do
     if LKey.StartsWith(LKeyPrefix, True) then
@@ -212,12 +208,7 @@ begin
   inherited PrepareRange(AFirstViewRow, ACount);
   LFirstSource := MapViewToSourceIndex(AFirstViewRow);
   if (LFirstSource >= 0) and Assigned(FOnPrepareRange) then
-    FOnPrepareRange(
-      Self,
-      LFirstSource,
-      ACount,
-      FQueryGeneration
-    );
+    FOnPrepareRange(Self, LFirstSource, ACount, FQueryGeneration);
 end;
 
 procedure Th5uVirtualController.SetSourceValue(ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue);
@@ -226,20 +217,10 @@ var
 begin
   LHandled := False;
   if Assigned(FOnSetValue) then
-    FOnSetValue(
-      Self,
-      ASourceRowIndex,
-      AFieldName,
-      AValue,
-      LHandled
-    );
+    FOnSetValue(Self, ASourceRowIndex, AFieldName, AValue, LHandled);
 
   if not LHandled then
-    inherited SetSourceValue(
-      ASourceRowIndex,
-      AFieldName,
-      AValue
-    );
+    inherited SetSourceValue(ASourceRowIndex, AFieldName, AValue);
 
   NotifyRowChanged(ASourceRowIndex, AFieldName);
 end;

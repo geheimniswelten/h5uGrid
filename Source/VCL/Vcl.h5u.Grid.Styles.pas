@@ -53,18 +53,9 @@ begin
   LColor1 := ColorToRGB(AColor1);
   LColor2 := ColorToRGB(AColor2);
 
-  LR := (
-    GetRValue(LColor1) * (255 - AWeight) +
-    GetRValue(LColor2) * AWeight
-  ) div 255;
-  LG := (
-    GetGValue(LColor1) * (255 - AWeight) +
-    GetGValue(LColor2) * AWeight
-  ) div 255;
-  LB := (
-    GetBValue(LColor1) * (255 - AWeight) +
-    GetBValue(LColor2) * AWeight
-  ) div 255;
+  LR := (GetRValue(LColor1) * (255 - AWeight) + GetRValue(LColor2) * AWeight) div 255;
+  LG := (GetGValue(LColor1) * (255 - AWeight) + GetGValue(LColor2) * AWeight) div 255;
+  LB := (GetBValue(LColor1) * (255 - AWeight) + GetBValue(LColor2) * AWeight) div 255;
 
   Result := RGB(LR, LG, LB);
 end;
@@ -156,44 +147,37 @@ begin
         Result.ThumbHintText := clWhite;
       end;
 
-  else
-    begin
-      LWindow := StyleServices.GetSystemColor(clWindow);
-      LText := StyleServices.GetSystemColor(clWindowText);
-      LButton := StyleServices.GetSystemColor(clBtnFace);
-      LHighlight := StyleServices.GetSystemColor(clHighlight);
-      LHighlightText := StyleServices.GetSystemColor(clHighlightText);
+    else
+      begin
+        LWindow := StyleServices.GetSystemColor(clWindow);
+        LText := StyleServices.GetSystemColor(clWindowText);
+        LButton := StyleServices.GetSystemColor(clBtnFace);
+        LHighlight := StyleServices.GetSystemColor(clHighlight);
+        LHighlightText := StyleServices.GetSystemColor(clHighlightText);
 
-      Result.GridBackground := LButton;
-      Result.EmptyArea := LButton;
-      Result.CellBackground := LWindow;
-      Result.CellText := LText;
-      Result.CellBorder := h5uBlendColor(LText, LWindow, 205);
-      Result.HeaderBackground := LButton;
-      Result.HeaderText := StyleServices.GetSystemColor(clBtnText);
-      Result.FixedBackground := LButton;
-      Result.OddBackground := LWindow;
-      Result.EvenBackground := h5uBlendColor(LWindow, LButton, 35);
-      Result.StripeBackground := h5uBlendColor(LWindow, LHighlight, 28);
-      Result.HighlightedColumnBackground :=
-        h5uBlendColor(LWindow, clYellow, 25);
-      Result.SelectedBackground := LHighlight;
-      Result.SelectedText := LHighlightText;
-      Result.FocusBorder := LHighlight;
-      Result.ErrorBackground :=
-        h5uBlendColor(LWindow, clRed, 35);
-      Result.WarningBackground :=
-        h5uBlendColor(LWindow, clYellow, 45);
-      Result.TreeBranchEndBackground :=
-        h5uBlendColor(LWindow, LHighlight, 20);
-      Result.AdjacentGroupEndBackground :=
-        h5uBlendColor(LWindow, LHighlight, 28);
-      Result.DisabledText := StyleServices.GetSystemColor(clGrayText);
-      Result.ThumbHintBackground :=
-        StyleServices.GetSystemColor(clInfoBk);
-      Result.ThumbHintText :=
-        StyleServices.GetSystemColor(clInfoText);
-    end;
+        Result.GridBackground := LButton;
+        Result.EmptyArea := LButton;
+        Result.CellBackground := LWindow;
+        Result.CellText := LText;
+        Result.CellBorder := h5uBlendColor(LText, LWindow, 205);
+        Result.HeaderBackground := LButton;
+        Result.HeaderText := StyleServices.GetSystemColor(clBtnText);
+        Result.FixedBackground := LButton;
+        Result.OddBackground := LWindow;
+        Result.EvenBackground := h5uBlendColor(LWindow, LButton, 35);
+        Result.StripeBackground := h5uBlendColor(LWindow, LHighlight, 28);
+        Result.HighlightedColumnBackground := h5uBlendColor(LWindow, clYellow, 25);
+        Result.SelectedBackground := LHighlight;
+        Result.SelectedText := LHighlightText;
+        Result.FocusBorder := LHighlight;
+        Result.ErrorBackground := h5uBlendColor(LWindow, clRed, 35);
+        Result.WarningBackground := h5uBlendColor(LWindow, clYellow, 45);
+        Result.TreeBranchEndBackground := h5uBlendColor(LWindow, LHighlight, 20);
+        Result.AdjacentGroupEndBackground := h5uBlendColor(LWindow, LHighlight, 28);
+        Result.DisabledText := StyleServices.GetSystemColor(clGrayText);
+        Result.ThumbHintBackground := StyleServices.GetSystemColor(clInfoBk);
+        Result.ThumbHintText := StyleServices.GetSystemColor(clInfoText);
+      end;
   end;
 end;
 

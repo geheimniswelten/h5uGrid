@@ -136,16 +136,10 @@ end;
 
 procedure TestColorStreaming;
 const
-  CFormText = 'object Fixture: TColorStreamFixture'#13#10 +
-    '  Appearance.DefaultCellColor = clWhite'#13#10 +
-    '  Columns = <'#13#10 +
-    '    item Id = ''name'' Color = 16774378 end'#13#10 +
-    '    item Id = ''active'' Color = 15530218 end'#13#10 +
-    '    item Id = ''red'' Color = clRed end'#13#10 +
-    '    item Id = ''none'' Color = clNone end'#13#10 +
-    '    item Id = ''default'' Color = clDefault end'#13#10 +
-    '    item Id = ''window'' Color = clWindow end>'#13#10 +
-    'end'#13#10;
+  CFormText = 'object Fixture: TColorStreamFixture'#13#10 + '  Appearance.DefaultCellColor = clWhite'#13#10 + '  Columns = <'#13#10
+    + '    item Id = ''name'' Color = 16774378 end'#13#10 + '    item Id = ''active'' Color = 15530218 end'#13#10
+    + '    item Id = ''red'' Color = clRed end'#13#10 + '    item Id = ''none'' Color = clNone end'#13#10
+    + '    item Id = ''default'' Color = clDefault end'#13#10 + '    item Id = ''window'' Color = clWindow end>'#13#10 + 'end'#13#10;
 var
   LText: TStringStream;
   LBinary: TMemoryStream;

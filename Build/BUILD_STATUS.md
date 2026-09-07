@@ -12,7 +12,7 @@
 - Tree-Ast-Abschlussleiste mit Level-Column-/Event-Erkennung, eigenem Style und per Grid austauschbarer Factory-Zelle,
 - Adjacent-Group-Folding für unmittelbar aufeinanderfolgende gleiche IDs mit unabhängigen Wiederholungen,
 - Plus-/Minus-Faltzeichen und alternative Abschlussleiste mit den Modi `Never`, `CollapsedOnly`, `ExpandedOnly` und `Always`,
-- Pascal-Quellformat mit einer maximalen Zeilenlänge von 180 Zeichen.
+- Pascal-Quellformat: Code maximal 150 Zeichen, Properties/Signaturen maximal 180 Zeichen.
 
 ## Quellformatierung
 
@@ -34,7 +34,7 @@ Die ursprünglichen und formatierten Pascal-Quellen wurden zusätzlich lexikalis
 - PowerShell-Buildskript referenziert alle enthaltenen Packages und Demo-DPRs,
 - DFM-/FMX-Ressourcen und Eventhandler,
 - h5u-Namenskonventionen und Plattformtrennung,
-- maximale Pascal-Zeilenlänge von 180 Zeichen und keine verfrüht umgebrochenen Deklarationsblöcke,
+- Pascal-Zeilenbreiten 150/180 und Operatoren am Anfang der Folgezeile,
 - fünf fokussierte Semantiktests für Property-, Eventtyp- und Methodensignaturformatierung,
 - Factory-IDs, Optionen, Kontexte und öffentliche API des Adjacent-Group-Foldings,
 - lokale Factory-Erzeugung von Faltzeichen und Abschlussleiste in VCL und FMX,

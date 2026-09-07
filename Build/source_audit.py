@@ -17,6 +17,9 @@ from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Iterable
 
+from format_pascal import line_limits, wide_line_indexes
+from pascal_layout import opaque_lines, trailing_operator
+
 
 @dataclass
 class Finding:
@@ -176,9 +179,13 @@ def check_balanced_delimiters(
 
 def check_pascal_file(path: Path, root: Path, findings: list[Finding]) -> None:
     text = path.read_text(encoding="utf-8-sig")
-    for line_number, line in enumerate(text.splitlines(), 1):
-        if len(line) > 180:
-            findings.append(Finding("error", rel(path, root), line_number, f"line has {len(line)} characters; maximum is 180"))
+    lines = text.splitlines()
+    protected = wide_line_indexes(lines) | opaque_lines(lines)
+    for line_number, (line, limit) in enumerate(zip(lines, line_limits(lines)), 1):
+        if len(line) > limit:
+            findings.append(Finding("error", rel(path, root), line_number, f"line has {len(line)} characters; maximum is {limit}"))
+        if line_number - 1 not in protected and trailing_operator(line):
+            findings.append(Finding("error", rel(path, root), line_number, "binary operator must begin the continuation line"))
         if "\t" in line:
             findings.append(Finding("error", rel(path, root), line_number, "tab character in Pascal source"))
     match = UNIT_RE.search(text)

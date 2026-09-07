@@ -1,17 +1,10 @@
 {
-  "date": "2026-09-02",
-  "version": "0.1.4",
-  "pascal_project_files": 39,
-  "pascal_lines": 16628,
-  "maximum_allowed_line_length": 180,
-  "maximum_actual_line_length": 180,
-  "maximum_line_location": {
-    "file": "Source/VCL/Vcl.h5u.Grid.pas",
-    "line": 2269
-  },
-  "lines_over_limit": 0,
-  "tab_characters": 0,
-  "declaration_blocks_reformatted_from_0.1.3": 789,
-  "lexically_equivalent_pascal_files_to_0.1.3": 39,
-  "formatter_semantic_tests": 5
+  "date": "2026-09-07",
+  "code_line_length": 150,
+  "declaration_line_length": 180,
+  "leading_operators": true,
+  "reflow_existing_continuations": true,
+  "files": 40,
+  "findings": 0,
+  "case_else_at_label_indent": true
 }

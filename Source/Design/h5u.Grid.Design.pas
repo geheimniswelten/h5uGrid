@@ -22,14 +22,8 @@ procedure Register;
 var
   Icon: TPngImage;
 begin
-  RegisterComponents('h5u', [
-    Th5uClassFactory,
-    Th5uDataSetController,
-    Th5uMemoryController,
-    Th5uObjectListController,
-    Th5uVirtualController,
-    Th5uSampleClientDataSet
-  ]);
+  RegisterComponents('h5u', [Th5uClassFactory, Th5uDataSetController, Th5uMemoryController, Th5uObjectListController, Th5uVirtualController,
+    Th5uSampleClientDataSet]);
 
   Icon := TPngImage.Create;
   try

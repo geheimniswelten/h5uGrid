@@ -139,8 +139,7 @@ constructor Th5uDataSetController.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FDataLink := Th5uDataSetDataLink.Create(Self);
-  FSnapshotCache :=
-    TObjectDictionary<Int64, Th5uDataRowSnapshot>.Create([doOwnsValues]);
+  FSnapshotCache := TObjectDictionary<Int64, Th5uDataRowSnapshot>.Create([doOwnsValues]);
   Cache.Mode := Th5uCacheMode.Viewport;
 end;
 
@@ -171,20 +170,12 @@ begin
         Exit;
 
       for LField in LDataSet.Fields do
-        Result.Values.AddOrSetValue(
-          LField.FieldName,
-          ReadFieldValue(LField)
-        );
+        Result.Values.AddOrSetValue(LField.FieldName, ReadFieldValue(LField));
 
-      if (FKeyFieldName <> '') and
-         Assigned(LDataSet.FindField(FKeyFieldName)) then
+      if (FKeyFieldName <> '') and Assigned(LDataSet.FindField(FKeyFieldName)) then
       begin
-        LKeyValue := ReadFieldValue(
-          LDataSet.FieldByName(FKeyFieldName)
-        );
-        Result.RowKey := Th5uRowKey.FromString(
-          h5uValueToDisplayText(LKeyValue)
-        );
+        LKeyValue := ReadFieldValue(LDataSet.FieldByName(FKeyFieldName));
+        Result.RowKey := Th5uRowKey.FromString(h5uValueToDisplayText(LKeyValue));
       end
       else
         Result.RowKey := Th5uRowKey.FromInt64(ASourceRowIndex);
@@ -251,13 +242,11 @@ var
   LField: TField;
 begin
   Result := False;
-  if not Assigned(DataSet) or not DataSet.Active or
-     not DataSet.CanModify then
+  if not Assigned(DataSet) or not DataSet.Active or not DataSet.CanModify then
     Exit;
 
   LField := DataSet.FindField(AFieldName);
-  Result := Assigned(LField) and not LField.ReadOnly and
-    (LField.FieldKind = fkData);
+  Result := Assigned(LField) and not LField.ReadOnly and (LField.FieldKind = fkData);
 end;
 
 function Th5uDataSetController.GetSourceRowCount: Int64;
@@ -333,9 +322,7 @@ var
 begin
   Result := False;
   LDataSet := DataSet;
-  if not Assigned(LDataSet) or not LDataSet.Active or
-     (ASourceRowIndex < 0) or
-     (ASourceRowIndex >= LDataSet.RecordCount) then
+  if not Assigned(LDataSet) or not LDataSet.Active or (ASourceRowIndex < 0) or (ASourceRowIndex >= LDataSet.RecordCount) then
     Exit;
 
   try
@@ -387,8 +374,7 @@ begin
 
     Th5uCacheMode.Paged:
       begin
-        LFirstSource :=
-          (LFirstSource div Cache.PageSize) * Cache.PageSize;
+        LFirstSource := (LFirstSource div Cache.PageSize) * Cache.PageSize;
         LLastSource := LFirstSource + Cache.PageSize - 1;
         if LLastSource >= GetSourceRowCount then
           LLastSource := GetSourceRowCount - 1;
@@ -399,10 +385,7 @@ begin
   while LViewIndex <= LLastSource do
   begin
     if not FSnapshotCache.ContainsKey(LViewIndex) then
-      FSnapshotCache.Add(
-        LViewIndex,
-        CreateSnapshot(LViewIndex)
-      );
+      FSnapshotCache.Add(LViewIndex, CreateSnapshot(LViewIndex));
     Inc(LViewIndex);
   end;
 
@@ -410,8 +393,7 @@ begin
   begin
     LKeys := FSnapshotCache.Keys.ToArray;
     for LKey in LKeys do
-      if (LKey < LFirstSource - 32) or
-         (LKey > LLastSource + 32) then
+      if (LKey < LFirstSource - 32) or (LKey > LLastSource + 32) then
         FSnapshotCache.Remove(LKey);
   end;
 end;
@@ -452,8 +434,8 @@ begin
         end;
       end;
 
-  else
-    Result := TValue.From<string>(AField.AsString);
+    else
+      Result := TValue.From<string>(AField.AsString);
   end;
 end;
 
@@ -534,8 +516,8 @@ begin
 
     ftDate, ftTime, ftDateTime, ftTimeStamp: AField.AsDateTime := AValue.AsType<TDateTime>;
 
-  else
-    AField.AsString := AValue.ToString;
+    else
+      AField.AsString := AValue.ToString;
   end;
 end;
 

@@ -17,7 +17,7 @@ Legende:
 | Factory-Scope pro Grid | Ja | Ja | Ja | lokales Override und Kontext |
 | Shared Factory | Ja | Ja | Ja | Grid im Eventkontext |
 | GetClass/Create/Configure | Ja | Ja | Ja | Erweiterungspipeline |
-| 180-Zeichen-Quellformat | Ja | Ja | Ja | Properties und Signaturen erst bei Überschreitung umbrechen |
+| 150/180-Zeichen-Quellformat | Ja | Ja | Ja | Code 150, Properties/Signaturen 180; Operatoren auf Folgezeilen vorne |
 | sichtbare Zellobjekte/Pools | – | Ja | Ja | leichte Presenter |
 | native Style-Anbindung | – | Ja | Basis | VCL umfangreicher; FMX semantische Palette plus Styled Controls |
 | Classic2000/Modern/Dark | – | Ja | Ja | Built-in-Themes |

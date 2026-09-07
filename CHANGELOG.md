@@ -2,6 +2,13 @@
 
 ## Unveröffentlicht – 2026-09-07
 
+- `else` im `case` auf die Ebene der Fallwerte eingerückt; Formatter und vorhandene Quellen angepasst.
+
+- Quellformat auf 150 Zeichen begrenzt; Properties und Methodensignaturen bleiben bis 180 Zeichen einzeilig.
+- Bereits umgebrochene Ausdrücke und Aufrufe werden anhand der 150-Zeichen-Grenze neu verteilt.
+- Umgebrochene Ausdrücke beginnen auf Folgezeilen mit dem Operator.
+- Formatter und Audits prüfen beide Grenzen, Operatorposition und die Erhaltung von Tokens und Zeichenketten.
+
 - Farbproperties verwenden direkt `System.UITypes.TColor` und den VCL-Standard-Farbeditor.
 - Eigener Farbtyp, eigene Default-/None-Konstanten und RGB-/ARGB-Hilfsfunktionen entfernt.
 - VCL-Farben werden direkt weitergereicht; die FMX-Grenze konvertiert BGR/ARGB korrekt.

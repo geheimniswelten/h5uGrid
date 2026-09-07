@@ -25,7 +25,7 @@ Das Paket dient dazu, Architektur, API, Design-Time-Verhalten und die wichtigste
 - deaktivierbare Abstände (`0`), vererbbarer Column-Abstand (`RightSpacing = -1`) und eigene Grid-/Column-Farben,
 - Tree-Abschlussleiste nach dem letzten sichtbaren Child: größere Höhe und eigener Style ersetzen dort das normale Row-Spacing.
 - Adjacent-Group-Folding für direkt aufeinanderfolgende gleiche IDs: unabhängige Läufe, Plus-/Minus-Symbol, unveränderte Quellreihenfolge und Abschlussleiste wahlweise nie, nur eingeklappt, nur ausgeklappt oder immer.
-- Delphi-Quellen mit 180-Zeichen-Grenze; Properties und Methodensignaturen bleiben bis zu dieser Grenze einzeilig.
+- Delphi-Quellen mit 150-Zeichen-Grenze; Properties und Methodensignaturen bleiben bis 180 Zeichen einzeilig. Operatoren stehen bei Umbrüchen vorne.
 
 Die VCL-Ausgabe bildet im ersten Stand den umfassenderen Referenzpfad. Die FMX-Ausgabe verwendet denselben Core und dieselben Controller, besitzt aber noch nicht bei allen Komfortfunktionen vollständige Parität. Die genaue Abdeckung steht in der [Funktionsmatrix](Docs/FEATURE-MATRIX.md).
 

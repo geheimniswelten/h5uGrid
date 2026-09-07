@@ -469,11 +469,8 @@ var
 begin
   LRange := Self;
   LRange.Normalize;
-  Result :=
-    (ARowIndex >= LRange.StartRowIndex) and
-    (ARowIndex <= LRange.EndRowIndex) and
-    (AColumnIndex >= LRange.StartColumnIndex) and
-    (AColumnIndex <= LRange.EndColumnIndex);
+  Result := (ARowIndex >= LRange.StartRowIndex) and (ARowIndex <= LRange.EndRowIndex) and (AColumnIndex >= LRange.StartColumnIndex) and (AColumnIndex
+    <= LRange.EndColumnIndex);
 end;
 
 class function Th5uCellRange.Create(AStartRow, AEndRow: Int64; AStartColumn, AEndColumn: Integer): Th5uCellRange;
