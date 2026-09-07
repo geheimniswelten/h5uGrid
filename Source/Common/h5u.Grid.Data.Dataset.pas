@@ -21,8 +21,8 @@ type
     FOwner: Th5uDatasetController;
   protected
     procedure ActiveChanged; override;
-    procedure DatasetChanged; override;
-    procedure DatasetScrolled(Distance: Integer); override;
+    procedure DataSetChanged; override;
+    procedure DataSetScrolled(Distance: Integer); override;
     procedure LayoutChanged; override;
     procedure RecordChanged(Field: TField); override;
   public
@@ -81,7 +81,7 @@ implementation
 
 procedure Th5uDatasetDataLink.ActiveChanged;
 begin
-  inherited ActiveChanged;
+  inherited;
   FOwner.DatasetChanged(Th5uDataChangeKind.Reset);
 end;
 
@@ -91,26 +91,26 @@ begin
   FOwner := AOwner;
 end;
 
-procedure Th5uDatasetDataLink.DatasetChanged;
+procedure Th5uDatasetDataLink.DataSetChanged;
 begin
-  inherited DatasetChanged;
+  inherited;
   FOwner.DatasetChanged(Th5uDataChangeKind.RowsChanged);
 end;
 
-procedure Th5uDatasetDataLink.DatasetScrolled(Distance: Integer);
+procedure Th5uDatasetDataLink.DataSetScrolled(Distance: Integer);
 begin
-  inherited DatasetScrolled(Distance);
+  inherited;
 end;
 
 procedure Th5uDatasetDataLink.LayoutChanged;
 begin
-  inherited LayoutChanged;
+  inherited;
   FOwner.DatasetChanged(Th5uDataChangeKind.LayoutChanged);
 end;
 
 procedure Th5uDatasetDataLink.RecordChanged(Field: TField);
 begin
-  inherited RecordChanged(Field);
+  inherited;
   FOwner.DatasetChanged(Th5uDataChangeKind.CellChanged, Field);
 end;
 
@@ -118,14 +118,14 @@ end;
 
 constructor Th5uDataRowSnapshot.Create;
 begin
-  inherited Create;
+  inherited;
   FValues := TDictionary<string, TValue>.Create;
 end;
 
 destructor Th5uDataRowSnapshot.Destroy;
 begin
   FValues.Free;
-  inherited Destroy;
+  inherited;
 end;
 
 { Th5uDatasetController }
@@ -138,7 +138,7 @@ end;
 
 constructor Th5uDatasetController.Create(AOwner: TComponent);
 begin
-  inherited Create(AOwner);
+  inherited;
   FDataLink := Th5uDatasetDataLink.Create(Self);
   FSnapshotCache := TObjectDictionary<Int64, Th5uDataRowSnapshot>.Create([doOwnsValues]);
   Cache.Mode := Th5uCacheMode.Viewport;
@@ -222,12 +222,12 @@ begin
   FDataLink.DataSource := nil;
   FSnapshotCache.Free;
   FDataLink.Free;
-  inherited Destroy;
+  inherited;
 end;
 
 procedure Th5uDatasetController.DoCacheOptionsChanged;
 begin
-  inherited DoCacheOptionsChanged;
+  inherited;
   ClearSnapshotCache;
 end;
 
@@ -278,7 +278,7 @@ begin
     Exit(LSnapshot.RowKey);
   end;
 
-  Result := inherited GetSourceRowKey(ASourceRowIndex);
+  Result := inherited;
 end;
 
 function Th5uDatasetController.GetSourceValue(ASourceRowIndex: Int64; const AFieldName: string): TValue;
@@ -354,7 +354,7 @@ end;
 
 procedure Th5uDatasetController.Notification(AComponent: TComponent; Operation: TOperation);
 begin
-  inherited Notification(AComponent, Operation);
+  inherited;
   if (Operation = opRemove) and (AComponent = FDataSource) then
     DataSource := nil;
 end;
@@ -367,7 +367,7 @@ var
   LKeys: TArray<Int64>;
   LKey: Int64;
 begin
-  inherited PrepareRange(AFirstViewRow, ACount);
+  inherited;
   if Cache.Mode = Th5uCacheMode.None then
     Exit;
 

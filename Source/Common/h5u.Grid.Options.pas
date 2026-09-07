@@ -369,7 +369,7 @@ begin
     Changed;
   end
   else
-    inherited Assign(Source);
+    inherited;
 end;
 
 procedure Th5uGridSpacingOptions.Changed;
@@ -380,7 +380,7 @@ end;
 
 constructor Th5uGridSpacingOptions.Create;
 begin
-  inherited Create;
+  inherited;
   FLeft := 1;
   FTop := 1;
   FRight := 1;
@@ -492,7 +492,7 @@ begin
     Changed;
   end
   else
-    inherited Assign(Source);
+    inherited;
 end;
 
 procedure Th5uGridAppearanceOptions.Changed;
@@ -503,7 +503,7 @@ end;
 
 constructor Th5uGridAppearanceOptions.Create;
 begin
-  inherited Create;
+  inherited;
   FDefaultCellColor := TColorRec.SysDefault;
 end;
 
@@ -532,7 +532,7 @@ begin
     Changed;
   end
   else
-    inherited Assign(Source);
+    inherited;
 end;
 
 procedure Th5uTreeBranchEndBandOptions.Changed;
@@ -543,7 +543,7 @@ end;
 
 constructor Th5uTreeBranchEndBandOptions.Create;
 begin
-  inherited Create;
+  inherited;
   FEnabled := False;
   FHeight := 6;
   FColor := TColorRec.SysDefault;
@@ -606,7 +606,7 @@ begin
     Changed;
   end
   else
-    inherited Assign(Source);
+    inherited;
 end;
 
 procedure Th5uTreeOptions.Changed;
@@ -622,7 +622,7 @@ end;
 
 constructor Th5uTreeOptions.Create;
 begin
-  inherited Create;
+  inherited;
   FEnabled := False;
   FBranchEndBand := Th5uTreeBranchEndBandOptions.Create;
   FBranchEndBand.OnChanged := ChildChanged;
@@ -631,7 +631,7 @@ end;
 destructor Th5uTreeOptions.Destroy;
 begin
   FBranchEndBand.Free;
-  inherited Destroy;
+  inherited;
 end;
 
 procedure Th5uTreeOptions.SetBranchEndBand(const AValue: Th5uTreeBranchEndBandOptions);
@@ -672,7 +672,7 @@ begin
     Changed;
   end
   else
-    inherited Assign(Source);
+    inherited;
 end;
 
 procedure Th5uAdjacentGroupEndBandOptions.Changed;
@@ -683,7 +683,7 @@ end;
 
 constructor Th5uAdjacentGroupEndBandOptions.Create;
 begin
-  inherited Create;
+  inherited;
   FVisibility := Th5uAdjacentGroupEndBandVisibility.Never;
   FHeight := 6;
   FColor := TColorRec.SysDefault;
@@ -742,7 +742,7 @@ begin
     Changed;
   end
   else
-    inherited Assign(Source);
+    inherited;
 end;
 
 procedure Th5uAdjacentGroupFoldingOptions.Changed;
@@ -758,7 +758,7 @@ end;
 
 constructor Th5uAdjacentGroupFoldingOptions.Create;
 begin
-  inherited Create;
+  inherited;
   FEnabled := False;
   FInitialState := Th5uAdjacentGroupInitialState.Expanded;
   FShowFoldGlyph := True;
@@ -772,7 +772,7 @@ end;
 destructor Th5uAdjacentGroupFoldingOptions.Destroy;
 begin
   FEndBand.Free;
-  inherited Destroy;
+  inherited;
 end;
 
 procedure Th5uAdjacentGroupFoldingOptions.SetCaseSensitive(const AValue: Boolean);
@@ -855,7 +855,7 @@ begin
     Changed;
   end
   else
-    inherited Assign(Source);
+    inherited;
 end;
 
 procedure Th5uRowHeightOptions.Changed;
@@ -866,7 +866,7 @@ end;
 
 constructor Th5uRowHeightOptions.Create;
 begin
-  inherited Create;
+  inherited;
   FMode := Th5uRowHeightMode.Fixed;
   FFixedHeight := 24;
   FMinHeight := 20;
@@ -924,7 +924,7 @@ begin
     Changed;
   end
   else
-    inherited Assign(Source);
+    inherited;
 end;
 
 procedure Th5uScrollingOptions.Changed;
@@ -935,7 +935,7 @@ end;
 
 constructor Th5uScrollingOptions.Create;
 begin
-  inherited Create;
+  inherited;
   FVerticalMode := Th5uVerticalScrollMode.Pixel;
   FHorizontalMode := Th5uHorizontalScrollMode.Pixel;
   FOverscanRows := 2;
@@ -959,12 +959,12 @@ begin
     FUseHeaderPath := LSource.FUseHeaderPath;
   end
   else
-    inherited Assign(Source);
+    inherited;
 end;
 
 constructor Th5uScrollHintOptions.Create;
 begin
-  inherited Create;
+  inherited;
   FEnabled := True;
   FTriggers := [Th5uScrollHintTrigger.ThumbTracking];
   FShowRowPosition := True;
@@ -986,7 +986,7 @@ begin
     Changed;
   end
   else
-    inherited Assign(Source);
+    inherited;
 end;
 
 procedure Th5uPaginationOptions.Changed;
@@ -997,7 +997,7 @@ end;
 
 constructor Th5uPaginationOptions.Create;
 begin
-  inherited Create;
+  inherited;
   FMode := Th5uPaginationMode.Continuous;
   FPageSize := 100;
   FPageIndex := 0;
@@ -1033,7 +1033,7 @@ begin
     Changed;
   end
   else
-    inherited Assign(Source);
+    inherited;
 end;
 
 procedure Th5uCacheOptions.Changed;
@@ -1044,7 +1044,7 @@ end;
 
 constructor Th5uCacheOptions.Create;
 begin
-  inherited Create;
+  inherited;
   FMode := Th5uCacheMode.Viewport;
   FPageSize := 200;
   FMaxCachedPages := 8;
@@ -1073,12 +1073,12 @@ begin
     FRestartAtPage := LSource.FRestartAtPage;
   end
   else
-    inherited Assign(Source);
+    inherited;
 end;
 
 constructor Th5uRowStyleOptions.Create;
 begin
-  inherited Create;
+  inherited;
   FStripePeriod := 2;
   FStripeOffset := 1;
   FStripeStyleName := 'Stripe';
@@ -1092,7 +1092,7 @@ end;
 destructor Th5uRowStyleOptions.Destroy;
 begin
   FMappings.Free;
-  inherited Destroy;
+  inherited;
 end;
 
 function Th5uRowStyleOptions.ResolveStyle(AViewRowIndex: Int64; AStyleKey: Integer; AHasStyleKey: Boolean): string;
@@ -1135,12 +1135,12 @@ begin
     FShowColumnChooser := LSource.FShowColumnChooser;
   end
   else
-    inherited Assign(Source);
+    inherited;
 end;
 
 constructor Th5uCustomizationOptions.Create;
 begin
-  inherited Create;
+  inherited;
   FAllowColumnMoving := True;
   FAllowColumnHiding := True;
   FAllowColumnResizing := True;

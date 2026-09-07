@@ -34,7 +34,7 @@ type
 
 constructor TColorStreamFixture.Create(AOwner: TComponent);
 begin
-  inherited Create(AOwner);
+  inherited;
   FColumns := Th5uGridColumns.Create(Self);
   FAppearance := Th5uGridAppearanceOptions.Create;
 end;

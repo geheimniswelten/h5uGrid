@@ -60,7 +60,7 @@ end;
 destructor Th5uMemoryRow.Destroy;
 begin
   FValues.Free;
-  inherited Destroy;
+  inherited;
 end;
 
 function Th5uMemoryRow.GetValue(const AFieldName: string): TValue;
@@ -116,7 +116,7 @@ end;
 
 constructor Th5uMemoryController.Create(AOwner: TComponent);
 begin
-  inherited Create(AOwner);
+  inherited;
   FRows := TObjectList<Th5uMemoryRow>.Create(True);
   FNextKey := 0;
   Cache.Mode := Th5uCacheMode.None;
@@ -140,7 +140,7 @@ end;
 destructor Th5uMemoryController.Destroy;
 begin
   FRows.Free;
-  inherited Destroy;
+  inherited;
 end;
 
 function Th5uMemoryController.GetSourceCanEdit(ASourceRowIndex: Int64; const AFieldName: string): Boolean;

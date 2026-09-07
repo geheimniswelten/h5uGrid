@@ -56,7 +56,7 @@ end;
 
 constructor Th5uFmxImageEditor.Create(AOwner: TComponent);
 begin
-  inherited Create(AOwner);
+  inherited;
   Width := 420;
   Height := 300;
   ClipChildren := True;

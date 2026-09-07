@@ -50,7 +50,7 @@ begin
     FailNextRead := False;
     raise EReadFailure.Create('Injected field read failure');
   end;
-  Result := inherited GetAsString;
+  Result := inherited;
 end;
 
 procedure Check(ACondition: Boolean; const AMessage: string);
@@ -97,7 +97,7 @@ begin
   Controller.Free;
   Source.Free;
   Data.Free;
-  inherited Destroy;
+  inherited;
 end;
 
 procedure TFixture.Changed(Sender: TObject; const AChange: Th5uDataChange);

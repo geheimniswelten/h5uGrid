@@ -535,7 +535,7 @@ end;
 destructor Th5uFmxDataCell.Destroy;
 begin
   FBitmap.Free;
-  inherited Destroy;
+  inherited;
 end;
 
 procedure Th5uFmxDataCell.EnsureBitmap;
@@ -591,7 +591,7 @@ var
   LWidth: Single;
   LHeight: Single;
 begin
-  inherited PaintDefault(AGrid, ACanvas);
+  inherited;
   if not (Context.Column is Th5uGridColumn) then
     Exit;
 
@@ -913,7 +913,7 @@ end;
 
 constructor Th5uFmxGrid.Create(AOwner: TComponent);
 begin
-  inherited Create(AOwner);
+  inherited;
 
   FFactoryScope := Th5uFactoryScope.Create(Self);
   FFactoryScope.Parent := h5uGlobalFactoryScope;
@@ -1027,14 +1027,14 @@ begin
   FHeaderLayout.Free;
   FColumns.Free;
   FFactoryScope.Free;
-  inherited Destroy;
+  inherited;
 end;
 
 procedure Th5uFmxGrid.DblClick;
 var
   LHit: Th5uFmxHitTestInfo;
 begin
-  inherited DblClick;
+  inherited;
   LHit := GridHitTest(FLastMousePoint.X, FLastMousePoint.Y);
   if LHit.Kind = Th5uFmxHitKind.DataCell then
     StartEdit(LHit);
@@ -2283,7 +2283,7 @@ end;
 
 procedure Th5uFmxGrid.Loaded;
 begin
-  inherited Loaded;
+  inherited;
   LayoutScrollBars;
   // Paint refreshes data-dependent layout; FormCreate may not have run yet.
   Repaint;
@@ -2335,7 +2335,7 @@ var
   LHit: Th5uFmxHitTestInfo;
   LCell: Th5uCellAddress;
 begin
-  inherited MouseDown(Button, Shift, X, Y);
+  inherited;
   FLastMousePoint := PointF(X, Y);
   if Button <> TMouseButton.mbLeft then
     Exit;
@@ -2372,7 +2372,7 @@ end;
 
 procedure Th5uFmxGrid.MouseMove(Shift: TShiftState; X, Y: Single);
 begin
-  inherited MouseMove(Shift, X, Y);
+  inherited;
   FLastMousePoint := PointF(X, Y);
 end;
 
@@ -2380,7 +2380,7 @@ procedure Th5uFmxGrid.MouseWheel(Shift: TShiftState; WheelDelta: Integer; var Ha
 var
   LDelta: Single;
 begin
-  inherited MouseWheel(Shift, WheelDelta, Handled);
+  inherited;
   LDelta := FScrolling.WheelRows * (FRowHeight.EstimatedHeight + FSpacing.RowSpacing);
   if WheelDelta > 0 then
     FVerticalOffset := FVerticalOffset - LDelta
@@ -2539,7 +2539,7 @@ end;
 
 procedure Th5uFmxGrid.Notification(AComponent: TComponent; Operation: TOperation);
 begin
-  inherited Notification(AComponent, Operation);
+  inherited;
   if Operation <> opRemove then
     Exit;
   if AComponent = FDataController then
@@ -2564,7 +2564,7 @@ var
 begin
   if not CanUpdateLayout then
     Exit;
-  inherited Paint;
+  inherited;
   LPalette := h5uGetFmxPalette(FTheme);
   Canvas.Fill.Kind := TBrushKind.Solid;
   Canvas.Fill.Color := LPalette.EmptyArea;
@@ -2624,7 +2624,7 @@ end;
 
 procedure Th5uFmxGrid.Resize;
 begin
-  inherited Resize;
+  inherited;
   if not CanUpdateLayout then
     Exit;
   LayoutScrollBars;

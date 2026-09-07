@@ -269,7 +269,7 @@ begin
     Changed;
   end
   else
-    inherited Assign(Source);
+    inherited;
 end;
 
 procedure Th5uGridColumn.Changed;
@@ -279,7 +279,7 @@ end;
 
 constructor Th5uGridColumn.Create(Collection: TCollection);
 begin
-  inherited Create(Collection);
+  inherited;
   FId := '';
   FCaption := '';
   FFieldName := '';
@@ -318,7 +318,7 @@ begin
   else if FFieldName <> '' then
     Result := FFieldName
   else
-    Result := inherited GetDisplayName;
+    Result := inherited;
 end;
 
 procedure Th5uGridColumn.SetColor(const AValue: TColor);
@@ -486,7 +486,7 @@ end;
 
 procedure Th5uGridColumns.Update(Item: TCollectionItem);
 begin
-  inherited Update(Item);
+  inherited;
   if Assigned(FOnChanged) then
     FOnChanged(Self, Th5uGridColumn(Item));
 end;
@@ -513,7 +513,7 @@ end;
 
 constructor Th5uHeaderLayoutCell.Create(Collection: TCollection);
 begin
-  inherited Create(Collection);
+  inherited;
   FRowSpan := 1;
   FColumnSpan := 1;
   FClassId := h5uClassIdGridHeaderGroupCell;
@@ -526,7 +526,7 @@ begin
   else if FId <> '' then
     Result := FId
   else
-    Result := inherited GetDisplayName;
+    Result := inherited;
 end;
 
 { Th5uHeaderLayoutCells }
@@ -557,7 +557,7 @@ begin
     FCells.Assign(Th5uHeaderLayout(Source).FCells);
   end
   else
-    inherited Assign(Source);
+    inherited;
 end;
 
 constructor Th5uHeaderLayout.Create(AOwner: TPersistent);
@@ -572,7 +572,7 @@ end;
 destructor Th5uHeaderLayout.Destroy;
 begin
   FCells.Free;
-  inherited Destroy;
+  inherited;
 end;
 
 procedure Th5uHeaderLayout.SetCells(const AValue: Th5uHeaderLayoutCells);

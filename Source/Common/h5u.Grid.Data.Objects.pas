@@ -93,7 +93,7 @@ end;
 
 constructor Th5uObjectListController.Create(AOwner: TComponent);
 begin
-  inherited Create(AOwner);
+  inherited;
   FItems := TList<TObject>.Create;
   FOwnsObjects := False;
   FRttiContext := TRttiContext.Create;
@@ -130,12 +130,12 @@ begin
   FPropertyCache.Free;
   FRttiContext.Free;
   FItems.Free;
-  inherited Destroy;
+  inherited;
 end;
 
 procedure Th5uObjectListController.DoCacheOptionsChanged;
 begin
-  inherited DoCacheOptionsChanged;
+  inherited;
   ClearValueCache;
 end;
 
@@ -189,7 +189,7 @@ begin
       Exit(Th5uRowKey.FromString(LValue.ToString));
   end;
 
-  Result := inherited GetSourceRowKey(ASourceRowIndex);
+  Result := inherited;
 end;
 
 function Th5uObjectListController.GetSourceValue(ASourceRowIndex: Int64; const AFieldName: string): TValue;

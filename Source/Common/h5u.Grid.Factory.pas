@@ -237,7 +237,7 @@ destructor Th5uFactoryScope.Destroy;
 begin
   FLock.Free;
   FRegistrations.Free;
-  inherited Destroy;
+  inherited;
 end;
 
 function Th5uFactoryScope.FindLocalClass(const AContext: Th5uFactoryContext; AExpectedBaseClass: TClass): TClass;
@@ -378,7 +378,7 @@ end;
 
 constructor Th5uClassFactory.Create(AOwner: TComponent);
 begin
-  inherited Create(AOwner);
+  inherited;
   FScope := Th5uFactoryScope.Create(Self);
   FScope.Parent := h5uGlobalFactoryScope;
 end;
@@ -386,7 +386,7 @@ end;
 destructor Th5uClassFactory.Destroy;
 begin
   FScope.Free;
-  inherited Destroy;
+  inherited;
 end;
 
 function Th5uClassFactory.GetOnConfigureInstance: Th5uConfigureInstanceEvent;

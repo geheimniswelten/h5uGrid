@@ -49,7 +49,7 @@ end;
 
 constructor Th5uVclImageEditForm.Create(AOwner: TComponent);
 begin
-  inherited CreateNew(AOwner);
+  inherited;
   Caption := 'Bild bearbeiten';
   BorderStyle := bsSizeable;
   Position := poOwnerFormCenter;

@@ -131,7 +131,7 @@ end;
 
 constructor Th5uGridSelection.Create;
 begin
-  inherited Create;
+  inherited;
   FAllowedKinds := [Th5uSelectionKind.Rows, Th5uSelectionKind.Columns, Th5uSelectionKind.CellRanges];
   FCombinationMode := Th5uSelectionCombinationMode.Mixed;
   FScope := Th5uSelectionScope.CurrentQuery;
@@ -151,7 +151,7 @@ begin
   FCellRanges.Free;
   FSelectedColumns.Free;
   FSelectedRows.Free;
-  inherited Destroy;
+  inherited;
 end;
 
 procedure Th5uGridSelection.ExcludeRow(const ARowKey: Th5uRowKey);
@@ -330,7 +330,7 @@ begin
     Changed;
   end
   else
-    inherited Assign(Source);
+    inherited;
 end;
 
 end.

@@ -246,7 +246,7 @@ end;
 
 constructor Th5uAdjacentGroupMap.Create;
 begin
-  inherited Create;
+  inherited;
   FRuns := TList<Th5uAdjacentGroupRun>.Create;
   FVisibleControllerRows := TList<Int64>.Create;
   FVisibleGroupIndexes := TList<Integer>.Create;
@@ -259,7 +259,7 @@ begin
   FVisibleGroupIndexes.Free;
   FVisibleControllerRows.Free;
   FRuns.Free;
-  inherited Destroy;
+  inherited;
 end;
 
 procedure Th5uAdjacentGroupMap.EndBuild;

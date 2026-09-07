@@ -607,7 +607,7 @@ end;
 destructor Th5uVclDataCell.Destroy;
 begin
   FPicture.Free;
-  inherited Destroy;
+  inherited;
 end;
 
 procedure Th5uVclDataCell.EnsurePicture;
@@ -662,7 +662,7 @@ var
   LHeight: Integer;
   LPalette: Th5uVclPalette;
 begin
-  inherited PaintDefault(AGrid, ACanvas);
+  inherited;
   if not (Context.Column is Th5uGridColumn) then
     Exit;
 
@@ -1124,7 +1124,7 @@ end;
 
 constructor Th5uVclGrid.Create(AOwner: TComponent);
 begin
-  inherited Create(AOwner);
+  inherited;
   ControlStyle := ControlStyle + [csOpaque, csDoubleClicks];
 
   FFactoryScope := Th5uFactoryScope.Create(Self);
@@ -1243,7 +1243,7 @@ begin
   FHeaderLayout.Free;
   FColumns.Free;
   FFactoryScope.Free;
-  inherited Destroy;
+  inherited;
 end;
 
 procedure Th5uVclGrid.DblClick;
@@ -1251,7 +1251,7 @@ var
   LPoint: TPoint;
   LHit: Th5uHitTestInfo;
 begin
-  inherited DblClick;
+  inherited;
   LPoint := ScreenToClient(Mouse.CursorPos);
   LHit := HitTest(LPoint.X, LPoint.Y);
   if LHit.Kind = Th5uHitKind.DataCell then
@@ -2726,7 +2726,7 @@ end;
 
 procedure Th5uVclGrid.Loaded;
 begin
-  inherited Loaded;
+  inherited;
   LayoutScrollBars;
   // Paint refreshes data-dependent layout; FormCreate may not have run yet.
   Invalidate;
@@ -2804,7 +2804,7 @@ var
   LRange: Th5uCellRange;
   LNearRightEdge: Boolean;
 begin
-  inherited MouseDown(Button, Shift, X, Y);
+  inherited;
   SetFocus;
   FMouseDownHit := HitTest(X, Y);
 
@@ -2874,7 +2874,7 @@ var
   LHit: Th5uHitTestInfo;
   LRange: Th5uCellRange;
 begin
-  inherited MouseMove(Shift, X, Y);
+  inherited;
 
   if Assigned(FResizingColumn) then
   begin
@@ -2898,7 +2898,7 @@ procedure Th5uVclGrid.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: In
 var
   LHit: Th5uHitTestInfo;
 begin
-  inherited MouseUp(Button, Shift, X, Y);
+  inherited;
 
   if Assigned(FResizingColumn) then
   begin
@@ -3065,7 +3065,7 @@ end;
 
 procedure Th5uVclGrid.Notification(AComponent: TComponent; Operation: TOperation);
 begin
-  inherited Notification(AComponent, Operation);
+  inherited;
   if Operation <> opRemove then
     Exit;
 
@@ -3165,7 +3165,7 @@ end;
 
 procedure Th5uVclGrid.Resize;
 begin
-  inherited Resize;
+  inherited;
   if not CanUpdateLayout then
     Exit;
   LayoutScrollBars;

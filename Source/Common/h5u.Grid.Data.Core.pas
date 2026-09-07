@@ -203,7 +203,7 @@ end;
 destructor Th5uDataControllerLink.Destroy;
 begin
   Controller := nil;
-  inherited Destroy;
+  inherited;
 end;
 
 procedure Th5uDataControllerLink.SetController(const AValue: Th5uCustomDataController);
@@ -224,7 +224,7 @@ end;
 
 constructor Th5uDataViewSession.Create(const AContext: Th5uFactoryContext);
 begin
-  inherited Create(AContext);
+  inherited;
   FGrid := AContext.Grid;
   FView := AContext.View;
   if AContext.DataController is Th5uCustomDataController then
@@ -262,7 +262,7 @@ end;
 
 constructor Th5uCustomDataController.Create(AOwner: TComponent);
 begin
-  inherited Create(AOwner);
+  inherited;
   FLinks := TList<Th5uDataControllerLink>.Create;
   FFactoryScope := Th5uFactoryScope.Create(Self);
   FFactoryScope.Parent := h5uGlobalFactoryScope;
@@ -292,7 +292,7 @@ begin
   FCache.Free;
   FFactoryScope.Free;
   FLinks.Free;
-  inherited Destroy;
+  inherited;
 end;
 
 procedure Th5uCustomDataController.DoCacheOptionsChanged;
@@ -428,7 +428,7 @@ end;
 
 procedure Th5uCustomDataController.Notification(AComponent: TComponent; Operation: TOperation);
 begin
-  inherited Notification(AComponent, Operation);
+  inherited;
   if (Operation = opRemove) and (AComponent = FSharedClassFactory) then
     SharedClassFactory := nil;
 end;

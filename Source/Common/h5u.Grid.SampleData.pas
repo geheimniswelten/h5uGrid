@@ -46,7 +46,7 @@ const
 
 constructor Th5uSampleClientDataset.Create(AOwner: TComponent);
 begin
-  inherited Create(AOwner);
+  inherited;
   FAutoCreateSampleData := True;
   FIncludeImages := True;
   FSampleRowCount := 25;
@@ -59,7 +59,7 @@ end;
 
 procedure Th5uSampleClientDataset.Loaded;
 begin
-  inherited Loaded;
+  inherited;
   if FRecreateAfterLoading and FAutoCreateSampleData then
     RecreateSampleData
   else

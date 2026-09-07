@@ -89,7 +89,7 @@ end;
 
 constructor Th5uVirtualController.Create(AOwner: TComponent);
 begin
-  inherited Create(AOwner);
+  inherited;
   FValueCache := TDictionary<string, TValue>.Create;
   FQueryGeneration := 1;
   Cache.Mode := Th5uCacheMode.Viewport;
@@ -98,12 +98,12 @@ end;
 destructor Th5uVirtualController.Destroy;
 begin
   FValueCache.Free;
-  inherited Destroy;
+  inherited;
 end;
 
 procedure Th5uVirtualController.DoCacheOptionsChanged;
 begin
-  inherited DoCacheOptionsChanged;
+  inherited;
   ClearValueCache;
 end;
 
@@ -125,7 +125,7 @@ end;
 
 function Th5uVirtualController.GetSourceRowKey(ASourceRowIndex: Int64): Th5uRowKey;
 begin
-  Result := inherited GetSourceRowKey(ASourceRowIndex);
+  Result := inherited;
   if Assigned(FOnGetRowKey) then
     FOnGetRowKey(Self, ASourceRowIndex, Result);
 end;
@@ -205,7 +205,7 @@ procedure Th5uVirtualController.PrepareRange(AFirstViewRow, ACount: Int64);
 var
   LFirstSource: Int64;
 begin
-  inherited PrepareRange(AFirstViewRow, ACount);
+  inherited;
   LFirstSource := MapViewToSourceIndex(AFirstViewRow);
   if (LFirstSource >= 0) and Assigned(FOnPrepareRange) then
     FOnPrepareRange(Self, LFirstSource, ACount, FQueryGeneration);
@@ -220,7 +220,7 @@ begin
     FOnSetValue(Self, ASourceRowIndex, AFieldName, AValue, LHandled);
 
   if not LHandled then
-    inherited SetSourceValue(ASourceRowIndex, AFieldName, AValue);
+    inherited;
 
   NotifyRowChanged(ASourceRowIndex, AFieldName);
 end;

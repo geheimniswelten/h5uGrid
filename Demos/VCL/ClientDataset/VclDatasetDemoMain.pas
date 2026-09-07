@@ -84,7 +84,7 @@ var
   LPriority: Integer;
   LRect: TRect;
 begin
-  inherited PaintDefault(AGrid, ACanvas);
+  inherited;
   if Value.IsEmpty then
     Exit;
 
