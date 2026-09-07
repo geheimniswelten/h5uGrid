@@ -1,4 +1,4 @@
-﻿object FmxListDemoForm: TFmxListDemoForm
+object FmxListDemoForm: TFmxListDemoForm
   Left = 0
   Top = 0
   Caption = 'h5u.Grid FMX - Objektliste / RTTI'
@@ -8,6 +8,7 @@
   FormFactor.Height = 480
   FormFactor.Devices = [Desktop]
   OnCreate = FormCreate
+  DesignerMasterStyle = 0
   object ToolBar: TToolBar
     Size.Width = 1020.000000000000000000
     Size.Height = 50.000000000000000000
@@ -19,7 +20,7 @@
       Size.Width = 132.000000000000000000
       Size.Height = 34.000000000000000000
       Size.PlatformDefault = False
-      Text = 'Objekt hinzufügen'
+      Text = 'Objekt hinzuf'#252'gen'
       OnClick = AddButtonClick
     end
     object CacheCheck: TCheckBox
@@ -32,13 +33,13 @@
       OnChange = OptionChange
     end
     object LiveCheck: TCheckBox
+      IsChecked = True
       Position.X = 278.000000000000000000
       Position.Y = 13.000000000000000000
       Size.Width = 112.000000000000000000
       Size.Height = 24.000000000000000000
       Size.PlatformDefault = False
-      IsChecked = True
-      Text = 'Live ändern'
+      Text = 'Live '#228'ndern'
       OnChange = OptionChange
     end
     object DarkCheck: TCheckBox
@@ -53,7 +54,8 @@
   end
   object Grid: Th5uFmxGrid
     Align = Client
-    Position.Y = 50.000000000000000000
+    CanFocus = True
+    ClipChildren = True
     Size.Width = 1020.000000000000000000
     Size.Height = 560.000000000000000000
     Size.PlatformDefault = False
@@ -118,7 +120,7 @@
       end
       item
         Id = 'priority'
-        Caption = 'Priorität'
+        Caption = 'Priorit'#228't'
         FieldName = 'Priority'
         Width = 78
         VisibleIndex = 6
@@ -126,20 +128,26 @@
       end
       item
         Id = 'updated'
-        Caption = 'Geändert'
+        Caption = 'Ge'#228'ndert'
         FieldName = 'UpdatedAt'
         Width = 145
         VisibleIndex = 7
         DataType = DateTime
         DisplayFormat = 'dd.mm.yyyy hh:nn:ss'
       end>
+    HeaderLayout.Cells = <>
+    Selection.AllowedKinds = [Rows, Columns, CellRanges]
     RowHeight.Mode = Automatic
     RowHeight.MinHeight = 26
     RowHeight.MaxHeight = 105
     RowHeight.EstimatedHeight = 30
+    ScrollHints.Triggers = [ThumbTracking]
     ScrollHints.VerticalColumnId = 'name'
     RowStyles.StripePeriod = 3
     RowStyles.StripeOffset = 3
+    RowStyles.StripeStyleName = 'Stripe'
+    RowStyles.OddStyleName = 'Odd'
+    RowStyles.EvenStyleName = 'Even'
     RowStyles.StyleKeyColumnId = 'priority'
     RowStyles.Mappings = <
       item
@@ -150,19 +158,55 @@
         Value = 3
         StyleName = 'Error'
       end>
-  end
-  object ObjectController: Th5uObjectListController
-    OwnsObjects = True
-    KeyPropertyName = 'Id'
-    Cache.Mode = None
-    Left = 32
-    Top = 80
+    HeaderRowHeight = 28.000000000000000000
+    RowIndicatorWidth = 38.000000000000000000
+    TextSize = 12.000000000000000000
+    object TScrollBar
+      Max = 513.000000000000000000
+      ViewportSize = 513.000000000000000000
+      SmallChange = 0.000000000000000000
+      Orientation = Vertical
+      Position.X = 1004.000000000000000000
+      Size.Width = 16.000000000000000000
+      Size.Height = 544.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      Visible = False
+    end
+    object TScrollBar
+      Max = 1018.000000000000000000
+      ViewportSize = 1018.000000000000000000
+      SmallChange = 0.000000000000000000
+      Orientation = Horizontal
+      Position.Y = 544.000000000000000000
+      Size.Width = 1020.000000000000000000
+      Size.Height = 16.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 1
+    end
+    object TLabel
+      TextSettings.HorzAlign = Center
+      Visible = False
+      TabOrder = 2
+    end
+    object TEdit
+      Touch.InteractiveGestures = [LongTap, DoubleTap]
+      TabOrder = 3
+      Visible = False
+    end
   end
   object UpdateTimer: TTimer
-    Enabled = True
     Interval = 800
     OnTimer = UpdateTimerTimer
     Left = 104
+    Top = 80
+  end
+  object ObjectController: Th5uObjectListController
+    Cache.Mode = None
+    Cache.MaxMemoryBytes = 67108864
+    OwnsObjects = True
+    KeyPropertyName = 'Id'
+    Left = 32
     Top = 80
   end
 end

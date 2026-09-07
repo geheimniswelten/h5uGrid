@@ -47,6 +47,7 @@ type
     FKeyFieldName: string;
     FSnapshotCache: TObjectDictionary<Int64, Th5uDataRowSnapshot>;
     FCacheGeneration: Int64;
+    FInternalReadCount: Integer;
     procedure SetDataSource(const AValue: TDataSource);
     function GetDataset: TDataset;
     function ReadFieldValue(AField: TField): TValue;
@@ -164,29 +165,34 @@ begin
       LHasBookmark := False;
     end;
 
-    LDataset.DisableControls;
+    Inc(FInternalReadCount);
     try
-      if not GoToSourceRow(ASourceRowIndex) then
-        Exit;
+      LDataset.DisableControls;
+      try
+        if not GoToSourceRow(ASourceRowIndex) then
+          Exit;
 
-      for LField in LDataset.Fields do
-        Result.Values.AddOrSetValue(LField.FieldName, ReadFieldValue(LField));
+        for LField in LDataset.Fields do
+          Result.Values.AddOrSetValue(LField.FieldName, ReadFieldValue(LField));
 
-      if (FKeyFieldName <> '') and Assigned(LDataset.FindField(FKeyFieldName)) then
-      begin
-        LKeyValue := ReadFieldValue(LDataset.FieldByName(FKeyFieldName));
-        Result.RowKey := Th5uRowKey.FromString(h5uValueToDisplayText(LKeyValue));
-      end
-      else
-        Result.RowKey := Th5uRowKey.FromInt64(ASourceRowIndex);
+        if (FKeyFieldName <> '') and Assigned(LDataset.FindField(FKeyFieldName)) then
+        begin
+          LKeyValue := ReadFieldValue(LDataset.FieldByName(FKeyFieldName));
+          Result.RowKey := Th5uRowKey.FromString(h5uValueToDisplayText(LKeyValue));
+        end
+        else
+          Result.RowKey := Th5uRowKey.FromInt64(ASourceRowIndex);
+      finally
+        if LHasBookmark then
+          try
+            LDataset.Bookmark := LBookmark;
+          except
+            { The source may have changed while the snapshot was built. }
+          end;
+        LDataset.EnableControls;
+      end;
     finally
-      if LHasBookmark then
-        try
-          LDataset.Bookmark := LBookmark;
-        except
-          { The source may have changed while the snapshot was built. }
-        end;
-      LDataset.EnableControls;
+      Dec(FInternalReadCount);
     end;
   except
     Result.Free;
@@ -198,6 +204,11 @@ procedure Th5uDatasetController.DatasetChanged(AKind: Th5uDataChangeKind; AField
 var
   LChange: Th5uDataChange;
 begin
+  // Internal cursor moves are reads. EnableControls also synchronously notifies
+  // the data link, so the read guard must remain active until it returns.
+  if FInternalReadCount > 0 then
+    Exit;
+
   ClearSnapshotCache;
   LChange := Th5uDataChange.ResetAll;
   LChange.Kind := AKind;
@@ -298,21 +309,26 @@ begin
     LHasBookmark := False;
   end;
 
-  LDataset.DisableControls;
+  Inc(FInternalReadCount);
   try
-    if GoToSourceRow(ASourceRowIndex) then
-    begin
-      LField := LDataset.FindField(AFieldName);
-      if Assigned(LField) then
-        Result := ReadFieldValue(LField);
+    LDataset.DisableControls;
+    try
+      if GoToSourceRow(ASourceRowIndex) then
+      begin
+        LField := LDataset.FindField(AFieldName);
+        if Assigned(LField) then
+          Result := ReadFieldValue(LField);
+      end;
+    finally
+      if LHasBookmark then
+        try
+          LDataset.Bookmark := LBookmark;
+        except
+        end;
+      LDataset.EnableControls;
     end;
   finally
-    if LHasBookmark then
-      try
-        LDataset.Bookmark := LBookmark;
-      except
-      end;
-    LDataset.EnableControls;
+    Dec(FInternalReadCount);
   end;
 end;
 

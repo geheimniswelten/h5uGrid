@@ -10,6 +10,7 @@ uses
   System.Rtti,
   System.SysUtils,
   Data.DB,
+  Datasnap.DBClient,
   Vcl.Controls,
   Vcl.ExtCtrls,
   Vcl.Forms,
