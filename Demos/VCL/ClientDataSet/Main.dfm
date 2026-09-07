@@ -201,7 +201,6 @@
     Height = 546
     Align = alClient
     DataController = DataController
-    Appearance.DefaultCellColor = 4294835709
     Tree.Enabled = True
     Tree.LevelColumnId = 'TREE_LEVEL'
     Tree.BranchEndBand.Enabled = True
