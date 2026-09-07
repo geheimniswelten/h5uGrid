@@ -32,7 +32,7 @@ Legende:
 | Faltzeichen pro Folgegruppe | Ja | Ja | Ja | Plus/Minus; lokaler Factory-Scope und CustomDraw |
 | Adjacent-Group-Abschlussleiste | Ja | Ja | Ja | nie/nur eingeklappt/nur ausgeklappt/immer; ersetzt RowSpacing |
 | Separator-CustomDraw | Ja | Ja | Ja | Row/Column/ContentPadding |
-| Grid-/Column-Zellfarben | Ja | Ja | Ja | plattformneutrale ARGB-Werte |
+| Grid-/Column-Zellfarben | Ja | Ja | Ja | `System.UITypes.TColor` (BGR) |
 | Textzelle | Ja | Ja | Ja | Word-Wrap |
 | Boolean-Editor | Ja | Ja | Ja | aktives Control nur beim Editieren |
 | Bild/BLOB/TBytes | Ja | Ja | Ja | sichtbare Dekodierung, Editorbasis |

@@ -13,16 +13,8 @@ uses
 
 type
   Th5uClassId = type string;
-  // Valid explicit colors use ARGB values $00000000..$FFFFFFFF. Negative
-  // values are reserved for semantic sentinels and therefore cannot collide
-  // with an actual VCL/FMX color.
-  Th5uColor = type TColor;
 
 const
-  h5uColorDefault = Th5uColor(-1);
-  h5uColorNone = Th5uColor(-2);
-  h5uColorLightGray = Th5uColor($FFD3D3D3);
-
   h5uClassIdGridVisibleRow = Th5uClassId('h5u.grid.visual.row');
   h5uClassIdGridDataCell = Th5uClassId('h5u.grid.visual.cell.data');
   h5uClassIdGridHeaderCell = Th5uClassId('h5u.grid.visual.cell.header');
@@ -380,10 +372,10 @@ type
   end;
 
   Th5uResolvedAppearance = record
-    Background: Th5uColor;
-    Foreground: Th5uColor;
-    Border: Th5uColor;
-    Accent: Th5uColor;
+    Background: TColor;
+    Foreground: TColor;
+    Border: TColor;
+    Accent: TColor;
     FontStyle: TFontStyles;
     HasBackground: Boolean;
     HasForeground: Boolean;
@@ -393,24 +385,8 @@ type
     procedure Clear;
   end;
 
-function h5uColorFromArgb(AAlpha, ARed, AGreen, ABlue: Byte): Th5uColor; inline;
-function h5uColorFromRgb(ARed, AGreen, ABlue: Byte): Th5uColor; inline;
 
 implementation
-
-function h5uColorFromArgb(AAlpha, ARed, AGreen, ABlue: Byte): Th5uColor;
-begin
-  Result := Th5uColor(
-    (Cardinal(AAlpha) shl 24) or
-    (Cardinal(ARed) shl 16) or
-    (Cardinal(AGreen) shl 8) or
-    Cardinal(ABlue));
-end;
-
-function h5uColorFromRgb(ARed, AGreen, ABlue: Byte): Th5uColor;
-begin
-  Result := h5uColorFromArgb($FF, ARed, AGreen, ABlue);
-end;
 
 { Th5uRowKey }
 

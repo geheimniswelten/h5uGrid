@@ -220,9 +220,9 @@ Grid.Spacing.Bottom := 1;
 Grid.Spacing.RowSpacing := 1;
 Grid.Spacing.DefaultColumnRightSpacing := 1;
 
-Grid.Spacing.RowSpacingColor := h5uColorLightGray;
-Grid.Spacing.ColumnSpacingColor := h5uColorLightGray;
-Grid.Spacing.ContentPaddingColor := h5uColorLightGray;
+Grid.Spacing.RowSpacingColor := TColorRec.Lightgray;
+Grid.Spacing.ColumnSpacingColor := TColorRec.Lightgray;
+Grid.Spacing.ContentPaddingColor := TColorRec.Lightgray;
 ```
 
 Damit entstehen standardmäßig ein Pixel breite hellgraue Trennflächen:
@@ -259,12 +259,12 @@ end;
 Die normale Zellfarbe kann auf Grid- und Column-Ebene gesetzt werden:
 
 ```pascal
-Grid.Appearance.DefaultCellColor := h5uColorFromRgb(253, 253, 253);
-AmountColumn.Color := h5uColorFromRgb(255, 244, 216);
-NameColumn.Color := h5uColorDefault;
+Grid.Appearance.DefaultCellColor := $00FDFDFD;
+AmountColumn.Color := $00D8F4FF;
+NameColumn.Color := TColorRec.SysDefault;
 ```
 
-`h5uColorDefault` bedeutet Vererbung aus Row-/Grid-/Theme-Darstellung. Selection-, Fokus- und Fehlerdarstellung behalten Vorrang vor einer festen Column-Farbe.
+`TColorRec.SysDefault` bedeutet Vererbung aus Row-/Grid-/Theme-Darstellung. Selection-, Fokus- und Fehlerdarstellung behalten Vorrang vor einer festen Column-Farbe.
 
 Für besondere Separator-Darstellungen existieren eigene CustomDraw-Elementarten:
 
@@ -274,7 +274,7 @@ Th5uElementKind.ColumnSpacing
 Th5uElementKind.ContentPadding
 ```
 
-Der aktive Skin darf als Fallback die Farbe liefern, wenn eine Separatorfarbe auf `h5uColorDefault` gesetzt wird. Die Größe der Abstände bleibt jedoch eine statische Layoutproperty und ändert sich nicht mit einem Zellzustand.
+Der aktive Skin darf als Fallback die Farbe liefern, wenn eine Separatorfarbe auf `TColorRec.SysDefault` gesetzt wird. Die Größe der Abstände bleibt jedoch eine statische Layoutproperty und ändert sich nicht mit einem Zellzustand.
 
 ## 9. Variable RowHeight
 
@@ -503,3 +503,21 @@ Die aktuelle Implementierung konzentriert sich auf den vertikalen Testpfad. Der 
 Der h5u-Quellstil erlaubt 180 Zeichen pro Pascal-Zeile. Die großzügige Grenze hält vor allem Property-Deklarationen und Implementationssignaturen kompakt, ohne komplexe APIs künstlich über viele kurze Zeilen zu verteilen. Erst beim Überschreiten der Grenze wird an Parameter- oder Property-Klauselgrenzen umgebrochen.
 
 Ein konservativer Formatter und der Release-Audit prüfen diese Regel reproduzierbar. Ausführbare Anweisungen werden nicht automatisch umgebaut, damit semantisch gruppierte Ausdrücke und bewusst gestaltete Kontrollflüsse erhalten bleiben.
+
+## Farbtyp und Migration
+
+Alle gemeinsamen Farbproperties und `Th5uResolvedAppearance` verwenden direkt
+`System.UITypes.TColor`. Damit erkennt der VCL-Formdesigner den Standard-Farbeditor.
+`clDefault` und `clNone` aus `Vcl.Graphics` entsprechen `TColorRec.SysDefault`
+und `TColorRec.SysNone` aus `System.UITypes`; die gemeinsamen Units benötigen keine VCL.
+Explizite Farben sind `$00BBGGRR`, beispielsweise Rot `$000000FF` und Blau `$00FF0000`.
+Die FMX-Zeichenfläche verwendet weiterhin `TAlphaColor` (`$AARRGGBB`); nur an dieser
+Grenze werden die Farbkanäle umgeordnet. `clNone` wird dort transparent, normale
+`TColor`-Werte werden deckend gezeichnet. Windows-Systemfarben werden unter Windows
+über `GetSysColor` aufgelöst. Für andere FMX-Plattformen explizite RGB-Farben verwenden.
+
+Die bisherigen eigenen Farbtypen, Sentinel-Konstanten und RGB-/ARGB-Hilfsfunktionen
+entfallen. Bereits gespeicherte Grid-Farbwerte im alten ARGB-Format müssen nach BGR
+umgerechnet werden; ebenso werden die alten Werte -1/-2 durch die Standardwerte
+für Default/None ersetzt. Die mitgelieferten DFM-/FMX-Demos sind bereits umgestellt.
+Die früher mögliche Alpha-Komponente gehört nicht zum neuen TColor-Vertrag.

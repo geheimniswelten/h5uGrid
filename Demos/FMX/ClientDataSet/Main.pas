@@ -8,6 +8,7 @@ uses
   System.Classes,
   System.Math,
   System.SysUtils,
+  System.UITypes,
   FMX.Controls,
   FMX.Forms,
   FMX.Layouts,
@@ -139,28 +140,28 @@ begin
   begin
     if DarkCheck.IsChecked then
     begin
-      Grid.Appearance.DefaultCellColor := h5uColorFromRgb(31, 31, 31);
+      Grid.Appearance.DefaultCellColor := $001F1F1F;
       if Assigned(LNameColumn) then
-        LNameColumn.Color := h5uColorFromRgb(31, 43, 54);
+        LNameColumn.Color := $00362B1F;
       if Assigned(LActiveColumn) then
-        LActiveColumn.Color := h5uColorFromRgb(29, 49, 34);
+        LActiveColumn.Color := $0022311D;
     end
     else
     begin
-      Grid.Appearance.DefaultCellColor := h5uColorFromRgb(253, 253, 253);
+      Grid.Appearance.DefaultCellColor := $00FDFDFD;
       if Assigned(LNameColumn) then
-        LNameColumn.Color := h5uColorFromRgb(234, 244, 255);
+        LNameColumn.Color := $00FFF4EA;
       if Assigned(LActiveColumn) then
-        LActiveColumn.Color := h5uColorFromRgb(234, 248, 236);
+        LActiveColumn.Color := $00ECF8EA;
     end;
   end
   else
   begin
-    Grid.Appearance.DefaultCellColor := h5uColorDefault;
+    Grid.Appearance.DefaultCellColor := TColorRec.SysDefault;
     if Assigned(LNameColumn) then
-      LNameColumn.Color := h5uColorDefault;
+      LNameColumn.Color := TColorRec.SysDefault;
     if Assigned(LActiveColumn) then
-      LActiveColumn.Color := h5uColorDefault;
+      LActiveColumn.Color := TColorRec.SysDefault;
   end;
 
   LPicture := Grid.Columns.FindById('picture');

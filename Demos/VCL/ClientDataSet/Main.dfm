@@ -317,7 +317,7 @@
         Width = 145
         VisibleIndex = 1
         DataType = Text
-        Color = 4293588223
+        Color = 16774378
         ScrollHintText = 'Artikelname'
       end
       item
@@ -376,7 +376,7 @@
         VisibleIndex = 7
         DataType = Boolean
         EditorKind = Boolean
-        Color = 4293589228
+        Color = 15530218
       end
       item
         Id = 'updated_at'

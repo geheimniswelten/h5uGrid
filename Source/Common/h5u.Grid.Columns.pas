@@ -10,6 +10,7 @@ uses
   System.Generics.Collections,
   System.Math,
   System.SysUtils,
+  System.UITypes,
   h5u.Grid.Types;
 
 type
@@ -42,7 +43,7 @@ type
     FHeaderStyleName: string;
     FHighlighted: Boolean;
     FRightSpacing: Integer;
-    FColor: Th5uColor;
+    FColor: TColor;
     FClassId: Th5uClassId;
     FCellClassId: Th5uClassId;
     FHeaderCellClassId: Th5uClassId;
@@ -57,7 +58,7 @@ type
     procedure SetFieldName(const AValue: string);
     procedure SetFixedKind(const AValue: Th5uFixedKind);
     procedure SetId(const AValue: string);
-    procedure SetColor(const AValue: Th5uColor);
+    procedure SetColor(const AValue: TColor);
     procedure SetRightSpacing(const AValue: Integer);
     procedure SetVisible(const AValue: Boolean);
     procedure SetVisibleIndex(const AValue: Integer);
@@ -92,7 +93,7 @@ type
     property HeaderStyleName: string read FHeaderStyleName write FHeaderStyleName;
     property Highlighted: Boolean read FHighlighted write FHighlighted default False;
     property RightSpacing: Integer read FRightSpacing write SetRightSpacing default -1;
-    property Color: Th5uColor read FColor write SetColor default h5uColorDefault;
+    property Color: TColor read FColor write SetColor default TColorRec.SysDefault;
     property ClassId: Th5uClassId read FClassId write FClassId;
     property CellClassId: Th5uClassId read FCellClassId write FCellClassId;
     property HeaderCellClassId: Th5uClassId read FHeaderCellClassId write FHeaderCellClassId;
@@ -292,7 +293,7 @@ begin
   FMaxAutoHeight := 160;
   FMaxLines := 0;
   FRightSpacing := -1;
-  FColor := h5uColorDefault;
+  FColor := TColorRec.SysDefault;
   FClassId := 'h5u.grid.column.default';
   FCellClassId := h5uClassIdGridDataCell;
   FHeaderCellClassId := h5uClassIdGridHeaderCell;
@@ -316,7 +317,7 @@ begin
     Result := inherited GetDisplayName;
 end;
 
-procedure Th5uGridColumn.SetColor(const AValue: Th5uColor);
+procedure Th5uGridColumn.SetColor(const AValue: TColor);
 begin
   if FColor = AValue then
     Exit;

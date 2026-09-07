@@ -1,5 +1,12 @@
 ﻿# Changelog
 
+## Unveröffentlicht – 2026-09-07
+
+- Farbproperties verwenden direkt `System.UITypes.TColor` und den VCL-Standard-Farbeditor.
+- Eigener Farbtyp, eigene Default-/None-Konstanten und RGB-/ARGB-Hilfsfunktionen entfernt.
+- VCL-Farben werden direkt weitergereicht; die FMX-Grenze konvertiert BGR/ARGB korrekt.
+- Demo-Farbwerte in Quellcode und DFM/FMX auf BGR umgerechnet; bestehende Farbtöne bleiben erhalten.
+
 ## 0.1.4 – 2026-09-02
 
 ### Delphi-Quellformatierung

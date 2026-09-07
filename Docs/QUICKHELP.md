@@ -206,14 +206,14 @@ DescriptionColumn.RightSpacing := 8;
 Farben:
 
 ```pascal
-Grid1.Spacing.RowSpacingColor := h5uColorLightGray;
-Grid1.Spacing.ColumnSpacingColor := h5uColorLightGray;
-Grid1.Spacing.ContentPaddingColor := h5uColorLightGray;
+Grid1.Spacing.RowSpacingColor := TColorRec.Lightgray;
+Grid1.Spacing.ColumnSpacingColor := TColorRec.Lightgray;
+Grid1.Spacing.ContentPaddingColor := TColorRec.Lightgray;
 
 Grid1.Appearance.DefaultCellColor :=
-  h5uColorFromRgb(253, 253, 253);
-AmountColumn.Color := h5uColorFromRgb(255, 244, 216);
-AmountColumn.Color := h5uColorDefault; // wieder erben
+  $00FDFDFD;
+AmountColumn.Color := $00D8F4FF;
+AmountColumn.Color := TColorRec.SysDefault; // wieder erben
 ```
 
 Zeilenabhängiger Abstand:
@@ -395,7 +395,7 @@ Grid1.Tree.LevelColumnId := 'TREE_LEVEL';
 
 Grid1.Tree.BranchEndBand.Enabled := True;
 Grid1.Tree.BranchEndBand.Height := 7;
-Grid1.Tree.BranchEndBand.Color := h5uColorDefault;
+Grid1.Tree.BranchEndBand.Color := TColorRec.SysDefault;
 Grid1.Tree.BranchEndBand.StyleName := 'TreeBranchEnd';
 Grid1.Tree.BranchEndBand.IncludeEndOfData := True;
 ```
@@ -408,7 +408,7 @@ Letztes Child:       RowHeight + BranchEndBand.Height
                      (kein zusätzliches RowSpacing)
 ```
 
-`Height = 0` entfernt an Astenden auch das normale Spacing. `OnGetRowSpacing` wird für eine erkannte Abschlussleiste nicht zusätzlich ausgewertet; die Tree-Option besitzt an dieser Stelle bewusst Vorrang. `StyleName = ''` mit `Color = h5uColorDefault` fällt auf die normale Separatorfarbe zurück. Der mitgelieferte semantische Style `TreeBranchEnd` besitzt in Classic, Modern und Dark eine passende Palette.
+`Height = 0` entfernt an Astenden auch das normale Spacing. `OnGetRowSpacing` wird für eine erkannte Abschlussleiste nicht zusätzlich ausgewertet; die Tree-Option besitzt an dieser Stelle bewusst Vorrang. `StyleName = ''` mit `Color = TColorRec.SysDefault` fällt auf die normale Separatorfarbe zurück. Der mitgelieferte semantische Style `TreeBranchEnd` besitzt in Classic, Modern und Dark eine passende Palette.
 
 Die Level-Column darf unsichtbar sein. Statt einer Column können die Werte über Events geliefert beziehungsweise korrigiert werden:
 
@@ -473,7 +473,7 @@ Läufe:          A     | B | C   | D     | E
 
 ```pascal
 Grid1.AdjacentGroupFolding.EndBand.Height := 7;
-Grid1.AdjacentGroupFolding.EndBand.Color := h5uColorDefault;
+Grid1.AdjacentGroupFolding.EndBand.Color := TColorRec.SysDefault;
 Grid1.AdjacentGroupFolding.EndBand.StyleName :=
   'AdjacentGroupEnd';
 Grid1.AdjacentGroupFolding.EndBand.Visibility :=

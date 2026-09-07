@@ -38,8 +38,6 @@ type
 
 function h5uGetVclPalette(ATheme: Th5uGridTheme): Th5uVclPalette;
 function h5uBlendColor(AColor1, AColor2: TColor; AWeight: Byte): TColor;
-function h5uColorToVcl(const AColor: Th5uColor): TColor;
-function h5uVclToColor(const AColor: TColor): Th5uColor;
 
 implementation
 
@@ -69,20 +67,6 @@ begin
   ) div 255;
 
   Result := RGB(LR, LG, LB);
-end;
-
-function h5uColorToVcl(const AColor: Th5uColor): TColor;
-begin
-  if AColor = h5uColorDefault then
-    Exit(clDefault);
-  if AColor = h5uColorNone then
-    Exit(clNone);
-
-  Result := RGB(
-    (Cardinal(AColor) shr 16) and $FF,
-    (Cardinal(AColor) shr 8) and $FF,
-    Cardinal(AColor) and $FF
-  );
 end;
 
 function h5uGetVclPalette(ATheme: Th5uGridTheme): Th5uVclPalette;
@@ -211,19 +195,6 @@ begin
         StyleServices.GetSystemColor(clInfoText);
     end;
   end;
-end;
-
-function h5uVclToColor(const AColor: TColor): Th5uColor;
-var
-  LColor: Cardinal;
-begin
-  LColor := ColorToRGB(AColor);
-  Result := Th5uColor(
-    $FF000000 or
-    (GetRValue(LColor) shl 16) or
-    (GetGValue(LColor) shl 8) or
-    GetBValue(LColor)
-  );
 end;
 
 end.

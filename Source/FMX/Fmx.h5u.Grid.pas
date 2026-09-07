@@ -13,6 +13,7 @@ uses
   System.SysUtils,
   System.Types,
   System.UITypes,
+  System.UIConsts,
   FMX.Controls,
   FMX.Edit,
   FMX.Graphics,
@@ -274,7 +275,7 @@ type
     function GetEffectiveRowSeparatorFor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey; out AElementKind: Th5uElementKind; out AColor: TAlphaColor; out AStyleName: string;
       out ATreeLevel: Integer; out AClosedTreeLevels: Integer): Single;
     function GetGridLines: Boolean;
-    function ResolveColor(const AColor: Th5uColor; AFallback: TAlphaColor): TAlphaColor;
+    function ResolveColor(const AColor: TColor; AFallback: TAlphaColor): TAlphaColor;
     function ResolveDefaultCellColor: TAlphaColor;
     function ResolveRowSpacingColor: TAlphaColor;
     function ResolveColumnSpacingColor: TAlphaColor;
@@ -1505,7 +1506,7 @@ begin
   if ASelected then
   begin
     LAppearance.HasBackground := True;
-    LAppearance.Background := h5uFmxToColor(
+    LAppearance.Background := AlphaColorToColor(
       h5uGetFmxPalette(FTheme).SelectedBackground
     );
   end;
@@ -1863,7 +1864,7 @@ begin
   if AColor <> TAlphaColorRec.Null then
   begin
     LAppearance.HasBackground := True;
-    LAppearance.Background := h5uFmxToColor(AColor);
+    LAppearance.Background := AlphaColorToColor(AColor);
   end;
   LCell := AcquireVisualCell(
     LFactoryContext,
@@ -2640,11 +2641,11 @@ begin
     (FSpacing.DefaultColumnRightSpacing > 0);
 end;
 
-function Th5uFmxGrid.ResolveColor(const AColor: Th5uColor; AFallback: TAlphaColor): TAlphaColor;
+function Th5uFmxGrid.ResolveColor(const AColor: TColor; AFallback: TAlphaColor): TAlphaColor;
 begin
-  if AColor = h5uColorDefault then
+  if AColor = TColorRec.SysDefault then
     Result := AFallback
-  else if AColor = h5uColorNone then
+  else if AColor = TColorRec.SysNone then
     Result := 0
   else
     Result := h5uColorToFmx(AColor);
@@ -2687,7 +2688,7 @@ var
   LPalette: Th5uFmxPalette;
   LStyleName: string;
 begin
-  if FTree.BranchEndBand.Color <> h5uColorDefault then
+  if FTree.BranchEndBand.Color <> TColorRec.SysDefault then
     Exit(ResolveColor(
       FTree.BranchEndBand.Color,
       ResolveRowSpacingColor
@@ -2716,7 +2717,7 @@ var
   LPalette: Th5uFmxPalette;
   LStyleName: string;
 begin
-  if FAdjacentGroupFolding.EndBand.Color <> h5uColorDefault then
+  if FAdjacentGroupFolding.EndBand.Color <> TColorRec.SysDefault then
     Exit(ResolveColor(
       FAdjacentGroupFolding.EndBand.Color,
       ResolveRowSpacingColor
@@ -3274,27 +3275,27 @@ begin
   Result.Clear;
   Result.HasBackground := True;
   LPalette := h5uGetFmxPalette(FTheme);
-  Result.Background := h5uFmxToColor(
+  Result.Background := AlphaColorToColor(
     ResolveRowBackground(AViewRowIndex)
   );
 
-  if (AColumn.Color <> h5uColorDefault) and not ASelected then
+  if (AColumn.Color <> TColorRec.SysDefault) and not ASelected then
     Result.Background := AColumn.Color;
 
   if AColumn.Highlighted and
-     (AColumn.Color = h5uColorDefault) and
+     (AColumn.Color = TColorRec.SysDefault) and
      not ASelected then
-    Result.Background := h5uFmxToColor(
+    Result.Background := AlphaColorToColor(
       LPalette.HighlightedColumnBackground
     );
 
   if ASelected then
   begin
-    Result.Background := h5uFmxToColor(
+    Result.Background := AlphaColorToColor(
       LPalette.SelectedBackground
     );
     Result.HasForeground := True;
-    Result.Foreground := h5uFmxToColor(
+    Result.Foreground := AlphaColorToColor(
       LPalette.SelectedText
     );
   end;
@@ -3302,7 +3303,7 @@ begin
   if AFocused then
   begin
     Result.HasBorder := True;
-    Result.Border := h5uFmxToColor(LPalette.FocusBorder);
+    Result.Border := AlphaColorToColor(LPalette.FocusBorder);
   end;
 end;
 
@@ -3340,7 +3341,7 @@ begin
     Result := LPalette.WarningBackground
   else if SameText(LStyle, 'Stripe') then
     Result := LPalette.StripeBackground
-  else if FAppearance.DefaultCellColor <> h5uColorDefault then
+  else if FAppearance.DefaultCellColor <> TColorRec.SysDefault then
     Result := ResolveDefaultCellColor
   else if SameText(LStyle, 'Odd') then
     Result := LPalette.OddBackground

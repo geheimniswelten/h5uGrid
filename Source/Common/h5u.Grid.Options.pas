@@ -8,6 +8,7 @@ uses
   System.Math,
   System.Classes,
   System.SysUtils,
+  System.UITypes,
   h5u.Grid.Columns,
   h5u.Grid.Types;
 
@@ -24,19 +25,19 @@ type
     FBottom: Integer;
     FRowSpacing: Integer;
     FDefaultColumnRightSpacing: Integer;
-    FRowSpacingColor: Th5uColor;
-    FColumnSpacingColor: Th5uColor;
-    FContentPaddingColor: Th5uColor;
+    FRowSpacingColor: TColor;
+    FColumnSpacingColor: TColor;
+    FContentPaddingColor: TColor;
     FOnChanged: Th5uOptionsChangedEvent;
     procedure Changed;
     procedure SetBottom(const AValue: Integer);
-    procedure SetColumnSpacingColor(const AValue: Th5uColor);
-    procedure SetContentPaddingColor(const AValue: Th5uColor);
+    procedure SetColumnSpacingColor(const AValue: TColor);
+    procedure SetContentPaddingColor(const AValue: TColor);
     procedure SetDefaultColumnRightSpacing(const AValue: Integer);
     procedure SetLeft(const AValue: Integer);
     procedure SetRight(const AValue: Integer);
     procedure SetRowSpacing(const AValue: Integer);
-    procedure SetRowSpacingColor(const AValue: Th5uColor);
+    procedure SetRowSpacingColor(const AValue: TColor);
     procedure SetTop(const AValue: Integer);
   public
     constructor Create;
@@ -50,23 +51,23 @@ type
     property Bottom: Integer read FBottom write SetBottom default 1;
     property RowSpacing: Integer read FRowSpacing write SetRowSpacing default 1;
     property DefaultColumnRightSpacing: Integer read FDefaultColumnRightSpacing write SetDefaultColumnRightSpacing default 1;
-    property RowSpacingColor: Th5uColor read FRowSpacingColor write SetRowSpacingColor default h5uColorLightGray;
-    property ColumnSpacingColor: Th5uColor read FColumnSpacingColor write SetColumnSpacingColor default h5uColorLightGray;
-    property ContentPaddingColor: Th5uColor read FContentPaddingColor write SetContentPaddingColor default h5uColorLightGray;
+    property RowSpacingColor: TColor read FRowSpacingColor write SetRowSpacingColor default TColorRec.Lightgray;
+    property ColumnSpacingColor: TColor read FColumnSpacingColor write SetColumnSpacingColor default TColorRec.Lightgray;
+    property ContentPaddingColor: TColor read FContentPaddingColor write SetContentPaddingColor default TColorRec.Lightgray;
   end;
 
   Th5uGridAppearanceOptions = class(TPersistent)
   private
-    FDefaultCellColor: Th5uColor;
+    FDefaultCellColor: TColor;
     FOnChanged: Th5uOptionsChangedEvent;
     procedure Changed;
-    procedure SetDefaultCellColor(const AValue: Th5uColor);
+    procedure SetDefaultCellColor(const AValue: TColor);
   public
     constructor Create;
     procedure Assign(Source: TPersistent); override;
     property OnChanged: Th5uOptionsChangedEvent read FOnChanged write FOnChanged;
   published
-    property DefaultCellColor: Th5uColor read FDefaultCellColor write SetDefaultCellColor default h5uColorDefault;
+    property DefaultCellColor: TColor read FDefaultCellColor write SetDefaultCellColor default TColorRec.SysDefault;
   end;
 
   // When a flattened tree leaves one or more child levels, this band replaces
@@ -76,12 +77,12 @@ type
   private
     FEnabled: Boolean;
     FHeight: Integer;
-    FColor: Th5uColor;
+    FColor: TColor;
     FStyleName: string;
     FIncludeEndOfData: Boolean;
     FOnChanged: Th5uOptionsChangedEvent;
     procedure Changed;
-    procedure SetColor(const AValue: Th5uColor);
+    procedure SetColor(const AValue: TColor);
     procedure SetEnabled(const AValue: Boolean);
     procedure SetHeight(const AValue: Integer);
     procedure SetIncludeEndOfData(const AValue: Boolean);
@@ -93,7 +94,7 @@ type
   published
     property Enabled: Boolean read FEnabled write SetEnabled default False;
     property Height: Integer read FHeight write SetHeight default 6;
-    property Color: Th5uColor read FColor write SetColor default h5uColorDefault;
+    property Color: TColor read FColor write SetColor default TColorRec.SysDefault;
     property StyleName: string read FStyleName write SetStyleName;
     property IncludeEndOfData: Boolean read FIncludeEndOfData write SetIncludeEndOfData default True;
   end;
@@ -127,11 +128,11 @@ type
   private
     FVisibility: Th5uAdjacentGroupEndBandVisibility;
     FHeight: Integer;
-    FColor: Th5uColor;
+    FColor: TColor;
     FStyleName: string;
     FOnChanged: Th5uOptionsChangedEvent;
     procedure Changed;
-    procedure SetColor(const AValue: Th5uColor);
+    procedure SetColor(const AValue: TColor);
     procedure SetHeight(const AValue: Integer);
     procedure SetStyleName(const AValue: string);
     procedure SetVisibility(const AValue: Th5uAdjacentGroupEndBandVisibility);
@@ -142,7 +143,7 @@ type
   published
     property Visibility: Th5uAdjacentGroupEndBandVisibility read FVisibility write SetVisibility default Th5uAdjacentGroupEndBandVisibility.Never;
     property Height: Integer read FHeight write SetHeight default 6;
-    property Color: Th5uColor read FColor write SetColor default h5uColorDefault;
+    property Color: TColor read FColor write SetColor default TColorRec.SysDefault;
     property StyleName: string read FStyleName write SetStyleName;
   end;
 
@@ -387,9 +388,9 @@ begin
   FBottom := 1;
   FRowSpacing := 1;
   FDefaultColumnRightSpacing := 1;
-  FRowSpacingColor := h5uColorLightGray;
-  FColumnSpacingColor := h5uColorLightGray;
-  FContentPaddingColor := h5uColorLightGray;
+  FRowSpacingColor := TColorRec.Lightgray;
+  FColumnSpacingColor := TColorRec.Lightgray;
+  FContentPaddingColor := TColorRec.Lightgray;
 end;
 
 procedure Th5uGridSpacingOptions.SetBottom(const AValue: Integer);
@@ -400,7 +401,7 @@ begin
   Changed;
 end;
 
-procedure Th5uGridSpacingOptions.SetColumnSpacingColor(const AValue: Th5uColor);
+procedure Th5uGridSpacingOptions.SetColumnSpacingColor(const AValue: TColor);
 begin
   if FColumnSpacingColor = AValue then
     Exit;
@@ -408,7 +409,7 @@ begin
   Changed;
 end;
 
-procedure Th5uGridSpacingOptions.SetContentPaddingColor(const AValue: Th5uColor);
+procedure Th5uGridSpacingOptions.SetContentPaddingColor(const AValue: TColor);
 begin
   if FContentPaddingColor = AValue then
     Exit;
@@ -472,7 +473,7 @@ begin
   Changed;
 end;
 
-procedure Th5uGridSpacingOptions.SetRowSpacingColor(const AValue: Th5uColor);
+procedure Th5uGridSpacingOptions.SetRowSpacingColor(const AValue: TColor);
 begin
   if FRowSpacingColor = AValue then
     Exit;
@@ -511,10 +512,10 @@ end;
 constructor Th5uGridAppearanceOptions.Create;
 begin
   inherited Create;
-  FDefaultCellColor := h5uColorDefault;
+  FDefaultCellColor := TColorRec.SysDefault;
 end;
 
-procedure Th5uGridAppearanceOptions.SetDefaultCellColor(const AValue: Th5uColor);
+procedure Th5uGridAppearanceOptions.SetDefaultCellColor(const AValue: TColor);
 begin
   if FDefaultCellColor = AValue then
     Exit;
@@ -553,12 +554,12 @@ begin
   inherited Create;
   FEnabled := False;
   FHeight := 6;
-  FColor := h5uColorDefault;
+  FColor := TColorRec.SysDefault;
   FStyleName := '';
   FIncludeEndOfData := True;
 end;
 
-procedure Th5uTreeBranchEndBandOptions.SetColor(const AValue: Th5uColor);
+procedure Th5uTreeBranchEndBandOptions.SetColor(const AValue: TColor);
 begin
   if FColor = AValue then
     Exit;
@@ -693,11 +694,11 @@ begin
   inherited Create;
   FVisibility := Th5uAdjacentGroupEndBandVisibility.Never;
   FHeight := 6;
-  FColor := h5uColorDefault;
+  FColor := TColorRec.SysDefault;
   FStyleName := '';
 end;
 
-procedure Th5uAdjacentGroupEndBandOptions.SetColor(const AValue: Th5uColor);
+procedure Th5uAdjacentGroupEndBandOptions.SetColor(const AValue: TColor);
 begin
   if FColor = AValue then
     Exit;

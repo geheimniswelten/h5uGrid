@@ -36,23 +36,30 @@ type
   end;
 
 function h5uGetFmxPalette(ATheme: Th5uGridTheme): Th5uFmxPalette;
-function h5uColorToFmx(const AColor: Th5uColor): TAlphaColor;
-function h5uFmxToColor(const AColor: TAlphaColor): Th5uColor;
+function h5uColorToFmx(const AColor: TColor): TAlphaColor;
 
 implementation
 
-function h5uColorToFmx(const AColor: Th5uColor): TAlphaColor;
+uses
+{$IFDEF MSWINDOWS}
+  Winapi.Windows,
+{$ENDIF}
+  System.UIConsts;
+
+function h5uColorToFmx(const AColor: TColor): TAlphaColor;
+var
+  LColor: TColor;
 begin
-  if (AColor = h5uColorDefault) or
-     (AColor = h5uColorNone) then
+  if (AColor = TColorRec.SysDefault) or (AColor = TColorRec.SysNone) then
     Exit(TAlphaColorRec.Null);
 
-  Result := TAlphaColor(Cardinal(AColor));
-end;
-
-function h5uFmxToColor(const AColor: TAlphaColor): Th5uColor;
-begin
-  Result := Th5uColor(Cardinal(AColor));
+  LColor := AColor;
+  // Resolve Windows system colors before converting BGR to opaque ARGB.
+{$IFDEF MSWINDOWS}
+  if LColor < 0 then
+    LColor := GetSysColor(LColor and $FF);
+{$ENDIF}
+  Result := MakeColor(TColorRec(LColor).R, TColorRec(LColor).G, TColorRec(LColor).B);
 end;
 
 function h5uGetFmxPalette(ATheme: Th5uGridTheme): Th5uFmxPalette;

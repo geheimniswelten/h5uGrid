@@ -301,7 +301,7 @@ type
     function GetEffectiveRowSeparatorFor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey; out AElementKind: Th5uElementKind; out AColor: TColor; out AStyleName: string;
       out ATreeLevel: Integer; out AClosedTreeLevels: Integer): Integer;
     function GetGridLines: Boolean;
-    function ResolveColor(const AColor: Th5uColor; AFallback: TColor): TColor;
+    function ResolveColor(const AColor: TColor; AFallback: TColor): TColor;
     function ResolveDefaultCellColor: TColor;
     function ResolveRowSpacingColor: TColor;
     function ResolveColumnSpacingColor: TColor;
@@ -515,7 +515,7 @@ var
 begin
   LPalette := h5uGetVclPalette(AGrid.Theme);
   if FAppearance.HasBackground then
-    Result := h5uColorToVcl(FAppearance.Background)
+    Result := FAppearance.Background
   else
     Result := AGrid.ResolveDefaultCellColor;
 end;
@@ -526,7 +526,7 @@ var
 begin
   LPalette := h5uGetVclPalette(AGrid.Theme);
   if FAppearance.HasForeground then
-    Result := h5uColorToVcl(FAppearance.Foreground)
+    Result := FAppearance.Foreground
   else
     Result := LPalette.CellText;
 end;
@@ -575,7 +575,7 @@ begin
   if not Appearance.HasBackground then
     Exit;
   ACanvas.Brush.Style := bsSolid;
-  ACanvas.Brush.Color := h5uColorToVcl(Appearance.Background);
+  ACanvas.Brush.Color := Appearance.Background;
   ACanvas.FillRect(Bounds);
 end;
 
@@ -1851,13 +1851,9 @@ begin
   if ASelected then
   begin
     LAppearance.HasBackground := True;
-    LAppearance.Background := h5uVclToColor(
-      h5uGetVclPalette(FTheme).SelectedBackground
-    );
+    LAppearance.Background := h5uGetVclPalette(FTheme).SelectedBackground;
     LAppearance.HasForeground := True;
-    LAppearance.Foreground := h5uVclToColor(
-      h5uGetVclPalette(FTheme).SelectedText
-    );
+    LAppearance.Foreground := h5uGetVclPalette(FTheme).SelectedText;
   end;
 
   LCell := AcquireVisualCell(LContext, Th5uVclDataCell);
@@ -1965,9 +1961,7 @@ begin
   if ASelected then
   begin
     LAppearance.HasBackground := True;
-    LAppearance.Background := h5uVclToColor(
-      h5uGetVclPalette(FTheme).SelectedBackground
-    );
+    LAppearance.Background := h5uGetVclPalette(FTheme).SelectedBackground;
   end;
 
   LCell := AcquireVisualCell(
@@ -2331,7 +2325,7 @@ begin
   if AColor <> clNone then
   begin
     LAppearance.HasBackground := True;
-    LAppearance.Background := h5uVclToColor(AColor);
+    LAppearance.Background := AColor;
   end;
   LCell := AcquireVisualCell(
     LFactoryContext,
@@ -3226,14 +3220,12 @@ begin
     Result.Bottom := Result.Top;
 end;
 
-function Th5uVclGrid.ResolveColor(const AColor: Th5uColor; AFallback: TColor): TColor;
+function Th5uVclGrid.ResolveColor(const AColor: TColor; AFallback: TColor): TColor;
 begin
-  if AColor = h5uColorDefault then
+  if AColor = clDefault then
     Result := AFallback
-  else if AColor = h5uColorNone then
-    Result := clNone
   else
-    Result := h5uColorToVcl(AColor);
+    Result := AColor;
 end;
 
 function Th5uVclGrid.ResolveDefaultCellColor: TColor;
@@ -3272,7 +3264,7 @@ function Th5uVclGrid.ResolveTreeBranchEndColor(AViewRowIndex: Int64; const ARowK
 var
   LAppearance: Th5uResolvedAppearance;
 begin
-  if FTree.BranchEndBand.Color <> h5uColorDefault then
+  if FTree.BranchEndBand.Color <> clDefault then
     Exit(ResolveColor(
       FTree.BranchEndBand.Color,
       ResolveRowSpacingColor
@@ -3292,7 +3284,7 @@ begin
       FTree.BranchEndBand.StyleName
     );
     if LAppearance.HasBackground then
-      Exit(h5uColorToVcl(LAppearance.Background));
+      Exit(LAppearance.Background);
   end;
 
   Result := ResolveRowSpacingColor;
@@ -3302,7 +3294,7 @@ function Th5uVclGrid.ResolveAdjacentGroupEndColor(AViewRowIndex: Int64; const AR
 var
   LAppearance: Th5uResolvedAppearance;
 begin
-  if FAdjacentGroupFolding.EndBand.Color <> h5uColorDefault then
+  if FAdjacentGroupFolding.EndBand.Color <> clDefault then
     Exit(ResolveColor(
       FAdjacentGroupFolding.EndBand.Color,
       ResolveRowSpacingColor
@@ -3322,7 +3314,7 @@ begin
       FAdjacentGroupFolding.EndBand.StyleName
     );
     if LAppearance.HasBackground then
-      Exit(h5uColorToVcl(LAppearance.Background));
+      Exit(LAppearance.Background);
   end;
 
   Result := ResolveRowSpacingColor;
@@ -3946,38 +3938,32 @@ begin
   Result := ARowAppearance;
   LPalette := h5uGetVclPalette(FTheme);
 
-  if AColumn.Color <> h5uColorDefault then
+  if AColumn.Color <> clDefault then
   begin
     Result.HasBackground := True;
     Result.Background := AColumn.Color;
   end;
 
   if AColumn.Highlighted and
-     (AColumn.Color = h5uColorDefault) and
+     (AColumn.Color = clDefault) and
      not ASelected then
   begin
     Result.HasBackground := True;
-    Result.Background := h5uVclToColor(
-      LPalette.HighlightedColumnBackground
-    );
+    Result.Background := LPalette.HighlightedColumnBackground;
   end;
 
   if ASelected then
   begin
     Result.HasBackground := True;
-    Result.Background := h5uVclToColor(
-      LPalette.SelectedBackground
-    );
+    Result.Background := LPalette.SelectedBackground;
     Result.HasForeground := True;
-    Result.Foreground := h5uVclToColor(
-      LPalette.SelectedText
-    );
+    Result.Foreground := LPalette.SelectedText;
   end;
 
   if AFocused then
   begin
     Result.HasBorder := True;
-    Result.Border := h5uVclToColor(LPalette.FocusBorder);
+    Result.Border := LPalette.FocusBorder;
   end;
 
   if Assigned(FOnGetCellAppearance) then
@@ -3994,23 +3980,21 @@ begin
   LPalette := h5uGetVclPalette(FTheme);
 
   if SameText(AStyleName, 'Error') then
-    Result.Background := h5uVclToColor(LPalette.ErrorBackground)
+    Result.Background := LPalette.ErrorBackground
   else if SameText(AStyleName, 'Warning') then
-    Result.Background := h5uVclToColor(LPalette.WarningBackground)
+    Result.Background := LPalette.WarningBackground
   else if SameText(AStyleName, 'TreeBranchEnd') then
-    Result.Background := h5uVclToColor(
-      LPalette.TreeBranchEndBackground
-    )
+    Result.Background := LPalette.TreeBranchEndBackground
   else if SameText(AStyleName, 'Stripe') then
-    Result.Background := h5uVclToColor(LPalette.StripeBackground)
-  else if FAppearance.DefaultCellColor <> h5uColorDefault then
-    Result.Background := h5uVclToColor(ResolveDefaultCellColor)
+    Result.Background := LPalette.StripeBackground
+  else if FAppearance.DefaultCellColor <> clDefault then
+    Result.Background := ResolveDefaultCellColor
   else if SameText(AStyleName, 'Odd') then
-    Result.Background := h5uVclToColor(LPalette.OddBackground)
+    Result.Background := LPalette.OddBackground
   else if SameText(AStyleName, 'Even') then
-    Result.Background := h5uVclToColor(LPalette.EvenBackground)
+    Result.Background := LPalette.EvenBackground
   else
-    Result.Background := h5uVclToColor(ResolveDefaultCellColor);
+    Result.Background := ResolveDefaultCellColor;
 
   if Assigned(FOnGetRowAppearance) then
     FOnGetRowAppearance(

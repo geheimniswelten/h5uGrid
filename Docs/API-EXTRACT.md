@@ -1,4 +1,4 @@
-﻿# h5u.Grid – öffentlicher API-Auszug
+# h5u.Grid – öffentlicher API-Auszug
 
 > Automatisch aus den vollständigen `interface`-Abschnitten des ausgelieferten Quellstands erzeugt. Maßgeblich bleiben die Pascal-Units.
 
@@ -21,13 +21,14 @@ uses
   System.SysUtils,
   System.Types,
   System.UITypes,
-  Fmx.Controls,
-  Fmx.Edit,
-  Fmx.Graphics,
-  Fmx.Layouts,
-  Fmx.Objects,
-  Fmx.StdCtrls,
-  Fmx.Types,
+  System.UIConsts,
+  FMX.Controls,
+  FMX.Edit,
+  FMX.Graphics,
+  FMX.Layouts,
+  FMX.Objects,
+  FMX.StdCtrls,
+  FMX.Types,
   h5u.Grid.AdjacentGroups,
   h5u.Grid.Columns,
   h5u.Grid.Data.Core,
@@ -282,7 +283,7 @@ type
     function GetEffectiveRowSeparatorFor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey; out AElementKind: Th5uElementKind; out AColor: TAlphaColor; out AStyleName: string;
       out ATreeLevel: Integer; out AClosedTreeLevels: Integer): Single;
     function GetGridLines: Boolean;
-    function ResolveColor(const AColor: Th5uColor; AFallback: TAlphaColor): TAlphaColor;
+    function ResolveColor(const AColor: TColor; AFallback: TAlphaColor): TAlphaColor;
     function ResolveDefaultCellColor: TAlphaColor;
     function ResolveRowSpacingColor: TAlphaColor;
     function ResolveColumnSpacingColor: TAlphaColor;
@@ -438,12 +439,13 @@ Quelle: `Source/FMX/Fmx.h5u.Grid.Editors.pas`
 uses
   System.Classes,
   System.SysUtils,
-  Fmx.Controls,
-  Fmx.Dialogs,
-  Fmx.Layouts,
-  Fmx.Objects,
-  Fmx.StdCtrls,
-  Fmx.Types;
+  System.Types,
+  FMX.Controls,
+  FMX.Dialogs,
+  FMX.Layouts,
+  FMX.Objects,
+  FMX.StdCtrls,
+  FMX.Types;
 
 type
   Th5uFmxImageEditor = class(TLayout)
@@ -510,8 +512,7 @@ type
   end;
 
 function h5uGetFmxPalette(ATheme: Th5uGridTheme): Th5uFmxPalette;
-function h5uColorToFmx(const AColor: Th5uColor): TAlphaColor;
-function h5uFmxToColor(const AColor: TAlphaColor): Th5uColor;
+function h5uColorToFmx(const AColor: TColor): TAlphaColor;
 ```
 
 ## `h5u.Grid.AdjacentGroups`
@@ -614,8 +615,11 @@ Quelle: `Source/Common/h5u.Grid.Columns.pas`
 
 uses
   System.Classes,
+  System.Generics.Defaults,
   System.Generics.Collections,
+  System.Math,
   System.SysUtils,
+  System.UITypes,
   h5u.Grid.Types;
 
 type
@@ -648,7 +652,7 @@ type
     FHeaderStyleName: string;
     FHighlighted: Boolean;
     FRightSpacing: Integer;
-    FColor: Th5uColor;
+    FColor: TColor;
     FClassId: Th5uClassId;
     FCellClassId: Th5uClassId;
     FHeaderCellClassId: Th5uClassId;
@@ -663,7 +667,7 @@ type
     procedure SetFieldName(const AValue: string);
     procedure SetFixedKind(const AValue: Th5uFixedKind);
     procedure SetId(const AValue: string);
-    procedure SetColor(const AValue: Th5uColor);
+    procedure SetColor(const AValue: TColor);
     procedure SetRightSpacing(const AValue: Integer);
     procedure SetVisible(const AValue: Boolean);
     procedure SetVisibleIndex(const AValue: Integer);
@@ -698,7 +702,7 @@ type
     property HeaderStyleName: string read FHeaderStyleName write FHeaderStyleName;
     property Highlighted: Boolean read FHighlighted write FHighlighted default False;
     property RightSpacing: Integer read FRightSpacing write SetRightSpacing default -1;
-    property Color: Th5uColor read FColor write SetColor default h5uColorDefault;
+    property Color: TColor read FColor write SetColor default TColorRec.SysDefault;
     property ClassId: Th5uClassId read FClassId write FClassId;
     property CellClassId: Th5uClassId read FCellClassId write FCellClassId;
     property HeaderCellClassId: Th5uClassId read FHeaderCellClassId write FHeaderCellClassId;
@@ -1067,6 +1071,7 @@ Quelle: `Source/Common/h5u.Grid.Data.Objects.pas`
 uses
   System.Classes,
   System.Generics.Collections,
+  System.Math,
   System.Rtti,
   System.SysUtils,
   h5u.Grid.Data.Core,
@@ -1325,6 +1330,7 @@ uses
   System.Math,
   System.Classes,
   System.SysUtils,
+  System.UITypes,
   h5u.Grid.Columns,
   h5u.Grid.Types;
 
@@ -1341,19 +1347,19 @@ type
     FBottom: Integer;
     FRowSpacing: Integer;
     FDefaultColumnRightSpacing: Integer;
-    FRowSpacingColor: Th5uColor;
-    FColumnSpacingColor: Th5uColor;
-    FContentPaddingColor: Th5uColor;
+    FRowSpacingColor: TColor;
+    FColumnSpacingColor: TColor;
+    FContentPaddingColor: TColor;
     FOnChanged: Th5uOptionsChangedEvent;
     procedure Changed;
     procedure SetBottom(const AValue: Integer);
-    procedure SetColumnSpacingColor(const AValue: Th5uColor);
-    procedure SetContentPaddingColor(const AValue: Th5uColor);
+    procedure SetColumnSpacingColor(const AValue: TColor);
+    procedure SetContentPaddingColor(const AValue: TColor);
     procedure SetDefaultColumnRightSpacing(const AValue: Integer);
     procedure SetLeft(const AValue: Integer);
     procedure SetRight(const AValue: Integer);
     procedure SetRowSpacing(const AValue: Integer);
-    procedure SetRowSpacingColor(const AValue: Th5uColor);
+    procedure SetRowSpacingColor(const AValue: TColor);
     procedure SetTop(const AValue: Integer);
   public
     constructor Create;
@@ -1367,23 +1373,23 @@ type
     property Bottom: Integer read FBottom write SetBottom default 1;
     property RowSpacing: Integer read FRowSpacing write SetRowSpacing default 1;
     property DefaultColumnRightSpacing: Integer read FDefaultColumnRightSpacing write SetDefaultColumnRightSpacing default 1;
-    property RowSpacingColor: Th5uColor read FRowSpacingColor write SetRowSpacingColor default h5uColorLightGray;
-    property ColumnSpacingColor: Th5uColor read FColumnSpacingColor write SetColumnSpacingColor default h5uColorLightGray;
-    property ContentPaddingColor: Th5uColor read FContentPaddingColor write SetContentPaddingColor default h5uColorLightGray;
+    property RowSpacingColor: TColor read FRowSpacingColor write SetRowSpacingColor default TColorRec.Lightgray;
+    property ColumnSpacingColor: TColor read FColumnSpacingColor write SetColumnSpacingColor default TColorRec.Lightgray;
+    property ContentPaddingColor: TColor read FContentPaddingColor write SetContentPaddingColor default TColorRec.Lightgray;
   end;
 
   Th5uGridAppearanceOptions = class(TPersistent)
   private
-    FDefaultCellColor: Th5uColor;
+    FDefaultCellColor: TColor;
     FOnChanged: Th5uOptionsChangedEvent;
     procedure Changed;
-    procedure SetDefaultCellColor(const AValue: Th5uColor);
+    procedure SetDefaultCellColor(const AValue: TColor);
   public
     constructor Create;
     procedure Assign(Source: TPersistent); override;
     property OnChanged: Th5uOptionsChangedEvent read FOnChanged write FOnChanged;
   published
-    property DefaultCellColor: Th5uColor read FDefaultCellColor write SetDefaultCellColor default h5uColorDefault;
+    property DefaultCellColor: TColor read FDefaultCellColor write SetDefaultCellColor default TColorRec.SysDefault;
   end;
 
   // When a flattened tree leaves one or more child levels, this band replaces
@@ -1393,12 +1399,12 @@ type
   private
     FEnabled: Boolean;
     FHeight: Integer;
-    FColor: Th5uColor;
+    FColor: TColor;
     FStyleName: string;
     FIncludeEndOfData: Boolean;
     FOnChanged: Th5uOptionsChangedEvent;
     procedure Changed;
-    procedure SetColor(const AValue: Th5uColor);
+    procedure SetColor(const AValue: TColor);
     procedure SetEnabled(const AValue: Boolean);
     procedure SetHeight(const AValue: Integer);
     procedure SetIncludeEndOfData(const AValue: Boolean);
@@ -1410,7 +1416,7 @@ type
   published
     property Enabled: Boolean read FEnabled write SetEnabled default False;
     property Height: Integer read FHeight write SetHeight default 6;
-    property Color: Th5uColor read FColor write SetColor default h5uColorDefault;
+    property Color: TColor read FColor write SetColor default TColorRec.SysDefault;
     property StyleName: string read FStyleName write SetStyleName;
     property IncludeEndOfData: Boolean read FIncludeEndOfData write SetIncludeEndOfData default True;
   end;
@@ -1444,11 +1450,11 @@ type
   private
     FVisibility: Th5uAdjacentGroupEndBandVisibility;
     FHeight: Integer;
-    FColor: Th5uColor;
+    FColor: TColor;
     FStyleName: string;
     FOnChanged: Th5uOptionsChangedEvent;
     procedure Changed;
-    procedure SetColor(const AValue: Th5uColor);
+    procedure SetColor(const AValue: TColor);
     procedure SetHeight(const AValue: Integer);
     procedure SetStyleName(const AValue: string);
     procedure SetVisibility(const AValue: Th5uAdjacentGroupEndBandVisibility);
@@ -1459,7 +1465,7 @@ type
   published
     property Visibility: Th5uAdjacentGroupEndBandVisibility read FVisibility write SetVisibility default Th5uAdjacentGroupEndBandVisibility.Never;
     property Height: Integer read FHeight write SetHeight default 6;
-    property Color: Th5uColor read FColor write SetColor default h5uColorDefault;
+    property Color: TColor read FColor write SetColor default TColorRec.SysDefault;
     property StyleName: string read FStyleName write SetStyleName;
   end;
 
@@ -1784,20 +1790,13 @@ uses
   System.Classes,
   System.Rtti,
   System.SysUtils,
+  System.UITypes,
   System.Types;
 
 type
   Th5uClassId = type string;
-  // Valid explicit colors use ARGB values $00000000..$FFFFFFFF. Negative
-  // values are reserved for semantic sentinels and therefore cannot collide
-  // with an actual VCL/FMX color.
-  Th5uColor = type Int64;
 
 const
-  h5uColorDefault = Th5uColor(-1);
-  h5uColorNone = Th5uColor(-2);
-  h5uColorLightGray = Th5uColor($FFD3D3D3);
-
   h5uClassIdGridVisibleRow = Th5uClassId('h5u.grid.visual.row');
   h5uClassIdGridDataCell = Th5uClassId('h5u.grid.visual.cell.data');
   h5uClassIdGridHeaderCell = Th5uClassId('h5u.grid.visual.cell.header');
@@ -1813,12 +1812,9 @@ const
   h5uClassIdGridRowSpacing = Th5uClassId('h5u.grid.spacing.row');
   h5uClassIdGridColumnSpacing = Th5uClassId('h5u.grid.spacing.column');
   h5uClassIdGridContentPadding = Th5uClassId('h5u.grid.spacing.content-padding');
-  h5uClassIdGridTreeBranchEndBand =
-    Th5uClassId('h5u.grid.spacing.tree-branch-end');
-  h5uClassIdGridAdjacentGroupFoldGlyph =
-    Th5uClassId('h5u.grid.visual.adjacent-group-fold-glyph');
-  h5uClassIdGridAdjacentGroupEndBand =
-    Th5uClassId('h5u.grid.spacing.adjacent-group-end');
+  h5uClassIdGridTreeBranchEndBand = Th5uClassId('h5u.grid.spacing.tree-branch-end');
+  h5uClassIdGridAdjacentGroupFoldGlyph = Th5uClassId('h5u.grid.visual.adjacent-group-fold-glyph');
+  h5uClassIdGridAdjacentGroupEndBand = Th5uClassId('h5u.grid.spacing.adjacent-group-end');
   h5uClassIdDataSession = Th5uClassId('h5u.grid.data.session');
   h5uClassIdDataCache = Th5uClassId('h5u.grid.data.cache');
   h5uClassIdDataPage = Th5uClassId('h5u.grid.data.page');
@@ -2158,10 +2154,10 @@ type
   end;
 
   Th5uResolvedAppearance = record
-    Background: Th5uColor;
-    Foreground: Th5uColor;
-    Border: Th5uColor;
-    Accent: Th5uColor;
+    Background: TColor;
+    Foreground: TColor;
+    Border: TColor;
+    Accent: TColor;
     FontStyle: TFontStyles;
     HasBackground: Boolean;
     HasForeground: Boolean;
@@ -2170,9 +2166,6 @@ type
     StyleName: string;
     procedure Clear;
   end;
-
-function h5uColorFromArgb(AAlpha, ARed, AGreen, ABlue: Byte): Th5uColor; inline;
-function h5uColorFromRgb(ARed, AGreen, ABlue: Byte): Th5uColor; inline;
 ```
 
 ## `Vcl.h5u.Grid`
@@ -2183,15 +2176,13 @@ Quelle: `Source/VCL/Vcl.h5u.Grid.pas`
 {$SCOPEDENUMS ON}
 
 uses
-  Vcl.Imaging.pngimage,
-  Vcl.Imaging.jpeg,
-  Vcl.Imaging.GIFImg,
   System.Classes,
   System.Generics.Collections,
   System.Math,
   System.Rtti,
   System.SysUtils,
   System.Types,
+  System.UITypes,
   Winapi.Messages,
   Winapi.Windows,
   Vcl.Controls,
@@ -2199,6 +2190,9 @@ uses
   Vcl.Graphics,
   Vcl.Menus,
   Vcl.StdCtrls,
+  Vcl.Imaging.pngimage,
+  Vcl.Imaging.jpeg,
+  Vcl.Imaging.GIFImg,
   h5u.Grid.AdjacentGroups,
   h5u.Grid.Columns,
   h5u.Grid.Data.Core,
@@ -2478,7 +2472,7 @@ type
     function GetEffectiveRowSeparatorFor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey; out AElementKind: Th5uElementKind; out AColor: TColor; out AStyleName: string;
       out ATreeLevel: Integer; out AClosedTreeLevels: Integer): Integer;
     function GetGridLines: Boolean;
-    function ResolveColor(const AColor: Th5uColor; AFallback: TColor): TColor;
+    function ResolveColor(const AColor: TColor; AFallback: TColor): TColor;
     function ResolveDefaultCellColor: TColor;
     function ResolveRowSpacingColor: TColor;
     function ResolveColumnSpacingColor: TColor;
@@ -2640,7 +2634,7 @@ procedure Register;
 
 ## `Vcl.h5u.Grid.Editors`
 
-Quelle: `Source/Vcl/Vcl.h5u.Grid.Editors.pas`
+Quelle: `Source/VCL/Vcl.h5u.Grid.Editors.pas`
 
 ```pascal
 uses
@@ -2676,7 +2670,7 @@ type
 
 ## `Vcl.h5u.Grid.Styles`
 
-Quelle: `Source/Vcl/Vcl.h5u.Grid.Styles.pas`
+Quelle: `Source/VCL/Vcl.h5u.Grid.Styles.pas`
 
 ```pascal
 {$SCOPEDENUMS ON}
@@ -2715,6 +2709,4 @@ type
 
 function h5uGetVclPalette(ATheme: Th5uGridTheme): Th5uVclPalette;
 function h5uBlendColor(AColor1, AColor2: TColor; AWeight: Byte): TColor;
-function h5uColorToVcl(const AColor: Th5uColor): TColor;
-function h5uVclToColor(const AColor: TColor): Th5uColor;
 ```
