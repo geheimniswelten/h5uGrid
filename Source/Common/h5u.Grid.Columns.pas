@@ -94,8 +94,11 @@ type
     property Highlighted: Boolean read FHighlighted write FHighlighted default False;
     property RightSpacing: Integer read FRightSpacing write SetRightSpacing default -1;
     property Color: TColor read FColor write SetColor default TColorRec.SysDefault;
+    [Default(h5uClassIdGridColumn)]
     property ClassId: Th5uClassId read FClassId write FClassId;
+    [Default(h5uClassIdGridDataCell)]
     property CellClassId: Th5uClassId read FCellClassId write FCellClassId;
+    [Default(h5uClassIdGridHeaderCell)]
     property HeaderCellClassId: Th5uClassId read FHeaderCellClassId write FHeaderCellClassId;
     property CanMove: Boolean read FCanMove write FCanMove default True;
     property CanHide: Boolean read FCanHide write FCanHide default True;
@@ -148,6 +151,7 @@ type
     property RowSpan: Integer read FRowSpan write FRowSpan default 1;
     property ColumnSpan: Integer read FColumnSpan write FColumnSpan default 1;
     property StyleName: string read FStyleName write FStyleName;
+    [Default(h5uClassIdGridHeaderGroupCell)]
     property ClassId: Th5uClassId read FClassId write FClassId;
   end;
 
@@ -294,7 +298,7 @@ begin
   FMaxLines := 0;
   FRightSpacing := -1;
   FColor := TColorRec.SysDefault;
-  FClassId := 'h5u.grid.column.default';
+  FClassId := h5uClassIdGridColumn;
   FCellClassId := h5uClassIdGridDataCell;
   FHeaderCellClassId := h5uClassIdGridHeaderCell;
   FCanMove := True;

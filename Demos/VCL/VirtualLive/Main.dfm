@@ -1,4 +1,4 @@
-﻿object MainForm: TMainForm
+object MainForm: TMainForm
   Left = 0
   Top = 0
   Caption = 'h5u.Grid VCL - VirtualSource / Live-Ereignisse'
@@ -10,9 +10,10 @@
   Font.Height = -12
   Font.Name = 'Segoe UI'
   Font.Style = []
+  Position = poScreenCenter
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  Position = poScreenCenter
+  TextHeight = 15
   object TopPanel: TPanel
     Left = 0
     Top = 0
@@ -23,8 +24,8 @@
     object StatusLabel: TLabel
       Left = 12
       Top = 41
-      Width = 179
-      Height = 17
+      Width = 168
+      Height = 15
       Caption = 'VirtualSource wird vorbereitet ...'
     end
     object PauseCheck: TCheckBox
@@ -70,7 +71,7 @@
       Top = 7
       Width = 116
       Height = 28
-      Caption = 'Event anhängen'
+      Caption = 'Event anh'#228'ngen'
       TabOrder = 4
       OnClick = AppendButtonClick
     end
@@ -88,7 +89,7 @@
       Top = 7
       Width = 112
       Height = 28
-      Caption = 'Nächste Seite'
+      Caption = 'N'#228'chste Seite'
       TabOrder = 6
       OnClick = NextPageButtonClick
     end
@@ -99,6 +100,8 @@
     Width = 1080
     Height = 564
     Align = alClient
+    TabOrder = 1
+    TabStop = True
     DataController = VirtualController
     Columns = <
       item
@@ -110,6 +113,9 @@
         FixedKind = Left
         ReadOnly = True
         DataType = Integer
+        ClassId = 'h5u.grid.column.default'
+        CellClassId = 'h5u.grid.visual.cell.data'
+        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end
       item
         Id = 'timestamp'
@@ -120,6 +126,9 @@
         ReadOnly = True
         DataType = DateTime
         DisplayFormat = 'dd.mm.yyyy hh:nn:ss'
+        ClassId = 'h5u.grid.column.default'
+        CellClassId = 'h5u.grid.visual.cell.data'
+        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end
       item
         Id = 'source'
@@ -129,6 +138,9 @@
         VisibleIndex = 2
         ReadOnly = True
         DataType = Text
+        ClassId = 'h5u.grid.column.default'
+        CellClassId = 'h5u.grid.visual.cell.data'
+        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end
       item
         Id = 'message'
@@ -141,6 +153,9 @@
         AutoHeight = True
         MaxAutoHeight = 100
         MaxLines = 4
+        ClassId = 'h5u.grid.column.default'
+        CellClassId = 'h5u.grid.visual.cell.data'
+        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end
       item
         Id = 'severity'
@@ -150,6 +165,9 @@
         VisibleIndex = 4
         ReadOnly = True
         DataType = Integer
+        ClassId = 'h5u.grid.column.default'
+        CellClassId = 'h5u.grid.visual.cell.data'
+        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end
       item
         Id = 'ack'
@@ -159,14 +177,23 @@
         VisibleIndex = 5
         DataType = Boolean
         EditorKind = Boolean
+        ClassId = 'h5u.grid.column.default'
+        CellClassId = 'h5u.grid.visual.cell.data'
+        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end>
+    HeaderLayout.Cells = <>
+    Selection.AllowedKinds = [Rows, Columns, CellRanges]
     RowHeight.Mode = Automatic
     RowHeight.MinHeight = 24
     RowHeight.MaxHeight = 110
     RowHeight.EstimatedHeight = 28
+    ScrollHints.Triggers = [ThumbTracking]
     ScrollHints.VerticalColumnId = 'message'
     RowStyles.StripePeriod = 5
     RowStyles.StripeOffset = 5
+    RowStyles.StripeStyleName = 'Stripe'
+    RowStyles.OddStyleName = 'Odd'
+    RowStyles.EvenStyleName = 'Even'
     RowStyles.StyleKeyColumnId = 'severity'
     RowStyles.Mappings = <
       item
@@ -177,11 +204,9 @@
         Value = 3
         StyleName = 'Error'
       end>
-    TabOrder = 1
   end
   object VirtualController: Th5uVirtualController
-    Cache.Mode = Viewport
-    Pagination.Mode = Continuous
+    Cache.MaxMemoryBytes = 67108864
     Pagination.PageSize = 20
     OnGetRowCount = VirtualControllerGetRowCount
     OnGetRowKey = VirtualControllerGetRowKey
@@ -192,7 +217,6 @@
     Top = 88
   end
   object LiveTimer: TTimer
-    Enabled = True
     Interval = 900
     OnTimer = LiveTimerTimer
     Left = 96

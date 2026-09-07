@@ -1,4 +1,4 @@
-﻿object MainForm: TMainForm
+object MainForm: TMainForm
   Left = 0
   Top = 0
   Caption = 'h5u.Grid VCL - TClientDataSet / Designer-Demo'
@@ -10,8 +10,9 @@
   Font.Height = -12
   Font.Name = 'Segoe UI'
   Font.Style = []
-  OnCreate = FormCreate
   Position = poScreenCenter
+  OnCreate = FormCreate
+  TextHeight = 15
   object OptionsPanel: TPanel
     Left = 0
     Top = 0
@@ -22,9 +23,19 @@
     object InfoLabel: TLabel
       Left = 12
       Top = 76
-      Width = 913
-      Height = 17
-      Caption = 'Designer-Test: Musterdaten, Tree und Folgegruppen sind vorgefüllt. Das +/- im Zeilenkopf faltet nur direkt aufeinanderfolgende gleiche FOLD_GROUP-Werte.'
+      Width = 828
+      Height = 15
+      Caption = 
+        'Designer-Test: Musterdaten, Tree und Folgegruppen sind vorgef'#252'll' +
+        't. Das +/- im Zeilenkopf faltet nur direkt aufeinanderfolgende g' +
+        'leiche FOLD_GROUP-Werte.'
+    end
+    object AdjacentBandModeLabel: TLabel
+      Left = 666
+      Top = 44
+      Width = 83
+      Height = 15
+      Caption = 'Abschlussleiste:'
     end
     object AutoHeightCheck: TCheckBox
       Left = 12
@@ -143,18 +154,11 @@
       TabOrder = 12
       OnClick = OptionClick
     end
-    object AdjacentBandModeLabel: TLabel
-      Left = 666
-      Top = 44
-      Width = 99
-      Height = 17
-      Caption = 'Abschlussleiste:'
-    end
     object AdjacentBandModeCombo: TComboBox
       Left = 770
       Top = 39
       Width = 150
-      Height = 25
+      Height = 23
       Style = csDropDownList
       ItemIndex = 3
       TabOrder = 13
@@ -180,7 +184,7 @@
       Top = 8
       Width = 112
       Height = 29
-      Caption = 'Nächste Seite'
+      Caption = 'N'#228'chste Seite'
       TabOrder = 7
       OnClick = NextPageButtonClick
     end
@@ -200,105 +204,9 @@
     Width = 1120
     Height = 546
     Align = alClient
+    TabOrder = 1
+    TabStop = True
     DataController = DataController
-    Tree.Enabled = True
-    Tree.LevelColumnId = 'TREE_LEVEL'
-    Tree.BranchEndBand.Enabled = True
-    Tree.BranchEndBand.Height = 7
-    Tree.BranchEndBand.StyleName = 'TreeBranchEnd'
-    AdjacentGroupFolding.Enabled = True
-    AdjacentGroupFolding.IdColumnId = 'fold_group'
-    AdjacentGroupFolding.ShowFoldGlyph = True
-    AdjacentGroupFolding.EndBand.Visibility = Always
-    AdjacentGroupFolding.EndBand.Height = 7
-    AdjacentGroupFolding.EndBand.StyleName = 'AdjacentGroupEnd'
-    HeaderLayout.Enabled = True
-    HeaderLayout.RowCount = 2
-    HeaderLayout.Cells = <
-      item
-        Id = 'master'
-        Caption = 'Stammdaten'
-        LayoutRow = 0
-        LayoutColumn = 0
-        RowSpan = 1
-        ColumnSpan = 4
-      end
-      item
-        Id = 'values'
-        Caption = 'Mengen und Bewertung'
-        LayoutRow = 0
-        LayoutColumn = 4
-        RowSpan = 1
-        ColumnSpan = 3
-      end
-      item
-        Id = 'state'
-        Caption = 'Status / Medien'
-        LayoutRow = 0
-        LayoutColumn = 7
-        RowSpan = 1
-        ColumnSpan = 3
-      end
-      item
-        Caption = 'ID'
-        ColumnId = 'id'
-        LayoutRow = 1
-        LayoutColumn = 0
-      end
-      item
-        Caption = 'Name'
-        ColumnId = 'name'
-        LayoutRow = 1
-        LayoutColumn = 1
-      end
-      item
-        Caption = 'Kategorie'
-        ColumnId = 'category'
-        LayoutRow = 1
-        LayoutColumn = 2
-      end
-      item
-        Caption = 'Beschreibung'
-        ColumnId = 'description'
-        LayoutRow = 1
-        LayoutColumn = 3
-      end
-      item
-        Caption = 'Menge'
-        ColumnId = 'quantity'
-        LayoutRow = 1
-        LayoutColumn = 4
-      end
-      item
-        Caption = 'Einzelpreis'
-        ColumnId = 'unit_price'
-        LayoutRow = 1
-        LayoutColumn = 5
-      end
-      item
-        Caption = 'Priorität'
-        ColumnId = 'priority'
-        LayoutRow = 1
-        LayoutColumn = 6
-      end
-      item
-        Caption = 'Aktiv'
-        ColumnId = 'active'
-        LayoutRow = 1
-        LayoutColumn = 7
-      end
-      item
-        Caption = 'Aktualisiert'
-        ColumnId = 'updated_at'
-        LayoutRow = 1
-        LayoutColumn = 8
-      end
-      item
-        Caption = 'Bild'
-        ColumnId = 'picture'
-        LayoutRow = 1
-        LayoutColumn = 9
-      end>
     Columns = <
       item
         Id = 'id'
@@ -309,6 +217,9 @@
         FixedKind = Left
         ReadOnly = True
         DataType = Integer
+        ClassId = 'h5u.grid.column.default'
+        CellClassId = 'h5u.grid.visual.cell.data'
+        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end
       item
         Id = 'name'
@@ -317,8 +228,11 @@
         Width = 145
         VisibleIndex = 1
         DataType = Text
-        Color = 16774378
         ScrollHintText = 'Artikelname'
+        Color = 16774378
+        ClassId = 'h5u.grid.column.default'
+        CellClassId = 'h5u.grid.visual.cell.data'
+        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end
       item
         Id = 'category'
@@ -327,6 +241,9 @@
         Width = 125
         VisibleIndex = 2
         DataType = Text
+        ClassId = 'h5u.grid.column.default'
+        CellClassId = 'h5u.grid.visual.cell.data'
+        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end
       item
         Id = 'description'
@@ -334,12 +251,15 @@
         FieldName = 'DESCRIPTION'
         Width = 285
         VisibleIndex = 3
-        RightSpacing = 8
         DataType = Text
         WordWrap = True
         AutoHeight = True
         MaxAutoHeight = 110
         MaxLines = 5
+        RightSpacing = 8
+        ClassId = 'h5u.grid.column.default'
+        CellClassId = 'h5u.grid.visual.cell.data'
+        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end
       item
         Id = 'quantity'
@@ -349,6 +269,9 @@
         VisibleIndex = 4
         DataType = Float
         DisplayFormat = '0.##'
+        ClassId = 'h5u.grid.column.default'
+        CellClassId = 'h5u.grid.visual.cell.data'
+        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end
       item
         Id = 'unit_price'
@@ -359,14 +282,20 @@
         DataType = Currency
         DisplayFormat = '#,##0.00'
         Highlighted = True
+        ClassId = 'h5u.grid.column.default'
+        CellClassId = 'h5u.grid.visual.cell.data'
+        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end
       item
         Id = 'priority'
-        Caption = 'Priorität'
+        Caption = 'Priorit'#228't'
         FieldName = 'PRIORITY'
         Width = 86
         VisibleIndex = 6
         DataType = Integer
+        ClassId = 'h5u.grid.column.default'
+        CellClassId = 'h5u.grid.visual.cell.data'
+        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end
       item
         Id = 'active'
@@ -377,6 +306,9 @@
         DataType = Boolean
         EditorKind = Boolean
         Color = 15530218
+        ClassId = 'h5u.grid.column.default'
+        CellClassId = 'h5u.grid.visual.cell.data'
+        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end
       item
         Id = 'updated_at'
@@ -386,6 +318,9 @@
         VisibleIndex = 8
         DataType = DateTime
         DisplayFormat = 'dd.mm.yyyy hh:nn'
+        ClassId = 'h5u.grid.column.default'
+        CellClassId = 'h5u.grid.visual.cell.data'
+        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end
       item
         Id = 'picture'
@@ -397,6 +332,9 @@
         EditorKind = Image
         AutoHeight = True
         MaxAutoHeight = 90
+        ClassId = 'h5u.grid.column.default'
+        CellClassId = 'h5u.grid.visual.cell.data'
+        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end
       item
         Id = 'fold_group'
@@ -407,19 +345,120 @@
         VisibleIndex = 10
         ReadOnly = True
         DataType = Integer
+        ClassId = 'h5u.grid.column.default'
+        CellClassId = 'h5u.grid.visual.cell.data'
+        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end>
+    HeaderLayout.Enabled = True
+    HeaderLayout.RowCount = 2
+    HeaderLayout.Cells = <
+      item
+        Id = 'master'
+        Caption = 'Stammdaten'
+        ColumnSpan = 4
+        ClassId = 'h5u.grid.visual.cell.header-group'
+      end
+      item
+        Id = 'values'
+        Caption = 'Mengen und Bewertung'
+        LayoutColumn = 4
+        ColumnSpan = 3
+        ClassId = 'h5u.grid.visual.cell.header-group'
+      end
+      item
+        Id = 'state'
+        Caption = 'Status / Medien'
+        LayoutColumn = 7
+        ColumnSpan = 3
+        ClassId = 'h5u.grid.visual.cell.header-group'
+      end
+      item
+        Id = ''
+        Caption = 'ID'
+        ColumnId = 'id'
+        LayoutRow = 1
+        ClassId = 'h5u.grid.visual.cell.header-group'
+      end
+      item
+        Id = ''
+        Caption = 'Name'
+        ColumnId = 'name'
+        LayoutRow = 1
+        LayoutColumn = 1
+        ClassId = 'h5u.grid.visual.cell.header-group'
+      end
+      item
+        Id = ''
+        Caption = 'Kategorie'
+        ColumnId = 'category'
+        LayoutRow = 1
+        LayoutColumn = 2
+        ClassId = 'h5u.grid.visual.cell.header-group'
+      end
+      item
+        Id = ''
+        Caption = 'Beschreibung'
+        ColumnId = 'description'
+        LayoutRow = 1
+        LayoutColumn = 3
+        ClassId = 'h5u.grid.visual.cell.header-group'
+      end
+      item
+        Id = ''
+        Caption = 'Menge'
+        ColumnId = 'quantity'
+        LayoutRow = 1
+        LayoutColumn = 4
+        ClassId = 'h5u.grid.visual.cell.header-group'
+      end
+      item
+        Id = ''
+        Caption = 'Einzelpreis'
+        ColumnId = 'unit_price'
+        LayoutRow = 1
+        LayoutColumn = 5
+        ClassId = 'h5u.grid.visual.cell.header-group'
+      end
+      item
+        Id = ''
+        Caption = 'Priorit'#228't'
+        ColumnId = 'priority'
+        LayoutRow = 1
+        LayoutColumn = 6
+        ClassId = 'h5u.grid.visual.cell.header-group'
+      end
+      item
+        Id = ''
+        Caption = 'Aktiv'
+        ColumnId = 'active'
+        LayoutRow = 1
+        LayoutColumn = 7
+        ClassId = 'h5u.grid.visual.cell.header-group'
+      end
+      item
+        Id = ''
+        Caption = 'Aktualisiert'
+        ColumnId = 'updated_at'
+        LayoutRow = 1
+        LayoutColumn = 8
+        ClassId = 'h5u.grid.visual.cell.header-group'
+      end
+      item
+        Id = ''
+        Caption = 'Bild'
+        ColumnId = 'picture'
+        LayoutRow = 1
+        LayoutColumn = 9
+        ClassId = 'h5u.grid.visual.cell.header-group'
+      end>
+    Selection.AllowedKinds = [Rows, Columns, CellRanges]
     RowHeight.Mode = Automatic
     RowHeight.FixedHeight = 25
     RowHeight.MinHeight = 24
     RowHeight.MaxHeight = 130
     RowHeight.EstimatedHeight = 30
-    Scrolling.VerticalMode = Pixel
-    Scrolling.HorizontalMode = Pixel
-    Scrolling.OverscanRows = 2
-    ScrollHints.Enabled = True
     ScrollHints.Triggers = [ThumbTracking, MouseWheel]
     ScrollHints.VerticalColumnId = 'name'
-    ScrollHints.ShowRowPosition = True
     RowStyles.StripePeriod = 5
     RowStyles.StripeOffset = 5
     RowStyles.StripeStyleName = 'Stripe'
@@ -435,13 +474,18 @@
         Value = 3
         StyleName = 'Error'
       end>
+    Tree.Enabled = True
+    Tree.LevelColumnId = 'TREE_LEVEL'
+    Tree.BranchEndBand.Enabled = True
+    Tree.BranchEndBand.Height = 7
+    Tree.BranchEndBand.StyleName = 'TreeBranchEnd'
+    AdjacentGroupFolding.Enabled = True
+    AdjacentGroupFolding.IdColumnId = 'fold_group'
+    AdjacentGroupFolding.EndBand.Visibility = Always
+    AdjacentGroupFolding.EndBand.Height = 7
+    AdjacentGroupFolding.EndBand.StyleName = 'AdjacentGroupEnd'
     HeaderRowHeight = 27
     RowIndicatorWidth = 38
-    ShowHeader = True
-    ShowRowIndicator = True
-    AllowEditing = True
-    GridLines = True
-    TabOrder = 1
     OnGetRowHeight = GridGetRowHeight
     OnGetThumbHint = GridGetThumbHint
   end
@@ -458,12 +502,12 @@
     Top = 112
   end
   object DataController: Th5uDataSetController
-    DataSource = DataSource
-    KeyFieldName = 'ID'
     Cache.Mode = Paged
     Cache.PageSize = 100
-    Pagination.Mode = Continuous
+    Cache.MaxMemoryBytes = 67108864
     Pagination.PageSize = 10
+    DataSource = DataSource
+    KeyFieldName = 'ID'
     Left = 208
     Top = 112
   end

@@ -16,6 +16,7 @@ type
 
 const
   h5uClassIdGridVisibleRow = Th5uClassId('h5u.grid.visual.row');
+  h5uClassIdGridColumn = Th5uClassId('h5u.grid.column.default');
   h5uClassIdGridDataCell = Th5uClassId('h5u.grid.visual.cell.data');
   h5uClassIdGridHeaderCell = Th5uClassId('h5u.grid.visual.cell.header');
   h5uClassIdGridHeaderGroupCell = Th5uClassId('h5u.grid.visual.cell.header-group');

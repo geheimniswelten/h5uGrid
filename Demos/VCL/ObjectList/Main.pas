@@ -13,6 +13,7 @@ uses
   Vcl.ExtCtrls,
   Vcl.Forms,
   Vcl.StdCtrls,
+  h5u.Grid.Data.Core,
   h5u.Grid.Data.Objects,
   Vcl.h5u.Grid;
 

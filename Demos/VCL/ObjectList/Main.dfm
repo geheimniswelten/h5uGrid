@@ -1,4 +1,4 @@
-﻿object MainForm: TMainForm
+object MainForm: TMainForm
   Left = 0
   Top = 0
   Caption = 'h5u.Grid VCL - Objektliste / RTTI'
@@ -10,8 +10,9 @@
   Font.Height = -12
   Font.Name = 'Segoe UI'
   Font.Style = []
-  OnCreate = FormCreate
   Position = poScreenCenter
+  OnCreate = FormCreate
+  TextHeight = 15
   object TopPanel: TPanel
     Left = 0
     Top = 0
@@ -22,16 +23,18 @@
     object InfoLabel: TLabel
       Left = 12
       Top = 39
-      Width = 729
-      Height = 17
-      Caption = 'Direkter Property-Zugriff oder optionaler Viewport-Cache. Der Timer verändert Objekte und meldet sie gezielt an den Controller.'
+      Width = 673
+      Height = 15
+      Caption = 
+        'Direkter Property-Zugriff oder optionaler Viewport-Cache. Der Ti' +
+        'mer ver'#228'ndert Objekte und meldet sie gezielt an den Controller.'
     end
     object AddButton: TButton
       Left = 12
       Top = 7
       Width = 126
       Height = 27
-      Caption = 'Objekt hinzufügen'
+      Caption = 'Objekt hinzuf'#252'gen'
       TabOrder = 0
       OnClick = AddButtonClick
     end
@@ -49,7 +52,7 @@
       Top = 10
       Width = 122
       Height = 20
-      Caption = 'Live ändern'
+      Caption = 'Live '#228'ndern'
       Checked = True
       State = cbChecked
       TabOrder = 2
@@ -71,6 +74,8 @@
     Width = 1040
     Height = 546
     Align = alClient
+    TabOrder = 1
+    TabStop = True
     DataController = ObjectController
     Columns = <
       item
@@ -82,6 +87,9 @@
         FixedKind = Left
         ReadOnly = True
         DataType = Integer
+        ClassId = 'h5u.grid.column.default'
+        CellClassId = 'h5u.grid.visual.cell.data'
+        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end
       item
         Id = 'name'
@@ -90,6 +98,9 @@
         Width = 150
         VisibleIndex = 1
         DataType = Text
+        ClassId = 'h5u.grid.column.default'
+        CellClassId = 'h5u.grid.visual.cell.data'
+        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end
       item
         Id = 'department'
@@ -98,6 +109,9 @@
         Width = 120
         VisibleIndex = 2
         DataType = Text
+        ClassId = 'h5u.grid.column.default'
+        CellClassId = 'h5u.grid.visual.cell.data'
+        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end
       item
         Id = 'notes'
@@ -110,6 +124,9 @@
         AutoHeight = True
         MaxAutoHeight = 95
         MaxLines = 4
+        ClassId = 'h5u.grid.column.default'
+        CellClassId = 'h5u.grid.visual.cell.data'
+        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end
       item
         Id = 'amount'
@@ -120,6 +137,9 @@
         DataType = Currency
         DisplayFormat = '#,##0.00'
         Highlighted = True
+        ClassId = 'h5u.grid.column.default'
+        CellClassId = 'h5u.grid.visual.cell.data'
+        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end
       item
         Id = 'active'
@@ -129,31 +149,46 @@
         VisibleIndex = 5
         DataType = Boolean
         EditorKind = Boolean
+        ClassId = 'h5u.grid.column.default'
+        CellClassId = 'h5u.grid.visual.cell.data'
+        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end
       item
         Id = 'priority'
-        Caption = 'Priorität'
+        Caption = 'Priorit'#228't'
         FieldName = 'Priority'
         Width = 80
         VisibleIndex = 6
         DataType = Integer
+        ClassId = 'h5u.grid.column.default'
+        CellClassId = 'h5u.grid.visual.cell.data'
+        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end
       item
         Id = 'updated'
-        Caption = 'Geändert'
+        Caption = 'Ge'#228'ndert'
         FieldName = 'UpdatedAt'
         Width = 140
         VisibleIndex = 7
         DataType = DateTime
         DisplayFormat = 'dd.mm.yyyy hh:nn:ss'
+        ClassId = 'h5u.grid.column.default'
+        CellClassId = 'h5u.grid.visual.cell.data'
+        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end>
+    HeaderLayout.Cells = <>
+    Selection.AllowedKinds = [Rows, Columns, CellRanges]
     RowHeight.Mode = Automatic
     RowHeight.MinHeight = 24
     RowHeight.MaxHeight = 110
     RowHeight.EstimatedHeight = 28
+    ScrollHints.Triggers = [ThumbTracking]
     ScrollHints.VerticalColumnId = 'name'
     RowStyles.StripePeriod = 3
     RowStyles.StripeOffset = 3
+    RowStyles.StripeStyleName = 'Stripe'
+    RowStyles.OddStyleName = 'Odd'
+    RowStyles.EvenStyleName = 'Even'
     RowStyles.StyleKeyColumnId = 'priority'
     RowStyles.Mappings = <
       item
@@ -164,17 +199,16 @@
         Value = 3
         StyleName = 'Error'
       end>
-    TabOrder = 1
   end
   object ObjectController: Th5uObjectListController
+    Cache.Mode = None
+    Cache.MaxMemoryBytes = 67108864
     OwnsObjects = True
     KeyPropertyName = 'Id'
-    Cache.Mode = None
     Left = 32
     Top = 88
   end
   object UpdateTimer: TTimer
-    Enabled = True
     Interval = 800
     OnTimer = UpdateTimerTimer
     Left = 104
