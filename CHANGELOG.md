@@ -1,6 +1,8 @@
-﻿# Changelog
+# Changelog
 
 ## Unveröffentlicht – 2026-09-07
+
+- SampleClientDataset: verfrühten LogChanges-Zugriff auf geschlossene Datenmenge entfernt; Neuerzeugung während des Komponenten-Streamings bis Loaded verschoben. Regressionstest für Konstruktion und Design-/Laufzeit-Streaming ergänzt.
 
 - `else` im `case` auf die Ebene der Fallwerte eingerückt; Formatter und vorhandene Quellen angepasst.
 

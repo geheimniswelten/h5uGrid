@@ -1123,10 +1123,6 @@ constructor Th5uVclGrid.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   ControlStyle := ControlStyle + [csOpaque, csDoubleClicks];
-  Width := 640;
-  Height := 320;
-  TabStop := True;
-  DoubleBuffered := True;
 
   FFactoryScope := Th5uFactoryScope.Create(Self);
   FFactoryScope.Parent := h5uGlobalFactoryScope;
@@ -1207,6 +1203,9 @@ begin
   FEditor.OnExit := EditorExit;
   FEditor.OnKeyDown := EditorKeyDown;
 
+  TabStop := True;
+  DoubleBuffered := True;
+  SetBounds(Left, Top, 640, 320);
   LayoutScrollBars;
 end;
 

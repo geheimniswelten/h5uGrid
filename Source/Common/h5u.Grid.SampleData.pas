@@ -16,6 +16,7 @@ type
     FIncludeImages: Boolean;
     FSampleRowCount: Integer;
     FUpdatingSampleData: Boolean;
+    FRecreateAfterLoading: Boolean;
     procedure SetAutoCreateSampleData(const AValue: Boolean);
     procedure SetIncludeImages(const AValue: Boolean);
     procedure SetSampleRowCount(const AValue: Integer);
@@ -49,17 +50,20 @@ begin
   FAutoCreateSampleData := True;
   FIncludeImages := True;
   FSampleRowCount := 25;
-  LogChanges := False;
 
   // This also makes a newly dropped component immediately useful in the
   // designer. Loaded calls EnsureSampleData again after DFM streaming.
-  EnsureSampleData;
+  if not Assigned(AOwner) or not (csLoading in AOwner.ComponentState) then
+    EnsureSampleData;
 end;
 
 procedure Th5uSampleClientDataset.Loaded;
 begin
   inherited Loaded;
-  EnsureSampleData;
+  if FRecreateAfterLoading and FAutoCreateSampleData then
+    RecreateSampleData
+  else
+    EnsureSampleData;
 end;
 
 procedure Th5uSampleClientDataset.SetAutoCreateSampleData(const AValue: Boolean);
@@ -289,9 +293,18 @@ end;
 
 procedure Th5uSampleClientDataset.RecreateSampleData;
 begin
+  // During streaming Close only records Active=False; it does not close the cursor.
+  // Apply property changes after Loaded has cleared the streaming state.
+  if ComponentState * [csLoading, csReading] <> [] then
+  begin
+    FRecreateAfterLoading := True;
+    Exit;
+  end;
+
   if FUpdatingSampleData then
     Exit;
 
+  FRecreateAfterLoading := False;
   FUpdatingSampleData := True;
   try
     if Active then
@@ -309,7 +322,7 @@ end;
 
 procedure Th5uSampleClientDataset.EnsureSampleData;
 begin
-  if not FAutoCreateSampleData or FUpdatingSampleData then
+  if not FAutoCreateSampleData or FUpdatingSampleData or (ComponentState * [csLoading, csReading] <> []) then
     Exit;
 
   if not Active then

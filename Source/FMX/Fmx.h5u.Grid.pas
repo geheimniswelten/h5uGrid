@@ -911,10 +911,6 @@ end;
 constructor Th5uFmxGrid.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  Width := 640;
-  Height := 320;
-  CanFocus := True;
-  ClipChildren := True;
 
   FFactoryScope := Th5uFactoryScope.Create(Self);
   FFactoryScope.Parent := h5uGlobalFactoryScope;
@@ -990,6 +986,10 @@ begin
   FEditor.OnExit := EditorExit;
   FEditor.OnKeyDown := EditorKeyDown;
 
+
+  CanFocus := True;
+  ClipChildren := True;
+  SetSize(640, 320);
   LayoutScrollBars;
 end;
 
