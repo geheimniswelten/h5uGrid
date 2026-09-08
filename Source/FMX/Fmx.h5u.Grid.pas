@@ -195,6 +195,9 @@ type
     FFactoryScope: Th5uFactoryScope;
     FSharedClassFactory: Th5uClassFactory;
     FSelection: Th5uGridSelection;
+    FHeaderSelectionActive: Boolean;
+    FHeaderSelectionKind: Th5uSelectionKind;
+    FHeaderAnchor, FHeaderFocus: Th5uCellAddress;
     FRowHeight: Th5uRowHeightOptions;
     FScrolling: Th5uScrollingOptions;
     FScrollHints: Th5uScrollHintOptions;
@@ -229,9 +232,21 @@ type
     FOnRowIndicatorClick: Th5uCellEvent;
     FOnSelectionChange: TNotifyEvent;
     FClickDownHit: Th5uFmxHitTestInfo;
+    FSelectingRange, FSelectionDragging, FMouseEditPending: Boolean;
+    FSelectionDragKind: Th5uSelectionKind;
+    FSelectionDragShift: TShiftState;
+    FSelectionDragOrigin: TPointF;
+    FSelectionDragLast: Th5uCellAddress;
+    FMovingColumns: TArray<Th5uGridColumn>;
+    FMovingRowKeys: TArray<Th5uRowKey>;
+    FMovingFirstRowIndex: Int64;
+    FMoveDragging: Boolean;
+    FMoveCursor: TCursor;
+    FOnRowsMoved: Th5uRowsMovedEvent;
     FLastNotifiedCell: Th5uCellAddress;
-    function FocusCell(ARow: Int64; AColumn: Integer; AExtend, AEdit: Boolean): Boolean;
+    function FocusCell(ARow: Int64; AColumn: Integer; AExtend, AEdit: Boolean; AAdd: Boolean = False): Boolean;
     function FocusedCellHit(out AHit: Th5uFmxHitTestInfo): Boolean;
+    function CellHit(const LCell: Th5uCellAddress; out AHit: Th5uFmxHitTestInfo): Boolean;
     procedure EditFocusedCell(AAutomatic: Boolean);
     function HandleNavigationKey(AKey: Word; AShift: TShiftState): Boolean;
     procedure SearchCharacter(AChar: Char);
@@ -287,6 +302,17 @@ type
     procedure ColumnsChanged(Sender: TObject; AColumn: Th5uGridColumn);
     procedure DataChanged(Sender: TObject; const AChange: Th5uDataChange);
     procedure OptionsChanged(Sender: TObject);
+    procedure BeginSelectionDrag(AKind: Th5uSelectionKind; X, Y: Single; AShift: TShiftState);
+    procedure UpdateSelectionDrag(X, Y: Single);
+    procedure EndSelectionDrag;
+    function IsRowMoveGesture(AShift: TShiftState): Boolean;
+    function BeginColumnMove(AColumnIndex: Integer; X, Y: Single): Boolean;
+    function BeginRowMove(ARowIndex: Int64; X, Y: Single): Boolean;
+    procedure UpdateHeaderMove(X, Y: Single);
+    function FinishHeaderMove(X, Y: Single): Boolean;
+    function CanMoveColumn(AColumn: Th5uGridColumn): Boolean;
+    function IsColumnMoveGesture(AColumn: Th5uGridColumn; AShift: TShiftState): Boolean;
+    procedure SelectHeaderRange(AKind: Th5uSelectionKind; ARow: Int64; AColumn: Integer; AShift: TShiftState);
     procedure SelectionChanged(Sender: TObject);
     procedure ScrollChanged(Sender: TObject);
     procedure ThumbHintTimer(Sender: TObject);
@@ -409,6 +435,7 @@ type
     function GetVisualCellClass(const AContext: Th5uFactoryContext; ADefaultClass: Th5uFmxVisualCellClass): Th5uFmxVisualCellClass; virtual;
     procedure DoCustomDraw(ACanvas: TCanvas; const AContext: Th5uFmxDrawContext; AStage: Th5uFmxCustomDrawStage; var ADrawDefault: Boolean);
   protected
+    procedure DoExit; override;
     procedure KeyDown(var Key: Word; var KeyChar: Char; Shift: TShiftState); override;
     procedure Loaded; override;
     procedure Paint; override;
@@ -510,6 +537,7 @@ type
     property OnCellEnter: Th5uCellEvent read FOnCellEnter write FOnCellEnter;
     property OnCellExit: Th5uCellEvent read FOnCellExit write FOnCellExit;
     property OnRowIndicatorClick: Th5uCellEvent read FOnRowIndicatorClick write FOnRowIndicatorClick;
+    property OnRowsMoved: Th5uRowsMovedEvent read FOnRowsMoved write FOnRowsMoved;
     property OnSelectionChange: TNotifyEvent read FOnSelectionChange write FOnSelectionChange;
     property ShowColumnModes: Boolean read FShowColumnModes write SetShowColumnModes default False;
     property OnClick;
@@ -1166,6 +1194,7 @@ begin
     if not Result then Exit;
     if Assigned(FEditColumn) then CommitEditor;
   end;
+  FHeaderSelectionActive := False;
   FSelection.SetFocus(ACell, AUpdateAnchor);
   Result := True;
 end;
@@ -1401,6 +1430,9 @@ end;
 
 procedure Th5uFmxGrid.DataChanged(Sender: TObject; const AChange: Th5uDataChange);
 begin
+  // Unknown row changes may reorder positional keys; abandon the pending drop.
+  if (Length(FMovingRowKeys) > 0) and (AChange.Kind <> Th5uDataChangeKind.CellChanged) then
+    EndSelectionDrag;
   InvalidateAdjacentGroupMap(not FAdjacentGroupFolding.PreserveStateOnDataChange);
   // Live updates must not discard an in-progress draft. Cancel only when the
   // target is no longer the same row; never commit into a replacement row.
@@ -1415,6 +1447,7 @@ end;
 
 destructor Th5uFmxGrid.Destroy;
 begin
+  EndSelectionDrag;
   FInitialized := False;
   FDataLink.Controller := nil;
   FAdjacentGroupMap.Free;
@@ -2851,11 +2884,361 @@ begin
     FTouchScrolling := True;
   end;
 end;
+function Th5uFmxGrid.CanMoveColumn(AColumn: Th5uGridColumn): Boolean;
+var
+  I: Integer;
+begin
+  Result := False;
+  // The source column may have been removed while the mouse was captured.
+  for I := 0 to FColumns.Count - 1 do
+    if FColumns[I] = AColumn then
+    begin
+      case AColumn.MovePermission of
+        Th5uColumnMovePermission.Default: Result := FCustomization.AllowColumnMoving;
+        Th5uColumnMovePermission.Allow: Result := True;
+        Th5uColumnMovePermission.Deny: Result := False;
+      end;
+      Exit;
+    end;
+end;
+
+function Th5uFmxGrid.IsColumnMoveGesture(AColumn: Th5uGridColumn; AShift: TShiftState): Boolean;
+begin
+  Result := False;
+  if (AShift * [ssCtrl, ssShift] <> []) or not CanMoveColumn(AColumn) then Exit;
+  if FCustomization.ColumnMovingGesture = Th5uColumnMovingGesture.AltDrag then Result := ssAlt in AShift
+  else Result := not (ssAlt in AShift);
+end;
+function Th5uFmxGrid.IsRowMoveGesture(AShift: TShiftState): Boolean;
+begin
+  Result := False;
+  if not Assigned(FOnRowsMoved) or not FCustomization.AllowRowMoving
+    or (AShift * [ssCtrl, ssShift] <> []) then Exit;
+  if FCustomization.RowMovingGesture = Th5uRowMovingGesture.AltDrag then Result := ssAlt in AShift
+  else Result := not (ssAlt in AShift);
+end;
+
+function Th5uFmxGrid.BeginColumnMove(AColumnIndex: Integer; X, Y: Single): Boolean;
+var
+  LColumns: TArray<Th5uGridColumn>;
+  LFirst, LLast, I: Integer;
+begin
+  Result := False;
+  LColumns := FColumns.VisibleColumns;
+  if (AColumnIndex < 0) or (AColumnIndex >= Length(LColumns)) then Exit;
+  LFirst := AColumnIndex;
+  LLast := LFirst;
+  if FSelection.IsColumnSelected(LColumns[LFirst].Id) then
+  begin
+    while (LFirst > 0) and FSelection.IsColumnSelected(LColumns[LFirst - 1].Id) do Dec(LFirst);
+    while (LLast < High(LColumns)) and FSelection.IsColumnSelected(LColumns[LLast + 1].Id) do Inc(LLast);
+    // Include the entire selected block or do not start at all (also for hidden selections).
+    if LLast - LFirst + 1 <> FSelection.SelectedColumnCount then Exit;
+  end;
+  for I := LFirst to LLast do
+    if not CanMoveColumn(LColumns[I]) or (LColumns[I].FixedKind <> LColumns[LFirst].FixedKind) then Exit;
+  FMovingColumns := Copy(LColumns, LFirst, LLast - LFirst + 1);
+  FSelectionDragOrigin := PointF(X, Y);
+  Capture;
+  Result := True;
+end;
+
+function Th5uFmxGrid.BeginRowMove(ARowIndex: Int64; X, Y: Single): Boolean;
+var
+  LFirst, LLast, LCount, LSelectedCount: Int64;
+  I: Integer;
+begin
+  Result := False;
+  if not CanUpdateLayout or not Assigned(FOnRowsMoved) or not FCustomization.AllowRowMoving then Exit;
+  LCount := GetViewRowCount;
+  if (ARowIndex < 0) or (ARowIndex >= LCount) then Exit;
+  LFirst := ARowIndex;
+  LLast := LFirst;
+  if FSelection.IsRowSelected(GetViewRowKey(LFirst)) then
+  begin
+    LSelectedCount := FSelection.SelectedRowCount(LCount);
+    if (LSelectedCount >= LCount) or (LSelectedCount <= 0) then Exit;
+    // Visit only the selected neighbours; virtual grids must not scan every row.
+    while (LFirst > 0) and FSelection.IsRowSelected(GetViewRowKey(LFirst - 1)) do Dec(LFirst);
+    while (LLast < LCount - 1) and FSelection.IsRowSelected(GetViewRowKey(LLast + 1)) do Inc(LLast);
+    if LLast - LFirst + 1 <> LSelectedCount then Exit;
+  end;
+  if LLast - LFirst >= MaxInt then Exit;
+  SetLength(FMovingRowKeys, LLast - LFirst + 1);
+  for I := 0 to High(FMovingRowKeys) do
+  begin
+    FMovingRowKeys[I] := GetViewRowKey(LFirst + I);
+    if FMovingRowKeys[I].IsEmpty then
+    begin
+      FMovingRowKeys := nil;
+      Exit;
+    end;
+  end;
+  FMovingFirstRowIndex := LFirst;
+  FSelectionDragOrigin := PointF(X, Y);
+  Capture;
+  Result := True;
+end;
+
+procedure Th5uFmxGrid.UpdateHeaderMove(X, Y: Single);
+begin
+  if (Length(FMovingColumns) = 0) and (Length(FMovingRowKeys) = 0) then Exit;
+  if not ((Root <> nil) and (Root.Captured <> nil) and (Root.Captured.GetObject = Self)) then
+  begin
+    EndSelectionDrag;
+    Exit;
+  end;
+  if FMoveDragging or ((Abs(X - FSelectionDragOrigin.X) < 4)
+    and (Abs(Y - FSelectionDragOrigin.Y) < 4)) then Exit;
+  FMoveCursor := Cursor;
+  FMoveDragging := True;
+  Cursor := crDrag;
+end;
+
+function Th5uFmxGrid.FinishHeaderMove(X, Y: Single): Boolean;
+var
+  LHit: Th5uFmxHitTestInfo;
+  LColumns, LMovingColumns: TArray<Th5uGridColumn>;
+  LContext: Th5uRowsMovedContext;
+  LFirst, LNewIndex, I: Integer;
+  LDragging: Boolean;
+begin
+  Result := (Length(FMovingColumns) > 0) or (Length(FMovingRowKeys) > 0);
+  if not Result then Exit;
+  try
+    UpdateHeaderMove(X, Y);
+    LDragging := FMoveDragging;
+    LMovingColumns := FMovingColumns;
+    LContext.RowKeys := FMovingRowKeys;
+    LContext.FirstRowIndex := FMovingFirstRowIndex;
+  finally
+    // Release capture/restore the cursor before layout notifications or user code.
+    EndSelectionDrag;
+  end;
+  if not CanUpdateLayout then Exit;
+  LHit := GridHitTest(X, Y);
+  if not LDragging then
+  begin
+    if (Length(LMovingColumns) > 0) and (LHit.Kind = Th5uFmxHitKind.Header)
+      and (LHit.Column = FClickDownHit.Column) then
+      SelectHeaderRange(Th5uSelectionKind.Columns, -1, LHit.ColumnIndex, [])
+    else if (Length(LContext.RowKeys) > 0) and (LHit.Kind = Th5uFmxHitKind.RowIndicator)
+      and (LHit.RowKey = FClickDownHit.RowKey) then
+      SelectHeaderRange(Th5uSelectionKind.Rows, LHit.RowIndex, -1, []);
+    Result := False; // A click still dispatches the ordinary header click event.
+    Exit;
+  end;
+  if Length(LMovingColumns) > 0 then
+  begin
+    if (LHit.Kind <> Th5uFmxHitKind.Header) or not Assigned(LHit.Column) then Exit;
+    LColumns := FColumns.VisibleColumns;
+    LFirst := -1;
+    for I := 0 to High(LColumns) do
+      if LColumns[I] = LMovingColumns[0] then LFirst := I;
+    if (LFirst < 0) or (LFirst + Length(LMovingColumns) > Length(LColumns)) then Exit;
+    for I := 0 to High(LMovingColumns) do
+    begin
+      if LColumns[LFirst + I] <> LMovingColumns[I] then Exit;
+      if not CanMoveColumn(LMovingColumns[I]) then Exit;
+    end;
+    if (LHit.ColumnIndex >= LFirst) and (LHit.ColumnIndex < LFirst + Length(LMovingColumns)) then Exit;
+    LNewIndex := LHit.ColumnIndex;
+    if LNewIndex > LFirst then Dec(LNewIndex, Length(LMovingColumns) - 1);
+    FColumns.MoveColumns(LMovingColumns, LNewIndex);
+    Repaint;
+  end
+  else if Length(LContext.RowKeys) > 0 then
+  begin
+    if not Assigned(FOnRowsMoved) or not FCustomization.AllowRowMoving
+      or not (LHit.Kind in [Th5uFmxHitKind.RowIndicator, Th5uFmxHitKind.DataCell]) then Exit;
+    if (LContext.FirstRowIndex < 0)
+      or (LContext.FirstRowIndex + Length(LContext.RowKeys) > GetViewRowCount) then Exit;
+    if (LHit.RowIndex >= LContext.FirstRowIndex)
+      and (LHit.RowIndex < LContext.FirstRowIndex + Length(LContext.RowKeys)) then Exit;
+    SetLength(LContext.SourceRowIndexes, Length(LContext.RowKeys));
+    for I := 0 to High(LContext.RowKeys) do
+    begin
+      // A live sort/filter or removed row invalidates the original drag range.
+      if GetViewRowKey(LContext.FirstRowIndex + I) <> LContext.RowKeys[I] then Exit;
+      LContext.SourceRowIndexes[I] := GetViewSourceRowIndex(LContext.FirstRowIndex + I);
+    end;
+    LContext.TargetRowIndex := LHit.RowIndex;
+    LContext.TargetRowKey := LHit.RowKey;
+    LContext.TargetSourceRowIndex := GetViewSourceRowIndex(LHit.RowIndex);
+    LContext.InsertAfter := LHit.RowIndex > LContext.FirstRowIndex;
+    LContext.NewFirstRowIndex := LHit.RowIndex;
+    if LContext.InsertAfter then Dec(LContext.NewFirstRowIndex, Length(LContext.RowKeys) - 1);
+    FOnRowsMoved(Self, LContext);
+  end;
+end;
+
+
+procedure Th5uFmxGrid.BeginSelectionDrag(AKind: Th5uSelectionKind; X, Y: Single; AShift: TShiftState);
+begin
+  FSelectingRange := True;
+  FSelectionDragging := False;
+  FSelectionDragKind := AKind;
+  FSelectionDragShift := AShift;
+  FSelectionDragOrigin := PointF(X, Y);
+  FSelectionDragLast := Th5uCellAddress.Empty;
+  Capture;
+end;
+
+procedure Th5uFmxGrid.EndSelectionDrag;
+var
+  LCaptured: Boolean;
+begin
+  LCaptured := FSelectingRange or (Length(FMovingColumns) > 0) or (Length(FMovingRowKeys) > 0);
+  FMovingColumns := nil;
+  FMovingRowKeys := nil;
+  if FMoveDragging then
+  begin
+    FMoveDragging := False;
+    Cursor := FMoveCursor;
+  end;
+  FSelectingRange := False;
+  FSelectionDragging := False;
+  FMouseEditPending := False;
+  if LCaptured then ReleaseCapture;
+end;
+
+procedure Th5uFmxGrid.UpdateSelectionDrag(X, Y: Single);
+var
+  LHit: Th5uFmxHitTestInfo;
+  LCell: Th5uCellAddress;
+  LRange: Th5uCellRange;
+begin
+  if not FSelectingRange or not CanUpdateLayout then Exit;
+  if not FSelectionDragging then
+  begin
+    if (Abs(X - FSelectionDragOrigin.X) < 4) and (Abs(Y - FSelectionDragOrigin.Y) < 4) then Exit;
+    FSelectionDragging := True;
+    FMouseEditPending := False;
+  end;
+  LHit := GridHitTest(X, Y);
+  LCell := Th5uCellAddress.Empty;
+  case FSelectionDragKind of
+    Th5uSelectionKind.CellRanges:
+      begin
+        if (LHit.Kind <> Th5uFmxHitKind.DataCell) or not FSelection.AnchorCell.IsValid then Exit;
+        LCell.RowIndex := LHit.RowIndex;
+        LCell.RowKey := LHit.RowKey;
+        LCell.ColumnIndex := LHit.ColumnIndex;
+        LCell.ColumnId := LHit.Column.Id;
+      end;
+    Th5uSelectionKind.Rows:
+      begin
+        if not (LHit.Kind in [Th5uFmxHitKind.RowIndicator, Th5uFmxHitKind.DataCell]) then Exit;
+        LCell.RowIndex := LHit.RowIndex;
+        LCell.RowKey := LHit.RowKey;
+      end;
+    Th5uSelectionKind.Columns:
+      begin
+        if not (LHit.Kind in [Th5uFmxHitKind.Header, Th5uFmxHitKind.DataCell]) then Exit;
+        LCell.ColumnIndex := LHit.ColumnIndex;
+        LCell.ColumnId := LHit.Column.Id;
+      end;
+  end;
+  if (LCell.RowIndex = FSelectionDragLast.RowIndex) and (LCell.RowKey = FSelectionDragLast.RowKey)
+    and (LCell.ColumnIndex = FSelectionDragLast.ColumnIndex) and (LCell.ColumnId = FSelectionDragLast.ColumnId) then Exit;
+  if FSelectionDragKind = Th5uSelectionKind.CellRanges then
+  begin
+    if not TryFocusCell(LCell, False) then Exit;
+    LRange := Th5uCellRange.Create(FSelection.AnchorCell.RowIndex, LCell.RowIndex,
+      FSelection.AnchorCell.ColumnIndex, LCell.ColumnIndex);
+    FSelection.AddCellRange(LRange, ssCtrl in FSelectionDragShift, True);
+  end
+  else
+    SelectHeaderRange(FSelectionDragKind, LCell.RowIndex, LCell.ColumnIndex, FSelectionDragShift + [ssShift]);
+  FSelectionDragLast := LCell;
+end;
+
+
+procedure Th5uFmxGrid.SelectHeaderRange(AKind: Th5uSelectionKind; ARow: Int64; AColumn: Integer; AShift: TShiftState);
+var
+  LColumns: TArray<Th5uGridColumn>;
+  LKeys: TArray<Th5uRowKey>;
+  LIds: TList<string>;
+  LRow, LFirstRow, LLastRow: Int64;
+  I, LAnchorColumn: Integer;
+  LExtend: Boolean;
+begin
+  if not CanUpdateLayout or not (AKind in FSelection.AllowedKinds) then Exit;
+  LColumns := FColumns.VisibleColumns;
+  if AKind = Th5uSelectionKind.Rows then
+  begin
+    if (ARow < 0) or (ARow >= GetViewRowCount) then Exit;
+  end
+  else if (AColumn < 0) or (AColumn >= Length(LColumns)) then Exit
+  else if not LColumns[AColumn].CanSelect then Exit;
+
+  LExtend := (ssShift in AShift) and FHeaderSelectionActive and (FHeaderSelectionKind = AKind);
+  if not LExtend then FHeaderAnchor := Th5uCellAddress.Empty;
+  FHeaderSelectionActive := True;
+  FHeaderSelectionKind := AKind;
+  FHeaderFocus := Th5uCellAddress.Empty;
+  if AKind = Th5uSelectionKind.Rows then
+  begin
+    FHeaderFocus.RowIndex := ARow;
+    FHeaderFocus.RowKey := GetViewRowKey(ARow);
+    // A removed/replaced row must not leave an anchor pointing at another row.
+    if (FHeaderAnchor.RowIndex < 0) or (FHeaderAnchor.RowIndex >= GetViewRowCount) then
+      FHeaderAnchor := FHeaderFocus
+    else if GetViewRowKey(FHeaderAnchor.RowIndex) <> FHeaderAnchor.RowKey then
+      FHeaderAnchor := FHeaderFocus;
+    if (ssCtrl in AShift) and not (ssShift in AShift) then
+      FSelection.ToggleRow(FHeaderFocus.RowKey)
+    else
+    begin
+      LFirstRow := Min(FHeaderAnchor.RowIndex, ARow);
+      LLastRow := Max(FHeaderAnchor.RowIndex, ARow);
+      SetLength(LKeys, LLastRow - LFirstRow + 1);
+      for LRow := LFirstRow to LLastRow do LKeys[LRow - LFirstRow] := GetViewRowKey(LRow);
+      FSelection.SelectRows(LKeys, ssCtrl in AShift, LExtend);
+    end;
+  end
+  else
+  begin
+    FHeaderFocus.ColumnIndex := AColumn;
+    FHeaderFocus.ColumnId := LColumns[AColumn].Id;
+    LAnchorColumn := -1;
+    for I := 0 to High(LColumns) do
+      if LColumns[I].Id = FHeaderAnchor.ColumnId then LAnchorColumn := I;
+    if LAnchorColumn < 0 then
+    begin
+      FHeaderAnchor := FHeaderFocus;
+      LAnchorColumn := AColumn;
+    end;
+    if (ssCtrl in AShift) and not (ssShift in AShift) then
+      FSelection.ToggleColumn(FHeaderFocus.ColumnId)
+    else
+    begin
+      LIds := TList<string>.Create;
+      try
+        for I := Min(LAnchorColumn, AColumn) to Max(LAnchorColumn, AColumn) do
+          if LColumns[I].CanSelect then LIds.Add(LColumns[I].Id);
+        FSelection.SelectColumns(LIds.ToArray, ssCtrl in AShift, LExtend);
+      finally
+        LIds.Free;
+      end;
+    end;
+  end;
+end;
+
+
+procedure Th5uFmxGrid.DoExit;
+begin
+  EndSelectionDrag;
+  inherited;
+end;
+
 procedure Th5uFmxGrid.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Single);
 var
   LHit: Th5uFmxHitTestInfo;
   LCell: Th5uCellAddress;
+  LRange: Th5uCellRange;
 begin
+  EndSelectionDrag;
   if not FDispatchingTouch and (Button = TMouseButton.mbLeft)
     and ((ssTouch in Shift) {$IFDEF ANDROID}or True{$ENDIF}) then
   begin
@@ -2889,16 +3272,32 @@ begin
       ToggleAdjacentGroup(LHit.RowIndex);
 
     Th5uFmxHitKind.Header:
-      if ssCtrl in Shift then
-        FSelection.ToggleColumn(LHit.Column.Id)
-      else
-        FSelection.SelectColumn(LHit.Column.Id, False);
+      begin
+    if IsColumnMoveGesture(LHit.Column, Shift) then
+    begin
+      BeginColumnMove(LHit.ColumnIndex, X, Y);
+      Exit;
+    end;
+    if LHit.Column.CanSelect and (Th5uSelectionKind.Columns in FSelection.AllowedKinds) then
+    begin
+      SelectHeaderRange(Th5uSelectionKind.Columns, -1, LHit.ColumnIndex, Shift);
+      BeginSelectionDrag(Th5uSelectionKind.Columns, X, Y, Shift);
+    end;
+      end;
 
     Th5uFmxHitKind.RowIndicator:
-      if ssCtrl in Shift then
-        FSelection.ToggleRow(LHit.RowKey)
-      else
-        FSelection.SelectRow(LHit.RowKey, False);
+      begin
+    if IsRowMoveGesture(Shift) then
+    begin
+      BeginRowMove(LHit.RowIndex, X, Y);
+      Exit;
+    end;
+    if Th5uSelectionKind.Rows in FSelection.AllowedKinds then
+    begin
+      SelectHeaderRange(Th5uSelectionKind.Rows, LHit.RowIndex, -1, Shift);
+      BeginSelectionDrag(Th5uSelectionKind.Rows, X, Y, Shift);
+    end;
+      end;
 
     Th5uFmxHitKind.DataCell:
       begin
@@ -2906,16 +3305,14 @@ begin
         LCell.ColumnIndex := LHit.ColumnIndex;
         LCell.RowKey := LHit.RowKey;
         LCell.ColumnId := LHit.Column.Id;
-        if not TryFocusCell(LCell, True) then Exit;
-          FSelection.AddCellRange(Th5uCellRange.Create(LHit.RowIndex, LHit.RowIndex, LHit.ColumnIndex, LHit.ColumnIndex), ssCtrl in Shift);
-          if (LHit.Column.EditorKind = Th5uColumnEditorKind.Boolean)
-            or ((LHit.Column.EditorKind = Th5uColumnEditorKind.Automatic) and (LHit.Column.DataType = Th5uColumnDataType.Boolean)) then
-          begin
-            if GetCheckBoxRect(LHit.Bounds).Contains(PointF(X, Y)) then
-              StartEdit(LHit);
-          end
-          else if FImmediateEdit and not (ssShift in Shift) and not (ssCtrl in Shift) then
-            EditFocusedCell(True);
+        if (ssShift in Shift) and FSelection.AnchorCell.IsValid then
+          LRange := Th5uCellRange.Create(FSelection.AnchorCell.RowIndex, LCell.RowIndex, FSelection.AnchorCell.ColumnIndex, LCell.ColumnIndex)
+        else LRange := Th5uCellRange.Create(LCell.RowIndex, LCell.RowIndex, LCell.ColumnIndex, LCell.ColumnIndex);
+        if not TryFocusCell(LCell, not (ssShift in Shift)) then Exit;
+          FSelection.AddCellRange(LRange, ssCtrl in Shift, ssShift in Shift);
+        BeginSelectionDrag(Th5uSelectionKind.CellRanges, X, Y, Shift);
+        // Wait for release: the same MouseDown can still become a range drag.
+        FMouseEditPending := not (ssCtrl in Shift) and not (ssShift in Shift);
       end;
   end;
 end;
@@ -2923,6 +3320,7 @@ end;
 procedure Th5uFmxGrid.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Single);
 var
   LHit: Th5uFmxHitTestInfo;
+  LDragged, LEdit: Boolean;
 begin
   if (Button = TMouseButton.mbLeft) and (FTouchTracking or FTouchScrolling) then
   begin
@@ -2943,19 +3341,59 @@ begin
       FDispatchingTouch := False;
     end;
   end;
+  if (Button = TMouseButton.mbLeft) and FinishHeaderMove(X, Y) then
+  begin
+    FClickDownHit := Th5uFmxHitTestInfo.Empty;
+    inherited;
+    Exit;
+  end;
+  LDragged := False;
+  LEdit := False;
+  if Button = TMouseButton.mbLeft then
+    try
+      UpdateSelectionDrag(X, Y);
+      LDragged := FSelectionDragging;
+      LEdit := FMouseEditPending;
+    finally
+      EndSelectionDrag;
+    end;
   inherited;
+  if LDragged then
+  begin
+    FClickDownHit := Th5uFmxHitTestInfo.Empty;
+    Exit;
+  end;
+
   if Button <> TMouseButton.mbLeft then Exit;
   LHit := GridHitTest(X, Y);
   if (LHit.Kind = FClickDownHit.Kind) and (LHit.Column = FClickDownHit.Column)
     and (LHit.RowIndex = FClickDownHit.RowIndex)
     and (LHit.Kind in [Th5uFmxHitKind.DataCell, Th5uFmxHitKind.Header, Th5uFmxHitKind.RowIndicator]) then
-    NotifyCellClick(LHit.Column, LHit.RowIndex, LHit.Kind = Th5uFmxHitKind.Header, LHit.Kind = Th5uFmxHitKind.RowIndicator);
+    begin
+      if LEdit and (LHit.Kind = Th5uFmxHitKind.DataCell) then
+      begin
+        if (LHit.Column.EditorKind = Th5uColumnEditorKind.Boolean)
+          or ((LHit.Column.EditorKind = Th5uColumnEditorKind.Automatic) and (LHit.Column.DataType = Th5uColumnDataType.Boolean)) then
+        begin
+          if GetCheckBoxRect(FClickDownHit.Bounds).Contains(FSelectionDragOrigin)
+            and GetCheckBoxRect(FClickDownHit.Bounds).Contains(PointF(X, Y)) then StartEdit(LHit);
+        end
+        else if FImmediateEdit then EditFocusedCell(True);
+      end;
+      NotifyCellClick(LHit.Column, LHit.RowIndex, LHit.Kind = Th5uFmxHitKind.Header, LHit.Kind = Th5uFmxHitKind.RowIndicator);
+    end;
   FClickDownHit := Th5uFmxHitTestInfo.Empty;
 end;
 procedure Th5uFmxGrid.MouseMove(Shift: TShiftState; X, Y: Single);
 begin
   inherited;
-  if FTouchTracking and not FGesturePanning then MoveTouchScroll(PointF(X, Y));
+  if FTouchTracking and not FGesturePanning then MoveTouchScroll(PointF(X, Y))
+  else if not (ssLeft in Shift) then EndSelectionDrag
+  else
+  begin
+    UpdateHeaderMove(X, Y);
+    UpdateSelectionDrag(X, Y);
+  end;
   FLastMousePoint := PointF(X, Y);
 end;
 
@@ -2977,7 +3415,7 @@ end;
 
 procedure Th5uFmxGrid.MoveColumn(AColumn: Th5uGridColumn; ANewVisibleIndex: Integer);
 begin
-  if not FCustomization.AllowColumnMoving then
+  if not CanMoveColumn(AColumn) then
     Exit;
   FColumns.MoveColumn(AColumn, ANewVisibleIndex);
   Repaint;
@@ -3381,6 +3819,7 @@ procedure Th5uFmxGrid.SetDataController(const AValue: Th5uCustomDataController);
 begin
   if FDataController = AValue then
     Exit;
+  EndSelectionDrag;
   if Assigned(FDataController) then
     FDataController.RemoveFreeNotification(Self);
   FDataController := AValue;
@@ -3537,8 +3976,12 @@ begin
 end;
 
 function Th5uFmxGrid.FocusedCellHit(out AHit: Th5uFmxHitTestInfo): Boolean;
+begin
+  Result := CellHit(FSelection.FocusedCell, AHit);
+end;
+
+function Th5uFmxGrid.CellHit(const LCell: Th5uCellAddress; out AHit: Th5uFmxHitTestInfo): Boolean;
 var
-  LCell: Th5uCellAddress;
   LColumns: TArray<Th5uGridColumn>;
   LView: TRectF;
   LTop, LHeight, LLeft, LRight: Single;
@@ -3553,7 +3996,6 @@ begin
   AHit := Th5uFmxHitTestInfo.Empty;
   if not CanUpdateLayout or not Assigned(FDataController) then
     Exit;
-  LCell := FSelection.FocusedCell;
   LColumns := FColumns.VisibleColumns;
   if not LCell.IsValid or (LCell.RowIndex >= GetViewRowCount)
     or (LCell.ColumnIndex >= Length(LColumns)) then
@@ -3605,7 +4047,7 @@ begin
   Result := True;
 end;
 
-function Th5uFmxGrid.FocusCell(ARow: Int64; AColumn: Integer; AExtend, AEdit: Boolean): Boolean;
+function Th5uFmxGrid.FocusCell(ARow: Int64; AColumn: Integer; AExtend, AEdit: Boolean; AAdd: Boolean): Boolean;
 var
   LCell: Th5uCellAddress;
   LColumns: TArray<Th5uGridColumn>;
@@ -3628,7 +4070,7 @@ begin
   else
     LRange := Th5uCellRange.Create(LCell.RowIndex, LCell.RowIndex, LCell.ColumnIndex, LCell.ColumnIndex);
   if not TryFocusCell(LCell, not AExtend) then Exit;
-  FSelection.AddCellRange(LRange);
+  FSelection.AddCellRange(LRange, AAdd, AExtend);
   Result := FocusedCellHit(LHit);
   if Result and AEdit and FImmediateEdit and not AExtend then
     EditFocusedCell(True);
@@ -3651,6 +4093,7 @@ end;
 function Th5uFmxGrid.HandleNavigationKey(AKey: Word; AShift: TShiftState): Boolean;
 var
   LCell: Th5uCellAddress;
+  LHit: Th5uFmxHitTestInfo;
   LColumns: TArray<Th5uGridColumn>;
   LRow, LCount: Int64;
   LColumn: Integer;
@@ -3661,7 +4104,9 @@ begin
     Exit;
   if AKey = vkEscape then
   begin
+    EndSelectionDrag;
     FSearchText := '';
+    FHeaderSelectionActive := False;
     FSelection.ClearExtendedSelection;
     Exit(True);
   end;
@@ -3674,6 +4119,20 @@ begin
   if (LCount = 0) or (Length(LColumns) = 0) then
     Exit;
   LCell := FSelection.FocusedCell;
+  if FHeaderSelectionActive and (ssShift in AShift) and (AKey <> vkF2) then
+  begin
+    if not LCell.IsValid then
+    begin
+      LCell.RowIndex := 0;
+      LCell.ColumnIndex := 0;
+    end;
+    if FHeaderSelectionKind = Th5uSelectionKind.Rows then LCell.RowIndex := FHeaderFocus.RowIndex
+    else LCell.ColumnIndex := FHeaderFocus.ColumnIndex;
+    LCell.RowIndex := EnsureRange(LCell.RowIndex, Int64(0), LCount - 1);
+    LCell.ColumnIndex := EnsureRange(LCell.ColumnIndex, 0, High(LColumns));
+    LCell.RowKey := GetViewRowKey(LCell.RowIndex);
+    LCell.ColumnId := LColumns[LCell.ColumnIndex].Id;
+  end;
   if not LCell.IsValid then
   begin
     FocusCell(0, 0, False, AKey <> vkF2);
@@ -3700,7 +4159,16 @@ begin
       end;
     vkF2: begin EditFocusedCell(False); Exit; end;
   end;
-  FocusCell(LRow, LColumn, ssShift in AShift, True);
+  if FHeaderSelectionActive and (ssShift in AShift) then
+  begin
+    LCell.RowIndex := EnsureRange(LRow, Int64(0), LCount - 1);
+    LCell.ColumnIndex := EnsureRange(LColumn, 0, High(LColumns));
+    LCell.RowKey := GetViewRowKey(LCell.RowIndex);
+    LCell.ColumnId := LColumns[LCell.ColumnIndex].Id;
+    SelectHeaderRange(FHeaderSelectionKind, LCell.RowIndex, LCell.ColumnIndex, AShift);
+    CellHit(LCell, LHit);
+  end
+  else FocusCell(LRow, LColumn, ssShift in AShift, True, (ssCtrl in AShift) and (ssShift in AShift));
 end;
 
 procedure Th5uFmxGrid.SearchCharacter(AChar: Char);

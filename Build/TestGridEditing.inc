@@ -1,7 +1,7 @@
 ﻿uses
   System.TypInfo, System.Classes, System.DateUtils, System.SysUtils, System.Types, System.Rtti, System.UITypes,
   Data.DB, Datasnap.DBClient, MidasLib,
-  h5u.Grid.Types, h5u.Grid.Columns, h5u.Grid.Data.Core, h5u.Grid.Data.Dataset,
+  h5u.Grid.Types, h5u.Grid.Columns, h5u.Grid.Options, h5u.Grid.Data.Core, h5u.Grid.Data.Dataset,
 {$IFDEF TEST_FMX}
   System.UIConsts, FMX.Objects, FMX.Types, FMX.StdCtrls, FMX.Forms, FMX.Controls, FMX.Edit, FMX.DateTimeCtrls, FMX.Graphics, Fmx.h5u.Grid, Fmx.h5u.Grid.Styles,
   FmxDatasetDemoMain in '..\Demos\FMX\ClientDataset\FmxDatasetDemoMain.pas',
@@ -51,10 +51,23 @@ type
     procedure TouchDrag(const AFrom, ATo: TPointF);
     procedure PanGesture(const AFrom, ATo: TPointF);
 {$ENDIF}
+    procedure LoseMoveCapture;
     procedure DesignModeForTest(AValue: Boolean);
     procedure Press(AKey: Word; AShift: TShiftState = []);
     procedure TypeText(const AText: string);
     procedure ClickAt(const APoint: TPoint; ADouble: Boolean = False);
+    procedure ClickWithShift(const P: TPoint; Shift: TShiftState);
+    procedure PointerDown(const P: TPoint; Shift: TShiftState = []);
+    procedure PointerMove(const P: TPoint; Shift: TShiftState = []);
+    procedure PointerUp(const P: TPoint; Shift: TShiftState = []);
+  end;
+
+  TMoveProbe = class
+  public
+    Count: Integer;
+    Context: Th5uRowsMovedContext;
+    RaiseError: Boolean;
+    procedure RowsMoved(Sender: TObject; const AContext: Th5uRowsMovedContext);
   end;
 
   TFixture = class
@@ -901,6 +914,650 @@ begin
   end;
 end;
 
+procedure TGridAccess.ClickWithShift(const P: TPoint; Shift: TShiftState);
+begin
+  MouseDown(TMouseButton.mbLeft, Shift, P.X, P.Y);
+  MouseUp(TMouseButton.mbLeft, Shift, P.X, P.Y);
+end;
+
+procedure TGridAccess.PointerDown(const P: TPoint; Shift: TShiftState);
+begin
+  MouseDown(TMouseButton.mbLeft, Shift, P.X, P.Y);
+end;
+
+procedure TGridAccess.PointerMove(const P: TPoint; Shift: TShiftState);
+begin
+  MouseMove(Shift + [ssLeft], P.X, P.Y);
+end;
+
+procedure TGridAccess.PointerUp(const P: TPoint; Shift: TShiftState);
+begin
+  MouseUp(TMouseButton.mbLeft, Shift, P.X, P.Y);
+end;
+procedure TestColumnMovingStreaming;
+var
+  Form: TForm;
+  Grid: TGridAccess;
+  Text: TStringStream;
+  Binary: TMemoryStream;
+  Columns: Th5uGridColumns;
+  Options: Th5uCustomizationOptions;
+begin
+  Form := TForm.CreateNew(nil);
+  Text := TStringStream.Create('object OptionsForm: TForm' + sLineBreak
+    + 'object Grid: TGridAccess' + sLineBreak
+    + 'Customization.ColumnMovingGesture = Drag' + sLineBreak
+    + 'Customization.AllowColumnMoving = False' + sLineBreak
+    + 'Customization.AllowRowMoving = False' + sLineBreak
+    + 'Customization.RowMovingGesture = Drag' + sLineBreak
+    + 'Columns = <item Id = ''denied'' MovePermission = Deny end' + sLineBreak
+    + 'item Id = ''allowed'' MovePermission = Allow end>' + sLineBreak
+    + 'end' + sLineBreak + 'end');
+  Binary := TMemoryStream.Create;
+  try
+    ObjectTextToBinary(Text, Binary);
+    Binary.Position := 0;
+    Binary.ReadComponent(Form);
+    Grid := Form.FindComponent('Grid') as TGridAccess;
+    Check(Grid.Columns[0].MovePermission=Th5uColumnMovePermission.Deny,'MovePermission=Deny not loaded');
+    Check(Grid.Columns[1].MovePermission=Th5uColumnMovePermission.Allow,'Column Allow not loaded');
+    Check(not Grid.Customization.AllowColumnMoving
+      and (Grid.Customization.ColumnMovingGesture=Th5uColumnMovingGesture.Drag),'Customization options not loaded');
+    Columns := Th5uGridColumns.Create(Form);
+    Options := Th5uCustomizationOptions.Create;
+    try
+      Columns.Assign(Grid.Columns);
+      Options.Assign(Grid.Customization);
+      Check(not Options.AllowRowMoving and (Options.RowMovingGesture=Th5uRowMovingGesture.Drag),'Assign lost row moving options');
+      Check((Columns[0].MovePermission=Th5uColumnMovePermission.Deny)
+        and (Columns[1].MovePermission=Th5uColumnMovePermission.Allow),'Assign lost column permissions');
+      Check(not Options.AllowColumnMoving and (Options.ColumnMovingGesture=Th5uColumnMovingGesture.Drag),'Assign lost moving gesture');
+    finally
+      Options.Free;
+      Columns.Free;
+    end;
+    Binary.Clear;
+    Binary.WriteComponent(Form);
+    Binary.Position := 0;
+    Text.Size := 0;
+    ObjectBinaryToText(Binary, Text);
+    Check(Text.DataString.Contains('ColumnMovingGesture = Drag')
+      and Text.DataString.Contains('MovePermission = Deny')
+      and Text.DataString.Contains('MovePermission = Allow'),'New moving options not saved');
+    Check(not Text.DataString.Contains('CanMove ='),'Legacy alias should not be saved alongside MovePermission');
+    Writeln('PASS: moving options DFM/FMX streaming and Assign');
+  finally
+    Binary.Free;
+    Text.Free;
+    Form.Free;
+  end;
+end;
+
+procedure TMoveProbe.RowsMoved(Sender: TObject; const AContext: Th5uRowsMovedContext);
+begin
+  Inc(Count);
+  Context := AContext;
+  Check(TGridAccess(Sender).Cursor = crCross, 'Move event ran before cursor restoration');
+{$IFDEF TEST_FMX}
+  Check(TGridAccess(Sender).Root.Captured = nil, 'Row event ran with mouse capture');
+{$ELSE}
+  Check(not TGridAccess(Sender).MouseCapture, 'Row event ran with mouse capture');
+{$ENDIF}
+  if RaiseError then raise Exception.Create('Move handler test exception');
+end;
+
+procedure TGridAccess.LoseMoveCapture;
+begin
+{$IFDEF TEST_FMX}
+  ReleaseCapture;
+{$ELSE}
+  MouseCapture := False;
+{$ENDIF}
+end;
+
+procedure TestBlockMoving;
+var
+  T: TFixture;
+  Probe: TMoveProbe;
+  Rows, Cols: array[0..2] of TPoint;
+  Keys: array[0..2] of Th5uRowKey;
+  I, X, Y, Before: Integer;
+  Found: Boolean;
+{$IFDEF TEST_FMX}
+  H: Th5uFmxHitTestInfo;
+{$ELSE}
+  H: Th5uHitTestInfo;
+{$ENDIF}
+
+  procedure Drag(const AFrom, ATo: TPoint; Shift: TShiftState = [ssAlt]);
+  begin
+    T.Grid.PointerDown(AFrom, Shift);
+    T.Grid.PointerMove(ATo, Shift);
+    T.Grid.PointerUp(ATo, Shift);
+  end;
+
+  procedure CheckOrder(A, B, C: Integer; const Msg: string);
+  var
+    V: TArray<Th5uGridColumn>;
+  begin
+    V := T.Grid.Columns.VisibleColumns;
+    Check((V[0]=T.Grid.Columns[A]) and (V[1]=T.Grid.Columns[B]) and (V[2]=T.Grid.Columns[C]), Msg);
+  end;
+
+begin
+  T := TFixture.Create(Th5uCacheMode.None);
+  Probe := TMoveProbe.Create;
+  try
+    T.Grid.AllowEditing := False;
+    T.Grid.Cursor := crCross;
+    T.Grid.Selection.AllowedKinds := [Th5uSelectionKind.Rows,Th5uSelectionKind.Columns,Th5uSelectionKind.CellRanges];
+    Check(GetPropInfo(T.Grid.Columns[0], 'CanMove') = nil, 'CanMove compatibility remains published');
+    for I := 0 to 2 do
+    begin
+      Keys[I] := T.Controller.GetRowKey(I);
+      Found := False;
+      for Y := 0 to Trunc(T.Grid.Height) div 4 do
+      begin
+        for X := 0 to Trunc(T.Grid.Width) div 4 do
+        begin
+{$IFDEF TEST_FMX}
+          H := T.Grid.GridHitTest(X*4,Y*4);
+          if (H.Kind=Th5uFmxHitKind.RowIndicator) and (H.RowIndex=I) then
+{$ELSE}
+          H := T.Grid.HitTest(X*4,Y*4);
+          if (H.Kind=Th5uHitKind.RowIndicator) and (H.RowIndex=I) then
+{$ENDIF}
+          begin
+            Rows[I] := Point(X*4, Round((H.Bounds.Top+H.Bounds.Bottom)/2));
+            Found := True;
+            Break;
+          end;
+        end;
+        if Found then Break;
+      end;
+      Check(Found, 'Row header missing for block move');
+      Found := False;
+      for Y := 0 to Trunc(T.Grid.Height) div 4 do
+      begin
+        for X := 0 to Trunc(T.Grid.Width) div 4 do
+        begin
+{$IFDEF TEST_FMX}
+          H := T.Grid.GridHitTest(X*4,Y*4);
+          if (H.Kind=Th5uFmxHitKind.Header) and (H.ColumnIndex=I) then
+{$ELSE}
+          H := T.Grid.HitTest(X*4,Y*4);
+          if (H.Kind=Th5uHitKind.Header) and (H.ColumnIndex=I) then
+{$ENDIF}
+          begin
+            Cols[I] := Point(Round((H.Bounds.Left+H.Bounds.Right)/2), Y*4);
+            Found := True;
+            Break;
+          end;
+        end;
+        if Found then Break;
+      end;
+      Check(Found, 'Column header missing for block move');
+    end;
+
+    T.Grid.Selection.SelectColumns([T.Grid.Columns[0].Id,T.Grid.Columns[1].Id]);
+    T.Grid.PointerDown(Cols[1],[ssAlt]);
+    Check(T.Grid.Cursor=crCross, 'Move cursor activated on mere MouseDown');
+    T.Grid.PointerMove(Cols[2],[ssAlt]);
+    Check(T.Grid.Cursor=crDrag, 'Column block drag cursor missing');
+    T.Grid.PointerUp(Cols[2],[ssAlt]);
+    CheckOrder(2,0,1,'Column block did not retain order moving right');
+    Check(T.Grid.Cursor=crCross,'Column cursor not restored');
+    Check(T.Grid.Selection.IsColumnSelected(T.Grid.Columns[0].Id)
+      and T.Grid.Selection.IsColumnSelected(T.Grid.Columns[1].Id),'Column move lost selection');
+    T.PaintGrid;
+    Drag(Cols[2],Cols[0]);
+    CheckOrder(0,1,2,'Column block did not retain order moving left');
+    T.PaintGrid;
+    Drag(Cols[0],Cols[1]);
+    CheckOrder(0,1,2,'Drop inside selected column block moved it');
+    T.Grid.Selection.SelectColumns([T.Grid.Columns[0].Id,T.Grid.Columns[2].Id]);
+    T.Grid.PointerDown(Cols[0],[ssAlt]);
+    T.Grid.PointerMove(Cols[1],[ssAlt]);
+    Check(T.Grid.Cursor=crCross,'Non-contiguous column move started');
+    T.Grid.PointerUp(Cols[1],[ssAlt]);
+    CheckOrder(0,1,2,'Non-contiguous column selection moved');
+    T.Grid.Selection.SelectColumns([T.Grid.Columns[0].Id,T.Grid.Columns[1].Id]);
+    T.Grid.Columns[1].MovePermission := Th5uColumnMovePermission.Deny;
+    Drag(Cols[0],Cols[2]);
+    CheckOrder(0,1,2,'Partially denied column block moved');
+    T.Grid.Columns[1].MovePermission := Th5uColumnMovePermission.Default;
+    T.Grid.Selection.Clear;
+    T.Grid.Columns[0].FixedKind := Th5uFixedKind.Left;
+    T.PaintGrid;
+    Drag(Cols[1],Cols[0]);
+    CheckOrder(0,1,2,'Column crossed the fixed region');
+    T.Grid.Columns[0].FixedKind := Th5uFixedKind.None;
+    T.PaintGrid;
+    T.Grid.PointerDown(Cols[0],[ssAlt]);
+    T.Grid.PointerMove(Cols[2],[ssAlt]);
+    T.Grid.Press(vkEscape);
+    Check(T.Grid.Cursor=crCross,'Escape did not restore column cursor');
+    T.Grid.PointerUp(Cols[2],[ssAlt]);
+    CheckOrder(0,1,2,'Escape did not cancel column move');
+    T.Grid.PointerDown(Cols[0],[ssAlt]);
+    T.Grid.PointerMove(Cols[2],[ssAlt]);
+    T.Grid.Columns[0].MovePermission := Th5uColumnMovePermission.Deny;
+    T.Grid.PointerUp(Cols[2],[ssAlt]);
+    CheckOrder(0,1,2,'Column permission changed during drag was ignored');
+    T.Grid.Columns[0].MovePermission := Th5uColumnMovePermission.Default;
+    Drag(Cols[0],Point(-20,-20));
+    CheckOrder(0,1,2,'Outside column drop changed order');
+    Check(T.Grid.Cursor=crCross,'Outside column drop left drag cursor');
+
+    T.Grid.PointerDown(Rows[0],[ssAlt]);
+    T.Grid.PointerMove(Rows[2],[ssAlt]);
+    Check(T.Grid.Cursor=crCross,'Row move started without an event');
+    T.Grid.PointerUp(Rows[2],[ssAlt]);
+    T.Grid.Selection.Clear;
+    T.Grid.OnRowsMoved := Probe.RowsMoved;
+    T.Grid.PointerDown(Rows[0],[ssAlt]);
+    T.Grid.PointerUp(Rows[0],[ssAlt]);
+    Check(Probe.Count=0,'Click emitted a move event');
+    T.Grid.Selection.SelectRows([Keys[0],Keys[1]]);
+    T.Grid.PointerDown(Rows[1],[ssAlt]);
+    T.Grid.PointerMove(Rows[2],[ssAlt]);
+    Check(T.Grid.Cursor=crDrag,'Row block drag cursor missing');
+    T.Grid.PointerUp(Rows[2],[ssAlt]);
+    Check((Probe.Count=1) and (Probe.Context.FirstRowIndex=0)
+      and (Probe.Context.NewFirstRowIndex=1) and (Length(Probe.Context.RowKeys)=2)
+      and (Probe.Context.RowKeys[0]=Keys[0]) and (Probe.Context.RowKeys[1]=Keys[1])
+      and (Probe.Context.SourceRowIndexes[0]=0) and (Probe.Context.SourceRowIndexes[1]=1)
+      and (Probe.Context.TargetRowIndex=2) and (Probe.Context.TargetSourceRowIndex=2)
+      and (Probe.Context.TargetRowKey=Keys[2]) and Probe.Context.InsertAfter,'Incorrect downward row move context');
+    Check((T.Posts=0) and (T.Controller.GetRowKey(0)=Keys[0]),'Grid reordered data without the developer handler');
+    T.Grid.Selection.SelectRows([Keys[1],Keys[2]]);
+    Drag(Rows[2],Rows[0]);
+    Check((Probe.Count=2) and (Probe.Context.FirstRowIndex=1)
+      and (Probe.Context.NewFirstRowIndex=0) and not Probe.Context.InsertAfter
+      and (Probe.Context.TargetRowKey=Keys[0]),'Incorrect upward row move context');
+    Before := Probe.Count;
+    Drag(Rows[1],Rows[2]);
+    Check(Probe.Count=Before,'Drop inside row block emitted event');
+    T.Grid.Selection.SelectRows([Keys[0],Keys[2]]);
+    T.Grid.PointerDown(Rows[0],[ssAlt]);
+    T.Grid.PointerMove(Rows[1],[ssAlt]);
+    Check(T.Grid.Cursor=crCross,'Non-contiguous row move started');
+    T.Grid.PointerUp(Rows[1],[ssAlt]);
+    Check(Probe.Count=Before,'Non-contiguous rows emitted move event');
+    T.Grid.Selection.SelectAllRows;
+    Drag(Rows[0],Rows[2]);
+    Check(Probe.Count=Before,'Moving the entire query should be a no-op');
+    T.Grid.Selection.ExcludeRow(Keys[0]);
+    Drag(Rows[2],Rows[0]);
+    Check((Probe.Count=Before+1) and (Length(Probe.Context.RowKeys)=2),'Contiguous select-all minus exclusions could not move');
+    T.Grid.Selection.Clear;
+    T.Grid.Customization.RowMovingGesture := Th5uRowMovingGesture.Drag;
+    Drag(Rows[0],Rows[2],[]);
+    Check((Probe.Count=Before+2) and (Length(Probe.Context.RowKeys)=1),'Plain row moving gesture failed');
+    Before := Probe.Count;
+    Drag(Rows[0],Rows[2],[ssCtrl]);
+    Check(Probe.Count=Before,'Ctrl selection moved rows');
+    T.Grid.Customization.AllowRowMoving := False;
+    Drag(Rows[0],Rows[2],[]);
+    Check(Probe.Count=Before,'Row moving ignored grid prohibition');
+    T.Grid.Customization.AllowRowMoving := True;
+    T.Grid.Customization.RowMovingGesture := Th5uRowMovingGesture.AltDrag;
+    T.Grid.Selection.Clear;
+    T.Grid.PointerDown(Rows[0],[ssAlt]);
+    T.Grid.PointerMove(Rows[2],[ssAlt]);
+    T.Grid.Press(vkEscape);
+    T.Grid.PointerUp(Rows[2],[ssAlt]);
+    Check((Probe.Count=Before) and (T.Grid.Cursor=crCross),'Escape did not cancel row move');
+    T.Grid.PointerDown(Rows[0],[ssAlt]);
+    T.Grid.PointerMove(Rows[2],[ssAlt]);
+    T.Grid.LoseMoveCapture;
+    T.Grid.PointerUp(Rows[2],[ssAlt]);
+    Check((Probe.Count=Before) and (T.Grid.Cursor=crCross),'Lost capture did not cancel row move');
+    Drag(Rows[0],Point(-20,-20));
+    Check((Probe.Count=Before) and (T.Grid.Cursor=crCross),'Outside drop emitted row move');
+    T.Grid.PointerDown(Rows[0],[ssAlt]);
+    T.Grid.PointerMove(Rows[2],[ssAlt]);
+    T.Grid.OnRowsMoved := nil;
+    T.Grid.PointerUp(Rows[2],[ssAlt]);
+    Check(Probe.Count=Before,'Unassigned row handler called');
+    T.Grid.OnRowsMoved := Probe.RowsMoved;
+    Probe.RaiseError := True;
+    try
+      Drag(Rows[0],Rows[2]);
+      Check(False,'Move handler exception was swallowed');
+    except
+      on E: Exception do Check(E.Message='Move handler test exception','Unexpected move exception: '+E.Message);
+    end;
+    Check(T.Grid.Cursor=crCross,'Move handler exception left drag cursor');
+    Probe.RaiseError := False;
+    Before := Probe.Count;
+    T.Grid.PointerDown(Rows[0],[ssAlt]);
+    T.Grid.PointerMove(Rows[2],[ssAlt]);
+    T.Grid.DataController := nil;
+    T.Grid.DataController := T.Controller;
+    T.PaintGrid;
+    T.Grid.PointerUp(Rows[2],[ssAlt]);
+    Check((Probe.Count=Before) and (T.Grid.Cursor=crCross),'Controller change did not cancel row move');
+    T.Grid.PointerDown(Rows[0],[ssAlt]);
+    T.Grid.PointerMove(Rows[2],[ssAlt]);
+    T.Data.First;
+    T.Data.Delete;
+    T.PaintGrid;
+    T.Grid.PointerUp(Rows[1],[ssAlt]);
+    Check(Probe.Count=Before,'Deleted source row emitted stale move event');
+    Writeln('PASS: contiguous row/column block moving, event context, permissions, fixed regions, cursor, cancel and live changes');
+  finally
+    T.Grid.OnRowsMoved := nil;
+    Probe.Free;
+    T.Free;
+  end;
+end;
+
+
+procedure TestMixedSelection;
+var
+  T: TFixture;
+  Events: TCellEventProbe;
+  Cells: array[0..2, 0..2] of TPoint;
+  Rows, Cols: array[0..2] of TPoint;
+  Keys: array[0..2] of Th5uRowKey;
+  I, J, Before: Integer;
+
+  function HitPoint(Kind: Th5uSelectionKind; Row, Col: Integer): TPoint;
+  var
+    X, Y: Integer;
+{$IFDEF TEST_FMX}
+    H: Th5uFmxHitTestInfo;
+{$ELSE}
+    H: Th5uHitTestInfo;
+{$ENDIF}
+    Match: Boolean;
+  begin
+    T.PaintGrid;
+    for Y := 0 to Trunc(T.Grid.Height) div 4 do
+      for X := 0 to Trunc(T.Grid.Width) div 4 do
+      begin
+{$IFDEF TEST_FMX}
+        H := T.Grid.GridHitTest(X*4,Y*4);
+        Match := ((Kind=Th5uSelectionKind.Rows) and (H.Kind=Th5uFmxHitKind.RowIndicator) and (H.RowIndex=Row))
+          or ((Kind=Th5uSelectionKind.Columns) and (H.Kind=Th5uFmxHitKind.Header) and (H.ColumnIndex=Col))
+          or ((Kind=Th5uSelectionKind.CellRanges) and (H.Kind=Th5uFmxHitKind.DataCell) and (H.RowIndex=Row) and (H.ColumnIndex=Col));
+{$ELSE}
+        H := T.Grid.HitTest(X*4,Y*4);
+        Match := ((Kind=Th5uSelectionKind.Rows) and (H.Kind=Th5uHitKind.RowIndicator) and (H.RowIndex=Row))
+          or ((Kind=Th5uSelectionKind.Columns) and (H.Kind=Th5uHitKind.Header) and (H.ColumnIndex=Col))
+          or ((Kind=Th5uSelectionKind.CellRanges) and (H.Kind=Th5uHitKind.DataCell) and (H.RowIndex=Row) and (H.ColumnIndex=Col));
+{$ENDIF}
+        if Match then
+          if Kind=Th5uSelectionKind.Rows then Exit(Point(X*4,Round((H.Bounds.Top+H.Bounds.Bottom)/2)))
+          else if Kind=Th5uSelectionKind.Columns then Exit(Point(Round((H.Bounds.Left+H.Bounds.Right)/2),Y*4))
+          else Exit(Point(Round((H.Bounds.Left+H.Bounds.Right)/2),Round((H.Bounds.Top+H.Bounds.Bottom)/2)));
+      end;
+    raise Exception.CreateFmt('Selection target not found: %d/%d/%d',[Ord(Kind),Row,Col]);
+  end;
+
+  procedure CheckRows(A, B, C: Boolean; const Msg: string);
+  begin
+    Check((T.Grid.Selection.IsRowSelected(Keys[0])=A) and (T.Grid.Selection.IsRowSelected(Keys[1])=B)
+      and (T.Grid.Selection.IsRowSelected(Keys[2])=C),Msg);
+  end;
+
+  procedure CheckCols(A, B, C: Boolean; const Msg: string);
+  begin
+    Check((T.Grid.Selection.IsColumnSelected(T.Grid.Columns[0].Id)=A)
+      and (T.Grid.Selection.IsColumnSelected(T.Grid.Columns[1].Id)=B)
+      and (T.Grid.Selection.IsColumnSelected(T.Grid.Columns[2].Id)=C),Msg);
+  end;
+
+begin
+  T := TFixture.Create(Th5uCacheMode.None);
+  Events := TCellEventProbe.Create;
+  try
+    T.Grid.AllowEditing := False;
+    T.Grid.OnSelectionChange := Events.SelectionChange;
+    for I := 0 to 2 do
+    begin
+      Keys[I] := T.Controller.GetRowKey(I);
+      Rows[I] := HitPoint(Th5uSelectionKind.Rows,I,-1);
+      Cols[I] := HitPoint(Th5uSelectionKind.Columns,-1,I);
+      for J := 0 to 2 do Cells[I,J] := HitPoint(Th5uSelectionKind.CellRanges,I,J);
+    end;
+    T.Grid.ClickAt(Rows[0]);
+    T.Grid.ClickWithShift(Cols[0],[ssCtrl]);
+    T.Grid.ClickWithShift(Cells[1,1],[ssCtrl]);
+    CheckRows(True,False,False,'Ctrl cell/column click lost row');
+    CheckCols(True,False,False,'Ctrl cell click lost column');
+    T.Grid.ClickAt(Cells[2,2]);
+    CheckRows(False,False,False,'Plain cell click retained row');
+    CheckCols(False,False,False,'Plain cell click retained column');
+    Check(T.Grid.Selection.IsCellSelected(2,2) and not T.Grid.Selection.IsCellSelected(1,1),'Plain cell did not replace selection');
+    T.Grid.ClickWithShift(Cols[0],[ssCtrl]);
+    T.Grid.ClickAt(Cols[1]);
+    CheckCols(False,True,False,'Plain column retained old column');
+    Check(T.Grid.Selection.CellRanges.Count=0,'Plain column retained cells');
+    T.Grid.ClickWithShift(Rows[0],[ssCtrl]);
+    T.Grid.ClickAt(Rows[1]);
+    CheckCols(False,False,False,'Plain row retained column');
+    CheckRows(False,True,False,'Plain row retained old row');
+
+    T.Grid.ClickAt(Rows[0]);
+    Before := Events.Selections;
+    T.Grid.ClickWithShift(Rows[2],[ssShift]);
+    CheckRows(True,True,True,'Shift row range missing');
+    Check(Events.Selections=Before+1,'Row range emitted intermediate selection notifications');
+    T.Grid.ClickWithShift(Rows[1],[ssShift]);
+    CheckRows(True,True,False,'Shift row range did not contract');
+    T.Grid.ClickAt(Rows[0]);
+    T.Grid.ClickWithShift(Rows[2],[ssCtrl]);
+    T.Grid.ClickWithShift(Rows[1],[ssCtrl,ssShift]);
+    CheckRows(True,True,True,'Ctrl+Shift row range lost previous selection');
+    T.Grid.ClickWithShift(Rows[2],[ssCtrl,ssShift]);
+    CheckRows(True,False,True,'Ctrl+Shift row range did not contract');
+    T.Grid.Press(vkUp,[ssCtrl,ssShift]);
+    CheckRows(True,True,True,'Ctrl+Shift Up did not extend rows');
+    T.Grid.Press(vkDown,[ssCtrl,ssShift]);
+    CheckRows(True,False,True,'Ctrl+Shift Down did not contract rows');
+    T.Grid.ClickAt(Rows[0]);
+    T.Grid.Press(vkDown,[ssShift]);
+    CheckRows(True,True,False,'Shift Down did not extend rows');
+    T.Grid.Press(vkUp,[ssShift]);
+    CheckRows(True,False,False,'Shift Up did not contract rows');
+
+    T.Grid.ClickAt(Cols[0]);
+    T.Grid.ClickWithShift(Cols[2],[ssShift]);
+    CheckCols(True,True,True,'Shift column range missing');
+    T.Grid.ClickWithShift(Cols[1],[ssShift]);
+    CheckCols(True,True,False,'Shift column range did not contract');
+    T.Grid.ClickAt(Cols[0]);
+    T.Grid.ClickWithShift(Cols[2],[ssCtrl]);
+    T.Grid.ClickWithShift(Cols[1],[ssCtrl,ssShift]);
+    CheckCols(True,True,True,'Ctrl+Shift column range lost previous selection');
+    T.Grid.ClickWithShift(Cols[2],[ssCtrl,ssShift]);
+    CheckCols(True,False,True,'Ctrl+Shift column range did not contract');
+    T.Grid.Press(vkLeft,[ssCtrl,ssShift]);
+    CheckCols(True,True,True,'Ctrl+Shift Left did not extend columns');
+    T.Grid.Press(vkRight,[ssCtrl,ssShift]);
+    CheckCols(True,False,True,'Ctrl+Shift Right did not contract columns');
+    T.Grid.ClickAt(Cols[0]);
+    T.Grid.Press(vkRight,[ssShift]);
+    CheckCols(True,True,False,'Shift Right did not extend columns');
+    T.Grid.Press(vkLeft,[ssShift]);
+    CheckCols(True,False,False,'Shift Left did not contract columns');
+
+    T.Grid.ClickAt(Cells[0,0]);
+    T.Grid.ClickWithShift(Cells[2,2],[ssCtrl]);
+    T.Grid.ClickWithShift(Cells[1,1],[ssCtrl,ssShift]);
+    Check(T.Grid.Selection.IsCellSelected(0,0) and T.Grid.Selection.IsCellSelected(1,1)
+      and T.Grid.Selection.IsCellSelected(2,1) and not T.Grid.Selection.IsCellSelected(0,2),'Ctrl+Shift cell range incorrect');
+    T.Grid.ClickWithShift(Cells[2,2],[ssCtrl,ssShift]);
+    Check(T.Grid.Selection.IsCellSelected(0,0) and not T.Grid.Selection.IsCellSelected(1,1),'Ctrl+Shift cell contraction lost base or retained old extent');
+    T.Grid.Press(vkUp,[ssCtrl,ssShift]);
+    T.Grid.Press(vkLeft,[ssCtrl,ssShift]);
+    Check(T.Grid.Selection.IsCellSelected(0,0) and T.Grid.Selection.IsCellSelected(1,1),'Ctrl+Shift arrows replaced base selection');
+    T.Grid.Press(vkRight,[ssCtrl,ssShift]);
+    T.Grid.Press(vkDown,[ssCtrl,ssShift]);
+    Check(T.Grid.Selection.IsCellSelected(0,0) and T.Grid.Selection.IsCellSelected(2,2)
+      and not T.Grid.Selection.IsCellSelected(1,2) and not T.Grid.Selection.IsCellSelected(2,1),'Ctrl+Shift arrows did not contract');
+    Check(T.Grid.Selection.CellRanges.Count=3,'Ctrl+Shift accumulated a range on every key press');
+    T.Grid.ClickAt(Cells[0,0]);
+    T.Grid.ClickWithShift(Cells[2,2],[ssShift]);
+    Check(T.Grid.Selection.IsCellSelected(1,1),'Shift cell click did not extend');
+    T.Grid.Press(vkUp,[ssShift]);
+    Check(T.Grid.Selection.IsCellSelected(1,2) and not T.Grid.Selection.IsCellSelected(2,2),'Shift Up did not contract cell range');
+    Check(T.Posts=0,'Selection modifiers edited a checkbox');
+
+    // Selection must change during MouseMove, before the button is released.
+    T.Grid.ClickAt(Cells[2,2]);
+    T.Grid.OnCellClick := Events.CellClick;
+    Before := Events.Clicks;
+    T.Grid.PointerDown(Cells[0,1]);
+    Check(T.Grid.Selection.IsCellSelected(0,1) and not T.Grid.Selection.IsCellSelected(2,2),'MouseDown did not replace selection');
+    T.Grid.PointerMove(Cells[2,2]);
+    Check(T.Grid.Selection.IsCellSelected(1,1) and T.Grid.Selection.IsCellSelected(2,2),'MouseMove did not select cell rectangle');
+    T.Grid.PointerMove(Cells[1,1]);
+    Check(T.Grid.Selection.IsCellSelected(1,1) and not T.Grid.Selection.IsCellSelected(2,2),'Mouse drag did not contract');
+    T.Grid.PointerUp(Cells[1,1]);
+    Check(Events.Clicks=Before,'Range drag fired OnCellClick');
+    T.Grid.ClickAt(Cells[0,0]);
+    T.Grid.PointerDown(Cells[2,2],[ssCtrl]);
+    T.Grid.PointerMove(Cells[1,1],[ssCtrl]);
+    Check(T.Grid.Selection.IsCellSelected(0,0) and T.Grid.Selection.IsCellSelected(1,1),'Ctrl drag lost previous selection');
+    T.Grid.PointerMove(Cells[2,2],[ssCtrl]);
+    Check(T.Grid.Selection.IsCellSelected(0,0) and not T.Grid.Selection.IsCellSelected(1,1),'Ctrl drag contraction lost base');
+    T.Grid.PointerUp(Cells[2,2],[ssCtrl]);
+    T.Grid.PointerMove(Cells[0,1],[ssCtrl]);
+    Check(not T.Grid.Selection.IsCellSelected(0,1),'MouseMove changed selection after MouseUp');
+    T.Grid.PointerDown(Cells[0,1]);
+    T.Grid.PointerUp(Cells[2,2]);
+    Check(T.Grid.Selection.IsCellSelected(1,1) and T.Grid.Selection.IsCellSelected(2,2),'MouseUp final coordinates were ignored');
+    T.Grid.PointerDown(Cells[0,1]);
+    T.Grid.PointerMove(Cells[2,2]);
+    T.Grid.PointerUp(Point(-20,-20));
+    T.Grid.PointerMove(Cells[0,1]);
+    Check(T.Grid.Selection.IsCellSelected(2,2),'Release outside the grid left a drag active');
+
+    T.Grid.PointerDown(Rows[0]);
+    T.Grid.PointerMove(Rows[2]);
+    CheckRows(True,True,True,'Row header drag missing');
+    T.Grid.PointerMove(Rows[1]);
+    CheckRows(True,True,False,'Row drag did not contract');
+    T.Grid.PointerUp(Rows[1]);
+    T.Grid.ClickAt(Rows[0]);
+    T.Grid.PointerDown(Rows[2],[ssCtrl]);
+    T.Grid.PointerMove(Rows[1],[ssCtrl]);
+    CheckRows(True,True,True,'Ctrl row drag lost base');
+    T.Grid.PointerMove(Rows[2],[ssCtrl]);
+    T.Grid.PointerUp(Rows[2],[ssCtrl]);
+    CheckRows(True,False,True,'Ctrl row drag contraction incorrect');
+
+    Check(T.Grid.Customization.ColumnMovingGesture=Th5uColumnMovingGesture.AltDrag,'Default moving gesture is not Alt+drag');
+    T.Grid.PointerDown(Cols[0]);
+    T.Grid.PointerMove(Cols[2]);
+    CheckCols(True,True,True,'Column header drag missing');
+    T.Grid.PointerMove(Cols[1]);
+    CheckCols(True,True,False,'Column drag did not contract');
+    T.Grid.PointerUp(Cols[1]);
+    Check(T.Grid.Columns[0].VisibleIndex=0,'Selection drag moved a column');
+    T.Grid.ClickAt(Cols[0]);
+    T.Grid.PointerDown(Cols[2],[ssCtrl]);
+    T.Grid.PointerMove(Cols[1],[ssCtrl]);
+    CheckCols(True,True,True,'Ctrl column drag lost base');
+    T.Grid.PointerMove(Cols[2],[ssCtrl]);
+    T.Grid.PointerUp(Cols[2],[ssCtrl]);
+    CheckCols(True,False,True,'Ctrl column drag contraction incorrect');
+
+    T.Grid.AllowEditing := True;
+    T.Grid.ImmediateEdit := True;
+    Before := T.Posts;
+    T.Grid.PointerDown(Cells[0,1]);
+    Check(not T.Editor.Visible,'Immediate editor opened before a drag could start');
+    T.Grid.PointerMove(Cells[2,2]);
+    T.Grid.PointerUp(Cells[2,2]);
+    Check(not T.Editor.Visible and (T.Posts=Before),'Range drag opened or committed an editor');
+    T.Grid.PointerDown(Cells[0,0]);
+    Check(T.Posts=Before,'Checkbox changed on MouseDown');
+    T.Grid.PointerMove(Cells[2,1]);
+    T.Grid.PointerUp(Cells[2,1]);
+    Check((T.Posts=Before) and not T.Editor.Visible,'Drag from checkbox edited the cell');
+    T.Grid.ClickAt(Cells[0,0]);
+    Check(T.Posts=Before+1,'Checkbox click stopped toggling');
+    T.Grid.ClickAt(Cells[0,1]);
+    Check(T.Editor.Visible,'Immediate editor did not open on click release');
+    T.EditorKey(vkEscape);
+    T.Grid.AllowEditing := False;
+    T.Grid.ImmediateEdit := False;
+    T.Grid.OnCellClick := nil;
+
+    T.Grid.PointerDown(Cols[0],[ssAlt]);
+    T.Grid.PointerMove(Cols[2],[ssAlt]);
+    T.Grid.PointerUp(Cols[2],[ssAlt]);
+    Check(T.Grid.Columns[0].VisibleIndex=2,'Alt+drag did not move column');
+    T.Grid.MoveColumn(T.Grid.Columns[0],0);
+    T.PaintGrid;
+    T.Grid.Customization.ColumnMovingGesture := Th5uColumnMovingGesture.Drag;
+    T.Grid.PointerDown(Cols[0]);
+    T.Grid.PointerMove(Cols[2]);
+    T.Grid.PointerUp(Cols[2]);
+    Check(T.Grid.Columns[0].VisibleIndex=2,'Plain drag mode did not move column');
+    T.Grid.MoveColumn(T.Grid.Columns[0],0);
+    T.PaintGrid;
+    T.Grid.PointerDown(Cols[0],[ssCtrl]);
+    T.Grid.PointerMove(Cols[2],[ssCtrl]);
+    T.Grid.PointerUp(Cols[2],[ssCtrl]);
+    CheckCols(True,True,True,'Ctrl drag in moving mode did not select');
+    Check(T.Grid.Columns[0].VisibleIndex=0,'Ctrl selection moved a column');
+    T.Grid.Customization.AllowColumnMoving := False;
+    T.Grid.PointerDown(Cols[0]);
+    T.Grid.PointerMove(Cols[2]);
+    T.Grid.PointerUp(Cols[2]);
+    CheckCols(True,True,True,'Disabled moving did not permit column selection');
+    Check(T.Grid.Columns[0].VisibleIndex=0,'Grid move prohibition ignored');
+    T.Grid.Selection.Clear;
+    T.Grid.Columns[0].MovePermission := Th5uColumnMovePermission.Allow;
+    T.Grid.PointerDown(Cols[0]);
+    T.Grid.PointerMove(Cols[2]);
+    T.Grid.PointerUp(Cols[2]);
+    Check(T.Grid.Columns[0].VisibleIndex=2,'Column Allow did not override grid default');
+    T.Grid.MoveColumn(T.Grid.Columns[0],0);
+    T.PaintGrid;
+    T.Grid.Customization.AllowColumnMoving := True;
+    T.Grid.Columns[0].MovePermission := Th5uColumnMovePermission.Deny;
+    T.Grid.PointerDown(Cols[0]);
+    T.Grid.PointerMove(Cols[2]);
+    T.Grid.PointerUp(Cols[2]);
+    Check(T.Grid.Columns[0].VisibleIndex=0,'Column Deny was ignored');
+    CheckCols(True,True,True,'Denied column moving blocked range selection');
+    T.Grid.Columns[0].MovePermission := Th5uColumnMovePermission.Default;
+    T.Grid.Customization.ColumnMovingGesture := Th5uColumnMovingGesture.AltDrag;
+    Writeln('PASS: live mouse range selection, Ctrl addition, release/capture, immediate and checkbox editing, configurable column moving and permissions');
+
+    T.Grid.Selection.CombinationMode := Th5uSelectionCombinationMode.Exclusive;
+    T.Grid.ClickAt(Rows[0]);
+    T.Grid.ClickWithShift(Cols[0],[ssCtrl]);
+    CheckRows(False,False,False,'Exclusive column toggle retained rows');
+    T.Grid.ClickWithShift(Rows[0],[ssCtrl]);
+    CheckCols(False,False,False,'Exclusive row toggle retained columns');
+    T.Grid.Selection.AllowedKinds := [Th5uSelectionKind.CellRanges];
+    T.Grid.ClickWithShift(Rows[0],[ssCtrl]);
+    T.Grid.ClickWithShift(Cols[0],[ssCtrl]);
+    CheckRows(False,False,False,'Ctrl bypassed AllowedKinds for rows');
+    CheckCols(False,False,False,'Ctrl bypassed AllowedKinds for columns');
+    T.Grid.Selection.AllowedKinds := [Th5uSelectionKind.Rows,Th5uSelectionKind.Columns,Th5uSelectionKind.CellRanges];
+    T.Grid.Columns[1].CanSelect := False;
+    T.Grid.ClickAt(Cols[0]);
+    T.Grid.ClickWithShift(Cols[2],[ssShift]);
+    CheckCols(True,False,True,'Shift selected a column with CanSelect=False');
+    T.Grid.ClickWithShift(Cols[1],[ssCtrl]);
+    CheckCols(True,False,True,'Ctrl bypassed column CanSelect');
+    Writeln('PASS: mixed/exclusive selection, row/column/cell Shift and Ctrl+Shift clicks/arrows, range contraction and permissions');
+  finally
+    T.Grid.OnSelectionChange := nil;
+    Events.Free;
+    T.Free;
+  end;
+end;
+
+
 procedure TestKeyboard(AMode: Th5uCacheMode);
 var
   T: TFixture;
@@ -946,7 +1603,7 @@ begin
     Check(T.Grid.Selection.FocusedCell.RowIndex = 1, 'Escape cleared focus');
     T.Grid.Press(vkRight);
     T.Grid.Press(vkEscape);
-    Check(T.Grid.Selection.IsCellSelected(1,1), 'Escape cleared single cell');
+    Check(T.Grid.Selection.IsCellSelected(1,1), Format('Escape cleared single cell; focus=%d/%d, ranges=%d', [T.Grid.Selection.FocusedCell.RowIndex, T.Grid.Selection.FocusedCell.ColumnIndex, T.Grid.Selection.CellRanges.Count]));
     T.Grid.Selection.SelectRow(T.Grid.Selection.FocusedCell.RowKey);
     T.Grid.Press(vkEscape);
     Check(not T.Grid.Selection.IsRowSelected(T.Grid.Selection.FocusedCell.RowKey), 'Escape retained row');
@@ -1758,6 +2415,9 @@ begin
 {$IFDEF TEST_FMX}
     TestMobileInputAndEditors;
 {$ENDIF}
+    TestColumnMovingStreaming;
+    TestMixedSelection;
+    TestBlockMoving;
     TestElementStyleAndModes;
     TestCellEvents;
     TestClippedCheckboxBounds;

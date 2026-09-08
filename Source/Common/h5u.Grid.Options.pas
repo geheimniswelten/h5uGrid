@@ -333,6 +333,9 @@ type
   Th5uCustomizationOptions = class(TPersistent)
   private
     FAllowColumnMoving: Boolean;
+    FColumnMovingGesture: Th5uColumnMovingGesture;
+    FAllowRowMoving: Boolean;
+    FRowMovingGesture: Th5uRowMovingGesture;
     FAllowColumnHiding: Boolean;
     FAllowColumnResizing: Boolean;
     FShowColumnChooser: Boolean;
@@ -341,6 +344,9 @@ type
     procedure Assign(Source: TPersistent); override;
   published
     property AllowColumnMoving: Boolean read FAllowColumnMoving write FAllowColumnMoving default True;
+    property AllowRowMoving: Boolean read FAllowRowMoving write FAllowRowMoving default True;
+    property RowMovingGesture: Th5uRowMovingGesture read FRowMovingGesture write FRowMovingGesture default Th5uRowMovingGesture.AltDrag;
+    property ColumnMovingGesture: Th5uColumnMovingGesture read FColumnMovingGesture write FColumnMovingGesture default Th5uColumnMovingGesture.AltDrag;
     property AllowColumnHiding: Boolean read FAllowColumnHiding write FAllowColumnHiding default True;
     property AllowColumnResizing: Boolean read FAllowColumnResizing write FAllowColumnResizing default True;
     property ShowColumnChooser: Boolean read FShowColumnChooser write FShowColumnChooser default True;
@@ -1130,6 +1136,9 @@ begin
   begin
     LSource := Th5uCustomizationOptions(Source);
     FAllowColumnMoving := LSource.FAllowColumnMoving;
+    FColumnMovingGesture := LSource.FColumnMovingGesture;
+    FAllowRowMoving := LSource.FAllowRowMoving;
+    FRowMovingGesture := LSource.FRowMovingGesture;
     FAllowColumnHiding := LSource.FAllowColumnHiding;
     FAllowColumnResizing := LSource.FAllowColumnResizing;
     FShowColumnChooser := LSource.FShowColumnChooser;
@@ -1142,6 +1151,9 @@ constructor Th5uCustomizationOptions.Create;
 begin
   inherited;
   FAllowColumnMoving := True;
+  FColumnMovingGesture := Th5uColumnMovingGesture.AltDrag;
+  FAllowRowMoving := True;
+  FRowMovingGesture := Th5uRowMovingGesture.AltDrag;
   FAllowColumnHiding := True;
   FAllowColumnResizing := True;
   FShowColumnChooser := True;

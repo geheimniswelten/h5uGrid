@@ -56,6 +56,23 @@ type
     class operator NotEqual(const ALeft, ARight: Th5uRowKey): Boolean;
   end;
 
+  Th5uRowsMovedContext = record
+    // All indexes are zero-based. Source indexes address the controller data.
+    FirstRowIndex: Int64;
+    RowKeys: TArray<Th5uRowKey>;
+    SourceRowIndexes: TArray<Int64>;
+    // Target indexes/key refer to the view BEFORE the requested move.
+    TargetRowIndex: Int64;
+    TargetRowKey: Th5uRowKey;
+    TargetSourceRowIndex: Int64;
+    InsertAfter: Boolean;
+    // First view index of the block after removal and insertion.
+    NewFirstRowIndex: Int64;
+  end;
+
+  // Notification of a requested drop: the handler must update the data/order.
+  Th5uRowsMovedEvent = procedure(Sender: TObject; const AContext: Th5uRowsMovedContext) of object;
+
   Th5uElementKind = (
     Grid,
     View,
@@ -232,6 +249,10 @@ type
   end;
 
   Th5uAdjacentGroupStateChangedEvent = procedure(Sender: TObject; const AContext: Th5uAdjacentGroupStateChangedContext) of object;
+
+  Th5uColumnMovingGesture = (AltDrag, Drag);
+  Th5uRowMovingGesture = (AltDrag, Drag);
+  Th5uColumnMovePermission = (Default, Allow, Deny);
 
   Th5uGridTheme = (
     ApplicationStyle,

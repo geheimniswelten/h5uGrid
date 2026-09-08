@@ -55,7 +55,7 @@ type
     FClassId: Th5uClassId;
     FCellClassId: Th5uClassId;
     FHeaderCellClassId: Th5uClassId;
-    FCanMove: Boolean;
+    FMovePermission: Th5uColumnMovePermission;
     FCanHide: Boolean;
     FCanResize: Boolean;
     FCanSelect: Boolean;
@@ -80,6 +80,7 @@ type
     procedure SetVisible(const AValue: Boolean);
     procedure SetVisibleIndex(const AValue: Integer);
     procedure SetWidth(const AValue: Integer);
+    procedure SetMovePermission(AValue: Th5uColumnMovePermission);
   protected
     function GetDisplayName: string; override;
   public
@@ -118,7 +119,7 @@ type
     property CellClassId: Th5uClassId read FCellClassId write FCellClassId;
     [Default(h5uClassIdGridHeaderCell)]
     property HeaderCellClassId: Th5uClassId read FHeaderCellClassId write FHeaderCellClassId;
-    property CanMove: Boolean read FCanMove write FCanMove default True;
+    property MovePermission: Th5uColumnMovePermission read FMovePermission write SetMovePermission default Th5uColumnMovePermission.Default;
     property CanHide: Boolean read FCanHide write FCanHide default True;
     property CanResize: Boolean read FCanResize write FCanResize default True;
     property CanSelect: Boolean read FCanSelect write FCanSelect default True;
@@ -152,6 +153,8 @@ type
     function VisibleColumns: TArray<Th5uGridColumn>;
     procedure NormalizeVisibleIndexes;
     procedure MoveColumn(AColumn: Th5uGridColumn; ANewVisibleIndex: Integer);
+    // ANewVisibleIndex is the block's first index after removal and insertion.
+    procedure MoveColumns(const AColumns: array of Th5uGridColumn; ANewVisibleIndex: Integer);
     property Items[AIndex: Integer]: Th5uGridColumn read GetItem write SetItem; default;
     property OnGetMode: Th5uGetColumnModeEvent read FOnGetMode write FOnGetMode;
     property OnChanged: Th5uColumnChangedEvent read FOnChanged write FOnChanged;
@@ -300,7 +303,7 @@ begin
     FClassId := LSource.FClassId;
     FCellClassId := LSource.FCellClassId;
     FHeaderCellClassId := LSource.FHeaderCellClassId;
-    FCanMove := LSource.FCanMove;
+    FMovePermission := LSource.FMovePermission;
     FCanHide := LSource.FCanHide;
     FCanResize := LSource.FCanResize;
     FCanSelect := LSource.FCanSelect;
@@ -350,7 +353,7 @@ begin
   FClassId := h5uClassIdGridColumn;
   FCellClassId := h5uClassIdGridDataCell;
   FHeaderCellClassId := h5uClassIdGridHeaderCell;
-  FCanMove := True;
+  FMovePermission := Th5uColumnMovePermission.Default;
   FCanHide := True;
   FCanResize := True;
   FCanSelect := True;
@@ -441,6 +444,12 @@ begin
   Changed;
 end;
 
+procedure Th5uGridColumn.SetMovePermission(AValue: Th5uColumnMovePermission);
+begin
+  if FMovePermission = AValue then Exit;
+  FMovePermission := AValue;
+  Changed;
+end;
 procedure Th5uGridColumn.SetWidth(const AValue: Integer);
 begin
   if FWidth = AValue then
@@ -489,28 +498,40 @@ begin
 end;
 
 procedure Th5uGridColumns.MoveColumn(AColumn: Th5uGridColumn; ANewVisibleIndex: Integer);
+begin
+  MoveColumns([AColumn], ANewVisibleIndex);
+end;
+
+procedure Th5uGridColumns.MoveColumns(const AColumns: array of Th5uGridColumn; ANewVisibleIndex: Integer);
 var
   LColumns: TArray<Th5uGridColumn>;
   LList: TList<Th5uGridColumn>;
-  LColumn: Th5uGridColumn;
-  I: Integer;
+  I, LFirst: Integer;
 begin
-  if not Assigned(AColumn) or not AColumn.CanMove then
-    Exit;
-
+  if Length(AColumns) = 0 then Exit;
   LColumns := VisibleColumns;
+  LFirst := -1;
+  for I := 0 to High(LColumns) do
+    if LColumns[I] = AColumns[0] then LFirst := I;
+  if (LFirst < 0) or (LFirst + Length(AColumns) > Length(LColumns)) then Exit;
+  for I := 0 to High(AColumns) do
+  begin
+    // Validate ownership/contiguity before dereferencing supplied columns.
+    if LColumns[LFirst + I] <> AColumns[I] then Exit;
+    if (AColumns[I].MovePermission = Th5uColumnMovePermission.Deny)
+      or (AColumns[I].FixedKind <> AColumns[0].FixedKind) then Exit;
+  end;
+  ANewVisibleIndex := EnsureRange(ANewVisibleIndex, 0, Length(LColumns) - Length(AColumns));
+  if ANewVisibleIndex = LFirst then Exit;
   LList := TList<Th5uGridColumn>.Create;
   try
-    for LColumn in LColumns do
-      LList.Add(LColumn);
-
-    LList.Remove(AColumn);
-    ANewVisibleIndex := EnsureRange(ANewVisibleIndex, 0, LList.Count);
-    LList.Insert(ANewVisibleIndex, AColumn);
-
+    LList.AddRange(LColumns);
+    LList.DeleteRange(LFirst, Length(AColumns));
+    LList.InsertRange(ANewVisibleIndex, AColumns);
+    // Moving never changes which columns are fixed or crosses a fixed region.
     for I := 0 to LList.Count - 1 do
-      LList[I].FVisibleIndex := I;
-
+      if LList[I].FixedKind <> LColumns[I].FixedKind then Exit;
+    for I := 0 to LList.Count - 1 do LList[I].FVisibleIndex := I;
     Changed;
   finally
     LList.Free;
