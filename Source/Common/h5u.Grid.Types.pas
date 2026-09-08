@@ -84,6 +84,8 @@ type
     DataPage
   );
 
+  Th5uElementPaintPart = (Background, Text, Glyph, Border, ColumnMode);
+
   Th5uElementFlag = (
     FixedRow,
     FixedColumn,

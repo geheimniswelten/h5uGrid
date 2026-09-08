@@ -1,5 +1,5 @@
 ﻿uses
-  System.Classes, System.DateUtils, System.SysUtils, System.Types, System.Rtti, System.UITypes,
+  System.TypInfo, System.Classes, System.DateUtils, System.SysUtils, System.Types, System.Rtti, System.UITypes,
   Data.DB, Datasnap.DBClient, MidasLib,
   h5u.Grid.Types, h5u.Grid.Columns, h5u.Grid.Data.Core, h5u.Grid.Data.Dataset,
 {$IFDEF TEST_FMX}
@@ -47,6 +47,7 @@ type
   TGridAccess = class(Th5uVclGrid)
 {$ENDIF}
   public
+    procedure DesignModeForTest(AValue: Boolean);
     procedure Press(AKey: Word; AShift: TShiftState = []);
     procedure TypeText(const AText: string);
     procedure ClickAt(const APoint: TPoint; ADouble: Boolean = False);
@@ -75,6 +76,11 @@ type
     function CellPoint(const AField: string): TPoint;
     procedure EditorKey(AKey: Word);
   end;
+
+procedure TGridAccess.DesignModeForTest(AValue: Boolean);
+begin
+  SetDesigning(AValue);
+end;
 
 procedure Check(ACondition: Boolean; const AMessage: string);
 begin
@@ -490,6 +496,143 @@ begin
     Check(T.Controller.GetValue(0,'DESCRIPTION').ToString = 'yes', 'Boolean-to-text checkbox conversion failed');
     Writeln('PASS: cell event permissions, validation precedence, ESC, conversion and notifications');
   finally
+    T.Free;
+    P.Free;
+  end;
+end;
+
+
+type
+  TElementStyleProbe = class
+    Kinds: set of Th5uElementKind;
+    Symbols: Integer;
+{$IFDEF TEST_FMX}
+    procedure Prepare(Sender, Control: TObject; Canvas: TCanvas; const Context: Th5uFmxDrawContext; Part: Th5uElementPaintPart);
+{$ELSE}
+    procedure Prepare(Sender, Control: TObject; Canvas: TCanvas; const Context: Th5uVclDrawContext; Part: Th5uElementPaintPart);
+{$ENDIF}
+  end;
+{$IFDEF TEST_FMX}
+procedure TElementStyleProbe.Prepare(Sender, Control: TObject; Canvas: TCanvas; const Context: Th5uFmxDrawContext; Part: Th5uElementPaintPart);
+{$ELSE}
+procedure TElementStyleProbe.Prepare(Sender, Control: TObject; Canvas: TCanvas; const Context: Th5uVclDrawContext; Part: Th5uElementPaintPart);
+{$ENDIF}
+var
+  Color: TAlphaColor;
+begin
+  Check(Assigned(Control), 'PrepareElement has no element');
+  Include(Kinds, Context.FactoryContext.ElementKind);
+  if Context.FactoryContext.ElementKind = Th5uElementKind.RowHeaderCell then
+    Check(Control <> Sender, 'Index cell has no element object');
+  if Part = Th5uElementPaintPart.ColumnMode then Inc(Symbols);
+  if Part = Th5uElementPaintPart.Background then
+  begin
+    case Context.FactoryContext.ElementKind of
+      Th5uElementKind.DataCell: Color := TAlphaColorRec.Red;
+      Th5uElementKind.ColumnHeaderCell: Color := TAlphaColorRec.Lime;
+      Th5uElementKind.RowHeaderCell: Color := TAlphaColorRec.Blue;
+      Th5uElementKind.Grid: Color := TAlphaColorRec.Yellow;
+      else Color := TAlphaColorRec.Fuchsia;
+    end;
+{$IFDEF TEST_FMX}
+    Canvas.Fill.Kind := TBrushKind.Solid;
+    Canvas.Fill.Color := Color;
+{$ELSE}
+    Canvas.Brush.Style := bsSolid;
+    Canvas.Brush.Color := RGB((Color shr 16) and $FF, (Color shr 8) and $FF, Color and $FF);
+{$ENDIF}
+  end;
+  if Part = Th5uElementPaintPart.Text then
+  begin
+    Canvas.Font.Size := 17;
+    Canvas.Font.Style := [TFontStyle.fsBold];
+{$IFDEF TEST_FMX}
+    Canvas.Fill.Color := TAlphaColorRec.White;
+{$ELSE}
+    Canvas.Font.Color := clWhite;
+{$ENDIF}
+  end;
+end;
+
+procedure TestElementStyleAndModes;
+var
+  T: TFixture;
+  P: TElementStyleProbe;
+  B: TBitmap;
+  Pt: TPoint;
+  Column: Th5uGridColumn;
+  Info: PPropInfo;
+{$IFDEF TEST_FMX}
+  Map: TBitmapData;
+  H: Th5uFmxHitTestInfo;
+{$ELSE}
+  H: Th5uHitTestInfo;
+{$ENDIF}
+  procedure CheckPixel(X,Y: Integer; Expected: TAlphaColor; const Message: string);
+{$IFNDEF TEST_FMX}
+  var Actual: TColor;
+{$ENDIF}
+  begin
+{$IFDEF TEST_FMX}
+    Check(Map.GetPixel(X,Y) = Expected, Message);
+{$ELSE}
+    Actual := ColorToRGB(B.Canvas.Pixels[X,Y]);
+    Check(Actual = RGB((Expected shr 16) and $FF, (Expected shr 8) and $FF, Expected and $FF), Message);
+{$ENDIF}
+  end;
+begin
+  T := TFixture.Create(Th5uCacheMode.None);
+  P := TElementStyleProbe.Create;
+  try
+    Column := T.Grid.Columns[0];
+    T.Controller.KeyFieldName := 'FLAG';
+    T.Grid.Tree.LevelColumnId := 'FLAG';
+    T.Grid.AdjacentGroupFolding.IdColumnId := 'FLAG';
+    T.Grid.RowStyles.StyleKeyColumnId := 'FLAG';
+    T.Grid.ScrollHints.VerticalColumnId := 'FLAG';
+    Check(Column.Mode = 'KeyField TreeLevel GroupId StyleKey ScrollHint', 'Combined column roles incorrect');
+    Info := GetPropInfo(Column, 'Mode');
+    Check(Assigned(Info) and (Info.SetProc = nil), 'Mode is not published read-only');
+    T.Grid.OnPrepareElement := P.Prepare;
+    T.PaintGrid;
+    Check(P.Symbols = 0, 'Runtime modes should default to hidden');
+    T.Grid.ShowColumnModes := True;
+    T.PaintGrid;
+    Check(P.Symbols > 0, 'Configured role symbols not painted');
+    T.Grid.ShowColumnModes := False;
+    T.Grid.DesignModeForTest(True);
+    P.Symbols := 0;
+    T.PaintGrid;
+    Check(P.Symbols > 0, 'Designer must always show roles');
+    T.Grid.DesignModeForTest(False);
+    Check(Th5uElementKind.ContentPadding in P.Kinds, 'Padding style event missing');
+    Check(Th5uElementKind.ColumnSpacing in P.Kinds, 'Column spacing style event missing');
+    Check(Th5uElementKind.RowSpacing in P.Kinds, 'Row spacing style event missing');
+    Pt := T.CellPoint('DESCRIPTION');
+{$IFDEF TEST_FMX}
+    H := T.Grid.GridHitTest(Pt.X,Pt.Y);
+    B := T.Grid.MakeScreenshot;
+    Check(B.Map(TMapAccess.Read, Map), 'Cannot map style image');
+{$ELSE}
+    H := T.Grid.HitTest(Pt.X,Pt.Y);
+    B := TBitmap.Create;
+    B.SetSize(T.Grid.Width,T.Grid.Height);
+    T.Grid.PaintTo(B.Canvas.Handle,0,0);
+{$ENDIF}
+    try
+      CheckPixel(Round(H.Bounds.Left)+2, Round(H.Bounds.Top)+2,TAlphaColorRec.Red,'Cell fill override lost');
+      CheckPixel(Round(H.Bounds.Left)+2,3,TAlphaColorRec.Lime,'Header fill override lost');
+      CheckPixel(3,Round(H.Bounds.Top)+2,TAlphaColorRec.Blue,'Index fill override lost');
+      CheckPixel(550,180,TAlphaColorRec.Yellow,'Empty grid fill override lost');
+    finally
+{$IFDEF TEST_FMX}
+      B.Unmap(Map);
+{$ENDIF}
+      B.Free;
+    end;
+    Writeln('PASS: element style pixels, spacing contexts, column modes and designer roles');
+  finally
+    T.Grid.OnPrepareElement := nil;
     T.Free;
     P.Free;
   end;
@@ -1472,6 +1615,7 @@ begin
 {$IFDEF TEST_FMX}
     TestHorizontalScrollBar;
 {$ENDIF}
+    TestElementStyleAndModes;
     TestCellEvents;
     TestClippedCheckboxBounds;
     TestOpaqueCellBackground;

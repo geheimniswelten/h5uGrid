@@ -6,6 +6,7 @@ interface
 
 uses
   System.StrUtils,
+  System.TypInfo,
   System.Classes,
   System.DateUtils,
   System.Generics.Collections,
@@ -98,6 +99,11 @@ type
     Appearance: Th5uResolvedAppearance;
   end;
 
+  Th5uFmxAfterDrawEvent = procedure(Sender: TObject; ACanvas: TCanvas) of object;
+
+  Th5uFmxPrepareElementEvent = procedure(Sender: TObject; Control: TObject; ACanvas: TCanvas;
+    const AContext: Th5uFmxDrawContext; APart: Th5uElementPaintPart) of object;
+
   Th5uFmxCustomDrawEvent = procedure(Sender: TObject; ACanvas: TCanvas; const AContext: Th5uFmxDrawContext; AStage: Th5uFmxCustomDrawStage; var ADrawDefault: Boolean) of object;
 
   Th5uFmxVisibleColumnInfo = record
@@ -132,6 +138,7 @@ type
     FAppearance: Th5uResolvedAppearance;
     FInUse: Boolean;
   protected
+    procedure PrepareCanvas(AGrid: Th5uFmxGrid; ACanvas: TCanvas; APart: Th5uElementPaintPart);
     procedure PaintDefault(AGrid: Th5uFmxGrid; ACanvas: TCanvas); virtual;
   public
     procedure BindCell(const AContext: Th5uFactoryContext; const ABounds: TRectF; const AValue: TValue; const ADisplayText: string;
@@ -174,6 +181,7 @@ type
 
   Th5uFmxGrid = class(TStyledControl)
   private
+    FShowColumnModes: Boolean;
     FColumns: Th5uGridColumns;
     FHeaderLayout: Th5uHeaderLayout;
     FDataController: Th5uCustomDataController;
@@ -258,6 +266,8 @@ type
     FOnGetRowHeight: Th5uFmxGetRowHeightEvent;
     FOnGetRowSpacing: Th5uFmxGetRowSpacingEvent;
     FOnGetThumbHint: Th5uFmxGetThumbHintEvent;
+    FOnAfterDraw: Th5uFmxAfterDrawEvent;
+    FOnPrepareElement: Th5uFmxPrepareElementEvent;
     FOnCustomDraw: Th5uFmxCustomDrawEvent;
     FOnGetTreeLevel: Th5uGetTreeLevelEvent;
     FOnGetTreeBranchEnd: Th5uGetTreeBranchEndEvent;
@@ -373,6 +383,10 @@ type
     function GetCellText(AColumn: Th5uGridColumn; ARow: Int64; ADisplay: Boolean): string;
     procedure PutCellValue(AColumn: Th5uGridColumn; ARow: Int64; const AValue: TValue);
     procedure NotifyCellClick(AColumn: Th5uGridColumn; ARow: Int64; AHeader, AIndicator: Boolean);
+    procedure SetShowColumnModes(AValue: Boolean);
+    procedure GetColumnMode(AColumn: Th5uGridColumn; var AMode: string);
+    function ColumnModeSymbols(AColumn: Th5uGridColumn): string;
+    procedure PrepareGridCanvas(const ABounds: TRectF; AKind: Th5uElementKind);
     procedure CommitEditor;
     procedure CancelEditor;
     procedure ImageEditorCommit(Sender: TObject);
@@ -465,6 +479,8 @@ type
     property OnGetRowHeight: Th5uFmxGetRowHeightEvent read FOnGetRowHeight write FOnGetRowHeight;
     property OnGetRowSpacing: Th5uFmxGetRowSpacingEvent read FOnGetRowSpacing write FOnGetRowSpacing;
     property OnGetThumbHint: Th5uFmxGetThumbHintEvent read FOnGetThumbHint write FOnGetThumbHint;
+    property OnAfterDraw: Th5uFmxAfterDrawEvent read FOnAfterDraw write FOnAfterDraw;
+    property OnPrepareElement: Th5uFmxPrepareElementEvent read FOnPrepareElement write FOnPrepareElement;
     property OnCustomDraw: Th5uFmxCustomDrawEvent read FOnCustomDraw write FOnCustomDraw;
     property OnGetTreeLevel: Th5uGetTreeLevelEvent read FOnGetTreeLevel write FOnGetTreeLevel;
     property OnGetTreeBranchEnd: Th5uGetTreeBranchEndEvent read FOnGetTreeBranchEnd write FOnGetTreeBranchEnd;
@@ -481,6 +497,7 @@ type
     property OnCellExit: Th5uCellEvent read FOnCellExit write FOnCellExit;
     property OnRowIndicatorClick: Th5uCellEvent read FOnRowIndicatorClick write FOnRowIndicatorClick;
     property OnSelectionChange: TNotifyEvent read FOnSelectionChange write FOnSelectionChange;
+    property ShowColumnModes: Boolean read FShowColumnModes write SetShowColumnModes default False;
     property OnClick;
     property OnDblClick;
     property OnDragDrop;
@@ -529,11 +546,38 @@ begin
   FAppearance := AAppearance;
 end;
 
+procedure Th5uFmxVisualCell.PrepareCanvas(AGrid: Th5uFmxGrid; ACanvas: TCanvas; APart: Th5uElementPaintPart);
+var
+  LContext: Th5uFmxDrawContext;
+begin
+  if not Assigned(AGrid.FOnPrepareElement) then Exit;
+  LContext.FactoryContext := Context;
+  LContext.Bounds := Bounds;
+  LContext.DisplayText := DisplayText;
+  LContext.Appearance := Appearance;
+  AGrid.FOnPrepareElement(AGrid, Self, ACanvas, LContext, APart);
+end;
+
+procedure Th5uFmxGrid.PrepareGridCanvas(const ABounds: TRectF; AKind: Th5uElementKind);
+var
+  LContext: Th5uFmxDrawContext;
+begin
+  if not Assigned(FOnPrepareElement) then Exit;
+  LContext := Default(Th5uFmxDrawContext);
+  LContext.FactoryContext := Th5uFactoryContext.Create(Self, Self, FDataController, '', AKind);
+  LContext.FactoryContext.ViewRowIndex := -1;
+  LContext.Bounds := ABounds;
+  FOnPrepareElement(Self, Self, Canvas, LContext, Th5uElementPaintPart.Background);
+end;
 procedure Th5uFmxVisualCell.Paint(AGrid: Th5uFmxGrid; ACanvas: TCanvas);
 var
   LContext: Th5uFmxDrawContext;
   LDrawDefault: Boolean;
+  LState: TCanvasSaveState;
 begin
+  LState := nil;
+  if Assigned(AGrid.FOnPrepareElement) then LState := ACanvas.SaveState;
+  try
   LContext.FactoryContext := FContext;
   LContext.Bounds := FBounds;
   LContext.DisplayText := FDisplayText;
@@ -544,6 +588,9 @@ begin
   if LDrawDefault then
     PaintDefault(AGrid, ACanvas);
   AGrid.DoCustomDraw(ACanvas, LContext, Th5uFmxCustomDrawStage.AfterDefault, LDrawDefault);
+  finally
+    if Assigned(LState) then ACanvas.RestoreState(LState);
+  end;
 end;
 
 procedure Th5uFmxVisualCell.PaintDefault(AGrid: Th5uFmxGrid; ACanvas: TCanvas);
@@ -557,6 +604,7 @@ begin
 
   ACanvas.Fill.Kind := TBrushKind.Solid;
   ACanvas.Fill.Color := LBackground;
+  PrepareCanvas(AGrid, ACanvas, Th5uElementPaintPart.Background);
   ACanvas.FillRect(Bounds, 0, 0, AllCorners, 1);
 end;
 
@@ -568,6 +616,7 @@ begin
     Exit;
   ACanvas.Fill.Kind := TBrushKind.Solid;
   ACanvas.Fill.Color := h5uColorToFmx(Appearance.Background);
+  PrepareCanvas(AGrid, ACanvas, Th5uElementPaintPart.Background);
   ACanvas.FillRect(Bounds, 0, 0, AllCorners, 1);
 end;
 
@@ -588,6 +637,7 @@ begin
   else
     ACanvas.Fill.Color := AGrid.ResolveDefaultCellColor;
   ACanvas.Fill.Kind := TBrushKind.Solid;
+  PrepareCanvas(AGrid, ACanvas, Th5uElementPaintPart.Background);
   ACanvas.FillRect(LRect, 0, 0, AllCorners, 1);
 
   LRect.Inflate(-1, -1);
@@ -595,10 +645,12 @@ begin
     Exit;
 
   ACanvas.Fill.Color := LPalette.CellBackground;
+  PrepareCanvas(AGrid, ACanvas, Th5uElementPaintPart.Background);
   ACanvas.FillRect(LRect, 0, 0, AllCorners, 1);
   ACanvas.Stroke.Kind := TBrushKind.Solid;
   ACanvas.Stroke.Color := LPalette.CellText;
   ACanvas.Stroke.Thickness := 1;
+  PrepareCanvas(AGrid, ACanvas, Th5uElementPaintPart.Glyph);
   ACanvas.DrawRect(LRect, 0, 0, AllCorners, 1);
 
   LMidX := (LRect.Left + LRect.Right) / 2;
@@ -657,6 +709,8 @@ end;
 
 procedure Th5uFmxDataCell.PaintDefault(AGrid: Th5uFmxGrid; ACanvas: TCanvas);
 var
+  LRow: Th5uFmxVisibleRowInfo;
+  LGlyph: TRectF;
   LColumn: Th5uGridColumn;
   LPalette: Th5uFmxPalette;
   LTextRect: TRectF;
@@ -670,6 +724,29 @@ var
   LHeight: Single;
 begin
   inherited;
+  if Context.ElementKind = Th5uElementKind.RowHeaderCell then
+  begin
+    LRow.RowIndex := Context.ViewRowIndex;
+    LRow.RowKey := Context.RowKey;
+    LRow.Bounds := Bounds;
+    LGlyph := AGrid.GetAdjacentGroupGlyphRect(LRow);
+    LTextRect := Bounds;
+    LTextRect.Inflate(-2, 0);
+    LAlign := TTextAlign.Center;
+    if not LGlyph.IsEmpty then
+    begin
+      LTextRect.Left := Max(LTextRect.Left, LGlyph.Right + 2);
+      LAlign := TTextAlign.Trailing;
+    end;
+    ACanvas.Fill.Kind := TBrushKind.Solid;
+    ACanvas.Fill.Color := h5uGetFmxPalette(AGrid.Theme).CellText;
+    ACanvas.Font.Size := AGrid.TextSize;
+    ACanvas.Font.Style := [];
+    PrepareCanvas(AGrid, ACanvas, Th5uElementPaintPart.Text);
+    if LTextRect.Width > 0 then
+      ACanvas.FillText(LTextRect, DisplayText, False, 1, [], LAlign, TTextAlign.Center);
+    Exit;
+  end;
   if not (Context.Column is Th5uGridColumn) then
     Exit;
 
@@ -700,13 +777,17 @@ begin
           ACanvas.Fill.Color := h5uColorToFmx(Appearance.Background)
         else
           ACanvas.Fill.Color := LPalette.CellBackground;
+        PrepareCanvas(AGrid, ACanvas, Th5uElementPaintPart.Background);
         ACanvas.FillRect(LCheckRect, 2, 2, AllCorners, 1);
+        PrepareCanvas(AGrid, ACanvas, Th5uElementPaintPart.Glyph);
         ACanvas.DrawRect(LCheckRect, 2, 2, AllCorners, 1);
         if LChecked then
         begin
           ACanvas.Stroke.Color := LTextColor;
           ACanvas.Stroke.Thickness := 2;
+          PrepareCanvas(AGrid, ACanvas, Th5uElementPaintPart.Glyph);
           ACanvas.DrawLine(PointF(LCheckRect.Left + 3, LCheckRect.Top + 8), PointF(LCheckRect.Left + 6, LCheckRect.Bottom - 3), 1);
+          PrepareCanvas(AGrid, ACanvas, Th5uElementPaintPart.Glyph);
           ACanvas.DrawLine(PointF(LCheckRect.Left + 6, LCheckRect.Bottom - 3), PointF(LCheckRect.Right - 2, LCheckRect.Top + 3), 1);
           ACanvas.Stroke.Thickness := 1;
         end;
@@ -741,6 +822,8 @@ begin
         if LColumn.DataType in [Th5uColumnDataType.Integer, Th5uColumnDataType.Float, Th5uColumnDataType.Currency] then
           LAlign := TTextAlign.Trailing;
 
+        PrepareCanvas(AGrid, ACanvas, Th5uElementPaintPart.Text);
+
         ACanvas.FillText(LTextRect, DisplayText, LColumn.WordWrap, 1, [], LAlign, TTextAlign.Center);
       end;
   end;
@@ -749,6 +832,7 @@ begin
   begin
     ACanvas.Stroke.Color := LPalette.FocusBorder;
     ACanvas.Stroke.Thickness := 2;
+    PrepareCanvas(AGrid, ACanvas, Th5uElementPaintPart.Border);
     ACanvas.DrawRect(Bounds, 0, 0, AllCorners, 1);
     ACanvas.Stroke.Thickness := 1;
   end;
@@ -759,11 +843,14 @@ end;
 procedure Th5uFmxHeaderCell.PaintDefault(AGrid: Th5uFmxGrid; ACanvas: TCanvas);
 var
   LPalette: Th5uFmxPalette;
-  LRect: TRectF;
+  LRect, LSymbolRect: TRectF;
+  LSymbols: string;
+  LState: TCanvasSaveState;
 begin
   LPalette := h5uGetFmxPalette(AGrid.Theme);
   ACanvas.Fill.Kind := TBrushKind.Solid;
   ACanvas.Fill.Color := LPalette.HeaderBackground;
+  PrepareCanvas(AGrid, ACanvas, Th5uElementPaintPart.Background);
   ACanvas.FillRect(Bounds, 0, 0, AllCorners, 1);
 
   LRect := Bounds;
@@ -771,6 +858,22 @@ begin
   ACanvas.Font.Size := AGrid.TextSize;
   ACanvas.Font.Style := [TFontStyle.fsBold];
   ACanvas.Fill.Color := LPalette.HeaderText;
+  LSymbols := AGrid.ColumnModeSymbols(Th5uGridColumn(Context.Column));
+  if LSymbols <> '' then
+  begin
+    LState := ACanvas.SaveState;
+    try
+      ACanvas.Fill.Color := TAlphaColorRec.Maroon;
+      PrepareCanvas(AGrid, ACanvas, Th5uElementPaintPart.ColumnMode);
+      LSymbolRect := LRect;
+      LSymbolRect.Right := Min(LSymbolRect.Right, LSymbolRect.Left + ACanvas.TextWidth(LSymbols) + 4);
+      ACanvas.FillText(LSymbolRect, LSymbols, False, 1, [], TTextAlign.Leading, TTextAlign.Center);
+      LRect.Left := LSymbolRect.Right + 3;
+    finally
+      ACanvas.RestoreState(LState);
+    end;
+  end;
+  PrepareCanvas(AGrid, ACanvas, Th5uElementPaintPart.Text);
   ACanvas.FillText(LRect, DisplayText, False, 1, [], TTextAlign.Center, TTextAlign.Center);
   ACanvas.Font.Style := [];
 end;
@@ -973,6 +1076,50 @@ begin
     Th5uFmxImageEditor(FImageEditor).Visible := False;
 end;
 
+procedure Th5uFmxGrid.SetShowColumnModes(AValue: Boolean);
+begin
+  if FShowColumnModes = AValue then Exit;
+  FShowColumnModes := AValue;
+  Repaint;
+end;
+
+procedure Th5uFmxGrid.GetColumnMode(AColumn: Th5uGridColumn; var AMode: string);
+var
+  LKey: string;
+  procedure Add(const AToken: string);
+  begin
+    if AMode <> '' then AMode := AMode + ' ';
+    AMode := AMode + AToken;
+  end;
+begin
+  AMode := '';
+  if not Assigned(AColumn) then Exit;
+  LKey := '';
+  if Assigned(FDataController) then
+    if IsPublishedProp(FDataController, 'KeyFieldName') then
+      LKey := GetStrProp(FDataController, 'KeyFieldName')
+    else if IsPublishedProp(FDataController, 'KeyPropertyName') then
+      LKey := GetStrProp(FDataController, 'KeyPropertyName');
+  if (LKey <> '') and SameText(AColumn.FieldName, LKey) then Add('KeyField');
+  if (FTree.LevelColumnId <> '') and SameText(AColumn.Id, FTree.LevelColumnId) then Add('TreeLevel');
+  if (FAdjacentGroupFolding.IdColumnId <> '') and SameText(AColumn.Id, FAdjacentGroupFolding.IdColumnId) then Add('GroupId');
+  if (FRowStyles.StyleKeyColumnId <> '') and SameText(AColumn.Id, FRowStyles.StyleKeyColumnId) then Add('StyleKey');
+  if (FScrollHints.VerticalColumnId <> '') and SameText(AColumn.Id, FScrollHints.VerticalColumnId) then Add('ScrollHint');
+end;
+
+function Th5uFmxGrid.ColumnModeSymbols(AColumn: Th5uGridColumn): string;
+var
+  LMode: string;
+begin
+  Result := '';
+  if not Assigned(AColumn) or not (FShowColumnModes or (csDesigning in ComponentState)) then Exit;
+  LMode := ' ' + AColumn.Mode + ' ';
+  if Pos(' KeyField ', LMode) > 0 then Result := Result + #$26BF;
+  if Pos(' TreeLevel ', LMode) > 0 then Result := Result + #$21B3;
+  if Pos(' GroupId ', LMode) > 0 then Result := Result + #$2261;
+  if Pos(' StyleKey ', LMode) > 0 then Result := Result + #$25C6;
+  if Pos(' ScrollHint ', LMode) > 0 then Result := Result + #$2195;
+end;
 procedure Th5uFmxGrid.ColumnsChanged(Sender: TObject; AColumn: Th5uGridColumn);
 begin
   InvalidateAdjacentGroupMap(False);
@@ -1135,6 +1282,7 @@ begin
 
   FColumns := Th5uGridColumns.Create(Self);
   FColumns.OnChanged := ColumnsChanged;
+  FColumns.OnGetMode := GetColumnMode;
   FHeaderLayout := Th5uHeaderLayout.Create(Self);
   FLastNotifiedCell := Th5uCellAddress.Empty;
   FSelection := Th5uGridSelection.Create;
@@ -1482,8 +1630,6 @@ var
   LRowSelected: Boolean;
   LFocused: Boolean;
   LIndicatorRect: TRectF;
-  LIndicatorTextRect, LIndicatorGlyphRect: TRectF;
-  LIndicatorAlignment: TTextAlign;
   LPalette: Th5uFmxPalette;
   LColumnSpacing: Single;
   LRowSeparatorKind: Th5uElementKind;
@@ -1534,23 +1680,16 @@ begin
         if FShowRowIndicator then
         begin
           LIndicatorRect := RectF(LDataRect.Left, LRowRect.Top, LDataRect.Left + FRowIndicatorWidth, LRowRect.Bottom);
-          Canvas.Fill.Kind := TBrushKind.Solid;
-          Canvas.Fill.Color := LPalette.FixedBackground;
-          Canvas.FillRect(LIndicatorRect, 0, 0, AllCorners, 1);
-          Canvas.Fill.Color := LPalette.CellText;
-          Canvas.Font.Size := FTextSize;
-          LIndicatorTextRect := LIndicatorRect;
-          LIndicatorTextRect.Inflate(-2, 0);
-          LIndicatorGlyphRect := GetAdjacentGroupGlyphRect(LRowInfo);
-          LIndicatorAlignment := TTextAlign.Center;
-          if not LIndicatorGlyphRect.IsEmpty then
-          begin
-            LIndicatorTextRect.Left := Max(LIndicatorTextRect.Left, LIndicatorGlyphRect.Right + 2);
-            LIndicatorAlignment := TTextAlign.Trailing;
-          end;
-          if LIndicatorTextRect.Width > 0 then
-            Canvas.FillText(LIndicatorTextRect, IntToStr(LRowIndex + 1), False, 1, [], LIndicatorAlignment, TTextAlign.Center);
-
+          LContext := Th5uFactoryContext.Create(Self, Self, FDataController, h5uClassIdGridFixedCell, Th5uElementKind.RowHeaderCell);
+          LContext.ViewRowIndex := LRowIndex;
+          LContext.RowKey := LRowKey;
+          LContext.ElementFlags := [Th5uElementFlag.FixedColumn];
+          LAppearance.Clear;
+          LAppearance.HasBackground := True;
+          LAppearance.Background := AlphaColorToColor(LPalette.FixedBackground);
+          LCell := AcquireVisualCell(LContext, Th5uFmxDataCell);
+          LCell.BindCell(LContext, TRectF.Intersect(LIndicatorRect, LDataRect), TValue.Empty, IntToStr(LRowIndex + 1), LAppearance);
+          LCell.Paint(Self, Canvas);
           if FSpacing.DefaultColumnRightSpacing > 0 then
           begin
             LSeparatorRect := RectF(LIndicatorRect.Right, LIndicatorRect.Top, LIndicatorRect.Right
@@ -2880,6 +3019,7 @@ begin
   LPalette := h5uGetFmxPalette(FTheme);
   Canvas.Fill.Kind := TBrushKind.Solid;
   Canvas.Fill.Color := LPalette.EmptyArea;
+  PrepareGridCanvas(LocalRect, Th5uElementKind.Grid);
   Canvas.FillRect(LocalRect, 0, 0, AllCorners, 1);
 
   UpdateScrollBars;
@@ -2890,10 +3030,14 @@ begin
 
   LViewport := GetViewportRect;
   Canvas.Fill.Color := ResolveDefaultCellColor;
+  Canvas.Fill.Kind := TBrushKind.Solid;
+  PrepareGridCanvas(LViewport, Th5uElementKind.Grid);
   Canvas.FillRect(LViewport, 0, 0, AllCorners, 1);
 
   DrawHeaders;
   DrawRows;
+  if Assigned(FOnAfterDraw) then
+    FOnAfterDraw(Self, Canvas);
 end;
 
 function Th5uFmxGrid.ParseEditorValue(AColumn: Th5uGridColumn; const AText: string): TValue;

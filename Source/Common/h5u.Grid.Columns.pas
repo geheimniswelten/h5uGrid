@@ -23,6 +23,8 @@ type
   Th5uCellGetValueEvent = procedure(Sender: TObject; AColumn: Th5uGridColumn; ARowIndex: Int64; var AValue: TValue; ADisplayValue: Boolean) of object;
   Th5uCellSetValueEvent = procedure(Sender: TObject; AColumn: Th5uGridColumn; ARowIndex: Int64; var AValue: TValue) of object;
   Th5uCellValidateEvent = procedure(Sender: TObject; AColumn: Th5uGridColumn; ARowIndex: Int64; var AValue: TValue; var AValid: Boolean; var AErrorText: string) of object;
+  Th5uGetColumnModeEvent = procedure(AColumn: Th5uGridColumn; var AMode: string) of object;
+
   Th5uColumnChangedEvent = procedure(Sender: TObject; AColumn: Th5uGridColumn) of object;
 
   Th5uGridColumn = class(TCollectionItem)
@@ -83,6 +85,7 @@ type
   public
     constructor Create(Collection: TCollection); override;
     procedure Assign(Source: TPersistent); override;
+    function GetMode: string;
     function GetColumns: Th5uGridColumns;
     property Columns: Th5uGridColumns read GetColumns;
   published
@@ -120,6 +123,7 @@ type
     property CanResize: Boolean read FCanResize write FCanResize default True;
     property CanSelect: Boolean read FCanSelect write FCanSelect default True;
     property ShowInColumnChooser: Boolean read FShowInColumnChooser write FShowInColumnChooser default True;
+    property Mode: string read GetMode stored False;
     property ImagePreserveAspectRatio: Boolean read FImagePreserveAspectRatio write FImagePreserveAspectRatio default True;
     property OnCanFocus: Th5uCellPermissionEvent read FOnCanFocus write FOnCanFocus;
     property OnCanEdit: Th5uCellPermissionEvent read FOnCanEdit write FOnCanEdit;
@@ -134,6 +138,7 @@ type
 
   Th5uGridColumns = class(TOwnedCollection)
   private
+    FOnGetMode: Th5uGetColumnModeEvent;
     FOnChanged: Th5uColumnChangedEvent;
     function GetItem(AIndex: Integer): Th5uGridColumn;
     procedure SetItem(AIndex: Integer; const AValue: Th5uGridColumn);
@@ -148,6 +153,7 @@ type
     procedure NormalizeVisibleIndexes;
     procedure MoveColumn(AColumn: Th5uGridColumn; ANewVisibleIndex: Integer);
     property Items[AIndex: Integer]: Th5uGridColumn read GetItem write SetItem; default;
+    property OnGetMode: Th5uGetColumnModeEvent read FOnGetMode write FOnGetMode;
     property OnChanged: Th5uColumnChangedEvent read FOnChanged write FOnChanged;
   end;
 
@@ -250,6 +256,16 @@ begin
 end;
 
 { Th5uGridColumn }
+
+function Th5uGridColumn.GetMode: string;
+var
+  LColumns: Th5uGridColumns;
+begin
+  Result := '';
+  LColumns := GetColumns;
+  if Assigned(LColumns) and Assigned(LColumns.OnGetMode) then
+    LColumns.OnGetMode(Self, Result);
+end;
 
 procedure Th5uGridColumn.Assign(Source: TPersistent);
 var
