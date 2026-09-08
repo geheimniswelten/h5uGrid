@@ -1,4 +1,4 @@
-﻿object FmxVirtualDemoForm: TFmxVirtualDemoForm
+object FmxVirtualDemoForm: TFmxVirtualDemoForm
   Left = 0
   Top = 0
   Caption = 'h5u.Grid FMX - VirtualSource / Live'
@@ -24,12 +24,12 @@
       OnChange = OptionChange
     end
     object CacheCheck: TCheckBox
+      IsChecked = True
       Position.X = 96.000000000000000000
       Position.Y = 13.000000000000000000
       Size.Width = 120.000000000000000000
       Size.Height = 24.000000000000000000
       Size.PlatformDefault = False
-      IsChecked = True
       Text = 'Viewport-Cache'
       OnChange = OptionChange
     end
@@ -48,7 +48,7 @@
       Size.Width = 122.000000000000000000
       Size.Height = 34.000000000000000000
       Size.PlatformDefault = False
-      Text = 'Event anhängen'
+      Text = 'Event anh'#228'ngen'
       OnClick = AppendButtonClick
     end
     object ClearButton: TButton
@@ -146,6 +146,13 @@
         StyleName = 'Error'
       end>
   end
+  object LiveTimer: TTimer
+    Enabled = True
+    Interval = 900
+    OnTimer = LiveTimerTimer
+    Left = 104
+    Top = 80
+  end
   object VirtualController: Th5uVirtualController
     Cache.Mode = Viewport
     OnGetRowCount = VirtualGetRowCount
@@ -153,13 +160,6 @@
     OnGetValue = VirtualGetValue
     OnSetValue = VirtualSetValue
     Left = 32
-    Top = 80
-  end
-  object LiveTimer: TTimer
-    Enabled = True
-    Interval = 900
-    OnTimer = LiveTimerTimer
-    Left = 104
     Top = 80
   end
 end

@@ -10,9 +10,11 @@ uses
   System.Rtti,
   System.SysUtils,
   FMX.Controls,
+  FMX.Controls.Presentation,
   FMX.Forms,
   FMX.StdCtrls,
   FMX.Types,
+  h5u.Grid.Data.Core,
   h5u.Grid.Data.Virtual,
   h5u.Grid.Types,
   Fmx.h5u.Grid;
