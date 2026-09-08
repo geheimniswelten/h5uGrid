@@ -28,10 +28,28 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
+        <DeployFile Include="$(BDS)\lib\android\debug\armeabi-v7a\libnative-activity.so" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>GridFmxVirtualLiveDemo\library\lib\armeabi-v7a\</RemoteDir>
+            <RemoteName>libGridFmxVirtualLiveDemo.so</RemoteName>
+            <DeployClass>AndroidLibnativeArmeabiv7aFile</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
         <DeployFile Include="..\..\..\_bin\AndroidManifest.xml" Condition="'$(Config)'=='Debug'">
             <RemoteDir>GridFmxVirtualLiveDemo\</RemoteDir>
             <RemoteName>AndroidManifest.xml</RemoteName>
             <DeployClass>ProjectAndroidManifest</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="..\..\..\_bin\colors.xml" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>GridFmxVirtualLiveDemo\res\values\</RemoteDir>
+            <RemoteName>colors.xml</RemoteName>
+            <DeployClass>Android_Colors</DeployClass>
             <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
@@ -47,37 +65,10 @@
             <Overwrite>True</Overwrite>
             <Required>True</Required>
         </DeployFile>
-        <DeployFile Include="..\..\..\_bin\colors.xml" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>GridFmxVirtualLiveDemo\res\values\</RemoteDir>
-            <RemoteName>colors.xml</RemoteName>
-            <DeployClass>Android_Colors</DeployClass>
-            <Operation>1</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="$(BDS)\lib\android\debug\armeabi-v7a\libnative-activity.so" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>GridFmxVirtualLiveDemo\library\lib\armeabi-v7a\</RemoteDir>
-            <RemoteName>libGridFmxVirtualLiveDemo.so</RemoteName>
-            <DeployClass>AndroidLibnativeArmeabiv7aFile</DeployClass>
-            <Operation>1</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
         <DeployFile Include="..\..\..\Icons\h5uGridDemo_192x192.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>GridFmxVirtualLiveDemo\res\drawable-xxxhdpi\</RemoteDir>
             <RemoteName>ic_launcher.png</RemoteName>
             <DeployClass>Android_LauncherIcon192</DeployClass>
-            <Operation>1</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="..\..\..\_bin\splash_image_def.xml" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>GridFmxVirtualLiveDemo\res\drawable\</RemoteDir>
-            <RemoteName>splash_image_def.xml</RemoteName>
-            <DeployClass>AndroidSplashImageDef</DeployClass>
             <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
@@ -92,6 +83,15 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
+        <DeployFile Include="..\..\..\_bin\splash_image_def.xml" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>GridFmxVirtualLiveDemo\res\drawable\</RemoteDir>
+            <RemoteName>splash_image_def.xml</RemoteName>
+            <DeployClass>AndroidSplashImageDef</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
         <DeployFile Include="..\..\..\_bin\styles-v35.xml" Condition="'$(Config)'=='Debug'">
             <RemoteDir>GridFmxVirtualLiveDemo\res\values-v35\</RemoteDir>
             <RemoteName>styles.xml</RemoteName>
@@ -101,19 +101,19 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\_bin\styles.xml" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>GridFmxVirtualLiveDemo\res\values\</RemoteDir>
+        <DeployFile Include="..\..\..\_bin\styles-v21.xml" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>GridFmxVirtualLiveDemo\res\values-v21\</RemoteDir>
             <RemoteName>styles.xml</RemoteName>
-            <DeployClass>AndroidSplashStyles</DeployClass>
+            <DeployClass>AndroidSplashStylesV21</DeployClass>
             <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="..\..\..\_bin\styles-v21.xml" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>GridFmxVirtualLiveDemo\res\values-v21\</RemoteDir>
+        <DeployFile Include="..\..\..\_bin\styles.xml" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>GridFmxVirtualLiveDemo\res\values\</RemoteDir>
             <RemoteName>styles.xml</RemoteName>
-            <DeployClass>AndroidSplashStylesV21</DeployClass>
+            <DeployClass>AndroidSplashStyles</DeployClass>
             <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
