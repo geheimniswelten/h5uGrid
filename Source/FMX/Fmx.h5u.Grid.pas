@@ -38,16 +38,22 @@ type
   protected
     function GetAdjustType: TAdjustType; override;
     procedure HandlerPickerDateTimeChanged(Sender: TObject; const ADate: TDateTime); override;
+  public
+    procedure ApplyStyleLookup; override;
   end;
 
   Th5uCellTimeEdit = class(TTimeEdit)
   protected
     function GetAdjustType: TAdjustType; override;
+  public
+    procedure ApplyStyleLookup; override;
   end;
 
   Th5uCellTextEdit = class(TEdit)
   protected
     function GetAdjustType: TAdjustType; override;
+  public
+    procedure ApplyStyleLookup; override;
   end;
 
   Th5uFmxGrid = class;
@@ -237,6 +243,10 @@ type
     FThumbHint: TLabel;
     FThumbHintBackground: TRectangle;
     FThumbHintTimer: TTimer;
+    FEditorBackground: TRectangle;
+    FTouchTracking, FTouchScrolling, FGesturePanning, FDispatchingTouch: Boolean;
+    FTouchOrigin, FTouchOffset: TPointF;
+    FTouchShift: TShiftState;
     FEditor: TEdit;
     FDateEditor: TCustomDateTimeEdit;
     FCalendarEditor: TDateEdit;
@@ -387,6 +397,9 @@ type
     procedure GetColumnMode(AColumn: Th5uGridColumn; var AMode: string);
     function ColumnModeSymbols(AColumn: Th5uGridColumn): string;
     procedure PrepareGridCanvas(const ABounds: TRectF; AKind: Th5uElementKind);
+    procedure BeginTouchScroll(const APoint: TPointF);
+    procedure MoveTouchScroll(const APoint: TPointF);
+    procedure ShowEditorBackground(const ABounds: TRectF);
     procedure CommitEditor;
     procedure CancelEditor;
     procedure ImageEditorCommit(Sender: TObject);
@@ -401,6 +414,7 @@ type
     procedure Paint; override;
     procedure Resize; override;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
+    procedure DoGesture(const EventInfo: TGestureEventInfo; var Handled: Boolean); override;
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Single); override;
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Single); override;
     procedure MouseMove(Shift: TShiftState; X, Y: Single); override;
@@ -750,6 +764,10 @@ begin
   if not (Context.Column is Th5uGridColumn) then
     Exit;
 
+  // Mobile edit styles can be transparent. Do not draw the old cell content
+  // behind an active text/date editor, even when its style is replaced.
+  if (AGrid.FEditColumn = Context.Column) and (AGrid.FEditRowIndex = Context.ViewRowIndex)
+    and (AGrid.FEditor.Visible or AGrid.DateEditorVisible) then Exit;
   LColumn := Th5uGridColumn(Context.Column);
   LPalette := h5uGetFmxPalette(AGrid.Theme);
   if Appearance.HasForeground then
@@ -1070,6 +1088,7 @@ begin
   if Assigned(FDateEditor) then
     FDateEditor.Visible := False;
   FDateEditor := nil;
+  if Assigned(FEditorBackground) then FEditorBackground.Visible := False;
   if Assigned(FEditor) then
     FEditor.Visible := False;
   if Assigned(FImageEditor) then
@@ -1354,6 +1373,16 @@ begin
   FThumbHintTimer.Interval := 900;
   FThumbHintTimer.OnTimer := ThumbHintTimer;
 
+  FEditorBackground := TRectangle.Create(Self);
+  FEditorBackground.Stored := False;
+  FEditorBackground.Parent := Self;
+  FEditorBackground.Visible := False;
+  FEditorBackground.HitTest := False;
+  FEditorBackground.Stroke.Kind := TBrushKind.None;
+  FEditorBackground.Fill.Kind := TBrushKind.Solid;
+
+  Touch.DefaultInteractiveGestures := Touch.DefaultInteractiveGestures + [TInteractiveGesture.Pan];
+  Touch.InteractiveGestures := Touch.InteractiveGestures + [TInteractiveGesture.Pan];
   FEditor := Th5uCellTextEdit.Create(Self);
   FEditor.Stored := False;
   FEditor.Parent := Self;
@@ -2756,11 +2785,94 @@ begin
     Result := Min(Result, AColumn.MaxAutoHeight);
 end;
 
+procedure Th5uFmxGrid.ShowEditorBackground(const ABounds: TRectF);
+begin
+  FEditorBackground.SetBounds(ABounds.Left, ABounds.Top, ABounds.Width, ABounds.Height);
+  FEditorBackground.Fill.Color := h5uGetFmxPalette(FTheme).CellBackground or $FF000000;
+  FEditorBackground.Visible := True;
+  FEditorBackground.BringToFront;
+end;
+
+procedure Th5uFmxGrid.BeginTouchScroll(const APoint: TPointF);
+begin
+  FTouchTracking := True;
+  FTouchScrolling := False;
+  FTouchOrigin := APoint;
+  FTouchOffset := PointF(FHorizontalOffset, FVerticalOffset);
+end;
+
+procedure Th5uFmxGrid.MoveTouchScroll(const APoint: TPointF);
+var
+  LDelta: TPointF;
+begin
+  if not FTouchTracking or not CanUpdateLayout then Exit;
+  LDelta := FTouchOrigin - APoint;
+  if not FTouchScrolling then
+  begin
+    if (Abs(LDelta.X) < 6) and (Abs(LDelta.Y) < 6) then Exit;
+    FTouchScrolling := True;
+    FClickDownHit := Th5uFmxHitTestInfo.Empty;
+    CancelEditor;
+  end;
+  FHorizontalOffset := EnsureRange(FTouchOffset.X + LDelta.X, 0, Max(0.0, FHScrollBar.Max - FHScrollBar.ViewportSize));
+  FVerticalOffset := EnsureRange(FTouchOffset.Y + LDelta.Y, 0, Max(0.0, FVScrollBar.Max - FVScrollBar.ViewportSize));
+  FUpdatingScrollBars := True;
+  try
+    FHScrollBar.Value := FHorizontalOffset;
+    FVScrollBar.Value := FVerticalOffset;
+  finally
+    FUpdatingScrollBars := False;
+  end;
+  Repaint;
+end;
+
+procedure Th5uFmxGrid.DoGesture(const EventInfo: TGestureEventInfo; var Handled: Boolean);
+var
+  LPoint: TPointF;
+begin
+  if (EventInfo.GestureID <> igiPan) or not CanUpdateLayout then
+  begin
+    inherited;
+    Exit;
+  end;
+  Handled := True;
+  LPoint := AbsoluteToLocal(EventInfo.Location);
+  if TInteractiveGestureFlag.gfBegin in EventInfo.Flags then
+  begin
+    BeginTouchScroll(LPoint);
+    FGesturePanning := True;
+  end;
+  MoveTouchScroll(LPoint);
+  if TInteractiveGestureFlag.gfEnd in EventInfo.Flags then
+  begin
+    FTouchTracking := False;
+    FGesturePanning := False;
+    // A recognized pan must never become a checkbox click on release.
+    FTouchScrolling := True;
+  end;
+end;
 procedure Th5uFmxGrid.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Single);
 var
   LHit: Th5uFmxHitTestInfo;
   LCell: Th5uCellAddress;
 begin
+  if not FDispatchingTouch and (Button = TMouseButton.mbLeft)
+    and ((ssTouch in Shift) {$IFDEF ANDROID}or True{$ENDIF}) then
+  begin
+    if not CanUpdateLayout then Exit;
+    FGesturePanning := False;
+    FTouchShift := Shift;
+    BeginTouchScroll(PointF(X, Y));
+    Capture;
+    Exit;
+  end;
+  if not FDispatchingTouch then
+  begin
+    // Some platforms finish a native gesture without a synthetic MouseUp.
+    FTouchTracking := False;
+    FTouchScrolling := False;
+    FGesturePanning := False;
+  end;
   FClickDownHit := GridHitTest(X, Y);
   FLastMousePoint := PointF(X, Y);
   inherited;
@@ -2812,6 +2924,25 @@ procedure Th5uFmxGrid.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Si
 var
   LHit: Th5uFmxHitTestInfo;
 begin
+  if (Button = TMouseButton.mbLeft) and (FTouchTracking or FTouchScrolling) then
+  begin
+    if FTouchTracking and not FGesturePanning then MoveTouchScroll(PointF(X, Y));
+    FTouchTracking := False;
+    if FTouchScrolling then
+    begin
+      FTouchScrolling := False;
+      FGesturePanning := False;
+      FClickDownHit := Th5uFmxHitTestInfo.Empty;
+      ReleaseCapture;
+      Exit;
+    end;
+    FDispatchingTouch := True;
+    try
+      MouseDown(Button, FTouchShift - [ssTouch], X, Y);
+    finally
+      FDispatchingTouch := False;
+    end;
+  end;
   inherited;
   if Button <> TMouseButton.mbLeft then Exit;
   LHit := GridHitTest(X, Y);
@@ -2824,6 +2955,7 @@ end;
 procedure Th5uFmxGrid.MouseMove(Shift: TShiftState; X, Y: Single);
 begin
   inherited;
+  if FTouchTracking and not FGesturePanning then MoveTouchScroll(PointF(X, Y));
   FLastMousePoint := PointF(X, Y);
 end;
 
@@ -3625,6 +3757,16 @@ begin
     KeyChar := #0;
   end;
 end;
+procedure Th5uCellDateEdit.ApplyStyleLookup;
+var
+  LBounds: TRectF;
+begin
+  LBounds := BoundsRect;
+  inherited;
+  // Also clears the style presentation's internal adjustment mode.
+  SetAdjustType(TAdjustType.None);
+  BoundsRect := LBounds;
+end;
 function Th5uCellDateEdit.GetAdjustType: TAdjustType;
 begin
   Result := TAdjustType.None;
@@ -3637,11 +3779,31 @@ begin
   inherited HandlerPickerDateTimeChanged(Sender, DateOf(ADate) + TimeOf(DateTime));
 end;
 
+procedure Th5uCellTimeEdit.ApplyStyleLookup;
+var
+  LBounds: TRectF;
+begin
+  LBounds := BoundsRect;
+  inherited;
+  // Also clears the style presentation's internal adjustment mode.
+  SetAdjustType(TAdjustType.None);
+  BoundsRect := LBounds;
+end;
 function Th5uCellTimeEdit.GetAdjustType: TAdjustType;
 begin
   Result := TAdjustType.None;
 end;
 
+procedure Th5uCellTextEdit.ApplyStyleLookup;
+var
+  LBounds: TRectF;
+begin
+  LBounds := BoundsRect;
+  inherited;
+  // Also clears the style presentation's internal adjustment mode.
+  SetAdjustType(TAdjustType.None);
+  BoundsRect := LBounds;
+end;
 function Th5uCellTextEdit.GetAdjustType: TAdjustType;
 begin
   Result := TAdjustType.None;
@@ -3717,6 +3879,9 @@ begin
   FDateEditorWasEmpty := LValue.IsEmpty;
   FEditorExitBlocked := False;
   FDateEditor.SetBounds(AHit.Bounds.Left, AHit.Bounds.Top, AHit.Bounds.Width, AHit.Bounds.Height);
+  ShowEditorBackground(AHit.Bounds);
+  FDateEditor.StyledSettings := FDateEditor.StyledSettings - [TStyledSetting.FontColor];
+  FDateEditor.TextSettings.FontColor := h5uGetFmxPalette(FTheme).CellText;
   FDateEditor.Visible := True;
   FDateEditor.BringToFront;
   FDateEditor.SetFocus;
@@ -3810,6 +3975,9 @@ begin
         FEditorOriginalText := FEditor.Text;
         FEditorExitBlocked := False;
         FEditor.SetBounds(AHit.Bounds.Left, AHit.Bounds.Top, AHit.Bounds.Width, AHit.Bounds.Height);
+        ShowEditorBackground(AHit.Bounds);
+        FEditor.StyledSettings := FEditor.StyledSettings - [TStyledSetting.FontColor];
+        FEditor.TextSettings.FontColor := h5uGetFmxPalette(FTheme).CellText;
         FEditor.Visible := True;
         FEditor.BringToFront;
         FEditor.SetFocus;

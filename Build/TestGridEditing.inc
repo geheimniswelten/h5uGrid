@@ -3,7 +3,7 @@
   Data.DB, Datasnap.DBClient, MidasLib,
   h5u.Grid.Types, h5u.Grid.Columns, h5u.Grid.Data.Core, h5u.Grid.Data.Dataset,
 {$IFDEF TEST_FMX}
-  System.UIConsts, FMX.Types, FMX.StdCtrls, FMX.Forms, FMX.Controls, FMX.Edit, FMX.DateTimeCtrls, FMX.Graphics, Fmx.h5u.Grid, Fmx.h5u.Grid.Styles,
+  System.UIConsts, FMX.Objects, FMX.Types, FMX.StdCtrls, FMX.Forms, FMX.Controls, FMX.Edit, FMX.DateTimeCtrls, FMX.Graphics, Fmx.h5u.Grid, Fmx.h5u.Grid.Styles,
   FmxDatasetDemoMain in '..\Demos\FMX\ClientDataset\FmxDatasetDemoMain.pas',
   FmxListDemoMain in '..\Demos\FMX\ObjectList\FmxListDemoMain.pas',
   FmxVirtualDemoMain in '..\Demos\FMX\VirtualLive\FmxVirtualDemoMain.pas';
@@ -47,6 +47,10 @@ type
   TGridAccess = class(Th5uVclGrid)
 {$ENDIF}
   public
+{$IFDEF TEST_FMX}
+    procedure TouchDrag(const AFrom, ATo: TPointF);
+    procedure PanGesture(const AFrom, ATo: TPointF);
+{$ENDIF}
     procedure DesignModeForTest(AValue: Boolean);
     procedure Press(AKey: Word; AShift: TShiftState = []);
     procedure TypeText(const AText: string);
@@ -637,6 +641,142 @@ begin
     P.Free;
   end;
 end;
+
+
+{$IFDEF TEST_FMX}
+type
+  TMobileTextAccess = class(Th5uCellTextEdit)
+    procedure ForceFixedHeight;
+  end;
+  TMobileDateAccess = class(Th5uCellDateEdit)
+    procedure ForceFixedHeight;
+  end;
+  TMobileTimeAccess = class(Th5uCellTimeEdit)
+    procedure ForceFixedHeight;
+  end;
+
+procedure TMobileTextAccess.ForceFixedHeight;
+begin SetAdjustSizeValue(TSizeF.Create(100,22)); SetAdjustType(TAdjustType.FixedHeight); end;
+procedure TMobileDateAccess.ForceFixedHeight;
+begin SetAdjustSizeValue(TSizeF.Create(100,22)); SetAdjustType(TAdjustType.FixedHeight); end;
+procedure TMobileTimeAccess.ForceFixedHeight;
+begin SetAdjustSizeValue(TSizeF.Create(100,22)); SetAdjustType(TAdjustType.FixedHeight); end;
+
+procedure TGridAccess.TouchDrag(const AFrom, ATo: TPointF);
+begin
+  MouseDown(TMouseButton.mbLeft,[ssTouch],AFrom.X,AFrom.Y);
+  MouseMove([ssTouch,ssLeft],ATo.X,ATo.Y);
+  MouseUp(TMouseButton.mbLeft,[ssTouch],ATo.X,ATo.Y);
+end;
+
+procedure TGridAccess.PanGesture(const AFrom, ATo: TPointF);
+var
+  E: TGestureEventInfo;
+  Handled: Boolean;
+begin
+  E := Default(TGestureEventInfo);
+  E.GestureID := igiPan;
+  E.Location := LocalToAbsolute(AFrom);
+  E.Flags := [TInteractiveGestureFlag.gfBegin];
+  Handled := False;
+  DoGesture(E, Handled);
+  Check(Handled,'Pan begin not handled');
+  E.Location := LocalToAbsolute(ATo);
+  E.Flags := [];
+  DoGesture(E, Handled);
+  E.Flags := [TInteractiveGestureFlag.gfEnd];
+  DoGesture(E, Handled);
+end;
+
+procedure TestMobileInputAndEditors;
+var
+  T: TFixture;
+  P: TPoint;
+  I: Integer;
+  V,H: TScrollBar;
+  D: TMobileDateAccess;
+  C: TMobileTimeAccess;
+  Back: TRectangle;
+  BeforeValue: Boolean;
+  Events: TCellEventProbe;
+begin
+  T := TFixture.Create(Th5uCacheMode.None);
+  try
+    T.Grid.Width := 300;
+    T.Grid.Height := 180;
+    T.Grid.RowHeight.FixedHeight := 80;
+    T.PaintGrid;
+    V := nil; H := nil;
+    for I := 0 to T.Grid.ComponentCount-1 do
+      if T.Grid.Components[I] is TScrollBar then
+        if TScrollBar(T.Grid.Components[I]).Orientation = TOrientation.Vertical then
+          V := TScrollBar(T.Grid.Components[I])
+        else H := TScrollBar(T.Grid.Components[I]);
+    Check(Assigned(V) and Assigned(H),'Scrollbars missing');
+    P := T.CellPoint('FLAG');
+    BeforeValue := T.Controller.GetValue(0,'FLAG').AsBoolean;
+    T.Grid.ImmediateEdit := True;
+    T.Grid.TouchDrag(PointF(P.X,P.Y),PointF(P.X-40,P.Y-35));
+    T.PaintGrid;
+    Check((V.Value>0) and (H.Value>0),'Touch does not scroll both axes');
+    Check((T.Posts=0) and (T.Controller.GetValue(0,'FLAG').AsBoolean=BeforeValue), 'Swipe edited a checkbox');
+    Check(not T.Editor.Visible,'Swipe opened an editor');
+    V.Value := 0; H.Value := 0;
+    T.PaintGrid;
+    P := T.CellPoint('FLAG');
+    T.Grid.TouchDrag(PointF(P.X,P.Y),PointF(P.X,P.Y));
+    Check((T.Posts=1) and (T.Controller.GetValue(0,'FLAG').AsBoolean<>BeforeValue),'Tap did not toggle exactly once');
+    T.Grid.PanGesture(PointF(170,120),PointF(110,70));
+    Check((V.Value>0) and (H.Value>0),'Native pan gesture does not scroll');
+    T.Grid.PanGesture(PointF(150,100),PointF(-2000,-2000));
+    Check(Abs(V.Value-(V.Max-V.ViewportSize))<1,'Vertical pan exceeds range');
+    Check(Abs(H.Value-(H.Max-H.ViewportSize))<1,'Horizontal pan exceeds range');
+    V.Value := 0; H.Value := 0;
+    T.Grid.Width := 600;
+    T.PaintGrid;
+    P := T.CellPoint('DESCRIPTION');
+    Events := TCellEventProbe.Create;
+    try
+      T.Grid.OnCellClick := Events.CellClick;
+      T.Grid.ClickAt(P);
+      Check(Events.Clicks=1,'Native pan swallowed the next mouse click');
+      T.EditorKey(vkEscape);
+    finally
+      T.Grid.OnCellClick := nil;
+      Events.Free;
+    end;
+    T.Grid.TouchDrag(PointF(P.X,P.Y),PointF(P.X,P.Y));
+    Check(T.Editor.Visible,'Immediate edit did not open after tap');
+    Back := nil;
+    for I := 0 to T.Grid.ComponentCount-1 do
+      if (T.Grid.Components[I] is TRectangle) and TRectangle(T.Grid.Components[I]).Visible then
+        if TRectangle(T.Grid.Components[I]).BoundsRect.EqualsTo(T.Editor.BoundsRect) then
+          Back := TRectangle(T.Grid.Components[I]);
+    Check(Assigned(Back),'Opaque editor background missing or wrong size');
+    Check(((Back.Fill.Color shr 24)=$FF) and not Back.Stored and not Back.HitTest,'Editor background is transparent or persisted');
+    TMobileTextAccess(T.Editor).ForceFixedHeight;
+    T.Editor.ApplyStyleLookup;
+    T.Editor.SetBounds(80,40,210,70);
+    Check(Abs(T.Editor.Height-70)<1,'Text editor still fixed after style lookup');
+    T.Editor.ApplyStyleLookup;
+    Check(Abs(T.Editor.Height-70)<1,'Style reapplication resized text editor');
+    T.EditorKey(vkEscape);
+    Check(not Back.Visible,'Editor background remains after cancel');
+    D := TMobileDateAccess.Create(T.Form);
+    C := TMobileTimeAccess.Create(T.Form);
+    try
+      D.Parent := T.Form;
+      C.Parent := T.Form;
+      D.ApplyStyleLookup; C.ApplyStyleLookup;
+      D.ForceFixedHeight; C.ForceFixedHeight;
+      D.ApplyStyleLookup; C.ApplyStyleLookup;
+      D.SetBounds(0,0,210,70); C.SetBounds(0,80,210,70);
+      Check((Abs(D.Height-70)<1) and (Abs(C.Height-70)<1),'Date/time editor retains fixed style size');
+    finally C.Free; D.Free; end;
+    Writeln('PASS: touch drag/tap/pan, scroll limits, fixed editor styles and opaque backing');
+  finally T.Free; end;
+end;
+{$ENDIF}
 
 
 procedure TestCheckbox(AMode: Th5uCacheMode);
@@ -1614,6 +1754,9 @@ begin
   try
 {$IFDEF TEST_FMX}
     TestHorizontalScrollBar;
+{$ENDIF}
+{$IFDEF TEST_FMX}
+    TestMobileInputAndEditors;
 {$ENDIF}
     TestElementStyleAndModes;
     TestCellEvents;
