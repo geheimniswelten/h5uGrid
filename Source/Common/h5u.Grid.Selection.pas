@@ -36,6 +36,7 @@ type
     destructor Destroy; override;
 
     procedure Clear;
+    procedure ClearExtendedSelection;
     procedure ClearRows;
     procedure ClearColumns;
     procedure ClearCellRanges;
@@ -109,6 +110,22 @@ begin
   FAllRowsSelected := False;
   FFocusedCell := Th5uCellAddress.Empty;
   FAnchorCell := Th5uCellAddress.Empty;
+  Changed;
+end;
+
+procedure Th5uGridSelection.ClearExtendedSelection;
+var
+  LKeepSingleCell: Boolean;
+begin
+  LKeepSingleCell := (FCellRanges.Count = 1);
+  if LKeepSingleCell then
+    LKeepSingleCell := (FCellRanges[0].StartRowIndex = FCellRanges[0].EndRowIndex)
+      and (FCellRanges[0].StartColumnIndex = FCellRanges[0].EndColumnIndex);
+  ClearRows;
+  ClearColumns;
+  if not LKeepSingleCell then
+    ClearCellRanges;
+  // Keyboard focus and its anchor survive Escape, including when no cell is selected.
   Changed;
 end;
 

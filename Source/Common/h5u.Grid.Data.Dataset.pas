@@ -48,6 +48,7 @@ type
     FSnapshotCache: TObjectDictionary<Int64, Th5uDataRowSnapshot>;
     FCacheGeneration: Int64;
     FInternalReadCount: Integer;
+    FInternalWriteCount: Integer;
     procedure SetDataSource(const AValue: TDataSource);
     function GetDataset: TDataset;
     function ReadFieldValue(AField: TField): TValue;
@@ -55,7 +56,7 @@ type
     function CreateSnapshot(ASourceRowIndex: Int64): Th5uDataRowSnapshot;
     function GetSnapshot(ASourceRowIndex: Int64): Th5uDataRowSnapshot;
     procedure ClearSnapshotCache;
-    function GoToSourceRow(ASourceRowIndex: Int64): Boolean;
+    function GoToSourceRow(ASourceRowIndex: Int64; AReadOnly: Boolean = False): Boolean;
   protected
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     function GetSourceRowCount: Int64; override;
@@ -169,7 +170,7 @@ begin
     try
       LDataset.DisableControls;
       try
-        if not GoToSourceRow(ASourceRowIndex) then
+        if not GoToSourceRow(ASourceRowIndex, True) then
           Exit;
 
         for LField in LDataset.Fields do
@@ -183,7 +184,7 @@ begin
         else
           Result.RowKey := Th5uRowKey.FromInt64(ASourceRowIndex);
       finally
-        if LHasBookmark then
+        if LHasBookmark and not (LDataset.State in dsEditModes) then
           try
             LDataset.Bookmark := LBookmark;
           except
@@ -206,7 +207,7 @@ var
 begin
   // Internal cursor moves are reads. EnableControls also synchronously notifies
   // the data link, so the read guard must remain active until it returns.
-  if FInternalReadCount > 0 then
+  if (FInternalReadCount > 0) or (FInternalWriteCount > 0) then
     Exit;
 
   ClearSnapshotCache;
@@ -313,14 +314,14 @@ begin
   try
     LDataset.DisableControls;
     try
-      if GoToSourceRow(ASourceRowIndex) then
+      if GoToSourceRow(ASourceRowIndex, True) then
       begin
         LField := LDataset.FindField(AFieldName);
         if Assigned(LField) then
           Result := ReadFieldValue(LField);
       end;
     finally
-      if LHasBookmark then
+      if LHasBookmark and not (LDataset.State in dsEditModes) then
         try
           LDataset.Bookmark := LBookmark;
         except
@@ -332,7 +333,7 @@ begin
   end;
 end;
 
-function Th5uDatasetController.GoToSourceRow(ASourceRowIndex: Int64): Boolean;
+function Th5uDatasetController.GoToSourceRow(ASourceRowIndex: Int64; AReadOnly: Boolean): Boolean;
 var
   LDataset: TDataset;
 begin
@@ -340,6 +341,11 @@ begin
   LDataset := Dataset;
   if not Assigned(LDataset) or not LDataset.Active or (ASourceRowIndex < 0) or (ASourceRowIndex >= LDataset.RecordCount) then
     Exit;
+
+  // Even assigning the current RecNo can call CheckBrowseMode and post an edit.
+  // A read must never navigate away from an active edit/insert buffer.
+  if AReadOnly and (LDataset.State in dsEditModes) then
+    Exit(LDataset.RecNo = ASourceRowIndex + 1);
 
   try
     LDataset.RecNo := ASourceRowIndex + 1;
@@ -477,22 +483,45 @@ procedure Th5uDatasetController.SetSourceValue(ASourceRowIndex: Int64; const AFi
 var
   LDataset: TDataset;
   LField: TField;
+  LOwnEdit: Boolean;
 begin
   LDataset := Dataset;
   if not Assigned(LDataset) or not LDataset.Active then
     Exit;
 
-  if not GoToSourceRow(ASourceRowIndex) then
-    Exit;
+  // Publish only the completed write. Intermediate edit notifications can make
+  // grid layout read other rows and implicitly post the buffer being written.
+  Inc(FInternalWriteCount);
+  try
+    LDataset.DisableControls;
+    try
+      if not GoToSourceRow(ASourceRowIndex) then
+        Exit;
 
-  LField := LDataset.FieldByName(AFieldName);
-  if not (LDataset.State in dsEditModes) then
-    LDataset.Edit;
-
-  WriteFieldValue(LField, AValue);
-  LDataset.Post;
-
-  ClearSnapshotCache;
+      LOwnEdit := False;
+      try
+        LField := LDataset.FieldByName(AFieldName);
+        if not (LDataset.State in dsEditModes) then
+        begin
+          LDataset.Edit;
+          LOwnEdit := True;
+        end;
+        WriteFieldValue(LField, AValue);
+        LDataset.Post;
+      except
+        // The grid keeps the editor text for correction. Roll back only an
+        // edit opened here, never an edit buffer owned by the application.
+        if LOwnEdit and (LDataset.State in dsEditModes) then
+          LDataset.Cancel;
+        raise;
+      end;
+    finally
+      ClearSnapshotCache;
+      LDataset.EnableControls;
+    end;
+  finally
+    Dec(FInternalWriteCount);
+  end;
   NotifyDataChanged(Th5uDataChange.ResetAll);
 end;
 

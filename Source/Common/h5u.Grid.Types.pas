@@ -247,7 +247,8 @@ type
     Date,
     DateTime,
     Boolean,
-    Image
+    Image,
+    Time
   );
 
   Th5uColumnEditorKind = (
@@ -255,7 +256,10 @@ type
     None,
     Text,
     Boolean,
-    Image
+    Image,
+    Time,
+    Date,
+    DateTime
   );
 
   Th5uFixedKind = (

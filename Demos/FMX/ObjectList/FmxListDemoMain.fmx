@@ -161,39 +161,6 @@ object FmxListDemoForm: TFmxListDemoForm
     HeaderRowHeight = 28.000000000000000000
     RowIndicatorWidth = 38.000000000000000000
     TextSize = 12.000000000000000000
-    object TScrollBar
-      Max = 513.000000000000000000
-      ViewportSize = 513.000000000000000000
-      SmallChange = 0.000000000000000000
-      Orientation = Vertical
-      Position.X = 1004.000000000000000000
-      Size.Width = 16.000000000000000000
-      Size.Height = 544.000000000000000000
-      Size.PlatformDefault = False
-      TabOrder = 0
-      Visible = False
-    end
-    object TScrollBar
-      Max = 1018.000000000000000000
-      ViewportSize = 1018.000000000000000000
-      SmallChange = 0.000000000000000000
-      Orientation = Horizontal
-      Position.Y = 544.000000000000000000
-      Size.Width = 1020.000000000000000000
-      Size.Height = 16.000000000000000000
-      Size.PlatformDefault = False
-      TabOrder = 1
-    end
-    object TLabel
-      TextSettings.HorzAlign = Center
-      Visible = False
-      TabOrder = 2
-    end
-    object TEdit
-      Touch.InteractiveGestures = [LongTap, DoubleTap]
-      TabOrder = 3
-      Visible = False
-    end
   end
   object UpdateTimer: TTimer
     Interval = 800

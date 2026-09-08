@@ -207,7 +207,7 @@ object FmxDatasetDemoForm: TFmxDatasetDemoForm
         FieldName = 'QUANTITY'
         Width = 80
         VisibleIndex = 4
-        DataType = Float
+        DataType = Integer
         DisplayFormat = '0.##'
       end
       item
@@ -305,70 +305,6 @@ object FmxDatasetDemoForm: TFmxDatasetDemoForm
     RowIndicatorWidth = 40.000000000000000000
     TextSize = 12.000000000000000000
     OnGetThumbHint = GridGetThumbHint
-    object TScrollBar
-      Max = 2209.375000000000000000
-      ViewportSize = 507.000000000000000000
-      SmallChange = 0.000000000000000000
-      Orientation = Vertical
-      Position.X = 1084.000000000000000000
-      Size.Width = 16.000000000000000000
-      Size.Height = 540.000000000000000000
-      Size.PlatformDefault = False
-      TabOrder = 4
-    end
-    object TScrollBar
-      Max = 1082.000000000000000000
-      ViewportSize = 1082.000000000000000000
-      SmallChange = 0.000000000000000000
-      Orientation = Horizontal
-      Position.Y = 540.000000000000000000
-      Size.Width = 1084.000000000000000000
-      Size.Height = 16.000000000000000000
-      Size.PlatformDefault = False
-      TabOrder = 5
-    end
-    object TScrollBar
-      Max = 2209.375000000000000000
-      ViewportSize = 507.000000000000000000
-      SmallChange = 0.000000000000000000
-      Orientation = Vertical
-      Position.X = 1084.000000000000000000
-      Size.Width = 16.000000000000000000
-      Size.Height = 540.000000000000000000
-      Size.PlatformDefault = False
-      TabOrder = 0
-    end
-    object TScrollBar
-      Max = 1082.000000000000000000
-      ViewportSize = 1082.000000000000000000
-      SmallChange = 0.000000000000000000
-      Orientation = Horizontal
-      Position.Y = 540.000000000000000000
-      Size.Width = 1084.000000000000000000
-      Size.Height = 16.000000000000000000
-      Size.PlatformDefault = False
-      TabOrder = 1
-    end
-    object TLabel
-      TextSettings.HorzAlign = Center
-      Visible = False
-      TabOrder = 2
-    end
-    object TEdit
-      Touch.InteractiveGestures = [LongTap, DoubleTap]
-      TabOrder = 3
-      Visible = False
-    end
-    object TLabel
-      TextSettings.HorzAlign = Center
-      Visible = False
-      TabOrder = 6
-    end
-    object TEdit
-      Touch.InteractiveGestures = [LongTap, DoubleTap]
-      TabOrder = 7
-      Visible = False
-    end
   end
   object SampleData: Th5uSampleClientDataset
     PersistDataPacket.Data = {
