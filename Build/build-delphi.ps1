@@ -116,6 +116,37 @@ function Invoke-Dcc {
     }
 }
 
+function Invoke-DemoProject {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][string]$Project)
+
+    # Use the selected compiler and repository paths, independent of private IDE settings.
+    $demoSearchPath = $searchPath + ';' + (Join-Path $resolvedBin "..\lib\$Platform\release")
+
+    # DCC alone does not generate the icon/version/manifest resources from the
+    # DPROJ. In particular, an Android build can leave an empty Windows RES.
+    $projectFile = [IO.Path]::ChangeExtension($Project, '.dproj')
+    if (-not (Test-Path -LiteralPath $projectFile -PathType Leaf)) {
+        throw "Demo-Projektdatei fehlt: $projectFile"
+    }
+    foreach ($directory in @($dcuOutput, $binaryOutput, $packageOutput)) {
+        New-Item -ItemType Directory -Force -Path $directory | Out-Null
+    }
+    $arguments = @(
+        $projectFile, '/nologo', '/t:Build', '/v:minimal',
+        '/p:EnvironmentSettings=', '/p:ImportEnvOptions=false',
+        "/p:DCC_UnitSearchPath=$($demoSearchPath.Replace(';', '%3B'))",
+        "/p:Config=$Configuration", "/p:Platform=$Platform", '/p:DCC_BuildAllUnits=true',
+        "/p:DCC_DcuOutput=$dcuOutput", "/p:DCC_ExeOutput=$binaryOutput",
+        "/p:DCC_DcpOutput=$packageOutput", "/p:DCC_BplOutput=$packageOutput"
+    )
+    Write-Host "`n==> $([IO.Path]::GetFileName($projectFile)) [$Platform/$Configuration]"
+    & $msbuild @arguments
+    if ($LASTEXITCODE -ne 0) {
+        throw "MSBuild fehlgeschlagen (Exitcode $LASTEXITCODE): $projectFile"
+    }
+}
+
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 
 if ($RsVars) {
@@ -123,13 +154,22 @@ if ($RsVars) {
 }
 
 $resolvedBin = Resolve-DelphiBin -ExplicitBin $DelphiBin
+if (-not $SkipDemos) {
+    if (-not $RsVars) {
+        Import-BatchEnvironment -BatchFile (Join-Path $resolvedBin 'rsvars.bat')
+    }
+    $msbuild = Join-Path $env:FrameworkDir 'MSBuild.exe'
+    if (-not (Test-Path -LiteralPath $msbuild -PathType Leaf)) {
+        throw "MSBuild wurde nicht gefunden: $msbuild"
+    }
+}
 $compilerName = if ($Platform -eq 'Win64') { 'dcc64.exe' } else { 'dcc32.exe' }
 $compiler = Join-Path $resolvedBin $compilerName
 if (-not (Test-Path -LiteralPath $compiler -PathType Leaf)) {
     throw "Compiler wurde nicht gefunden: $compiler"
 }
 
-$output = Join-Path $OutputRoot "$Platform\$Configuration"
+$output = Join-Path ([IO.Path]::GetFullPath($OutputRoot)) "$Platform\$Configuration"
 $dcuOutput = Join-Path $output 'dcu'
 $binaryOutput = Join-Path $output 'bin'
 $packageOutput = Join-Path $output 'bpl'
@@ -190,9 +230,9 @@ if (-not $SkipDesignPackages) {
 
 if (-not $SkipDemos) {
     foreach ($demo in $demoProjects) {
-        Invoke-Dcc -Project $demo -Compiler $compiler -DcuOutput $dcuOutput `
-            -BinaryOutput $binaryOutput -PackageOutput $packageOutput -SearchPath $searchPath
+        Invoke-DemoProject -Project $demo
     }
+    & (Join-Path $PSScriptRoot 'test-demo-icons.ps1') -BinaryDirectory $binaryOutput
 }
 
 Write-Host "`nBuild abgeschlossen. Ausgabe: $output"
