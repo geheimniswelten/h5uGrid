@@ -329,6 +329,173 @@ begin
 {$ENDIF}
 end;
 
+type
+  TCellEventProbe = class
+    AllowFocus, AllowEdit, RejectValue, BooleanMap, GridOverride: Boolean;
+    Log: string;
+    ColumnValidations, GridValidations, Gets, Sets, DisplayGets, EditGets: Integer;
+    Clicks, Headers, Indicators, Enters, Exits, Selections: Integer;
+    procedure CanFocus(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64; var Allow: Boolean);
+    procedure CanEdit(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64; var Allow: Boolean);
+    procedure Validate(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64; var Value: TValue; var Valid: Boolean; var Error: string);
+    procedure GetValue(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64; var Value: TValue; Display: Boolean);
+    procedure SetValue(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64; var Value: TValue);
+    procedure CellClick(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64);
+    procedure HeaderClick(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64);
+    procedure IndicatorClick(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64);
+    procedure CellEnter(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64);
+    procedure CellExit(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64);
+    procedure SelectionChange(Sender: TObject);
+  end;
+
+procedure TCellEventProbe.CanFocus(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64; var Allow: Boolean);
+begin
+  if Sender = AColumn then begin Log := Log+'c'; Allow := AllowFocus; end
+  else begin Log := Log+'g'; if GridOverride then Allow := True; end;
+end;
+procedure TCellEventProbe.CanEdit(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64; var Allow: Boolean);
+begin
+  if Sender = AColumn then begin Log := Log+'e'; Allow := AllowEdit; end
+  else begin Log := Log+'G'; if GridOverride then Allow := True; end;
+end;
+procedure TCellEventProbe.Validate(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64;
+  var Value: TValue; var Valid: Boolean; var Error: string);
+begin
+  if Sender = AColumn then Inc(ColumnValidations) else Inc(GridValidations);
+  Valid := not RejectValue;
+  Error := 'Rejected by cell event';
+end;
+procedure TCellEventProbe.GetValue(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64; var Value: TValue; Display: Boolean);
+begin
+  Inc(Gets);
+  if Display then Inc(DisplayGets) else Inc(EditGets);
+  if BooleanMap then Value := TValue.From<Boolean>(Value.ToString = 'yes')
+  else if Display then Value := TValue.From<string>('Display: '+Value.ToString);
+end;
+procedure TCellEventProbe.SetValue(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64; var Value: TValue);
+begin
+  Inc(Sets);
+  if BooleanMap then
+  begin
+    if Value.AsBoolean then Value := TValue.From<string>('yes') else Value := TValue.From<string>('no');
+  end
+  else Value := TValue.From<string>(UpperCase(Value.ToString));
+end;
+procedure TCellEventProbe.CellClick(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64);
+begin Inc(Clicks); end;
+procedure TCellEventProbe.HeaderClick(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64);
+begin Check(ARow = -1, 'Header row index'); Inc(Headers); end;
+procedure TCellEventProbe.IndicatorClick(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64);
+begin Check(AColumn = nil, 'Indicator column'); Inc(Indicators); end;
+procedure TCellEventProbe.CellEnter(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64);
+begin Inc(Enters); end;
+procedure TCellEventProbe.CellExit(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64);
+begin Inc(Exits); end;
+procedure TCellEventProbe.SelectionChange(Sender: TObject);
+begin Inc(Selections); end;
+
+procedure TestCellEvents;
+var
+  T: TFixture;
+  P: TCellEventProbe;
+  C: Th5uGridColumn;
+  PointInCell: TPoint;
+  BeforeValidate, BeforeSets: Integer;
+  Rejected: Boolean;
+begin
+  T := TFixture.Create(Th5uCacheMode.None);
+  P := TCellEventProbe.Create;
+  try
+    C := T.Grid.Columns[1];
+    T.Grid.Press(vkHome, [ssCtrl]);
+    C.OnCanFocus := P.CanFocus;
+    C.OnCanEdit := P.CanEdit;
+    C.OnValidate := P.Validate;
+    C.OnGetValue := P.GetValue;
+    C.OnSetValue := P.SetValue;
+    C.OnCellClick := P.CellClick;
+    C.OnColumnHeaderClick := P.HeaderClick;
+    T.Grid.OnCanFocus := P.CanFocus;
+    T.Grid.OnCanEdit := P.CanEdit;
+    T.Grid.OnValidate := P.Validate;
+    T.Grid.OnCellClick := P.CellClick;
+    T.Grid.OnColumnHeaderClick := P.HeaderClick;
+    T.Grid.OnRowIndicatorClick := P.IndicatorClick;
+    T.Grid.OnCellEnter := P.CellEnter;
+    T.Grid.OnCellExit := P.CellExit;
+    T.Grid.OnSelectionChange := P.SelectionChange;
+    P.Log := '';
+    T.Grid.Press(vkRight);
+    Check((P.Log = 'cg') and (T.Grid.Selection.FocusedCell.ColumnIndex = 0), 'Column focus veto/order ignored');
+    Check(P.Enters = 0, 'Denied cell received enter');
+    P.GridOverride := True;
+    T.Grid.Press(vkRight);
+    Check((T.Grid.Selection.FocusedCell.ColumnIndex = 1) and (P.Enters = 1), 'Allowed cell did not receive focus');
+    P.GridOverride := False;
+    P.Log := '';
+    T.Grid.Press(vkF2);
+    Check((P.Log = 'eG') and not T.Editor.Visible, 'Column edit veto/order ignored');
+    P.AllowEdit := True;
+    T.Grid.AllowEditing := False;
+    C.ReadOnly := True;
+    T.Grid.Press(vkF2);
+    Check(T.Editor.Visible and (T.Editor.Text = 'Original memo'), 'Editor value differs from source');
+    T.Editor.Text := 'changed';
+    T.EditorKey(vkReturn);
+    Check((P.ColumnValidations = 1) and (P.GridValidations = 0), 'Column validation did not override grid');
+    Check(T.Controller.GetValue(0,'DESCRIPTION').ToString = 'CHANGED', 'SetValue conversion failed');
+    T.PaintGrid;
+    Check((P.DisplayGets > 0) and (P.EditGets > 0), 'Display/editor modes not reported');
+    P.AllowEdit := False;
+    P.GridOverride := True;
+    BeforeValidate := P.ColumnValidations;
+    BeforeSets := P.Sets;
+    T.Grid.Press(vkF2);
+    T.Editor.Text := 'discard';
+    T.EditorKey(vkEscape);
+    Check((P.ColumnValidations = BeforeValidate) and (P.Sets = BeforeSets), 'ESC called validate/set');
+    Check(T.Controller.GetValue(0,'DESCRIPTION').ToString = 'CHANGED', 'ESC changed stored value');
+    C.OnValidate := nil;
+    T.Grid.Press(vkF2);
+    T.Editor.Text := 'fallback';
+    T.EditorKey(vkReturn);
+    Check(P.GridValidations = 1, 'Grid validation fallback missing');
+    P.RejectValue := True;
+    T.Grid.Press(vkF2);
+    T.Editor.Text := 'invalid';
+    Rejected := False;
+    try T.EditorKey(vkReturn); except on E: EConvertError do Rejected := E.Message = 'Rejected by cell event'; end;
+    Check(Rejected and T.Editor.Visible, 'Rejected edit did not remain correctable');
+    Check(T.Controller.GetValue(0,'DESCRIPTION').ToString = 'FALLBACK', 'Validation rejection wrote data');
+    BeforeValidate := P.GridValidations;
+    T.EditorKey(vkEscape);
+    Check(P.GridValidations = BeforeValidate, 'ESC validated rejected value');
+    P.RejectValue := False;
+    PointInCell := T.CellPoint('DESCRIPTION');
+    P.Clicks := 0;
+    T.Grid.ClickAt(PointInCell);
+    Check(P.Clicks = 2, 'Column/grid cell click missing');
+    T.Grid.ClickAt(Point(PointInCell.X, 10));
+    Check(P.Headers = 2, 'Column/grid header click missing');
+    T.Grid.ClickAt(Point(10, PointInCell.Y));
+    Check(P.Indicators = 1, 'Row indicator click missing');
+    Check((P.Selections > 0) and (P.Exits > 0), 'Selection/exit events missing');
+    T.Controller.SetValue(0,'DESCRIPTION',TValue.From<string>('yes'));
+    P.BooleanMap := True;
+    C.DataType := Th5uColumnDataType.Boolean;
+    T.PaintGrid;
+    T.Grid.ClickAt(T.CellPoint('DESCRIPTION'));
+    Check(T.Controller.GetValue(0,'DESCRIPTION').ToString = 'no', 'Text-to-Boolean checkbox conversion failed');
+    T.Grid.ClickAt(T.CellPoint('DESCRIPTION'));
+    Check(T.Controller.GetValue(0,'DESCRIPTION').ToString = 'yes', 'Boolean-to-text checkbox conversion failed');
+    Writeln('PASS: cell event permissions, validation precedence, ESC, conversion and notifications');
+  finally
+    T.Free;
+    P.Free;
+  end;
+end;
+
+
 procedure TestCheckbox(AMode: Th5uCacheMode);
 var
   LTest: TFixture;
@@ -1305,6 +1472,7 @@ begin
 {$IFDEF TEST_FMX}
     TestHorizontalScrollBar;
 {$ENDIF}
+    TestCellEvents;
     TestClippedCheckboxBounds;
     TestOpaqueCellBackground;
     TestCheckboxPixels;

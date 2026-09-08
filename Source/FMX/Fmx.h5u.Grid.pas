@@ -202,6 +202,20 @@ type
     FImmediateEdit: Boolean;
     FSearchText: string;
     FSearchTime: TDateTime;
+
+    FOnCanFocus: Th5uCellPermissionEvent;
+    FOnCanEdit: Th5uCellPermissionEvent;
+    FOnValidate: Th5uCellValidateEvent;
+    FOnGetValue: Th5uCellGetValueEvent;
+    FOnSetValue: Th5uCellSetValueEvent;
+    FOnCellClick: Th5uCellEvent;
+    FOnColumnHeaderClick: Th5uCellEvent;
+    FOnCellEnter: Th5uCellEvent;
+    FOnCellExit: Th5uCellEvent;
+    FOnRowIndicatorClick: Th5uCellEvent;
+    FOnSelectionChange: TNotifyEvent;
+    FClickDownHit: Th5uFmxHitTestInfo;
+    FLastNotifiedCell: Th5uCellAddress;
     function FocusCell(ARow: Int64; AColumn: Integer; AExtend, AEdit: Boolean): Boolean;
     function FocusedCellHit(out AHit: Th5uFmxHitTestInfo): Boolean;
     procedure EditFocusedCell(AAutomatic: Boolean);
@@ -353,6 +367,12 @@ type
     function DateEditorValue: TValue;
     function DateEditorVisible: Boolean;
     procedure StartEdit(const AHit: Th5uFmxHitTestInfo);
+    function TryFocusCell(const ACell: Th5uCellAddress; AUpdateAnchor: Boolean): Boolean;
+    function AllowCellEdit(AColumn: Th5uGridColumn; ARow: Int64): Boolean;
+    function GetCellValue(AColumn: Th5uGridColumn; ARow: Int64; ADisplay: Boolean): TValue;
+    function GetCellText(AColumn: Th5uGridColumn; ARow: Int64; ADisplay: Boolean): string;
+    procedure PutCellValue(AColumn: Th5uGridColumn; ARow: Int64; const AValue: TValue);
+    procedure NotifyCellClick(AColumn: Th5uGridColumn; ARow: Int64; AHeader, AIndicator: Boolean);
     procedure CommitEditor;
     procedure CancelEditor;
     procedure ImageEditorCommit(Sender: TObject);
@@ -368,6 +388,7 @@ type
     procedure Resize; override;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Single); override;
+    procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Single); override;
     procedure MouseMove(Shift: TShiftState; X, Y: Single); override;
     procedure DblClick; override;
     procedure MouseWheel(Shift: TShiftState; WheelDelta: Integer; var Handled: Boolean); override;
@@ -449,6 +470,17 @@ type
     property OnGetTreeBranchEnd: Th5uGetTreeBranchEndEvent read FOnGetTreeBranchEnd write FOnGetTreeBranchEnd;
     property OnGetAdjacentGroupId: Th5uGetAdjacentGroupIdEvent read FOnGetAdjacentGroupId write FOnGetAdjacentGroupId;
     property OnAdjacentGroupStateChanged: Th5uAdjacentGroupStateChangedEvent read FOnAdjacentGroupStateChanged write FOnAdjacentGroupStateChanged;
+    property OnCanFocus: Th5uCellPermissionEvent read FOnCanFocus write FOnCanFocus;
+    property OnCanEdit: Th5uCellPermissionEvent read FOnCanEdit write FOnCanEdit;
+    property OnValidate: Th5uCellValidateEvent read FOnValidate write FOnValidate;
+    property OnGetValue: Th5uCellGetValueEvent read FOnGetValue write FOnGetValue;
+    property OnSetValue: Th5uCellSetValueEvent read FOnSetValue write FOnSetValue;
+    property OnCellClick: Th5uCellEvent read FOnCellClick write FOnCellClick;
+    property OnColumnHeaderClick: Th5uCellEvent read FOnColumnHeaderClick write FOnColumnHeaderClick;
+    property OnCellEnter: Th5uCellEvent read FOnCellEnter write FOnCellEnter;
+    property OnCellExit: Th5uCellEvent read FOnCellExit write FOnCellExit;
+    property OnRowIndicatorClick: Th5uCellEvent read FOnRowIndicatorClick write FOnRowIndicatorClick;
+    property OnSelectionChange: TNotifyEvent read FOnSelectionChange write FOnSelectionChange;
     property OnClick;
     property OnDblClick;
     property OnDragDrop;
@@ -949,6 +981,107 @@ begin
   Repaint;
 end;
 
+function Th5uFmxGrid.TryFocusCell(const ACell: Th5uCellAddress; AUpdateAnchor: Boolean): Boolean;
+var
+  LColumn: Th5uGridColumn;
+  LAllow: Boolean;
+begin
+  Result := False;
+  if not CanUpdateLayout then Exit;
+  LColumn := FColumns.FindById(ACell.ColumnId);
+  if not Assigned(LColumn) then Exit;
+  if (FSelection.FocusedCell.RowIndex <> ACell.RowIndex)
+    or (FSelection.FocusedCell.ColumnId <> ACell.ColumnId) then
+  begin
+    LAllow := True;
+    if Assigned(LColumn.OnCanFocus) then LColumn.OnCanFocus(LColumn, LColumn, ACell.RowIndex, LAllow);
+    if Assigned(FOnCanFocus) then FOnCanFocus(Self, LColumn, ACell.RowIndex, LAllow);
+    Result := LAllow;
+    if not Result then Exit;
+    if Assigned(FEditColumn) then CommitEditor;
+  end;
+  FSelection.SetFocus(ACell, AUpdateAnchor);
+  Result := True;
+end;
+
+function Th5uFmxGrid.AllowCellEdit(AColumn: Th5uGridColumn; ARow: Int64): Boolean;
+var
+  LAllow: Boolean;
+begin
+  Result := False;
+  if not CanUpdateLayout then Exit;
+  LAllow := FAllowEditing and not AColumn.ReadOnly and CanEditViewValue(ARow, AColumn.FieldName);
+  if Assigned(AColumn.OnCanEdit) then AColumn.OnCanEdit(AColumn, AColumn, ARow, LAllow);
+  if Assigned(FOnCanEdit) then FOnCanEdit(Self, AColumn, ARow, LAllow);
+  Result := LAllow;
+end;
+
+function Th5uFmxGrid.GetCellValue(AColumn: Th5uGridColumn; ARow: Int64; ADisplay: Boolean): TValue;
+begin
+  Result := GetViewValue(ARow, AColumn.FieldName);
+  if not CanUpdateLayout then Exit;
+  if Assigned(AColumn.OnGetValue) then AColumn.OnGetValue(AColumn, AColumn, ARow, Result, ADisplay)
+  else if Assigned(FOnGetValue) then FOnGetValue(Self, AColumn, ARow, Result, ADisplay);
+end;
+
+function Th5uFmxGrid.GetCellText(AColumn: Th5uGridColumn; ARow: Int64; ADisplay: Boolean): string;
+begin
+  if Assigned(AColumn.OnGetValue) or Assigned(FOnGetValue) then
+  begin
+    if ADisplay then
+      Result := h5uValueToDisplayText(GetCellValue(AColumn, ARow, True), AColumn.DisplayFormat)
+    else
+      Result := h5uValueToDisplayText(GetCellValue(AColumn, ARow, False));
+  end
+  else if ADisplay then
+    Result := GetViewDisplayText(ARow, AColumn.FieldName, AColumn.DisplayFormat)
+  else
+    Result := h5uValueToDisplayText(GetViewValue(ARow, AColumn.FieldName));
+end;
+
+procedure Th5uFmxGrid.PutCellValue(AColumn: Th5uGridColumn; ARow: Int64; const AValue: TValue);
+var
+  LValue: TValue;
+  LValid: Boolean;
+  LError: string;
+begin
+  if not CanUpdateLayout then Exit;
+  LValue := AValue;
+  LValid := True;
+  LError := '';
+  if Assigned(AColumn.OnValidate) then AColumn.OnValidate(AColumn, AColumn, ARow, LValue, LValid, LError)
+  else if Assigned(FOnValidate) then FOnValidate(Self, AColumn, ARow, LValue, LValid, LError);
+  if not LValid then
+  begin
+    if LError = '' then LError := 'Invalid cell value';
+    raise EConvertError.Create(LError);
+  end;
+  if Assigned(AColumn.OnSetValue) then AColumn.OnSetValue(AColumn, AColumn, ARow, LValue)
+  else if Assigned(FOnSetValue) then FOnSetValue(Self, AColumn, ARow, LValue);
+  SetViewValue(ARow, AColumn.FieldName, LValue);
+end;
+
+procedure Th5uFmxGrid.NotifyCellClick(AColumn: Th5uGridColumn; ARow: Int64; AHeader, AIndicator: Boolean);
+begin
+  if not CanUpdateLayout then Exit;
+  if AIndicator then
+  begin
+    if Assigned(FOnRowIndicatorClick) then FOnRowIndicatorClick(Self, nil, ARow);
+  end
+  else if Assigned(AColumn) then
+    if AHeader then
+    begin
+      if Assigned(AColumn.OnColumnHeaderClick) then AColumn.OnColumnHeaderClick(AColumn, AColumn, -1);
+      if Assigned(FOnColumnHeaderClick) then FOnColumnHeaderClick(Self, AColumn, -1);
+    end
+    else
+    begin
+      if Assigned(AColumn.OnCellClick) then AColumn.OnCellClick(AColumn, AColumn, ARow);
+      if Assigned(FOnCellClick) then FOnCellClick(Self, AColumn, ARow);
+    end;
+end;
+
+
 procedure Th5uFmxGrid.CommitEditor;
 var
   LValue: TValue;
@@ -970,8 +1103,11 @@ begin
       if DateEditorVisible then
         LValue := DateEditorValue
       else
-        LValue := ParseEditorValue(FEditColumn, FEditor.Text);
-      SetViewValue(FEditRowIndex, FEditColumn.FieldName, LValue);
+        if Assigned(FEditColumn.OnSetValue) or Assigned(FOnSetValue) then
+          LValue := TValue.From<string>(FEditor.Text)
+        else
+          LValue := ParseEditorValue(FEditColumn, FEditor.Text);
+      PutCellValue(FEditColumn, FEditRowIndex, LValue);
       CancelEditor;
       InvalidateAllRowHeights;
       Repaint;
@@ -1000,6 +1136,7 @@ begin
   FColumns := Th5uGridColumns.Create(Self);
   FColumns.OnChanged := ColumnsChanged;
   FHeaderLayout := Th5uHeaderLayout.Create(Self);
+  FLastNotifiedCell := Th5uCellAddress.Empty;
   FSelection := Th5uGridSelection.Create;
   FSelection.OnChanged := SelectionChanged;
   FRowHeight := Th5uRowHeightOptions.Create;
@@ -1451,13 +1588,12 @@ begin
             if LColumnInfo.Column.FixedKind <> Th5uFixedKind.None then
               Include(LContext.ElementFlags, Th5uElementFlag.FixedColumn);
 
-            LValue := GetViewValue(LRowIndex, LColumnInfo.Column.FieldName);
+            LValue := GetCellValue(LColumnInfo.Column, LRowIndex, True);
             LContext.Value := LValue;
             LAppearance := ResolveCellAppearance(LRowIndex, LColumnInfo.Column, LSelected, LFocused);
 
             LCell := AcquireVisualCell(LContext, Th5uFmxDataCell);
-            LCell.BindCell(LContext, LCellRect, LValue, GetViewDisplayText(LRowIndex, LColumnInfo.Column.FieldName,
-              LColumnInfo.Column.DisplayFormat), LAppearance);
+            LCell.BindCell(LContext, LCellRect, LValue, GetCellText(LColumnInfo.Column, LRowIndex, True), LAppearance);
             LCell.Paint(Self, Canvas);
           end;
 
@@ -2403,7 +2539,7 @@ begin
   if not Assigned(FDataController) or not Assigned(FEditColumn) then
     Exit;
   LImageEditor := Th5uFmxImageEditor(Sender);
-  SetViewValue(FEditRowIndex, FEditColumn.FieldName, TValue.From<TBytes>(LImageEditor.Bytes));
+  PutCellValue(FEditColumn, FEditRowIndex, TValue.From<TBytes>(LImageEditor.Bytes));
   CancelEditor;
   InvalidateAllRowHeights;
   Repaint;
@@ -2466,13 +2602,13 @@ begin
 
   if AColumn.DataType = Th5uColumnDataType.Image then
   begin
-    LValue := GetViewValue(AViewRowIndex, AColumn.FieldName);
+    LValue := GetCellValue(AColumn, AViewRowIndex, True);
     if LValue.IsType<TBytes> and (Length(LValue.AsType<TBytes>) > 0) then
       Result := Min(AColumn.MaxAutoHeight, 80);
     Exit;
   end;
 
-  LText := GetViewDisplayText(AViewRowIndex, AColumn.FieldName, AColumn.DisplayFormat);
+  LText := GetCellText(AColumn, AViewRowIndex, True);
   Canvas.Font.Size := FTextSize;
   LRect := RectF(0, 0, Max(8, AColumn.Width - 10), 10000);
   Canvas.MeasureText(LRect, LText, AColumn.WordWrap, [], TTextAlign.Leading, TTextAlign.Leading);
@@ -2486,6 +2622,7 @@ var
   LHit: Th5uFmxHitTestInfo;
   LCell: Th5uCellAddress;
 begin
+  FClickDownHit := GridHitTest(X, Y);
   FLastMousePoint := PointF(X, Y);
   inherited;
   // Inherited MouseDown dispatches DblClick. Do not take focus back afterwards.
@@ -2518,7 +2655,7 @@ begin
         LCell.ColumnIndex := LHit.ColumnIndex;
         LCell.RowKey := LHit.RowKey;
         LCell.ColumnId := LHit.Column.Id;
-        FSelection.SetFocus(LCell, True);
+        if not TryFocusCell(LCell, True) then Exit;
           FSelection.AddCellRange(Th5uCellRange.Create(LHit.RowIndex, LHit.RowIndex, LHit.ColumnIndex, LHit.ColumnIndex), ssCtrl in Shift);
           if (LHit.Column.EditorKind = Th5uColumnEditorKind.Boolean)
             or ((LHit.Column.EditorKind = Th5uColumnEditorKind.Automatic) and (LHit.Column.DataType = Th5uColumnDataType.Boolean)) then
@@ -2532,6 +2669,19 @@ begin
   end;
 end;
 
+procedure Th5uFmxGrid.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Single);
+var
+  LHit: Th5uFmxHitTestInfo;
+begin
+  inherited;
+  if Button <> TMouseButton.mbLeft then Exit;
+  LHit := GridHitTest(X, Y);
+  if (LHit.Kind = FClickDownHit.Kind) and (LHit.Column = FClickDownHit.Column)
+    and (LHit.RowIndex = FClickDownHit.RowIndex)
+    and (LHit.Kind in [Th5uFmxHitKind.DataCell, Th5uFmxHitKind.Header, Th5uFmxHitKind.RowIndicator]) then
+    NotifyCellClick(LHit.Column, LHit.RowIndex, LHit.Kind = Th5uFmxHitKind.Header, LHit.Kind = Th5uFmxHitKind.RowIndicator);
+  FClickDownHit := Th5uFmxHitTestInfo.Empty;
+end;
 procedure Th5uFmxGrid.MouseMove(Shift: TShiftState; X, Y: Single);
 begin
   inherited;
@@ -2883,8 +3033,32 @@ begin
 end;
 
 procedure Th5uFmxGrid.SelectionChanged(Sender: TObject);
+var
+  LOld, LNew: Th5uCellAddress;
+  LColumn: Th5uGridColumn;
 begin
   Repaint;
+  if not CanUpdateLayout then Exit;
+  LOld := FLastNotifiedCell;
+  LNew := FSelection.FocusedCell;
+  FLastNotifiedCell := LNew;
+  if (LOld.RowIndex <> LNew.RowIndex) or (LOld.ColumnId <> LNew.ColumnId)
+    or (LOld.RowKey <> LNew.RowKey) then
+  begin
+    if LOld.IsValid then
+    begin
+      LColumn := FColumns.FindById(LOld.ColumnId);
+      if Assigned(LColumn) and Assigned(LColumn.OnCellExit) then LColumn.OnCellExit(LColumn, LColumn, LOld.RowIndex);
+      if Assigned(FOnCellExit) then FOnCellExit(Self, LColumn, LOld.RowIndex);
+    end;
+    if LNew.IsValid then
+    begin
+      LColumn := FColumns.FindById(LNew.ColumnId);
+      if Assigned(LColumn) and Assigned(LColumn.OnCellEnter) then LColumn.OnCellEnter(LColumn, LColumn, LNew.RowIndex);
+      if Assigned(FOnCellEnter) then FOnCellEnter(Self, LColumn, LNew.RowIndex);
+    end;
+  end;
+  if Assigned(FOnSelectionChange) then FOnSelectionChange(Self);
 end;
 
 procedure Th5uFmxGrid.SetColumns(const AValue: Th5uGridColumns);
@@ -3177,7 +3351,7 @@ begin
       FSelection.AnchorCell.ColumnIndex, LCell.ColumnIndex)
   else
     LRange := Th5uCellRange.Create(LCell.RowIndex, LCell.RowIndex, LCell.ColumnIndex, LCell.ColumnIndex);
-  FSelection.SetFocus(LCell, not AExtend);
+  if not TryFocusCell(LCell, not AExtend) then Exit;
   FSelection.AddCellRange(LRange);
   Result := FocusedCellHit(LHit);
   if Result and AEdit and FImmediateEdit and not AExtend then
@@ -3282,7 +3456,7 @@ begin
   begin
     LRow := (LStart + I) mod LCount;
     PrepareViewRange(LRow, 1);
-    LText := GetViewDisplayText(LRow, LColumns[LColumn].FieldName, LColumns[LColumn].DisplayFormat);
+    LText := GetCellText(LColumns[LColumn], LRow, True);
     if SameText(Copy(LText, 1, Length(FSearchText)), FSearchText) then
     begin
       FocusCell(LRow, LColumn, False, False);
@@ -3389,7 +3563,7 @@ begin
   FEditRowKey := AHit.RowKey;
   FEditColumn := AHit.Column;
   FDateEditorKind := AKind;
-  LValue := GetViewValue(AHit.RowIndex, AHit.Column.FieldName);
+  LValue := GetCellValue(AHit.Column, AHit.RowIndex, False);
   if LValue.IsEmpty then
     FDateEditor.DateTime := Now
   else
@@ -3419,15 +3593,15 @@ begin
     end;
     CommitEditor;
   end;
-  if not FAllowEditing or not Assigned(FDataController) or not Assigned(AHit.Column) or AHit.Column.ReadOnly
-    or not CanEditViewValue(AHit.RowIndex, AHit.Column.FieldName) then
+  if not Assigned(FDataController) or not Assigned(AHit.Column)
+    or not AllowCellEdit(AHit.Column, AHit.RowIndex) then
     Exit;
 
   LCell.RowIndex := AHit.RowIndex;
   LCell.ColumnIndex := AHit.ColumnIndex;
   LCell.RowKey := AHit.RowKey;
   LCell.ColumnId := AHit.Column.Id;
-  FSelection.SetFocus(LCell, True);
+  if not TryFocusCell(LCell, True) then Exit;
 
   LKind := AHit.Column.EditorKind;
   if LKind = Th5uColumnEditorKind.Automatic then
@@ -3452,8 +3626,8 @@ begin
 
     Th5uColumnEditorKind.Boolean:
       begin
-        LValue := GetViewValue(AHit.RowIndex, AHit.Column.FieldName);
-        SetViewValue(AHit.RowIndex, AHit.Column.FieldName, TValue.From<Boolean>(LValue.IsEmpty or not LValue.AsBoolean));
+        LValue := GetCellValue(AHit.Column, AHit.RowIndex, False);
+        PutCellValue(AHit.Column, AHit.RowIndex, TValue.From<Boolean>(LValue.IsEmpty or not LValue.AsBoolean));
       end;
 
     Th5uColumnEditorKind.Image:
@@ -3473,7 +3647,7 @@ begin
         FEditRowIndex := AHit.RowIndex;
         FEditRowKey := AHit.RowKey;
         FEditColumn := AHit.Column;
-        LValue := GetViewValue(AHit.RowIndex, AHit.Column.FieldName);
+        LValue := GetCellValue(AHit.Column, AHit.RowIndex, False);
         if LValue.IsType<TBytes> then
           LImageEditor.Bytes := LValue.AsType<TBytes>
         else
@@ -3488,7 +3662,7 @@ begin
         FEditRowIndex := AHit.RowIndex;
         FEditRowKey := AHit.RowKey;
         FEditColumn := AHit.Column;
-        FEditor.Text := GetViewDisplayText(AHit.RowIndex, AHit.Column.FieldName, AHit.Column.DisplayFormat);
+        FEditor.Text := GetCellText(AHit.Column, AHit.RowIndex, False);
         FEditorOriginalText := FEditor.Text;
         FEditorExitBlocked := False;
         FEditor.SetBounds(AHit.Bounds.Left, AHit.Bounds.Top, AHit.Bounds.Width, AHit.Bounds.Height);

@@ -6,6 +6,7 @@ interface
 
 uses
   System.Classes,
+  System.Rtti,
   System.Generics.Defaults,
   System.Generics.Collections,
   System.Math,
@@ -17,6 +18,11 @@ type
   Th5uGridColumn = class;
   Th5uGridColumns = class;
 
+  Th5uCellEvent = procedure(Sender: TObject; AColumn: Th5uGridColumn; ARowIndex: Int64) of object;
+  Th5uCellPermissionEvent = procedure(Sender: TObject; AColumn: Th5uGridColumn; ARowIndex: Int64; var AAllow: Boolean) of object;
+  Th5uCellGetValueEvent = procedure(Sender: TObject; AColumn: Th5uGridColumn; ARowIndex: Int64; var AValue: TValue; ADisplayValue: Boolean) of object;
+  Th5uCellSetValueEvent = procedure(Sender: TObject; AColumn: Th5uGridColumn; ARowIndex: Int64; var AValue: TValue) of object;
+  Th5uCellValidateEvent = procedure(Sender: TObject; AColumn: Th5uGridColumn; ARowIndex: Int64; var AValue: TValue; var AValid: Boolean; var AErrorText: string) of object;
   Th5uColumnChangedEvent = procedure(Sender: TObject; AColumn: Th5uGridColumn) of object;
 
   Th5uGridColumn = class(TCollectionItem)
@@ -53,6 +59,15 @@ type
     FCanSelect: Boolean;
     FShowInColumnChooser: Boolean;
     FImagePreserveAspectRatio: Boolean;
+    FOnCanFocus: Th5uCellPermissionEvent;
+    FOnCanEdit: Th5uCellPermissionEvent;
+    FOnValidate: Th5uCellValidateEvent;
+    FOnGetValue: Th5uCellGetValueEvent;
+    FOnSetValue: Th5uCellSetValueEvent;
+    FOnCellClick: Th5uCellEvent;
+    FOnColumnHeaderClick: Th5uCellEvent;
+    FOnCellEnter: Th5uCellEvent;
+    FOnCellExit: Th5uCellEvent;
     procedure Changed;
     procedure SetCaption(const AValue: string);
     procedure SetFieldName(const AValue: string);
@@ -106,6 +121,15 @@ type
     property CanSelect: Boolean read FCanSelect write FCanSelect default True;
     property ShowInColumnChooser: Boolean read FShowInColumnChooser write FShowInColumnChooser default True;
     property ImagePreserveAspectRatio: Boolean read FImagePreserveAspectRatio write FImagePreserveAspectRatio default True;
+    property OnCanFocus: Th5uCellPermissionEvent read FOnCanFocus write FOnCanFocus;
+    property OnCanEdit: Th5uCellPermissionEvent read FOnCanEdit write FOnCanEdit;
+    property OnValidate: Th5uCellValidateEvent read FOnValidate write FOnValidate;
+    property OnGetValue: Th5uCellGetValueEvent read FOnGetValue write FOnGetValue;
+    property OnSetValue: Th5uCellSetValueEvent read FOnSetValue write FOnSetValue;
+    property OnCellClick: Th5uCellEvent read FOnCellClick write FOnCellClick;
+    property OnColumnHeaderClick: Th5uCellEvent read FOnColumnHeaderClick write FOnColumnHeaderClick;
+    property OnCellEnter: Th5uCellEvent read FOnCellEnter write FOnCellEnter;
+    property OnCellExit: Th5uCellEvent read FOnCellExit write FOnCellExit;
   end;
 
   Th5uGridColumns = class(TOwnedCollection)
@@ -266,6 +290,15 @@ begin
     FCanSelect := LSource.FCanSelect;
     FShowInColumnChooser := LSource.FShowInColumnChooser;
     FImagePreserveAspectRatio := LSource.FImagePreserveAspectRatio;
+    FOnCanFocus := LSource.FOnCanFocus;
+    FOnCanEdit := LSource.FOnCanEdit;
+    FOnValidate := LSource.FOnValidate;
+    FOnGetValue := LSource.FOnGetValue;
+    FOnSetValue := LSource.FOnSetValue;
+    FOnCellClick := LSource.FOnCellClick;
+    FOnColumnHeaderClick := LSource.FOnColumnHeaderClick;
+    FOnCellEnter := LSource.FOnCellEnter;
+    FOnCellExit := LSource.FOnCellExit;
     Changed;
   end
   else
