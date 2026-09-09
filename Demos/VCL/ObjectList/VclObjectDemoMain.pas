@@ -117,6 +117,7 @@ procedure TVclObjectDemoForm.FormCreate(Sender: TObject);
 var
   I: Integer;
 begin
+  Grid.Customization.ColumnMovingGesture := Th5uColumnMovingGesture.Drag;
   ObjectController.OwnsObjects := True;
   ObjectController.BeginUpdate;
   try

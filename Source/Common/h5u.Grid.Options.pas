@@ -339,6 +339,18 @@ type
     FAllowColumnHiding: Boolean;
     FAllowColumnResizing: Boolean;
     FShowColumnChooser: Boolean;
+    FLastColumnResizeHitZoneLeft: Integer;
+    FTouchLastColumnResizeHitZoneLeft: Integer;
+    FColumnResizeHitZoneLeft: Integer;
+    FColumnResizeHitZoneRight: Integer;
+    FTouchColumnResizeHitZoneLeft: Integer;
+    FTouchColumnResizeHitZoneRight: Integer;
+    procedure SetLastColumnResizeHitZoneLeft(const AValue: Integer);
+    procedure SetTouchLastColumnResizeHitZoneLeft(const AValue: Integer);
+    procedure SetColumnResizeHitZoneLeft(const AValue: Integer);
+    procedure SetColumnResizeHitZoneRight(const AValue: Integer);
+    procedure SetTouchColumnResizeHitZoneLeft(const AValue: Integer);
+    procedure SetTouchColumnResizeHitZoneRight(const AValue: Integer);
   public
     constructor Create;
     procedure Assign(Source: TPersistent); override;
@@ -349,6 +361,12 @@ type
     property ColumnMovingGesture: Th5uColumnMovingGesture read FColumnMovingGesture write FColumnMovingGesture default Th5uColumnMovingGesture.AltDrag;
     property AllowColumnHiding: Boolean read FAllowColumnHiding write FAllowColumnHiding default True;
     property AllowColumnResizing: Boolean read FAllowColumnResizing write FAllowColumnResizing default True;
+    property ColumnResizeHitZoneLeft: Integer read FColumnResizeHitZoneLeft write SetColumnResizeHitZoneLeft default 4;
+    property ColumnResizeHitZoneRight: Integer read FColumnResizeHitZoneRight write SetColumnResizeHitZoneRight default 4;
+    property TouchColumnResizeHitZoneLeft: Integer read FTouchColumnResizeHitZoneLeft write SetTouchColumnResizeHitZoneLeft default 12;
+    property TouchColumnResizeHitZoneRight: Integer read FTouchColumnResizeHitZoneRight write SetTouchColumnResizeHitZoneRight default 12;
+    property LastColumnResizeHitZoneLeft: Integer read FLastColumnResizeHitZoneLeft write SetLastColumnResizeHitZoneLeft default -1;
+    property TouchLastColumnResizeHitZoneLeft: Integer read FTouchLastColumnResizeHitZoneLeft write SetTouchLastColumnResizeHitZoneLeft default -1;
     property ShowColumnChooser: Boolean read FShowColumnChooser write FShowColumnChooser default True;
   end;
 
@@ -443,8 +461,7 @@ var
   LSize: Integer;
 begin
   LSize := EnsureRange(ASize, 0, 1000);
-  if (FLeft = LSize) and (FTop = LSize) and (FRight = LSize) and (FBottom = LSize) and (FRowSpacing = LSize) and (FDefaultColumnRightSpacing
-    = LSize) then
+  if (FLeft = LSize) and (FTop = LSize) and (FRight = LSize) and (FBottom = LSize) and (FRowSpacing = LSize) and (FDefaultColumnRightSpacing = LSize) then
     Exit;
 
   FLeft := LSize;
@@ -1142,6 +1159,12 @@ begin
     FAllowColumnHiding := LSource.FAllowColumnHiding;
     FAllowColumnResizing := LSource.FAllowColumnResizing;
     FShowColumnChooser := LSource.FShowColumnChooser;
+    FLastColumnResizeHitZoneLeft := LSource.FLastColumnResizeHitZoneLeft;
+    FTouchLastColumnResizeHitZoneLeft := LSource.FTouchLastColumnResizeHitZoneLeft;
+    FColumnResizeHitZoneLeft := LSource.FColumnResizeHitZoneLeft;
+    FColumnResizeHitZoneRight := LSource.FColumnResizeHitZoneRight;
+    FTouchColumnResizeHitZoneLeft := LSource.FTouchColumnResizeHitZoneLeft;
+    FTouchColumnResizeHitZoneRight := LSource.FTouchColumnResizeHitZoneRight;
   end
   else
     inherited;
@@ -1157,6 +1180,42 @@ begin
   FAllowColumnHiding := True;
   FAllowColumnResizing := True;
   FShowColumnChooser := True;
+  FLastColumnResizeHitZoneLeft := -1;
+  FTouchLastColumnResizeHitZoneLeft := -1;
+  FColumnResizeHitZoneLeft := 4;
+  FColumnResizeHitZoneRight := 4;
+  FTouchColumnResizeHitZoneLeft := 12;
+  FTouchColumnResizeHitZoneRight := 12;
+end;
+
+procedure Th5uCustomizationOptions.SetColumnResizeHitZoneLeft(const AValue: Integer);
+begin
+  FColumnResizeHitZoneLeft := Max(0, AValue);
+end;
+
+procedure Th5uCustomizationOptions.SetColumnResizeHitZoneRight(const AValue: Integer);
+begin
+  FColumnResizeHitZoneRight := Max(0, AValue);
+end;
+
+procedure Th5uCustomizationOptions.SetTouchColumnResizeHitZoneLeft(const AValue: Integer);
+begin
+  FTouchColumnResizeHitZoneLeft := Max(0, AValue);
+end;
+
+procedure Th5uCustomizationOptions.SetTouchColumnResizeHitZoneRight(const AValue: Integer);
+begin
+  FTouchColumnResizeHitZoneRight := Max(0, AValue);
+end;
+
+procedure Th5uCustomizationOptions.SetLastColumnResizeHitZoneLeft(const AValue: Integer);
+begin
+  FLastColumnResizeHitZoneLeft := Max(-1, AValue);
+end;
+
+procedure Th5uCustomizationOptions.SetTouchLastColumnResizeHitZoneLeft(const AValue: Integer);
+begin
+  FTouchLastColumnResizeHitZoneLeft := Max(-1, AValue);
 end;
 
 end.

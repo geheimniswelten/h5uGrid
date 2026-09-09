@@ -1,5 +1,32 @@
 # Changelog
 
+## Unveröffentlicht – 2026-09-09
+
+- VCL/FMX: Gruppenheader werden auf der angeklickten Ebene erkannt und mit sämtlichen Unterheadern/Datenspalten verschoben. Quellmarkierung, Gruppenbeschriftung und Einfügelinie verwenden dieselbe Headerzelle; verdeckte Kind-Spaltengrenzen lösen oben kein Resize aus.
+- FMX: mehrzeiliges HeaderLayout einschließlich Gruppen, Zeilenspannen, Styles und fixierten Bereichen wird gezeichnet. Beide Dataset-Demos zeigen dasselbe schaltbare Layout; die feststehende ID steht separat über beide Zeilen.
+- Header mit `ColumnId` folgen ihrer Datenspalte; Gruppen behalten ihre zugehörigen Spalten auch beim Aus-/Einblenden. Gruppen bleiben zusammenhängend, fixierte Bereiche und MovePermission werden eingehalten. Maus-, Touch-, Pan-, Pixel- und Abbruchtests decken beide Oberflächen ab.
+
+- VCL: Spaltenverschiebe-Markierung und Einfügelinie beginnen bei mehrzeiligen Headern an der jeweiligen unteren Headerzelle. Übergeordnete Gruppenheader bleiben frei; Zeilenspannen und Abstände werden berücksichtigt. Pixeltests prüfen die Dataset-Demo sowie ein dreizeiliges Layout.
+- VCL: beim Spaltenverschieben dieselbe sichtbare Rückmeldung wie in FMX: Quellmarkierung, mitlaufende Beschriftung und Einfügelinie. Unterstützt markierte Blöcke, Themes, DPI-Skalierung und Touch-Abstand; ungültige Ziele erhalten keine Einfügelinie.
+- VCL: sichtbarer Windows-Cursor wird während Maus-Capture aktualisiert. Drag-/Resize-Cursor und Rücksetzung funktionieren auch ohne weiteres `WM_SETCURSOR`; ein globaler `Screen.Cursor` behält Vorrang. Regressionstests prüfen die Windows-Cursorhandles sowie die gezeichnete Rückmeldung und deren Bereinigung.
+
+- VCL: Maus-Capture wird nach Verarbeitung von `MouseUp` freigegeben. Die automatische VCL-Freigabe vor `MouseUp` hatte Spalten-/Zeilenverschiebungen und ausstehende Auswahl-/Editieraktionen vorzeitig abgebrochen. Regressionstests durchlaufen nun auch Windows-Mausnachrichten einschließlich Capture-Verlust und Escape.
+
+- FMX: Maus-Pan-Ereignisse unterbrechen keine am Header begonnene Spaltenverschiebung mehr.
+- FMX: sichtbare Quellmarkierung, mitlaufende Beschriftung und Einfügelinie beim Verschieben mit Maus oder Touch; Rückmeldung auch bei nativen Pan-Ereignissen und Bereinigung bei Abbruch.
+- FMX: horizontales Scrollen erhält die Text-/Bildbreite auch an fixierten Spalten und Viewport-Rändern. Inhalte werden abgeschnitten, statt im sichtbaren Teil neu umbrochen oder zentriert zu werden. Sichtbare Checkbox-Treffer bleiben erhalten.
+- Regressionstests für Maus-/Touch-Pan, Rückmeldung vor dem Loslassen, ungültige Ziele, Escape/Capture-Verlust und Datenbereich-Wischen mit unveränderten Spaltenbreiten.
+- Dataset-Demos: „Nächste Seite“ ist nur bei aktivierter Pagination bedienbar.
+
+- Dataset-Demos: „1 px Trennlinien“ erhält den expliziten 8-Pixel-Abstand nach Beschreibung.
+- Alle sechs Demos verschieben Spalten mit normalem Ziehen am Header (`Customization.ColumnMovingGesture = Drag`).
+- `Selection.RightClickSelect` (Standard `False`) für VCL/FMX: Rechtsklick fokussiert die angeklickte Zelle; eine bereits durch Zellen, Zeilen oder Spalten abgedeckte Auswahl bleibt erhalten. Sonst wird nur die angeklickte Zelle ausgewählt. Leerer Hintergrund ändert die Zellselektion nicht.
+- Spaltenbreiten lassen sich in VCL und FMX an beiden Seiten des sichtbaren Header-Rands ändern; `crHSplit` zeigt den Bereich an. Capture-Verlust, Escape, Breitenlimits, gelöschte Spalten und Cursor-Rücksetzung werden berücksichtigt.
+- FMX-Touch: größere Resize-Trefferzone, Header-Verschieben ohne Alt und Vorrang vor gleichzeitig gemeldeten Pan-Gesten. Der Datenbereich bleibt per Touch scrollbar; Android und iOS werden berücksichtigt.
+- Die Trefferzone am Spaltenrand ist für Maus und Touch nach links/rechts getrennt über vier `Customization.*ColumnResizeHitZone*`-Properties einstellbar (Standard 4/4 und 12/12).
+- Eigener linker Trefferabstand am rechten Rand der letzten eingeblendeten Spalte: `LastColumnResizeHitZoneLeft` und `TouchLastColumnResizeHitZoneLeft`, jeweils `-1` für den normalen linken Wert.
+- Regressionstests für Rechtsklick, Streaming/Assign, Resize, Touch-Header, asymmetrische Trefferzonen, letzte/ausgeblendete/fixierte Spalten und Demo-Einstellungen ergänzt.
+
 ## Unveröffentlicht – 2026-09-07
 
 - SampleClientDataset: verfrühten LogChanges-Zugriff auf geschlossene Datenmenge entfernt; Neuerzeugung während des Komponenten-Streamings bis Loaded verschoben. Regressionstest für Konstruktion und Design-/Laufzeit-Streaming ergänzt.

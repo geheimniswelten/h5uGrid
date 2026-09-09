@@ -115,6 +115,7 @@ procedure TFmxVirtualDemoForm.FormCreate(Sender: TObject);
 var
   I: Integer;
 begin
+  Grid.Customization.ColumnMovingGesture := Th5uColumnMovingGesture.Drag;
   FRows := TObjectList<TLiveRow>.Create(True);
   for I := 1 to 60 do
     AppendRow;

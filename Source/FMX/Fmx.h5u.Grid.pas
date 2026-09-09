@@ -107,8 +107,7 @@ type
 
   Th5uFmxAfterDrawEvent = procedure(Sender: TObject; ACanvas: TCanvas) of object;
 
-  Th5uFmxPrepareElementEvent = procedure(Sender: TObject; Control: TObject; ACanvas: TCanvas;
-    const AContext: Th5uFmxDrawContext; APart: Th5uElementPaintPart) of object;
+  Th5uFmxPrepareElementEvent = procedure(Sender: TObject; Control: TObject; ACanvas: TCanvas; const AContext: Th5uFmxDrawContext; APart: Th5uElementPaintPart) of object;
 
   Th5uFmxCustomDrawEvent = procedure(Sender: TObject; ACanvas: TCanvas; const AContext: Th5uFmxDrawContext; AStage: Th5uFmxCustomDrawStage; var ADrawDefault: Boolean) of object;
 
@@ -132,6 +131,7 @@ type
     RowKey: Th5uRowKey;
     Column: Th5uGridColumn;
     Bounds: TRectF;
+    HeaderCell: Th5uHeaderLayoutCell;
     class function Empty: Th5uFmxHitTestInfo; static;
   end;
 
@@ -139,6 +139,7 @@ type
   private
     FContext: Th5uFactoryContext;
     FBounds: TRectF;
+    FContentBounds: TRectF;
     FValue: TValue;
     FDisplayText: string;
     FAppearance: Th5uResolvedAppearance;
@@ -152,6 +153,8 @@ type
     procedure Paint(AGrid: Th5uFmxGrid; ACanvas: TCanvas); virtual;
     property Context: Th5uFactoryContext read FContext;
     property Bounds: TRectF read FBounds;
+    // Text/images keep their horizontal layout while Bounds is the visible hit area.
+    property ContentBounds: TRectF read FContentBounds;
     property Value: TValue read FValue;
     property DisplayText: string read FDisplayText;
     property Appearance: Th5uResolvedAppearance read FAppearance;
@@ -241,7 +244,18 @@ type
     FMovingRowKeys: TArray<Th5uRowKey>;
     FMovingFirstRowIndex: Int64;
     FMoveDragging: Boolean;
+    FMovePoint: TPointF;
+    FMoveCaption: string;
+    FMovingHeaderCell: Th5uHeaderLayoutCell;
+    FMovePreviewWidth: Single;
+    FHeaderTouch: Boolean;
     FMoveCursor: TCursor;
+    FResizingColumn: Th5uGridColumn;
+    FResizeStartX: Single;
+    FResizeOriginalWidth: Integer;
+    FResizeCursorActive: Boolean;
+    FResizeCursor: TCursor;
+    FHeaderInteraction: Boolean;
     FOnRowsMoved: Th5uRowsMovedEvent;
     FLastNotifiedCell: Th5uCellAddress;
     function FocusCell(ARow: Int64; AColumn: Integer; AExtend, AEdit: Boolean; AAdd: Boolean = False): Boolean;
@@ -305,11 +319,21 @@ type
     procedure BeginSelectionDrag(AKind: Th5uSelectionKind; X, Y: Single; AShift: TShiftState);
     procedure UpdateSelectionDrag(X, Y: Single);
     procedure EndSelectionDrag;
+    function ColumnResizeAt(X, Y: Single; ATouch: Boolean): Th5uGridColumn;
+    function BeginColumnResize(X, Y: Single; ATouch: Boolean): Boolean;
+    procedure UpdateColumnResize(X: Single);
+    procedure SetResizeCursor(AActive: Boolean);
+    procedure SelectRightClickCell(const AHit: Th5uFmxHitTestInfo);
     function IsRowMoveGesture(AShift: TShiftState): Boolean;
+    function GetHeaderCellBounds(ACell: Th5uHeaderLayoutCell): TRectF;
+    function GetHeaderCellViewport(ACell: Th5uHeaderLayoutCell): TRectF;
+    function HeaderCellAtPoint(X, Y: Single): Th5uHeaderLayoutCell;
     function BeginColumnMove(AColumnIndex: Integer; X, Y: Single): Boolean;
     function BeginRowMove(ARowIndex: Int64; X, Y: Single): Boolean;
     procedure UpdateHeaderMove(X, Y: Single);
     function FinishHeaderMove(X, Y: Single): Boolean;
+    function GetColumnMoveHeaderBounds(const AInfo: Th5uFmxVisibleColumnInfo): TRectF;
+    function ColumnMoveTarget(X, Y: Single; out ANewIndex: Integer; out AMarkerX, AMarkerTop: Single): Boolean;
     function CanMoveColumn(AColumn: Th5uGridColumn): Boolean;
     function IsColumnMoveGesture(AColumn: Th5uGridColumn; AShift: TShiftState): Boolean;
     procedure SelectHeaderRange(AKind: Th5uSelectionKind; ARow: Int64; AColumn: Integer; AShift: TShiftState);
@@ -393,7 +417,9 @@ type
     function AcquireVisualCell(const AContext: Th5uFactoryContext; ADefaultClass: Th5uFmxVisualCellClass): Th5uFmxVisualCell;
 
     procedure DrawContentPadding;
+    procedure DrawCustomHeaderLayout;
     procedure DrawHeaders;
+    procedure DrawColumnMoveFeedback;
     procedure DrawRows;
     procedure DrawSpacingRect(const ABounds: TRectF; AElementKind: Th5uElementKind; AColumn: Th5uGridColumn; AViewRowIndex: Int64; const ARowKey: Th5uRowKey; AColor: TAlphaColor;
       const AStyleName: string = ''; ATreeLevel: Integer = -1; AClosedTreeLevels: Integer = 0);
@@ -436,6 +462,7 @@ type
     procedure DoCustomDraw(ACanvas: TCanvas; const AContext: Th5uFmxDrawContext; AStage: Th5uFmxCustomDrawStage; var ADrawDefault: Boolean);
   protected
     procedure DoExit; override;
+    procedure DoMouseLeave; override;
     procedure KeyDown(var Key: Word; var KeyChar: Char; Shift: TShiftState); override;
     procedure Loaded; override;
     procedure Paint; override;
@@ -583,6 +610,7 @@ procedure Th5uFmxVisualCell.BindCell(const AContext: Th5uFactoryContext; const A
 begin
   FContext := AContext;
   FBounds := ABounds;
+  FContentBounds := ABounds;
   FValue := AValue;
   FDisplayText := ADisplayText;
   FAppearance := AAppearance;
@@ -592,7 +620,8 @@ procedure Th5uFmxVisualCell.PrepareCanvas(AGrid: Th5uFmxGrid; ACanvas: TCanvas; 
 var
   LContext: Th5uFmxDrawContext;
 begin
-  if not Assigned(AGrid.FOnPrepareElement) then Exit;
+  if not Assigned(AGrid.FOnPrepareElement) then
+    Exit;
   LContext.FactoryContext := Context;
   LContext.Bounds := Bounds;
   LContext.DisplayText := DisplayText;
@@ -604,13 +633,15 @@ procedure Th5uFmxGrid.PrepareGridCanvas(const ABounds: TRectF; AKind: Th5uElemen
 var
   LContext: Th5uFmxDrawContext;
 begin
-  if not Assigned(FOnPrepareElement) then Exit;
+  if not Assigned(FOnPrepareElement) then
+    Exit;
   LContext := Default(Th5uFmxDrawContext);
   LContext.FactoryContext := Th5uFactoryContext.Create(Self, Self, FDataController, '', AKind);
   LContext.FactoryContext.ViewRowIndex := -1;
   LContext.Bounds := ABounds;
   FOnPrepareElement(Self, Self, Canvas, LContext, Th5uElementPaintPart.Background);
 end;
+
 procedure Th5uFmxVisualCell.Paint(AGrid: Th5uFmxGrid; ACanvas: TCanvas);
 var
   LContext: Th5uFmxDrawContext;
@@ -618,20 +649,24 @@ var
   LState: TCanvasSaveState;
 begin
   LState := nil;
-  if Assigned(AGrid.FOnPrepareElement) then LState := ACanvas.SaveState;
+  if Assigned(AGrid.FOnPrepareElement) or not FContentBounds.EqualsTo(FBounds) then
+    LState := ACanvas.SaveState;
   try
-  LContext.FactoryContext := FContext;
-  LContext.Bounds := FBounds;
-  LContext.DisplayText := FDisplayText;
-  LContext.Appearance := FAppearance;
+    if not FContentBounds.EqualsTo(FBounds) then
+      ACanvas.IntersectClipRect(FBounds);
+    LContext.FactoryContext := FContext;
+    LContext.Bounds := FBounds;
+    LContext.DisplayText := FDisplayText;
+    LContext.Appearance := FAppearance;
 
-  LDrawDefault := True;
-  AGrid.DoCustomDraw(ACanvas, LContext, Th5uFmxCustomDrawStage.BeforeDefault, LDrawDefault);
-  if LDrawDefault then
-    PaintDefault(AGrid, ACanvas);
-  AGrid.DoCustomDraw(ACanvas, LContext, Th5uFmxCustomDrawStage.AfterDefault, LDrawDefault);
+    LDrawDefault := True;
+    AGrid.DoCustomDraw(ACanvas, LContext, Th5uFmxCustomDrawStage.BeforeDefault, LDrawDefault);
+    if LDrawDefault then
+      PaintDefault(AGrid, ACanvas);
+    AGrid.DoCustomDraw(ACanvas, LContext, Th5uFmxCustomDrawStage.AfterDefault, LDrawDefault);
   finally
-    if Assigned(LState) then ACanvas.RestoreState(LState);
+    if Assigned(LState) then
+      ACanvas.RestoreState(LState);
   end;
 end;
 
@@ -794,8 +829,8 @@ begin
 
   // Mobile edit styles can be transparent. Do not draw the old cell content
   // behind an active text/date editor, even when its style is replaced.
-  if (AGrid.FEditColumn = Context.Column) and (AGrid.FEditRowIndex = Context.ViewRowIndex)
-    and (AGrid.FEditor.Visible or AGrid.DateEditorVisible) then Exit;
+  if (AGrid.FEditColumn = Context.Column) and (AGrid.FEditRowIndex = Context.ViewRowIndex) and (AGrid.FEditor.Visible
+    or AGrid.DateEditorVisible) then Exit;
   LColumn := Th5uGridColumn(Context.Column);
   LPalette := h5uGetFmxPalette(AGrid.Theme);
   if Appearance.HasForeground then
@@ -844,7 +879,7 @@ begin
         EnsureBitmap;
         if Assigned(FBitmap) and not FBitmap.IsEmpty then
         begin
-          LDest := Bounds;
+          LDest := ContentBounds;
           LDest.Inflate(-4, -4);
           if LColumn.ImagePreserveAspectRatio then
           begin
@@ -860,7 +895,7 @@ begin
 
     else
       begin
-        LTextRect := Bounds;
+        LTextRect := ContentBounds;
         LTextRect.Inflate(-5, -2);
         ACanvas.Fill.Color := LTextColor;
         ACanvas.Font.Size := AGrid.TextSize;
@@ -899,7 +934,7 @@ begin
   PrepareCanvas(AGrid, ACanvas, Th5uElementPaintPart.Background);
   ACanvas.FillRect(Bounds, 0, 0, AllCorners, 1);
 
-  LRect := Bounds;
+  LRect := ContentBounds;
   LRect.Inflate(-5, -2);
   ACanvas.Font.Size := AGrid.TextSize;
   ACanvas.Font.Style := [TFontStyle.fsBold];
@@ -1125,7 +1160,8 @@ end;
 
 procedure Th5uFmxGrid.SetShowColumnModes(AValue: Boolean);
 begin
-  if FShowColumnModes = AValue then Exit;
+  if FShowColumnModes = AValue then
+    Exit;
   FShowColumnModes := AValue;
   Repaint;
 end;
@@ -1135,23 +1171,30 @@ var
   LKey: string;
   procedure Add(const AToken: string);
   begin
-    if AMode <> '' then AMode := AMode + ' ';
+    if AMode <> '' then
+      AMode := AMode + ' ';
     AMode := AMode + AToken;
   end;
 begin
   AMode := '';
-  if not Assigned(AColumn) then Exit;
+  if not Assigned(AColumn) then
+    Exit;
   LKey := '';
   if Assigned(FDataController) then
     if IsPublishedProp(FDataController, 'KeyFieldName') then
       LKey := GetStrProp(FDataController, 'KeyFieldName')
     else if IsPublishedProp(FDataController, 'KeyPropertyName') then
       LKey := GetStrProp(FDataController, 'KeyPropertyName');
-  if (LKey <> '') and SameText(AColumn.FieldName, LKey) then Add('KeyField');
-  if (FTree.LevelColumnId <> '') and SameText(AColumn.Id, FTree.LevelColumnId) then Add('TreeLevel');
-  if (FAdjacentGroupFolding.IdColumnId <> '') and SameText(AColumn.Id, FAdjacentGroupFolding.IdColumnId) then Add('GroupId');
-  if (FRowStyles.StyleKeyColumnId <> '') and SameText(AColumn.Id, FRowStyles.StyleKeyColumnId) then Add('StyleKey');
-  if (FScrollHints.VerticalColumnId <> '') and SameText(AColumn.Id, FScrollHints.VerticalColumnId) then Add('ScrollHint');
+  if (LKey <> '') and SameText(AColumn.FieldName, LKey) then
+     Add('KeyField');
+  if (FTree.LevelColumnId <> '') and SameText(AColumn.Id, FTree.LevelColumnId) then
+    Add('TreeLevel');
+  if (FAdjacentGroupFolding.IdColumnId <> '') and SameText(AColumn.Id, FAdjacentGroupFolding.IdColumnId) then
+    Add('GroupId');
+  if (FRowStyles.StyleKeyColumnId <> '') and SameText(AColumn.Id, FRowStyles.StyleKeyColumnId) then
+    Add('StyleKey');
+  if (FScrollHints.VerticalColumnId <> '') and SameText(AColumn.Id, FScrollHints.VerticalColumnId) then
+    Add('ScrollHint');
 end;
 
 function Th5uFmxGrid.ColumnModeSymbols(AColumn: Th5uGridColumn): string;
@@ -1159,14 +1202,21 @@ var
   LMode: string;
 begin
   Result := '';
-  if not Assigned(AColumn) or not (FShowColumnModes or (csDesigning in ComponentState)) then Exit;
+  if not Assigned(AColumn) or not (FShowColumnModes or (csDesigning in ComponentState)) then
+    Exit;
   LMode := ' ' + AColumn.Mode + ' ';
-  if Pos(' KeyField ', LMode) > 0 then Result := Result + #$26BF;
-  if Pos(' TreeLevel ', LMode) > 0 then Result := Result + #$21B3;
-  if Pos(' GroupId ', LMode) > 0 then Result := Result + #$2261;
-  if Pos(' StyleKey ', LMode) > 0 then Result := Result + #$25C6;
-  if Pos(' ScrollHint ', LMode) > 0 then Result := Result + #$2195;
+  if Pos(' KeyField ', LMode) > 0 then
+    Result := Result + #$26BF;
+  if Pos(' TreeLevel ', LMode) > 0 then
+    Result := Result + #$21B3;
+  if Pos(' GroupId ', LMode) > 0 then
+    Result := Result + #$2261;
+  if Pos(' StyleKey ', LMode) > 0 then
+    Result := Result + #$25C6;
+  if Pos(' ScrollHint ', LMode) > 0 then
+    Result := Result + #$2195;
 end;
+
 procedure Th5uFmxGrid.ColumnsChanged(Sender: TObject; AColumn: Th5uGridColumn);
 begin
   InvalidateAdjacentGroupMap(False);
@@ -1181,18 +1231,23 @@ var
   LAllow: Boolean;
 begin
   Result := False;
-  if not CanUpdateLayout then Exit;
+  if not CanUpdateLayout then
+    Exit;
   LColumn := FColumns.FindById(ACell.ColumnId);
-  if not Assigned(LColumn) then Exit;
-  if (FSelection.FocusedCell.RowIndex <> ACell.RowIndex)
-    or (FSelection.FocusedCell.ColumnId <> ACell.ColumnId) then
+  if not Assigned(LColumn) then
+    Exit;
+  if (FSelection.FocusedCell.RowIndex <> ACell.RowIndex) or (FSelection.FocusedCell.ColumnId <> ACell.ColumnId) then
   begin
     LAllow := True;
-    if Assigned(LColumn.OnCanFocus) then LColumn.OnCanFocus(LColumn, LColumn, ACell.RowIndex, LAllow);
-    if Assigned(FOnCanFocus) then FOnCanFocus(Self, LColumn, ACell.RowIndex, LAllow);
+    if Assigned(LColumn.OnCanFocus) then
+      LColumn.OnCanFocus(LColumn, LColumn, ACell.RowIndex, LAllow);
+    if Assigned(FOnCanFocus) then
+      FOnCanFocus(Self, LColumn, ACell.RowIndex, LAllow);
     Result := LAllow;
-    if not Result then Exit;
-    if Assigned(FEditColumn) then CommitEditor;
+    if not Result then
+      Exit;
+    if Assigned(FEditColumn) then
+      CommitEditor;
   end;
   FHeaderSelectionActive := False;
   FSelection.SetFocus(ACell, AUpdateAnchor);
@@ -1204,19 +1259,25 @@ var
   LAllow: Boolean;
 begin
   Result := False;
-  if not CanUpdateLayout then Exit;
+  if not CanUpdateLayout then
+    Exit;
   LAllow := FAllowEditing and not AColumn.ReadOnly and CanEditViewValue(ARow, AColumn.FieldName);
-  if Assigned(AColumn.OnCanEdit) then AColumn.OnCanEdit(AColumn, AColumn, ARow, LAllow);
-  if Assigned(FOnCanEdit) then FOnCanEdit(Self, AColumn, ARow, LAllow);
+  if Assigned(AColumn.OnCanEdit) then
+    AColumn.OnCanEdit(AColumn, AColumn, ARow, LAllow);
+  if Assigned(FOnCanEdit) then
+    FOnCanEdit(Self, AColumn, ARow, LAllow);
   Result := LAllow;
 end;
 
 function Th5uFmxGrid.GetCellValue(AColumn: Th5uGridColumn; ARow: Int64; ADisplay: Boolean): TValue;
 begin
   Result := GetViewValue(ARow, AColumn.FieldName);
-  if not CanUpdateLayout then Exit;
-  if Assigned(AColumn.OnGetValue) then AColumn.OnGetValue(AColumn, AColumn, ARow, Result, ADisplay)
-  else if Assigned(FOnGetValue) then FOnGetValue(Self, AColumn, ARow, Result, ADisplay);
+  if not CanUpdateLayout then
+    Exit;
+  if Assigned(AColumn.OnGetValue) then
+    AColumn.OnGetValue(AColumn, AColumn, ARow, Result, ADisplay)
+  else if Assigned(FOnGetValue) then
+    FOnGetValue(Self, AColumn, ARow, Result, ADisplay);
 end;
 
 function Th5uFmxGrid.GetCellText(AColumn: Th5uGridColumn; ARow: Int64; ADisplay: Boolean): string;
@@ -1244,38 +1305,49 @@ begin
   LValue := AValue;
   LValid := True;
   LError := '';
-  if Assigned(AColumn.OnValidate) then AColumn.OnValidate(AColumn, AColumn, ARow, LValue, LValid, LError)
-  else if Assigned(FOnValidate) then FOnValidate(Self, AColumn, ARow, LValue, LValid, LError);
+  if Assigned(AColumn.OnValidate) then
+    AColumn.OnValidate(AColumn, AColumn, ARow, LValue, LValid, LError)
+  else if Assigned(FOnValidate) then
+    FOnValidate(Self, AColumn, ARow, LValue, LValid, LError);
   if not LValid then
   begin
-    if LError = '' then LError := 'Invalid cell value';
+    if LError = '' then
+      LError := 'Invalid cell value';
     raise EConvertError.Create(LError);
   end;
-  if Assigned(AColumn.OnSetValue) then AColumn.OnSetValue(AColumn, AColumn, ARow, LValue)
-  else if Assigned(FOnSetValue) then FOnSetValue(Self, AColumn, ARow, LValue);
+  if Assigned(AColumn.OnSetValue) then
+    AColumn.OnSetValue(AColumn, AColumn, ARow, LValue)
+  else if Assigned(FOnSetValue) then
+    FOnSetValue(Self, AColumn, ARow, LValue);
   SetViewValue(ARow, AColumn.FieldName, LValue);
 end;
 
 procedure Th5uFmxGrid.NotifyCellClick(AColumn: Th5uGridColumn; ARow: Int64; AHeader, AIndicator: Boolean);
 begin
-  if not CanUpdateLayout then Exit;
+  if not CanUpdateLayout then
+    Exit;
   if AIndicator then
   begin
-    if Assigned(FOnRowIndicatorClick) then FOnRowIndicatorClick(Self, nil, ARow);
+    if Assigned(FOnRowIndicatorClick) then
+      FOnRowIndicatorClick(Self, nil, ARow);
   end
-  else if Assigned(AColumn) then
-    if AHeader then
-    begin
-      if Assigned(AColumn.OnColumnHeaderClick) then AColumn.OnColumnHeaderClick(AColumn, AColumn, -1);
-      if Assigned(FOnColumnHeaderClick) then FOnColumnHeaderClick(Self, AColumn, -1);
-    end
-    else
-    begin
-      if Assigned(AColumn.OnCellClick) then AColumn.OnCellClick(AColumn, AColumn, ARow);
-      if Assigned(FOnCellClick) then FOnCellClick(Self, AColumn, ARow);
-    end;
+  else 
+    if Assigned(AColumn) then
+      if AHeader then
+      begin
+        if Assigned(AColumn.OnColumnHeaderClick) then
+          AColumn.OnColumnHeaderClick(AColumn, AColumn, -1);
+        if Assigned(FOnColumnHeaderClick) then
+          FOnColumnHeaderClick(Self, AColumn, -1);
+      end
+      else
+      begin
+        if Assigned(AColumn.OnCellClick) then
+          AColumn.OnCellClick(AColumn, AColumn, ARow);
+        if Assigned(FOnCellClick) then
+          FOnCellClick(Self, AColumn, ARow);
+      end;
 end;
-
 
 procedure Th5uFmxGrid.CommitEditor;
 var
@@ -1284,9 +1356,9 @@ begin
   if FCommittingEditor or (not FEditor.Visible and not DateEditorVisible) or not Assigned(FEditColumn) or not Assigned(FDataController) then
     Exit;
 
-  if (DateEditorVisible and (DateEditorValue.IsEmpty = FDateEditorWasEmpty)
-    and (FDateEditor.DateTime = FDateEditorOriginal))
-    or (not DateEditorVisible and (FEditor.Text = FEditorOriginalText)) then
+  if (DateEditorVisible and (DateEditorValue.IsEmpty = FDateEditorWasEmpty) and (FDateEditor.DateTime = FDateEditorOriginal))
+    or (not DateEditorVisible and (FEditor.Text = FEditorOriginalText))
+  then
   begin
     CancelEditor;
     Exit;
@@ -1420,7 +1492,6 @@ begin
   FEditor.OnChange := EditorChanged;
   FEditor.OnKeyDown := EditorKeyDown;
 
-
   FInitialized := True;
   CanFocus := True;
   ClipChildren := True;
@@ -1437,8 +1508,7 @@ begin
   // Live updates must not discard an in-progress draft. Cancel only when the
   // target is no longer the same row; never commit into a replacement row.
   if not FCommittingEditor and Assigned(FEditColumn) then
-    if not CanUpdateLayout or FEditRowKey.IsEmpty or (FEditRowIndex < 0)
-      or (FEditRowIndex >= GetViewRowCount) or (GetViewRowKey(FEditRowIndex) <> FEditRowKey) then
+    if not CanUpdateLayout or FEditRowKey.IsEmpty or (FEditRowIndex < 0) or (FEditRowIndex >= GetViewRowCount) or (GetViewRowKey(FEditRowIndex) <> FEditRowKey) then
       CancelEditor;
   InvalidateAllRowHeights;
   UpdateScrollBars;
@@ -1476,10 +1546,10 @@ var
 begin
   inherited;
   LHit := GridHitTest(FLastMousePoint.X, FLastMousePoint.Y);
-  if (LHit.Kind = Th5uFmxHitKind.DataCell)
-    and (((LHit.Column.EditorKind <> Th5uColumnEditorKind.Boolean)
+  if (LHit.Kind = Th5uFmxHitKind.DataCell) and (((LHit.Column.EditorKind <> Th5uColumnEditorKind.Boolean)
     and not ((LHit.Column.EditorKind = Th5uColumnEditorKind.Automatic) and (LHit.Column.DataType = Th5uColumnDataType.Boolean)))
-    or GetCheckBoxRect(LHit.Bounds).Contains(FLastMousePoint)) then
+      or GetCheckBoxRect(LHit.Bounds).Contains(FLastMousePoint))
+  then
     StartEdit(LHit);
 end;
 
@@ -1525,6 +1595,70 @@ begin
   end;
 end;
 
+procedure Th5uFmxGrid.DrawCustomHeaderLayout;
+var
+  I, LFirst, LLast: Integer;
+  LCellDef: Th5uHeaderLayoutCell;
+  LRect, LDrawRect, LClip, LSeparatorRect: TRectF;
+  LContext: Th5uFactoryContext;
+  LCell: Th5uFmxVisualCell;
+  LAppearance: Th5uResolvedAppearance;
+  LClassId: Th5uClassId;
+  LRightSpacing: Single;
+begin
+  for I := 0 to FHeaderLayout.Cells.Count - 1 do
+  begin
+    LCellDef := FHeaderLayout.Cells[I];
+    if not FHeaderLayout.ColumnRange(LCellDef, FColumns.VisibleColumns, LFirst, LLast) or (LLast >= Length(FAllColumns)) then
+      Continue;
+    LRect := GetHeaderCellBounds(LCellDef);
+    LClip := GetHeaderCellViewport(LCellDef);
+    LDrawRect := TRectF.Intersect(LRect, LClip);
+    if LDrawRect.IsEmpty then
+      Continue;
+    LClassId := LCellDef.ClassId;
+    if string(LClassId) = '' then
+      LClassId := h5uClassIdGridHeaderGroupCell;
+    LContext := Th5uFactoryContext.Create(Self, Self, FDataController, LClassId, Th5uElementKind.ColumnHeaderGroupCell);
+    LContext.HeaderCell := LCellDef;
+    LContext.LayoutRow := LCellDef.LayoutRow;
+    LContext.LayoutColumn := LFirst;
+    LContext.RowSpan := LCellDef.RowSpan;
+    LContext.ColumnSpan := LLast - LFirst + 1;
+    LContext.ElementFlags := [Th5uElementFlag.Header];
+    if FAllColumns[LFirst].Column.FixedKind <> Th5uFixedKind.None then
+      Include(LContext.ElementFlags, Th5uElementFlag.FixedColumn);
+    if LCellDef.ColumnId <> '' then
+    begin
+      LContext.Column := FColumns.FindById(LCellDef.ColumnId);
+      LContext.ElementKind := Th5uElementKind.ColumnHeaderCell;
+      if FSelection.IsColumnSelected(LCellDef.ColumnId) then
+        Include(LContext.ElementFlags, Th5uElementFlag.Selected);
+    end;
+    LAppearance.Clear;
+    LAppearance.StyleName := LCellDef.StyleName;
+    LCell := AcquireVisualCell(LContext, Th5uFmxHeaderCell);
+    LCell.BindCell(LContext, LDrawRect, TValue.Empty, LCellDef.Caption, LAppearance);
+    LCell.FContentBounds := LRect;
+    LCell.Paint(Self, Canvas);
+    LRightSpacing := GetEffectiveColumnRightSpacing(FAllColumns[LLast].Column);
+    if LRightSpacing > 0 then
+    begin
+      LSeparatorRect := RectF(LRect.Right, LRect.Top, LRect.Right + LRightSpacing, LRect.Bottom);
+      LSeparatorRect := TRectF.Intersect(LSeparatorRect, LClip);
+      if not LSeparatorRect.IsEmpty then
+        DrawSpacingRect(LSeparatorRect, Th5uElementKind.ColumnSpacing, FAllColumns[LLast].Column, -1, Th5uRowKey.Empty, ResolveColumnSpacingColor);
+    end;
+    if FSpacing.RowSpacing > 0 then
+    begin
+      LSeparatorRect := RectF(LRect.Left, LRect.Bottom, LRect.Right + LRightSpacing, LRect.Bottom + FSpacing.RowSpacing);
+      LSeparatorRect := TRectF.Intersect(LSeparatorRect, LClip);
+      if not LSeparatorRect.IsEmpty then
+        DrawSpacingRect(LSeparatorRect, Th5uElementKind.RowSpacing, Th5uGridColumn(LContext.Column), -1, Th5uRowKey.Empty, ResolveRowSpacingColor);
+    end;
+  end;
+end;
+
 procedure Th5uFmxGrid.DrawHeaders;
 var
   LInfo: Th5uFmxVisibleColumnInfo;
@@ -1549,7 +1683,7 @@ begin
 
   if FShowRowIndicator then
   begin
-    LRect := RectF(GetViewportRect.Left, GetViewportRect.Top, GetViewportRect.Left + FRowIndicatorWidth, GetViewportRect.Top + FHeaderRowHeight);
+    LRect := RectF(GetViewportRect.Left, GetViewportRect.Top, GetViewportRect.Left + FRowIndicatorWidth, GetViewportRect.Top + GetHeaderHeight);
     LContext := Th5uFactoryContext.Create(Self, Self, FDataController, h5uClassIdGridHeaderCell, Th5uElementKind.CornerCell);
     LContext.ElementFlags := [Th5uElementFlag.Header, Th5uElementFlag.Corner, Th5uElementFlag.FixedColumn];
     LAppearance.Clear;
@@ -1566,6 +1700,11 @@ begin
     end;
   end;
 
+  if FHeaderLayout.Enabled and (FHeaderLayout.Cells.Count > 0) then
+  begin
+    DrawCustomHeaderLayout;
+    Exit;
+  end;
   for LInfo in FVisibleColumns do
   begin
     LRect := LInfo.Bounds;
@@ -1592,6 +1731,7 @@ begin
       LAppearance.StyleName := LInfo.Column.HeaderStyleName;
       LCell := AcquireVisualCell(LContext, Th5uFmxHeaderCell);
       LCell.BindCell(LContext, LDrawRect, TValue.Empty, LInfo.Column.Caption, LAppearance);
+      LCell.FContentBounds := LRect;
       LCell.Paint(Self, Canvas);
     end;
 
@@ -1607,8 +1747,7 @@ begin
 
   if FSpacing.RowSpacing > 0 then
   begin
-    LSeparatorRect := RectF(GetViewportRect.Left, GetViewportRect.Top + FHeaderRowHeight, GetViewportRect.Right, GetViewportRect.Top
-      + FHeaderRowHeight + FSpacing.RowSpacing);
+    LSeparatorRect := RectF(GetViewportRect.Left, GetViewportRect.Top + FHeaderRowHeight, GetViewportRect.Right, GetViewportRect.Top + FHeaderRowHeight + FSpacing.RowSpacing);
     DrawSpacingRect(LSeparatorRect, Th5uElementKind.RowSpacing, nil, -1, Th5uRowKey.Empty, ResolveRowSpacingColor);
   end;
 end;
@@ -1621,8 +1760,9 @@ var
   LSize: Single;
 begin
   Result := RectF(0, 0, 0, 0);
-  if not FAdjacentGroupFolding.Enabled or not FAdjacentGroupFolding.ShowFoldGlyph or not TryGetAdjacentGroupRowInfo(ARowInfo.RowIndex, LInfo)
-    or not LInfo.IsFoldable or not LInfo.IsFirstRow then
+  if not FAdjacentGroupFolding.Enabled or not FAdjacentGroupFolding.ShowFoldGlyph 
+    or not TryGetAdjacentGroupRowInfo(ARowInfo.RowIndex, LInfo) or not LInfo.IsFoldable or not LInfo.IsFirstRow
+  then
     Exit;
 
   LSize := Min(13, Max(9, ARowInfo.Bounds.Height - 8));
@@ -1726,8 +1866,7 @@ begin
     begin
       LRowKey := GetViewRowKey(LRowIndex);
       LHeight := GetRowHeightFor(LRowIndex, LRowKey);
-      LRowSpacing := GetEffectiveRowSeparatorFor(LRowIndex, LRowKey, LRowSeparatorKind, LRowSeparatorColor, LRowSeparatorStyleName, LTreeLevel,
-        LClosedTreeLevels);
+      LRowSpacing := GetEffectiveRowSeparatorFor(LRowIndex, LRowKey, LRowSeparatorKind, LRowSeparatorColor, LRowSeparatorStyleName, LTreeLevel, LClosedTreeLevels);
       LRowRect := RectF(LDataRect.Left, LTop, LDataRect.Right, LTop + LHeight);
 
       LRowInfo.RowIndex := LRowIndex;
@@ -1754,8 +1893,7 @@ begin
           LCell.Paint(Self, Canvas);
           if FSpacing.DefaultColumnRightSpacing > 0 then
           begin
-            LSeparatorRect := RectF(LIndicatorRect.Right, LIndicatorRect.Top, LIndicatorRect.Right
-              + FSpacing.DefaultColumnRightSpacing, LIndicatorRect.Bottom);
+            LSeparatorRect := RectF(LIndicatorRect.Right, LIndicatorRect.Top, LIndicatorRect.Right + FSpacing.DefaultColumnRightSpacing, LIndicatorRect.Bottom);
             LSeparatorRect := TRectF.Intersect(LSeparatorRect, LDataRect);
             if not LSeparatorRect.IsEmpty then
               DrawSpacingRect(LSeparatorRect, Th5uElementKind.ColumnSpacing, nil, LRowIndex, LRowKey, ResolveColumnSpacingColor);
@@ -1771,8 +1909,8 @@ begin
           begin
             LSelected := FSelection.IsRowSelected(LRowKey) or FSelection.IsColumnSelected(LColumnInfo.Column.Id)
               or FSelection.IsCellSelected(LRowIndex, LColumnInfo.VisibleIndex);
-            LFocused := FSelection.FocusedCell.IsValid and (FSelection.FocusedCell.RowIndex = LRowIndex) and (FSelection.FocusedCell.ColumnIndex
-              = LColumnInfo.VisibleIndex);
+            LFocused := FSelection.FocusedCell.IsValid and (FSelection.FocusedCell.RowIndex = LRowIndex)
+              and (FSelection.FocusedCell.ColumnIndex = LColumnInfo.VisibleIndex);
 
             LContext := Th5uFactoryContext.Create(Self, Self, FDataController, LColumnInfo.Column.CellClassId, Th5uElementKind.DataCell);
             if string(LContext.ClassId) = '' then
@@ -1795,6 +1933,7 @@ begin
 
             LCell := AcquireVisualCell(LContext, Th5uFmxDataCell);
             LCell.BindCell(LContext, LCellRect, LValue, GetCellText(LColumnInfo.Column, LRowIndex, True), LAppearance);
+            LCell.FContentBounds := RectF(LColumnInfo.Bounds.Left, LCellRect.Top, LColumnInfo.Bounds.Right, LCellRect.Bottom);
             LCell.Paint(Self, Canvas);
           end;
 
@@ -1816,8 +1955,7 @@ begin
         LSeparatorRect := RectF(LDataRect.Left, LRowRect.Bottom, LDataRect.Right, LRowRect.Bottom + LRowSpacing);
         LSeparatorRect := TRectF.Intersect(LSeparatorRect, LDataRect);
         if not LSeparatorRect.IsEmpty then
-          DrawSpacingRect(LSeparatorRect, LRowSeparatorKind, nil, LRowIndex, LRowKey, LRowSeparatorColor, LRowSeparatorStyleName, LTreeLevel,
-            LClosedTreeLevels);
+          DrawSpacingRect(LSeparatorRect, LRowSeparatorKind, nil, LRowIndex, LRowKey, LRowSeparatorColor, LRowSeparatorStyleName, LTreeLevel, LClosedTreeLevels);
       end;
 
       LTop := LTop + LHeight + LRowSpacing;
@@ -1900,6 +2038,7 @@ begin
       end;
   Result.Left := Min(Result.Left, Result.Right);
 end;
+
 function Th5uFmxGrid.GetVisibleCellBounds(AColumn: Th5uGridColumn; const AColumnBounds, ARowBounds: TRectF): TRectF;
 begin
   // Painting, pointer hit testing and cell editors must use the same clipped
@@ -1910,13 +2049,14 @@ begin
   Result := TRectF.Intersect(Result, GetDataViewportRect);
   Result := TRectF.Intersect(Result, AColumnBounds);
 end;
+
 function Th5uFmxGrid.GetCheckBoxRect(const ABounds: TRectF): TRectF;
 begin
-  Result := RectF(ABounds.Left + (ABounds.Width - 15) / 2,
-    ABounds.Top + (ABounds.Height - 15) / 2, 0, 0);
+  Result := RectF(ABounds.Left + (ABounds.Width - 15) / 2, ABounds.Top + (ABounds.Height - 15) / 2, 0, 0);
   Result.Right := Result.Left + 15;
   Result.Bottom := Result.Top + 15;
 end;
+
 procedure Th5uFmxGrid.EditorChanged(Sender: TObject);
 begin
   // A changed value permits another automatic commit. Showing a validation
@@ -2013,7 +2153,8 @@ begin
 
   LCount := GetViewRowCount;
   if (FRowHeight.Mode = Th5uRowHeightMode.Fixed) and not Assigned(FOnGetRowSpacing) and not (FTree.Enabled and FTree.BranchEndBand.Enabled)
-    and not (FAdjacentGroupFolding.Enabled and (FAdjacentGroupFolding.EndBand.Visibility <> Th5uAdjacentGroupEndBandVisibility.Never)) then
+    and not (FAdjacentGroupFolding.Enabled and (FAdjacentGroupFolding.EndBand.Visibility <> Th5uAdjacentGroupEndBandVisibility.Never))
+  then
     Exit(LCount * (FRowHeight.FixedHeight + FSpacing.RowSpacing));
 
   if LCount <= 3000 then
@@ -2035,11 +2176,14 @@ begin
 end;
 
 function Th5uFmxGrid.GetHeaderHeight: Single;
+var
+  LRows: Integer;
 begin
-  if FShowHeader then
-    Result := FHeaderRowHeight + FSpacing.RowSpacing
-  else
-    Result := 0;
+  if not FShowHeader then Exit(0);
+  LRows := 1;
+  if FHeaderLayout.Enabled and (FHeaderLayout.Cells.Count > 0) then
+    LRows := Max(1, FHeaderLayout.RowCount);
+  Result := LRows * (FHeaderRowHeight + FSpacing.RowSpacing);
 end;
 
 function Th5uFmxGrid.GetOnConfigureInstance: Th5uConfigureInstanceEvent;
@@ -2668,6 +2812,7 @@ end;
 
 function Th5uFmxGrid.GridHitTest(X, Y: Single): Th5uFmxHitTestInfo;
 var
+  LFirst, LLast: Integer;
   LColumn: Th5uFmxVisibleColumnInfo;
   LRow: Th5uFmxVisibleRowInfo;
   LGlyphRect: TRectF;
@@ -2678,6 +2823,18 @@ begin
 
   if FShowHeader and (Y < GetDataViewportRect.Top) then
   begin
+    if FHeaderLayout.Enabled and (FHeaderLayout.Cells.Count > 0) then
+    begin
+      Result.HeaderCell := HeaderCellAtPoint(X, Y);
+      if not Assigned(Result.HeaderCell)
+        or not FHeaderLayout.ColumnRange(Result.HeaderCell, FColumns.VisibleColumns, LFirst, LLast) then Exit(Th5uFmxHitTestInfo.Empty);
+      Result.Kind := Th5uFmxHitKind.Header;
+      Result.ColumnIndex := LFirst;
+      Result.Column := FAllColumns[LFirst].Column;
+      Result.Bounds := GetHeaderCellBounds(Result.HeaderCell);
+      Result.Bounds := TRectF.Intersect(Result.Bounds, GetHeaderCellViewport(Result.HeaderCell));
+      Exit;
+    end;
     for LColumn in FVisibleColumns do
       if LColumn.Bounds.Contains(PointF(X, Y)) and GetColumnViewportRect(LColumn.Column).Contains(PointF(X, Y)) then
       begin
@@ -2685,6 +2842,8 @@ begin
         Result.Column := LColumn.Column;
         Result.ColumnIndex := LColumn.VisibleIndex;
         Result.Bounds := TRectF.Intersect(LColumn.Bounds, GetColumnViewportRect(LColumn.Column));
+        Result.Bounds.Top := GetViewportRect.Top;
+        Result.Bounds.Bottom := Result.Bounds.Top + FHeaderRowHeight;
         Exit;
       end;
   end;
@@ -2870,6 +3029,14 @@ begin
   end;
   Handled := True;
   LPoint := AbsoluteToLocal(EventInfo.Location);
+  if FHeaderInteraction then
+  begin
+    // FMX emits Pan for desktop mouse drags as well as touch. Keep the action
+    // chosen at pointer-down, and update feedback even on gesture-only moves.
+    if Assigned(FResizingColumn) then UpdateColumnResize(LPoint.X)
+    else UpdateHeaderMove(LPoint.X, LPoint.Y);
+    Exit;
+  end;
   if TInteractiveGestureFlag.gfBegin in EventInfo.Flags then
   begin
     BeginTouchScroll(LPoint);
@@ -2884,6 +3051,134 @@ begin
     FTouchScrolling := True;
   end;
 end;
+
+procedure Th5uFmxGrid.DoMouseLeave;
+begin
+  if not Assigned(FResizingColumn) then SetResizeCursor(False);
+  inherited;
+end;
+
+function Th5uFmxGrid.ColumnResizeAt(X, Y: Single; ATouch: Boolean): Th5uGridColumn;
+var
+  LInfo: Th5uFmxVisibleColumnInfo;
+  LView: TRectF;
+  LHeader: Th5uHeaderLayoutCell;
+  LLeftTolerance, LRightTolerance, LLastLeftTolerance, LEffectiveLeft, LDelta, LDistance, LBest: Single;
+begin
+  Result := nil;
+  if not CanUpdateLayout or not FShowHeader or not FCustomization.AllowColumnResizing then
+    Exit;
+  if not GetViewportRect.Contains(PointF(X, Y)) or (Y >= GetDataViewportRect.Top) then
+    Exit;
+  if ATouch then
+  begin
+    LLastLeftTolerance := FCustomization.TouchLastColumnResizeHitZoneLeft;
+    LLeftTolerance := FCustomization.TouchColumnResizeHitZoneLeft;
+    LRightTolerance := FCustomization.TouchColumnResizeHitZoneRight;
+  end
+  else
+  begin
+    LLastLeftTolerance := FCustomization.LastColumnResizeHitZoneLeft;
+    LLeftTolerance := FCustomization.ColumnResizeHitZoneLeft;
+    LRightTolerance := FCustomization.ColumnResizeHitZoneRight;
+  end;
+  LBest := Max(LLeftTolerance, LRightTolerance);
+  BuildColumnLayout;
+  for LInfo in FVisibleColumns do
+  begin
+    if not LInfo.Column.CanResize then
+      Continue;
+    LEffectiveLeft := LLeftTolerance;
+    // Use the last non-hidden column, not the last one inside the scrolled viewport.
+    if (LInfo.VisibleIndex = High(FAllColumns)) and (LLastLeftTolerance >= 0) then
+      LEffectiveLeft := LLastLeftTolerance;
+    LDelta := X - LInfo.Bounds.Right;
+    if (LDelta < -LEffectiveLeft) or (LDelta > LRightTolerance) then
+      Continue;
+    if FHeaderLayout.Enabled and (FHeaderLayout.Cells.Count > 0) then
+    begin
+      LHeader := HeaderCellAtPoint(LInfo.Bounds.Right - 1, Y);
+      if not Assigned(LHeader) or (Abs(GetHeaderCellBounds(LHeader).Right - LInfo.Bounds.Right) > 0.1) then
+        Continue;
+    end;
+    LDistance := Abs(LDelta);
+    if Assigned(Result) and (LDistance >= LBest) then
+      Continue;
+    LView := GetColumnViewportRect(LInfo.Column);
+    // A clipped column's viewport edge is not its resize boundary.
+    if (LInfo.Bounds.Right <= LView.Left) or (LInfo.Bounds.Right > LView.Right) then
+      Continue;
+    Result := LInfo.Column;
+    LBest := LDistance;
+  end;
+end;
+
+procedure Th5uFmxGrid.SetResizeCursor(AActive: Boolean);
+begin
+  if AActive = FResizeCursorActive then
+    Exit;
+  FResizeCursorActive := AActive;
+  if AActive then
+  begin
+    FResizeCursor := Cursor;
+    Cursor := crHSplit;
+  end
+  else if Cursor = crHSplit then Cursor := FResizeCursor;
+end;
+
+function Th5uFmxGrid.BeginColumnResize(X, Y: Single; ATouch: Boolean): Boolean;
+begin
+  FResizingColumn := ColumnResizeAt(X, Y, ATouch);
+  Result := Assigned(FResizingColumn);
+  if not Result then
+    Exit;
+  FHeaderInteraction := True;
+  FResizeStartX := X;
+  FResizeOriginalWidth := FResizingColumn.Width;
+  if not ATouch then
+    SetResizeCursor(True);
+  Capture;
+end;
+
+procedure Th5uFmxGrid.UpdateColumnResize(X: Single);
+var
+  I: Integer;
+begin
+  if not Assigned(FResizingColumn) then Exit;
+  if CanUpdateLayout and FCustomization.AllowColumnResizing and ((Root <> nil) and (Root.Captured <> nil) and (Root.Captured.GetObject = Self)) then
+    for I := 0 to FColumns.Count - 1 do
+      if FColumns[I] = FResizingColumn then
+      begin
+        if FColumns[I].Visible and FColumns[I].CanResize then
+        begin
+          FColumns[I].Width := FResizeOriginalWidth + Round(X - FResizeStartX);
+          Exit;
+        end;
+        Break;
+      end;
+  // Capture, permissions or the source column may disappear during a drag.
+  EndSelectionDrag;
+end;
+
+procedure Th5uFmxGrid.SelectRightClickCell(const AHit: Th5uFmxHitTestInfo);
+var
+  LCell: Th5uCellAddress;
+  LSelected: Boolean;
+begin
+  if not FSelection.RightClickSelect or (AHit.Kind <> Th5uFmxHitKind.DataCell) then
+    Exit;
+  LCell.RowIndex := AHit.RowIndex;
+  LCell.RowKey := AHit.RowKey;
+  LCell.ColumnIndex := AHit.ColumnIndex;
+  LCell.ColumnId := AHit.Column.Id;
+  LSelected := FSelection.IsCellSelected(LCell.RowIndex, LCell.ColumnIndex)
+    or FSelection.IsRowSelected(LCell.RowKey) or FSelection.IsColumnSelected(LCell.ColumnId);
+  if not TryFocusCell(LCell, not LSelected) then
+    Exit;
+  if not LSelected and AHit.Column.CanSelect then
+    FSelection.AddCellRange(Th5uCellRange.Create(LCell.RowIndex, LCell.RowIndex, LCell.ColumnIndex, LCell.ColumnIndex));
+end;
+
 function Th5uFmxGrid.CanMoveColumn(AColumn: Th5uGridColumn): Boolean;
 var
   I: Integer;
@@ -2905,30 +3200,90 @@ end;
 function Th5uFmxGrid.IsColumnMoveGesture(AColumn: Th5uGridColumn; AShift: TShiftState): Boolean;
 begin
   Result := False;
-  if (AShift * [ssCtrl, ssShift] <> []) or not CanMoveColumn(AColumn) then Exit;
-  if FCustomization.ColumnMovingGesture = Th5uColumnMovingGesture.AltDrag then Result := ssAlt in AShift
-  else Result := not (ssAlt in AShift);
+  if (AShift * [ssCtrl, ssShift] <> []) or not CanMoveColumn(AColumn) then
+    Exit;
+  if ssTouch in AShift then
+    Exit(True);
+  if FCustomization.ColumnMovingGesture = Th5uColumnMovingGesture.AltDrag then
+    Result := ssAlt in AShift
+  else
+    Result := not (ssAlt in AShift);
 end;
+
 function Th5uFmxGrid.IsRowMoveGesture(AShift: TShiftState): Boolean;
 begin
   Result := False;
-  if not Assigned(FOnRowsMoved) or not FCustomization.AllowRowMoving
-    or (AShift * [ssCtrl, ssShift] <> []) then Exit;
-  if FCustomization.RowMovingGesture = Th5uRowMovingGesture.AltDrag then Result := ssAlt in AShift
-  else Result := not (ssAlt in AShift);
+  if not Assigned(FOnRowsMoved) or not FCustomization.AllowRowMoving or (AShift * [ssCtrl, ssShift] <> []) then
+    Exit;
+  if FCustomization.RowMovingGesture = Th5uRowMovingGesture.AltDrag then
+    Result := ssAlt in AShift
+  else
+    Result := not (ssAlt in AShift);
+end;
+
+function Th5uFmxGrid.GetHeaderCellBounds(ACell: Th5uHeaderLayoutCell): TRectF;
+var
+  LFirst, LLast, LSpan: Integer;
+begin
+  Result := TRectF.Empty;
+  if not FHeaderLayout.ColumnRange(ACell, FColumns.VisibleColumns, LFirst, LLast) or (LLast >= Length(FAllColumns)) then
+    Exit;
+  Result.Left := FAllColumns[LFirst].Bounds.Left;
+  Result.Right := FAllColumns[LLast].Bounds.Right;
+  Result.Top := GetViewportRect.Top + ACell.LayoutRow * (FHeaderRowHeight + FSpacing.RowSpacing);
+  LSpan := Max(1, ACell.RowSpan);
+  Result.Bottom := Result.Top + LSpan * FHeaderRowHeight + (LSpan - 1) * FSpacing.RowSpacing;
+end;
+
+function Th5uFmxGrid.GetHeaderCellViewport(ACell: Th5uHeaderLayoutCell): TRectF;
+var
+  LFirst, LLast: Integer;
+begin
+  Result := TRectF.Empty;
+  if not FHeaderLayout.ColumnRange(ACell, FColumns.VisibleColumns, LFirst, LLast) or (LFirst >= Length(FAllColumns)) then
+    Exit;
+  Result := GetColumnViewportRect(FAllColumns[LFirst].Column);
+  Result.Bottom := Min(Result.Bottom, GetDataViewportRect.Top);
+end;
+
+function Th5uFmxGrid.HeaderCellAtPoint(X, Y: Single): Th5uHeaderLayoutCell;
+var
+  I: Integer;
+  LRect: TRectF;
+begin
+  Result := nil;
+  if not FHeaderLayout.Enabled or not FShowHeader then
+    Exit;
+  // Reverse paint order also resolves overlapping cells consistently with drawing.
+  for I := FHeaderLayout.Cells.Count - 1 downto 0 do
+  begin
+    LRect := GetHeaderCellBounds(FHeaderLayout.Cells[I]);
+    LRect := TRectF.Intersect(LRect, GetHeaderCellViewport(FHeaderLayout.Cells[I]));
+    if LRect.Contains(PointF(X, Y)) then
+      Exit(FHeaderLayout.Cells[I]);
+  end;
 end;
 
 function Th5uFmxGrid.BeginColumnMove(AColumnIndex: Integer; X, Y: Single): Boolean;
 var
   LColumns: TArray<Th5uGridColumn>;
   LFirst, LLast, I: Integer;
+  LHit: Th5uFmxHitTestInfo;
 begin
   Result := False;
   LColumns := FColumns.VisibleColumns;
-  if (AColumnIndex < 0) or (AColumnIndex >= Length(LColumns)) then Exit;
+  if (AColumnIndex < 0) or (AColumnIndex >= Length(LColumns)) then
+    Exit;
+  LHit := GridHitTest(X, Y);
+  FMovingHeaderCell := nil;
   LFirst := AColumnIndex;
   LLast := LFirst;
-  if FSelection.IsColumnSelected(LColumns[LFirst].Id) then
+  if Assigned(LHit.HeaderCell) and (LHit.HeaderCell.ColumnSpan > 1) then
+  begin
+    if not FHeaderLayout.ColumnRange(LHit.HeaderCell, LColumns, LFirst, LLast) then
+      Exit;
+  end
+  else if FSelection.IsColumnSelected(LColumns[LFirst].Id) then
   begin
     while (LFirst > 0) and FSelection.IsColumnSelected(LColumns[LFirst - 1].Id) do Dec(LFirst);
     while (LLast < High(LColumns)) and FSelection.IsColumnSelected(LColumns[LLast + 1].Id) do Inc(LLast);
@@ -2936,8 +3291,27 @@ begin
     if LLast - LFirst + 1 <> FSelection.SelectedColumnCount then Exit;
   end;
   for I := LFirst to LLast do
-    if not CanMoveColumn(LColumns[I]) or (LColumns[I].FixedKind <> LColumns[LFirst].FixedKind) then Exit;
+    if not CanMoveColumn(LColumns[I]) or (LColumns[I].FixedKind <> LColumns[LFirst].FixedKind) then
+      Exit;
+  if Assigned(LHit.HeaderCell) then
+    for I := 0 to FColumns.Count - 1 do
+      if FHeaderLayout.MovesWithColumns(FColumns[I], LColumns, LFirst, LLast - LFirst + 1)
+        and (not CanMoveColumn(FColumns[I]) or (FColumns[I].FixedKind <> LColumns[LFirst].FixedKind))
+      then
+        Exit;
+  FMovingHeaderCell := LHit.HeaderCell;
   FMovingColumns := Copy(LColumns, LFirst, LLast - LFirst + 1);
+  FHeaderInteraction := True;
+  FMovePoint := PointF(X, Y);
+  FMoveCaption := LColumns[LFirst].Caption;
+  if LLast > LFirst then
+    FMoveCaption := FMoveCaption + Format(' (+%d)', [LLast - LFirst]);
+  FMovePreviewWidth := EnsureRange(Single(LColumns[LFirst].Width), 80, 260);
+  if Assigned(FMovingHeaderCell) and (FMovingHeaderCell.ColumnSpan > 1) then
+  begin
+    FMoveCaption := FMovingHeaderCell.Caption;
+    FMovePreviewWidth := EnsureRange(Single(LHit.Bounds.Width), 80, 260);
+  end;
   FSelectionDragOrigin := PointF(X, Y);
   Capture;
   Result := True;
@@ -2949,21 +3323,28 @@ var
   I: Integer;
 begin
   Result := False;
-  if not CanUpdateLayout or not Assigned(FOnRowsMoved) or not FCustomization.AllowRowMoving then Exit;
+  if not CanUpdateLayout or not Assigned(FOnRowsMoved) or not FCustomization.AllowRowMoving then
+    Exit;
   LCount := GetViewRowCount;
-  if (ARowIndex < 0) or (ARowIndex >= LCount) then Exit;
+  if (ARowIndex < 0) or (ARowIndex >= LCount) then
+    Exit;
   LFirst := ARowIndex;
   LLast := LFirst;
   if FSelection.IsRowSelected(GetViewRowKey(LFirst)) then
   begin
     LSelectedCount := FSelection.SelectedRowCount(LCount);
-    if (LSelectedCount >= LCount) or (LSelectedCount <= 0) then Exit;
+    if (LSelectedCount >= LCount) or (LSelectedCount <= 0) then
+      Exit;
     // Visit only the selected neighbours; virtual grids must not scan every row.
-    while (LFirst > 0) and FSelection.IsRowSelected(GetViewRowKey(LFirst - 1)) do Dec(LFirst);
-    while (LLast < LCount - 1) and FSelection.IsRowSelected(GetViewRowKey(LLast + 1)) do Inc(LLast);
-    if LLast - LFirst + 1 <> LSelectedCount then Exit;
+    while (LFirst > 0) and FSelection.IsRowSelected(GetViewRowKey(LFirst - 1)) do
+      Dec(LFirst);
+    while (LLast < LCount - 1) and FSelection.IsRowSelected(GetViewRowKey(LLast + 1)) do
+      Inc(LLast);
+    if LLast - LFirst + 1 <> LSelectedCount then
+      Exit;
   end;
-  if LLast - LFirst >= MaxInt then Exit;
+  if LLast - LFirst >= MaxInt then
+    Exit;
   SetLength(FMovingRowKeys, LLast - LFirst + 1);
   for I := 0 to High(FMovingRowKeys) do
   begin
@@ -2974,6 +3355,7 @@ begin
       Exit;
     end;
   end;
+  FHeaderInteraction := True;
   FMovingFirstRowIndex := LFirst;
   FSelectionDragOrigin := PointF(X, Y);
   Capture;
@@ -2982,32 +3364,226 @@ end;
 
 procedure Th5uFmxGrid.UpdateHeaderMove(X, Y: Single);
 begin
-  if (Length(FMovingColumns) = 0) and (Length(FMovingRowKeys) = 0) then Exit;
+  if (Length(FMovingColumns) = 0) and (Length(FMovingRowKeys) = 0) then
+    Exit;
   if not ((Root <> nil) and (Root.Captured <> nil) and (Root.Captured.GetObject = Self)) then
   begin
     EndSelectionDrag;
     Exit;
   end;
-  if FMoveDragging or ((Abs(X - FSelectionDragOrigin.X) < 4)
-    and (Abs(Y - FSelectionDragOrigin.Y) < 4)) then Exit;
-  FMoveCursor := Cursor;
-  FMoveDragging := True;
-  Cursor := crDrag;
+  if Assigned(FMovingHeaderCell) and (not FHeaderLayout.Enabled or not FHeaderLayout.ContainsCell(FMovingHeaderCell)) then
+  begin
+    EndSelectionDrag;
+    Exit;
+  end;
+  if not FMoveDragging then
+  begin
+    if (Abs(X - FSelectionDragOrigin.X) < 4) and (Abs(Y - FSelectionDragOrigin.Y) < 4) then
+      Exit;
+    FMoveCursor := Cursor;
+    FMoveDragging := True;
+    Cursor := crDrag;
+  end;
+  FMovePoint := PointF(X, Y);
+  Repaint;
+end;
+
+function Th5uFmxGrid.GetColumnMoveHeaderBounds(const AInfo: Th5uFmxVisibleColumnInfo): TRectF;
+var
+  LCell: Th5uHeaderLayoutCell;
+  LFirst, LLast, I: Integer;
+begin
+  Result := AInfo.Bounds;
+  Result.Top := GetViewportRect.Top;
+  Result.Bottom := Result.Top + FHeaderRowHeight;
+  if Assigned(FMovingHeaderCell) then
+  begin
+    if not FHeaderLayout.ContainsCell(FMovingHeaderCell) then
+      Exit(TRectF.Empty);
+    if FMovingHeaderCell.ColumnSpan > 1 then
+    begin
+      Result := GetHeaderCellBounds(FMovingHeaderCell);
+      Result := TRectF.Intersect(Result, GetHeaderCellViewport(FMovingHeaderCell));
+      Exit;
+    end;
+    Result := TRectF.Empty;
+    for I := 0 to FHeaderLayout.Cells.Count - 1 do
+    begin
+      LCell := FHeaderLayout.Cells[I];
+      if (LCell.LayoutRow <> FMovingHeaderCell.LayoutRow) or not FHeaderLayout.ColumnRange(LCell, FColumns.VisibleColumns, LFirst, LLast) then
+        Continue;
+      if (AInfo.VisibleIndex >= LFirst) and (AInfo.VisibleIndex <= LLast) then Result := GetHeaderCellBounds(LCell);
+    end;
+  end;
+  Result := TRectF.Intersect(Result, GetColumnViewportRect(AInfo.Column));
+  Result.Bottom := Min(Result.Bottom, GetDataViewportRect.Top);
+end;
+
+function Th5uFmxGrid.ColumnMoveTarget(X, Y: Single; out ANewIndex: Integer; out AMarkerX, AMarkerTop: Single): Boolean;
+var
+  LHit: Th5uFmxHitTestInfo;
+  LColumns: TArray<Th5uGridColumn>;
+  LFirst, LTargetFirst, LTargetLast, I: Integer;
+begin
+  Result := False;
+  ANewIndex := -1;
+  AMarkerX := 0;
+  AMarkerTop := 0;
+  if not CanUpdateLayout or (Length(FMovingColumns) = 0) then
+    Exit;
+  if Assigned(FMovingHeaderCell) and (not FHeaderLayout.Enabled or not FHeaderLayout.ContainsCell(FMovingHeaderCell)) then
+    Exit;
+  LHit := GridHitTest(X, Y);
+  if (LHit.Kind <> Th5uFmxHitKind.Header) or not Assigned(LHit.Column) then
+    Exit;
+  LColumns := FColumns.VisibleColumns;
+  LFirst := -1;
+  for I := 0 to High(LColumns) do
+    if LColumns[I] = FMovingColumns[0] then
+      LFirst := I;
+  if (LFirst < 0) or (LFirst + Length(FMovingColumns) > Length(LColumns)) then
+    Exit;
+  for I := 0 to High(FMovingColumns) do
+  begin
+    if LColumns[LFirst + I] <> FMovingColumns[I] then
+      Exit;
+    if not CanMoveColumn(FMovingColumns[I]) then
+      Exit;
+    if FMovingColumns[I].FixedKind <> LHit.Column.FixedKind then
+       Exit;
+  end;
+  if Assigned(FMovingHeaderCell) then
+    for I := 0 to FColumns.Count - 1 do
+      if FHeaderLayout.MovesWithColumns(FColumns[I], LColumns, LFirst, Length(FMovingColumns)) and (not CanMoveColumn(FColumns[I])
+        or (FColumns[I].FixedKind <> LColumns[LFirst].FixedKind))
+      then
+        Exit;
+  LTargetFirst := LHit.ColumnIndex;
+  LTargetLast := LTargetFirst;
+  if Assigned(FMovingHeaderCell) then
+  begin
+    if not Assigned(LHit.HeaderCell) then
+      Exit;
+    if FMovingHeaderCell.ColumnSpan > 1 then
+    begin
+      if LHit.HeaderCell.LayoutRow <> FMovingHeaderCell.LayoutRow then
+        Exit;
+    end
+    else if (LHit.HeaderCell.ColumnSpan > 1)
+      or (LHit.HeaderCell.LayoutRow >= FMovingHeaderCell.LayoutRow + Max(1, FMovingHeaderCell.RowSpan))
+      or (FMovingHeaderCell.LayoutRow >= LHit.HeaderCell.LayoutRow + Max(1, LHit.HeaderCell.RowSpan))
+    then
+      Exit;
+    if not FHeaderLayout.ColumnRange(LHit.HeaderCell, LColumns, LTargetFirst, LTargetLast) then
+      Exit;
+  end;
+  if (LTargetFirst < LFirst + Length(FMovingColumns)) and (LTargetLast >= LFirst) then
+    Exit;
+  ANewIndex := LTargetFirst;
+  AMarkerX := LHit.Bounds.Left;
+  AMarkerTop := LHit.Bounds.Top;
+  if LTargetFirst > LFirst then
+  begin
+    ANewIndex := LTargetLast + 1 - Length(FMovingColumns);
+    AMarkerX := LHit.Bounds.Right;
+  end;
+  if FHeaderLayout.Enabled and not FHeaderLayout.CanMoveColumns(LColumns, LFirst, Length(FMovingColumns), ANewIndex) then
+    Exit;
+  Result := True;
+end;
+
+procedure Th5uFmxGrid.DrawColumnMoveFeedback;
+var
+  LPalette: Th5uFmxPalette;
+  LState: TCanvasSaveState;
+  LView, LRect, LTextRect: TRectF;
+  LInfo: Th5uFmxVisibleColumnInfo;
+  LColumn: Th5uGridColumn;
+  LMarkerX, LMarkerTop, LWidth, LHeight, LLeft, LTop, LOffset: Single;
+  LNewIndex: Integer;
+  LValid, LSourcePainted: Boolean;
+begin
+  if not FMoveDragging or (Length(FMovingColumns) = 0) or not FShowHeader then
+    Exit;
+  if (Root = nil) or (Root.Captured = nil) or (Root.Captured.GetObject <> Self) then
+    Exit;
+  if Assigned(FMovingHeaderCell) and not FHeaderLayout.ContainsCell(FMovingHeaderCell) then
+    Exit;
+  LView := GetViewportRect;
+  if LView.IsEmpty then Exit;
+  LPalette := h5uGetFmxPalette(FTheme);
+  LValid := ColumnMoveTarget(FMovePoint.X, FMovePoint.Y, LNewIndex, LMarkerX, LMarkerTop);
+  LState := Canvas.SaveState;
+  try
+    Canvas.IntersectClipRect(LView);
+    Canvas.Fill.Kind := TBrushKind.Solid;
+    Canvas.Stroke.Kind := TBrushKind.Solid;
+    Canvas.Stroke.Dash := TStrokeDash.Solid;
+    Canvas.Stroke.Thickness := 2;
+    // Highlight the source without changing its selection or collection order.
+    LSourcePainted := False;
+    for LInfo in FVisibleColumns do
+      for LColumn in FMovingColumns do
+        if LInfo.Column = LColumn then
+        begin
+          if LSourcePainted and Assigned(FMovingHeaderCell) and (FMovingHeaderCell.ColumnSpan > 1) then Continue;
+          LSourcePainted := True;
+          LRect := GetColumnMoveHeaderBounds(LInfo);
+          if LRect.IsEmpty then Continue;
+          Canvas.Fill.Color := LPalette.SelectedBackground;
+          Canvas.FillRect(LRect, 0, 0, AllCorners, 0.3);
+          Canvas.Stroke.Color := LPalette.SelectedBackground;
+          LRect.Inflate(-1, -1);
+          if not LRect.IsEmpty then Canvas.DrawRect(LRect, 0, 0, AllCorners, 1);
+        end;
+    if LValid then
+    begin
+      LMarkerX := EnsureRange(LMarkerX, LView.Left + 2, Max(LView.Left + 2, LView.Right - 2));
+      Canvas.Fill.Color := LPalette.SelectedBackground;
+      Canvas.FillRect(RectF(LMarkerX - 2, LMarkerTop, LMarkerX + 2, LView.Bottom), 0, 0, AllCorners, 1);
+      Canvas.FillRect(RectF(LMarkerX - 6, LMarkerTop, LMarkerX + 6, LMarkerTop + 7), 2, 2, AllCorners, 1);
+    end;
+    LWidth := Min(FMovePreviewWidth, Max(1, LView.Width - 8));
+    LHeight := Max(30, FHeaderRowHeight);
+    LOffset := 16;
+    if FHeaderTouch then LOffset := 40;
+    LLeft := EnsureRange(FMovePoint.X - LWidth / 2, LView.Left + 4, Max(LView.Left + 4, LView.Right - LWidth - 4));
+    LTop := EnsureRange(FMovePoint.Y + LOffset, LView.Top + 4, Max(LView.Top + 4, LView.Bottom - LHeight - 4));
+    LRect := RectF(LLeft, LTop, LLeft + LWidth, LTop + LHeight);
+    Canvas.Fill.Color := TAlphaColorRec.Black;
+    Canvas.FillRect(RectF(LRect.Left + 3, LRect.Top + 3, LRect.Right + 3, LRect.Bottom + 3), 4, 4, AllCorners, 0.25);
+    if LValid then Canvas.Fill.Color := LPalette.SelectedBackground
+    else Canvas.Fill.Color := LPalette.ErrorBackground;
+    Canvas.FillRect(LRect, 4, 4, AllCorners, 0.95);
+    Canvas.Stroke.Color := LPalette.SelectedBackground;
+    Canvas.DrawRect(LRect, 4, 4, AllCorners, 1);
+    if LValid then Canvas.Fill.Color := LPalette.SelectedText
+    else Canvas.Fill.Color := LPalette.CellText;
+    Canvas.Font.Size := FTextSize;
+    Canvas.Font.Style := [TFontStyle.fsBold];
+    LTextRect := LRect;
+    LTextRect.Inflate(-8, -3);
+    Canvas.FillText(LTextRect, FMoveCaption, False, 1, [], TTextAlign.Center, TTextAlign.Center);
+  finally
+    Canvas.RestoreState(LState);
+  end;
 end;
 
 function Th5uFmxGrid.FinishHeaderMove(X, Y: Single): Boolean;
 var
   LHit: Th5uFmxHitTestInfo;
-  LColumns, LMovingColumns: TArray<Th5uGridColumn>;
+  LMovingColumns: TArray<Th5uGridColumn>;
   LContext: Th5uRowsMovedContext;
-  LFirst, LNewIndex, I: Integer;
-  LDragging: Boolean;
+  LNewIndex, I: Integer;
+  LMarkerX, LMarkerTop: Single;
+  LDragging, LColumnTargetValid: Boolean;
 begin
   Result := (Length(FMovingColumns) > 0) or (Length(FMovingRowKeys) > 0);
   if not Result then Exit;
   try
     UpdateHeaderMove(X, Y);
     LDragging := FMoveDragging;
+    LColumnTargetValid := ColumnMoveTarget(X, Y, LNewIndex, LMarkerX, LMarkerTop);
     LMovingColumns := FMovingColumns;
     LContext.RowKeys := FMovingRowKeys;
     LContext.FirstRowIndex := FMovingFirstRowIndex;
@@ -3015,51 +3591,39 @@ begin
     // Release capture/restore the cursor before layout notifications or user code.
     EndSelectionDrag;
   end;
-  if not CanUpdateLayout then Exit;
+  if not CanUpdateLayout then
+     Exit;
   LHit := GridHitTest(X, Y);
   if not LDragging then
   begin
-    if (Length(LMovingColumns) > 0) and (LHit.Kind = Th5uFmxHitKind.Header)
-      and (LHit.Column = FClickDownHit.Column) then
+    if (Length(LMovingColumns) > 0) and (LHit.Kind = Th5uFmxHitKind.Header) and (LHit.Column = FClickDownHit.Column) then
       SelectHeaderRange(Th5uSelectionKind.Columns, -1, LHit.ColumnIndex, [])
-    else if (Length(LContext.RowKeys) > 0) and (LHit.Kind = Th5uFmxHitKind.RowIndicator)
-      and (LHit.RowKey = FClickDownHit.RowKey) then
+    else if (Length(LContext.RowKeys) > 0) and (LHit.Kind = Th5uFmxHitKind.RowIndicator) and (LHit.RowKey = FClickDownHit.RowKey) then
       SelectHeaderRange(Th5uSelectionKind.Rows, LHit.RowIndex, -1, []);
     Result := False; // A click still dispatches the ordinary header click event.
     Exit;
   end;
   if Length(LMovingColumns) > 0 then
   begin
-    if (LHit.Kind <> Th5uFmxHitKind.Header) or not Assigned(LHit.Column) then Exit;
-    LColumns := FColumns.VisibleColumns;
-    LFirst := -1;
-    for I := 0 to High(LColumns) do
-      if LColumns[I] = LMovingColumns[0] then LFirst := I;
-    if (LFirst < 0) or (LFirst + Length(LMovingColumns) > Length(LColumns)) then Exit;
-    for I := 0 to High(LMovingColumns) do
-    begin
-      if LColumns[LFirst + I] <> LMovingColumns[I] then Exit;
-      if not CanMoveColumn(LMovingColumns[I]) then Exit;
-    end;
-    if (LHit.ColumnIndex >= LFirst) and (LHit.ColumnIndex < LFirst + Length(LMovingColumns)) then Exit;
-    LNewIndex := LHit.ColumnIndex;
-    if LNewIndex > LFirst then Dec(LNewIndex, Length(LMovingColumns) - 1);
-    FColumns.MoveColumns(LMovingColumns, LNewIndex);
+    if not LColumnTargetValid then
+      Exit;
+    FColumns.MoveColumns(LMovingColumns, LNewIndex, FHeaderLayout);
     Repaint;
   end
   else if Length(LContext.RowKeys) > 0 then
   begin
-    if not Assigned(FOnRowsMoved) or not FCustomization.AllowRowMoving
-      or not (LHit.Kind in [Th5uFmxHitKind.RowIndicator, Th5uFmxHitKind.DataCell]) then Exit;
-    if (LContext.FirstRowIndex < 0)
-      or (LContext.FirstRowIndex + Length(LContext.RowKeys) > GetViewRowCount) then Exit;
-    if (LHit.RowIndex >= LContext.FirstRowIndex)
-      and (LHit.RowIndex < LContext.FirstRowIndex + Length(LContext.RowKeys)) then Exit;
+    if not Assigned(FOnRowsMoved) or not FCustomization.AllowRowMoving or not (LHit.Kind in [Th5uFmxHitKind.RowIndicator, Th5uFmxHitKind.DataCell]) then
+    Exit;
+    if (LContext.FirstRowIndex < 0) or (LContext.FirstRowIndex + Length(LContext.RowKeys) > GetViewRowCount) then
+      Exit;
+    if (LHit.RowIndex >= LContext.FirstRowIndex) and (LHit.RowIndex < LContext.FirstRowIndex + Length(LContext.RowKeys)) then
+      Exit;
     SetLength(LContext.SourceRowIndexes, Length(LContext.RowKeys));
     for I := 0 to High(LContext.RowKeys) do
     begin
       // A live sort/filter or removed row invalidates the original drag range.
-      if GetViewRowKey(LContext.FirstRowIndex + I) <> LContext.RowKeys[I] then Exit;
+      if GetViewRowKey(LContext.FirstRowIndex + I) <> LContext.RowKeys[I] then
+        Exit;
       LContext.SourceRowIndexes[I] := GetViewSourceRowIndex(LContext.FirstRowIndex + I);
     end;
     LContext.TargetRowIndex := LHit.RowIndex;
@@ -3067,11 +3631,11 @@ begin
     LContext.TargetSourceRowIndex := GetViewSourceRowIndex(LHit.RowIndex);
     LContext.InsertAfter := LHit.RowIndex > LContext.FirstRowIndex;
     LContext.NewFirstRowIndex := LHit.RowIndex;
-    if LContext.InsertAfter then Dec(LContext.NewFirstRowIndex, Length(LContext.RowKeys) - 1);
+    if LContext.InsertAfter then
+      Dec(LContext.NewFirstRowIndex, Length(LContext.RowKeys) - 1);
     FOnRowsMoved(Self, LContext);
   end;
 end;
-
 
 procedure Th5uFmxGrid.BeginSelectionDrag(AKind: Th5uSelectionKind; X, Y: Single; AShift: TShiftState);
 begin
@@ -3088,18 +3652,24 @@ procedure Th5uFmxGrid.EndSelectionDrag;
 var
   LCaptured: Boolean;
 begin
-  LCaptured := FSelectingRange or (Length(FMovingColumns) > 0) or (Length(FMovingRowKeys) > 0);
+  LCaptured := FSelectingRange or Assigned(FResizingColumn) or (Length(FMovingColumns) > 0) or (Length(FMovingRowKeys) > 0);
+  FResizingColumn := nil;
+  SetResizeCursor(False);
   FMovingColumns := nil;
   FMovingRowKeys := nil;
   if FMoveDragging then
   begin
     FMoveDragging := False;
     Cursor := FMoveCursor;
+    Repaint;
   end;
+  FMoveCaption := '';
+  FMovingHeaderCell := nil;
   FSelectingRange := False;
   FSelectionDragging := False;
   FMouseEditPending := False;
-  if LCaptured then ReleaseCapture;
+  if LCaptured then
+    ReleaseCapture;
 end;
 
 procedure Th5uFmxGrid.UpdateSelectionDrag(X, Y: Single);
@@ -3108,7 +3678,8 @@ var
   LCell: Th5uCellAddress;
   LRange: Th5uCellRange;
 begin
-  if not FSelectingRange or not CanUpdateLayout then Exit;
+  if not FSelectingRange or not CanUpdateLayout then
+    Exit;
   if not FSelectionDragging then
   begin
     if (Abs(X - FSelectionDragOrigin.X) < 4) and (Abs(Y - FSelectionDragOrigin.Y) < 4) then Exit;
@@ -3139,13 +3710,12 @@ begin
         LCell.ColumnId := LHit.Column.Id;
       end;
   end;
-  if (LCell.RowIndex = FSelectionDragLast.RowIndex) and (LCell.RowKey = FSelectionDragLast.RowKey)
-    and (LCell.ColumnIndex = FSelectionDragLast.ColumnIndex) and (LCell.ColumnId = FSelectionDragLast.ColumnId) then Exit;
+  if (LCell.RowIndex = FSelectionDragLast.RowIndex) and (LCell.RowKey = FSelectionDragLast.RowKey) and (LCell.ColumnIndex
+    = FSelectionDragLast.ColumnIndex) and (LCell.ColumnId = FSelectionDragLast.ColumnId) then Exit;
   if FSelectionDragKind = Th5uSelectionKind.CellRanges then
   begin
     if not TryFocusCell(LCell, False) then Exit;
-    LRange := Th5uCellRange.Create(FSelection.AnchorCell.RowIndex, LCell.RowIndex,
-      FSelection.AnchorCell.ColumnIndex, LCell.ColumnIndex);
+    LRange := Th5uCellRange.Create(FSelection.AnchorCell.RowIndex, LCell.RowIndex, FSelection.AnchorCell.ColumnIndex, LCell.ColumnIndex);
     FSelection.AddCellRange(LRange, ssCtrl in FSelectionDragShift, True);
   end
   else
@@ -3163,17 +3733,22 @@ var
   I, LAnchorColumn: Integer;
   LExtend: Boolean;
 begin
-  if not CanUpdateLayout or not (AKind in FSelection.AllowedKinds) then Exit;
+  if not CanUpdateLayout or not (AKind in FSelection.AllowedKinds) then
+    Exit;
   LColumns := FColumns.VisibleColumns;
   if AKind = Th5uSelectionKind.Rows then
   begin
-    if (ARow < 0) or (ARow >= GetViewRowCount) then Exit;
+    if (ARow < 0) or (ARow >= GetViewRowCount) then
+      Exit;
   end
-  else if (AColumn < 0) or (AColumn >= Length(LColumns)) then Exit
-  else if not LColumns[AColumn].CanSelect then Exit;
+  else if (AColumn < 0) or (AColumn >= Length(LColumns)) then
+    Exit
+  else if not LColumns[AColumn].CanSelect then
+    Exit;
 
   LExtend := (ssShift in AShift) and FHeaderSelectionActive and (FHeaderSelectionKind = AKind);
-  if not LExtend then FHeaderAnchor := Th5uCellAddress.Empty;
+  if not LExtend then
+    FHeaderAnchor := Th5uCellAddress.Empty;
   FHeaderSelectionActive := True;
   FHeaderSelectionKind := AKind;
   FHeaderFocus := Th5uCellAddress.Empty;
@@ -3193,7 +3768,8 @@ begin
       LFirstRow := Min(FHeaderAnchor.RowIndex, ARow);
       LLastRow := Max(FHeaderAnchor.RowIndex, ARow);
       SetLength(LKeys, LLastRow - LFirstRow + 1);
-      for LRow := LFirstRow to LLastRow do LKeys[LRow - LFirstRow] := GetViewRowKey(LRow);
+      for LRow := LFirstRow to LLastRow do
+        LKeys[LRow - LFirstRow] := GetViewRowKey(LRow);
       FSelection.SelectRows(LKeys, ssCtrl in AShift, LExtend);
     end;
   end
@@ -3203,7 +3779,8 @@ begin
     FHeaderFocus.ColumnId := LColumns[AColumn].Id;
     LAnchorColumn := -1;
     for I := 0 to High(LColumns) do
-      if LColumns[I].Id = FHeaderAnchor.ColumnId then LAnchorColumn := I;
+      if LColumns[I].Id = FHeaderAnchor.ColumnId then
+        LAnchorColumn := I;
     if LAnchorColumn < 0 then
     begin
       FHeaderAnchor := FHeaderFocus;
@@ -3216,7 +3793,8 @@ begin
       LIds := TList<string>.Create;
       try
         for I := Min(LAnchorColumn, AColumn) to Max(LAnchorColumn, AColumn) do
-          if LColumns[I].CanSelect then LIds.Add(LColumns[I].Id);
+          if LColumns[I].CanSelect then
+            LIds.Add(LColumns[I].Id);
         FSelection.SelectColumns(LIds.ToArray, ssCtrl in AShift, LExtend);
       finally
         LIds.Free;
@@ -3237,17 +3815,30 @@ var
   LHit: Th5uFmxHitTestInfo;
   LCell: Th5uCellAddress;
   LRange: Th5uCellRange;
+  LTouch: Boolean;
 begin
   EndSelectionDrag;
-  if not FDispatchingTouch and (Button = TMouseButton.mbLeft)
-    and ((ssTouch in Shift) {$IFDEF ANDROID}or True{$ENDIF}) then
+  LTouch := not FDispatchingTouch and (Button = TMouseButton.mbLeft) and ((ssTouch in Shift) {$IF Defined(ANDROID) or Defined(IOS)}or True{$ENDIF});
+  if not FDispatchingTouch then
   begin
-    if not CanUpdateLayout then Exit;
+    FHeaderInteraction := False;
+    FHeaderTouch := LTouch;
+  end;
+  if LTouch then
+  begin
+    if not CanUpdateLayout then
+      Exit;
+    Include(Shift, ssTouch);
     FGesturePanning := False;
     FTouchShift := Shift;
-    BeginTouchScroll(PointF(X, Y));
-    Capture;
-    Exit;
+    LHit := GridHitTest(X, Y);
+    FHeaderInteraction := Assigned(ColumnResizeAt(X, Y, True)) or ((LHit.Kind = Th5uFmxHitKind.Header) and IsColumnMoveGesture(LHit.Column, Shift));
+    if not FHeaderInteraction then
+    begin
+      BeginTouchScroll(PointF(X, Y));
+      Capture;
+      Exit;
+    end;
   end;
   if not FDispatchingTouch then
   begin
@@ -3262,10 +3853,16 @@ begin
   // Inherited MouseDown dispatches DblClick. Do not take focus back afterwards.
   if ssDouble in Shift then
     Exit;
-  if Button <> TMouseButton.mbLeft then
+  if Button = TMouseButton.mbRight then
+  begin
+    if FSelection.RightClickSelect then SetFocus;
+    SelectRightClickCell(FClickDownHit);
     Exit;
+  end;
+  if Button <> TMouseButton.mbLeft then Exit;
 
   SetFocus;
+  if BeginColumnResize(X, Y, LTouch) then Exit;
   LHit := GridHitTest(X, Y);
   case LHit.Kind of
     Th5uFmxHitKind.AdjacentGroupGlyph:
@@ -3322,9 +3919,21 @@ var
   LHit: Th5uFmxHitTestInfo;
   LDragged, LEdit: Boolean;
 begin
+  if (Button = TMouseButton.mbLeft) and Assigned(FResizingColumn) then
+  begin
+    try
+      UpdateColumnResize(X);
+    finally
+      EndSelectionDrag;
+    end;
+    FClickDownHit := Th5uFmxHitTestInfo.Empty;
+    inherited;
+    Exit;
+  end;
   if (Button = TMouseButton.mbLeft) and (FTouchTracking or FTouchScrolling) then
   begin
-    if FTouchTracking and not FGesturePanning then MoveTouchScroll(PointF(X, Y));
+    if FTouchTracking and not FGesturePanning then
+      MoveTouchScroll(PointF(X, Y));
     FTouchTracking := False;
     if FTouchScrolling then
     begin
@@ -3366,14 +3975,13 @@ begin
 
   if Button <> TMouseButton.mbLeft then Exit;
   LHit := GridHitTest(X, Y);
-  if (LHit.Kind = FClickDownHit.Kind) and (LHit.Column = FClickDownHit.Column)
-    and (LHit.RowIndex = FClickDownHit.RowIndex)
-    and (LHit.Kind in [Th5uFmxHitKind.DataCell, Th5uFmxHitKind.Header, Th5uFmxHitKind.RowIndicator]) then
+  if (LHit.Kind = FClickDownHit.Kind) and (LHit.Column = FClickDownHit.Column) and (LHit.RowIndex = FClickDownHit.RowIndex) and (LHit.Kind
+    in [Th5uFmxHitKind.DataCell, Th5uFmxHitKind.Header, Th5uFmxHitKind.RowIndicator]) then
     begin
       if LEdit and (LHit.Kind = Th5uFmxHitKind.DataCell) then
       begin
-        if (LHit.Column.EditorKind = Th5uColumnEditorKind.Boolean)
-          or ((LHit.Column.EditorKind = Th5uColumnEditorKind.Automatic) and (LHit.Column.DataType = Th5uColumnDataType.Boolean)) then
+        if (LHit.Column.EditorKind = Th5uColumnEditorKind.Boolean) or ((LHit.Column.EditorKind = Th5uColumnEditorKind.Automatic)
+          and (LHit.Column.DataType = Th5uColumnDataType.Boolean)) then
         begin
           if GetCheckBoxRect(FClickDownHit.Bounds).Contains(FSelectionDragOrigin)
             and GetCheckBoxRect(FClickDownHit.Bounds).Contains(PointF(X, Y)) then StartEdit(LHit);
@@ -3387,14 +3995,24 @@ end;
 procedure Th5uFmxGrid.MouseMove(Shift: TShiftState; X, Y: Single);
 begin
   inherited;
+  FLastMousePoint := PointF(X, Y);
+  if Assigned(FResizingColumn) then
+  begin
+    if ssLeft in Shift then UpdateColumnResize(X)
+    else EndSelectionDrag;
+    Exit;
+  end;
   if FTouchTracking and not FGesturePanning then MoveTouchScroll(PointF(X, Y))
-  else if not (ssLeft in Shift) then EndSelectionDrag
+  else if not (ssLeft in Shift) then
+  begin
+    EndSelectionDrag;
+    if not (ssTouch in Shift) then SetResizeCursor(Assigned(ColumnResizeAt(X, Y, False)));
+  end
   else
   begin
     UpdateHeaderMove(X, Y);
     UpdateSelectionDrag(X, Y);
   end;
-  FLastMousePoint := PointF(X, Y);
 end;
 
 procedure Th5uFmxGrid.MouseWheel(Shift: TShiftState; WheelDelta: Integer; var Handled: Boolean);
@@ -3606,6 +4224,7 @@ begin
 
   DrawHeaders;
   DrawRows;
+  DrawColumnMoveFeedback;
   if Assigned(FOnAfterDraw) then
     FOnAfterDraw(Self, Canvas);
 end;
@@ -3756,8 +4375,7 @@ begin
   LOld := FLastNotifiedCell;
   LNew := FSelection.FocusedCell;
   FLastNotifiedCell := LNew;
-  if (LOld.RowIndex <> LNew.RowIndex) or (LOld.ColumnId <> LNew.ColumnId)
-    or (LOld.RowKey <> LNew.RowKey) then
+  if (LOld.RowIndex <> LNew.RowIndex) or (LOld.ColumnId <> LNew.ColumnId) or (LOld.RowKey <> LNew.RowKey) then
   begin
     if LOld.IsValid then
     begin
@@ -3997,16 +4615,14 @@ begin
   if not CanUpdateLayout or not Assigned(FDataController) then
     Exit;
   LColumns := FColumns.VisibleColumns;
-  if not LCell.IsValid or (LCell.RowIndex >= GetViewRowCount)
-    or (LCell.ColumnIndex >= Length(LColumns)) then
+  if not LCell.IsValid or (LCell.RowIndex >= GetViewRowCount) or (LCell.ColumnIndex >= Length(LColumns)) then
     Exit;
   LView := GetDataViewportRect;
   LTop := 0;
   for LRow := 0 to LCell.RowIndex - 1 do
   begin
     LKey := GetViewRowKey(LRow);
-    LTop := LTop + GetRowHeightFor(LRow, LKey)
-      + GetEffectiveRowSeparatorFor(LRow, LKey, LElement, LColor, LStyle, LLevel, LClosed);
+    LTop := LTop + GetRowHeightFor(LRow, LKey) + GetEffectiveRowSeparatorFor(LRow, LKey, LElement, LColor, LStyle, LLevel, LClosed);
   end;
   PrepareViewRange(LCell.RowIndex, 1);
   LKey := GetViewRowKey(LCell.RowIndex);
@@ -4065,8 +4681,7 @@ begin
   LCell.RowKey := GetViewRowKey(LCell.RowIndex);
   LCell.ColumnId := LColumns[LCell.ColumnIndex].Id;
   if AExtend and FSelection.AnchorCell.IsValid then
-    LRange := Th5uCellRange.Create(FSelection.AnchorCell.RowIndex, LCell.RowIndex,
-      FSelection.AnchorCell.ColumnIndex, LCell.ColumnIndex)
+    LRange := Th5uCellRange.Create(FSelection.AnchorCell.RowIndex, LCell.RowIndex, FSelection.AnchorCell.ColumnIndex, LCell.ColumnIndex)
   else
     LRange := Th5uCellRange.Create(LCell.RowIndex, LCell.RowIndex, LCell.ColumnIndex, LCell.ColumnIndex);
   if not TryFocusCell(LCell, not AExtend) then Exit;
@@ -4083,9 +4698,9 @@ begin
   if not FocusedCellHit(LHit) then
     Exit;
   // Focus alone must neither toggle Boolean values nor open an image dialog.
-  if AAutomatic and not ((LHit.Column.EditorKind in [Th5uColumnEditorKind.Text, Th5uColumnEditorKind.Date, Th5uColumnEditorKind.Time, Th5uColumnEditorKind.DateTime])
-    or ((LHit.Column.EditorKind = Th5uColumnEditorKind.Automatic)
-    and not (LHit.Column.DataType in [Th5uColumnDataType.Boolean, Th5uColumnDataType.Image]))) then
+  if AAutomatic and not ((LHit.Column.EditorKind
+    in [Th5uColumnEditorKind.Text, Th5uColumnEditorKind.Date, Th5uColumnEditorKind.Time, Th5uColumnEditorKind.DateTime]) or ((LHit.Column.EditorKind
+    = Th5uColumnEditorKind.Automatic) and not (LHit.Column.DataType in [Th5uColumnDataType.Boolean, Th5uColumnDataType.Image]))) then
     Exit;
   StartEdit(LHit);
 end;
@@ -4149,8 +4764,7 @@ begin
     vkDown: Inc(LRow);
     vkHome: begin LColumn := 0; if ssCtrl in AShift then LRow := 0; end;
     vkEnd: begin LColumn := High(LColumns); if ssCtrl in AShift then LRow := LCount - 1; end;
-    vkPrior, vkNext:
-      begin
+    vkPrior, vkNext: begin
         LDistance := 0;
         repeat
           LDistance := LDistance + GetRowHeightFor(LRow, GetViewRowKey(LRow)) + FSpacing.RowSpacing;
@@ -4370,8 +4984,7 @@ begin
     end;
     CommitEditor;
   end;
-  if not Assigned(FDataController) or not Assigned(AHit.Column)
-    or not AllowCellEdit(AHit.Column, AHit.RowIndex) then
+  if not Assigned(FDataController) or not Assigned(AHit.Column) or not AllowCellEdit(AHit.Column, AHit.RowIndex) then
     Exit;
 
   LCell.RowIndex := AHit.RowIndex;

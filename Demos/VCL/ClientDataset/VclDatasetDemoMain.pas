@@ -154,6 +154,7 @@ begin
     DataController.Pagination.Mode := Th5uPaginationMode.Continuous;
     DataController.Pagination.PageIndex := 0;
   end;
+  NextPageButton.Enabled := PagedCheck.Checked;
 
   if CacheCheck.Checked then
     DataController.Cache.Mode := Th5uCacheMode.Paged
@@ -171,10 +172,7 @@ begin
 
   LDescriptionColumn := Grid.Columns.FindById('description');
   if Assigned(LDescriptionColumn) then
-    if SeparatorsCheck.Checked then
-      LDescriptionColumn.RightSpacing := 8
-    else
-      LDescriptionColumn.RightSpacing := 0;
+    LDescriptionColumn.RightSpacing := 8;
 
   LNameColumn := Grid.Columns.FindById('name');
   LActiveColumn := Grid.Columns.FindById('active');
@@ -216,6 +214,7 @@ end;
 
 procedure TVclDatasetDemoForm.FormCreate(Sender: TObject);
 begin
+  Grid.Customization.ColumnMovingGesture := Th5uColumnMovingGesture.Drag;
   if AdjacentBandModeCombo.ItemIndex < 0 then
     AdjacentBandModeCombo.ItemIndex := 3;
   FAllAdjacentGroupsCollapsed := False;

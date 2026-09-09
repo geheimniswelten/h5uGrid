@@ -322,7 +322,8 @@ object VclDatasetDemoForm: TVclDatasetDemoForm
       item
         Id = 'master'
         Caption = 'Stammdaten'
-        ColumnSpan = 4
+        LayoutColumn = 1
+        ColumnSpan = 3
       end
       item
         Id = 'values'
@@ -340,7 +341,7 @@ object VclDatasetDemoForm: TVclDatasetDemoForm
         Id = ''
         Caption = 'ID'
         ColumnId = 'id'
-        LayoutRow = 1
+        RowSpan = 2
       end
       item
         Id = ''

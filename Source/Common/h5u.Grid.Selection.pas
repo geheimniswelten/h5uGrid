@@ -19,6 +19,7 @@ type
     FCombinationMode: Th5uSelectionCombinationMode;
     FScope: Th5uSelectionScope;
     FMultiRange: Boolean;
+    FRightClickSelect: Boolean;
     FKeepAcrossPages: Boolean;
     FSelectedRows: TDictionary<string, Byte>;
     FSelectedColumns: TDictionary<string, Byte>;
@@ -76,6 +77,7 @@ type
     property AllowedKinds: Th5uSelectionKinds read FAllowedKinds write SetAllowedKinds;
     property CombinationMode: Th5uSelectionCombinationMode read FCombinationMode write FCombinationMode default Th5uSelectionCombinationMode.Mixed;
     property Scope: Th5uSelectionScope read FScope write FScope default Th5uSelectionScope.CurrentQuery;
+    property RightClickSelect: Boolean read FRightClickSelect write FRightClickSelect default False;
     property MultiRange: Boolean read FMultiRange write FMultiRange default True;
     property KeepAcrossPages: Boolean read FKeepAcrossPages write FKeepAcrossPages default True;
   end;
@@ -94,7 +96,8 @@ begin
   if FAllRowsSelected then
   begin
     Result := ATotalRowCount - FExcludedRows.Count;
-    if Result < 0 then Result := 0;
+    if Result < 0 then
+      Result := 0;
   end
   else Result := FSelectedRows.Count;
 end;
@@ -111,13 +114,17 @@ var
 begin
   FAllRowsSelected := ASource.FAllRowsSelected;
   FSelectedRows.Clear;
-  for LPair in ASource.FSelectedRows do FSelectedRows.Add(LPair.Key, LPair.Value);
+  for LPair in ASource.FSelectedRows do
+    FSelectedRows.Add(LPair.Key, LPair.Value);
   FExcludedRows.Clear;
-  for LPair in ASource.FExcludedRows do FExcludedRows.Add(LPair.Key, LPair.Value);
+  for LPair in ASource.FExcludedRows do
+    FExcludedRows.Add(LPair.Key, LPair.Value);
   FSelectedColumns.Clear;
-  for LPair in ASource.FSelectedColumns do FSelectedColumns.Add(LPair.Key, LPair.Value);
+  for LPair in ASource.FSelectedColumns do
+    FSelectedColumns.Add(LPair.Key, LPair.Value);
   FCellRanges.Clear;
-  for LRange in ASource.FCellRanges do FCellRanges.Add(LRange);
+  for LRange in ASource.FCellRanges do
+    FCellRanges.Add(LRange);
 end;
 
 procedure Th5uGridSelection.PrepareSelection(AKind: Th5uSelectionKind; AAdd, AExtend: Boolean);
@@ -138,17 +145,16 @@ begin
   end
   else ResetExtension;
 
-  if not AAdd or ((FCombinationMode = Th5uSelectionCombinationMode.Exclusive)
-    and (AKind <> Th5uSelectionKind.Rows)) then
+  if not AAdd or ((FCombinationMode = Th5uSelectionCombinationMode.Exclusive) and (AKind <> Th5uSelectionKind.Rows)) then
   begin
     FSelectedRows.Clear;
     FExcludedRows.Clear;
     FAllRowsSelected := False;
   end;
-  if not AAdd or ((FCombinationMode = Th5uSelectionCombinationMode.Exclusive)
-    and (AKind <> Th5uSelectionKind.Columns)) then FSelectedColumns.Clear;
-  if not AAdd or ((FCombinationMode = Th5uSelectionCombinationMode.Exclusive)
-    and (AKind <> Th5uSelectionKind.CellRanges)) then FCellRanges.Clear;
+  if not AAdd or ((FCombinationMode = Th5uSelectionCombinationMode.Exclusive) and (AKind <> Th5uSelectionKind.Columns)) then
+    FSelectedColumns.Clear;
+  if not AAdd or ((FCombinationMode = Th5uSelectionCombinationMode.Exclusive) and (AKind <> Th5uSelectionKind.CellRanges)) then
+    FCellRanges.Clear;
 end;
 
 
@@ -156,9 +162,11 @@ procedure Th5uGridSelection.AddCellRange(const ARange: Th5uCellRange; AAdd, AExt
 var
   LRange: Th5uCellRange;
 begin
-  if not (Th5uSelectionKind.CellRanges in FAllowedKinds) then Exit;
+  if not (Th5uSelectionKind.CellRanges in FAllowedKinds) then
+    Exit;
   PrepareSelection(Th5uSelectionKind.CellRanges, AAdd, AExtend);
-  if not FMultiRange then FCellRanges.Clear;
+  if not FMultiRange then
+    FCellRanges.Clear;
   LRange := ARange;
   LRange.Normalize;
   FCellRanges.Add(LRange);
@@ -305,9 +313,11 @@ procedure Th5uGridSelection.SelectColumns(const AColumnIds: array of string; AAd
 var
   LId: string;
 begin
-  if not (Th5uSelectionKind.Columns in FAllowedKinds) then Exit;
+  if not (Th5uSelectionKind.Columns in FAllowedKinds) then
+    Exit;
   PrepareSelection(Th5uSelectionKind.Columns, AAdd, AExtend);
-  for LId in AColumnIds do FSelectedColumns.AddOrSetValue(LId, 0);
+  for LId in AColumnIds do
+    FSelectedColumns.AddOrSetValue(LId, 0);
   Changed;
 end;
 
@@ -320,11 +330,14 @@ procedure Th5uGridSelection.SelectRows(const ARowKeys: array of Th5uRowKey; AAdd
 var
   LKey: Th5uRowKey;
 begin
-  if not (Th5uSelectionKind.Rows in FAllowedKinds) then Exit;
+  if not (Th5uSelectionKind.Rows in FAllowedKinds) then
+    Exit;
   PrepareSelection(Th5uSelectionKind.Rows, AAdd, AExtend);
   for LKey in ARowKeys do
-    if FAllRowsSelected then FExcludedRows.Remove(LKey.ToString)
-    else FSelectedRows.AddOrSetValue(LKey.ToString, 0);
+    if FAllRowsSelected then
+      FExcludedRows.Remove(LKey.ToString)
+    else
+      FSelectedRows.AddOrSetValue(LKey.ToString, 0);
   Changed;
 end;
 
@@ -358,16 +371,20 @@ end;
 
 procedure Th5uGridSelection.ToggleColumn(const AColumnId: string);
 begin
-  if not (Th5uSelectionKind.Columns in FAllowedKinds) then Exit;
+  if not (Th5uSelectionKind.Columns in FAllowedKinds) then
+    Exit;
   PrepareSelection(Th5uSelectionKind.Columns, True, False);
-  if IsColumnSelected(AColumnId) then FSelectedColumns.Remove(AColumnId)
-  else FSelectedColumns.AddOrSetValue(AColumnId, 0);
+  if IsColumnSelected(AColumnId) then
+    FSelectedColumns.Remove(AColumnId)
+  else
+    FSelectedColumns.AddOrSetValue(AColumnId, 0);
   Changed;
 end;
 
 procedure Th5uGridSelection.ToggleRow(const ARowKey: Th5uRowKey);
 begin
-  if not (Th5uSelectionKind.Rows in FAllowedKinds) then Exit;
+  if not (Th5uSelectionKind.Rows in FAllowedKinds) then
+    Exit;
   PrepareSelection(Th5uSelectionKind.Rows, True, False);
   if FAllRowsSelected then
   begin
@@ -401,6 +418,7 @@ begin
     FAllowedKinds := LSource.FAllowedKinds;
     FCombinationMode := LSource.FCombinationMode;
     FMultiRange := LSource.FMultiRange;
+    FRightClickSelect := LSource.FRightClickSelect;
     FScope := LSource.FScope;
     FKeepAcrossPages := LSource.FKeepAcrossPages;
     FFocusedCell := LSource.FFocusedCell;

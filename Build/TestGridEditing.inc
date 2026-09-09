@@ -1,7 +1,8 @@
 ﻿uses
   System.TypInfo, System.Classes, System.DateUtils, System.SysUtils, System.Types, System.Rtti, System.UITypes,
   Data.DB, Datasnap.DBClient, MidasLib,
-  h5u.Grid.Types, h5u.Grid.Columns, h5u.Grid.Options, h5u.Grid.Data.Core, h5u.Grid.Data.Dataset,
+  h5u.Grid.Selection, h5u.Grid.Types, h5u.Grid.Columns, h5u.Grid.Options,
+  h5u.Grid.Data.Core, h5u.Grid.Data.Dataset,
 {$IFDEF TEST_FMX}
   System.UIConsts, FMX.Objects, FMX.Types, FMX.StdCtrls, FMX.Forms, FMX.Controls, FMX.Edit, FMX.DateTimeCtrls, FMX.Graphics, Fmx.h5u.Grid, Fmx.h5u.Grid.Styles,
   FmxDatasetDemoMain in '..\Demos\FMX\ClientDataset\FmxDatasetDemoMain.pas',
@@ -27,12 +28,10 @@ type
     Found: Boolean;
 {$IFDEF TEST_FMX}
     Bounds: TRectF;
-    procedure Draw(Sender: TObject; ACanvas: TCanvas; const AContext: Th5uFmxDrawContext;
-      AStage: Th5uFmxCustomDrawStage; var ADrawDefault: Boolean);
+    procedure Draw(Sender: TObject; ACanvas: TCanvas; const AContext: Th5uFmxDrawContext; AStage: Th5uFmxCustomDrawStage; var ADrawDefault: Boolean);
 {$ELSE}
     Bounds: TRect;
-    procedure Draw(Sender: TObject; ACanvas: TCanvas; const AContext: Th5uVclDrawContext;
-      AStage: Th5uCustomDrawStage; var ADrawDefault: Boolean);
+    procedure Draw(Sender: TObject; ACanvas: TCanvas; const AContext: Th5uVclDrawContext; AStage: Th5uCustomDrawStage; var ADrawDefault: Boolean);
 {$ENDIF}
   end;
   TExceptionSink = class
@@ -50,7 +49,12 @@ type
 {$IFDEF TEST_FMX}
     procedure TouchDrag(const AFrom, ATo: TPointF);
     procedure PanGesture(const AFrom, ATo: TPointF);
+    procedure PanPoint(const APoint: TPointF; AFlags: TInteractiveGestureFlags);
 {$ENDIF}
+    procedure HoverAt(const P: TPoint);
+    procedure LeaveGrid;
+    procedure RightClickAt(const P: TPoint; Shift: TShiftState = []);
+    function HeaderBounds(AColumn: Integer): TRect;
     procedure LoseMoveCapture;
     procedure DesignModeForTest(AValue: Boolean);
     procedure Press(AKey: Word; AShift: TShiftState = []);
@@ -90,7 +94,7 @@ type
     constructor Create(AMode: Th5uCacheMode);
     destructor Destroy; override;
     procedure PaintGrid;
-    function CellPoint(const AField: string): TPoint;
+    function CellPoint(const AField: string; ARow: Integer = 0): TPoint;
     procedure EditorKey(AKey: Word);
   end;
 
@@ -113,15 +117,12 @@ end;
 {$ENDIF}
 
 {$IFDEF TEST_FMX}
-procedure TCellBoundsProbe.Draw(Sender: TObject; ACanvas: TCanvas; const AContext: Th5uFmxDrawContext;
-  AStage: Th5uFmxCustomDrawStage; var ADrawDefault: Boolean);
+procedure TCellBoundsProbe.Draw(Sender: TObject; ACanvas: TCanvas; const AContext: Th5uFmxDrawContext; AStage: Th5uFmxCustomDrawStage; var ADrawDefault: Boolean);
 {$ELSE}
-procedure TCellBoundsProbe.Draw(Sender: TObject; ACanvas: TCanvas; const AContext: Th5uVclDrawContext;
-  AStage: Th5uCustomDrawStage; var ADrawDefault: Boolean);
+procedure TCellBoundsProbe.Draw(Sender: TObject; ACanvas: TCanvas; const AContext: Th5uVclDrawContext; AStage: Th5uCustomDrawStage; var ADrawDefault: Boolean);
 {$ENDIF}
 begin
-  if (AContext.FactoryContext.ElementKind = Th5uElementKind.DataCell)
-    and (AContext.FactoryContext.ViewRowIndex = 0)
+  if (AContext.FactoryContext.ElementKind = Th5uElementKind.DataCell) and (AContext.FactoryContext.ViewRowIndex = 0)
     and (Th5uGridColumn(AContext.FactoryContext.Column).FieldName = 'FLAG') then
   begin
     Found := True;
@@ -218,8 +219,7 @@ begin
   Controller.Cache.Mode := AMode;
   Controller.DataSource := Source;
   // Create the control through streaming, as in the actual demo forms.
-  LText := TStringStream.Create('object TestForm: TForm' + sLineBreak
-    + '  object Grid: TGridAccess' + sLineBreak + '  end' + sLineBreak + 'end');
+  LText := TStringStream.Create('object TestForm: TForm' + sLineBreak + '  object Grid: TGridAccess' + sLineBreak + '  end' + sLineBreak + 'end');
   try
     LBinary := TMemoryStream.Create;
     try
@@ -311,7 +311,7 @@ begin
   LBitmap.Free;
 end;
 
-function TFixture.CellPoint(const AField: string): TPoint;
+function TFixture.CellPoint(const AField: string; ARow: Integer): TPoint;
 var
   LX, LY: Integer;
 {$IFDEF TEST_FMX}
@@ -332,7 +332,7 @@ begin
       if LHit.Kind <> Th5uHitKind.DataCell then
 {$ENDIF}
         Continue;
-      if (LHit.RowIndex = 0) and (LHit.Column.FieldName = AField) then
+      if (LHit.RowIndex = ARow) and (LHit.Column.FieldName = AField) then
         Exit(Point(Round((LHit.Bounds.Left + LHit.Bounds.Right) / 2), Round((LHit.Bounds.Top + LHit.Bounds.Bottom) / 2)));
     end;
   raise Exception.Create('Cell not found: ' + AField);
@@ -381,8 +381,7 @@ begin
   if Sender = AColumn then begin Log := Log+'e'; Allow := AllowEdit; end
   else begin Log := Log+'G'; if GridOverride then Allow := True; end;
 end;
-procedure TCellEventProbe.Validate(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64;
-  var Value: TValue; var Valid: Boolean; var Error: string);
+procedure TCellEventProbe.Validate(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64; var Value: TValue; var Valid: Boolean; var Error: string);
 begin
   if Sender = AColumn then Inc(ColumnValidations) else Inc(GridValidations);
   Valid := not RejectValue;
@@ -682,23 +681,25 @@ begin
   MouseUp(TMouseButton.mbLeft,[ssTouch],ATo.X,ATo.Y);
 end;
 
-procedure TGridAccess.PanGesture(const AFrom, ATo: TPointF);
+procedure TGridAccess.PanPoint(const APoint: TPointF; AFlags: TInteractiveGestureFlags);
 var
   E: TGestureEventInfo;
   Handled: Boolean;
 begin
   E := Default(TGestureEventInfo);
   E.GestureID := igiPan;
-  E.Location := LocalToAbsolute(AFrom);
-  E.Flags := [TInteractiveGestureFlag.gfBegin];
+  E.Location := LocalToAbsolute(APoint);
+  E.Flags := AFlags;
   Handled := False;
   DoGesture(E, Handled);
-  Check(Handled,'Pan begin not handled');
-  E.Location := LocalToAbsolute(ATo);
-  E.Flags := [];
-  DoGesture(E, Handled);
-  E.Flags := [TInteractiveGestureFlag.gfEnd];
-  DoGesture(E, Handled);
+  Check(Handled, 'Pan not handled');
+end;
+
+procedure TGridAccess.PanGesture(const AFrom, ATo: TPointF);
+begin
+  PanPoint(AFrom, [TInteractiveGestureFlag.gfBegin]);
+  PanPoint(ATo, []);
+  PanPoint(ATo, [TInteractiveGestureFlag.gfEnd]);
 end;
 
 procedure TestMobileInputAndEditors;
@@ -942,17 +943,17 @@ var
   Binary: TMemoryStream;
   Columns: Th5uGridColumns;
   Options: Th5uCustomizationOptions;
+  Selection: Th5uGridSelection;
 begin
   Form := TForm.CreateNew(nil);
-  Text := TStringStream.Create('object OptionsForm: TForm' + sLineBreak
-    + 'object Grid: TGridAccess' + sLineBreak
-    + 'Customization.ColumnMovingGesture = Drag' + sLineBreak
-    + 'Customization.AllowColumnMoving = False' + sLineBreak
-    + 'Customization.AllowRowMoving = False' + sLineBreak
-    + 'Customization.RowMovingGesture = Drag' + sLineBreak
-    + 'Columns = <item Id = ''denied'' MovePermission = Deny end' + sLineBreak
-    + 'item Id = ''allowed'' MovePermission = Allow end>' + sLineBreak
-    + 'end' + sLineBreak + 'end');
+  Text := TStringStream.Create('object OptionsForm: TForm' + sLineBreak + 'object Grid: TGridAccess' + sLineBreak
+    + 'Customization.ColumnResizeHitZoneLeft = 9' + sLineBreak + 'Customization.ColumnResizeHitZoneRight = 2' + sLineBreak
+    + 'Customization.TouchColumnResizeHitZoneLeft = 20' + sLineBreak + 'Customization.TouchColumnResizeHitZoneRight = 3' + sLineBreak
+    + 'Customization.LastColumnResizeHitZoneLeft = 17' + sLineBreak + 'Customization.TouchLastColumnResizeHitZoneLeft = 28' + sLineBreak
+    + 'Selection.RightClickSelect = True' + sLineBreak + 'Customization.ColumnMovingGesture = Drag' + sLineBreak
+    + 'Customization.AllowColumnMoving = False' + sLineBreak + 'Customization.AllowRowMoving = False' + sLineBreak
+    + 'Customization.RowMovingGesture = Drag' + sLineBreak + 'Columns = <item Id = ''denied'' MovePermission = Deny end' + sLineBreak
+    + 'item Id = ''allowed'' MovePermission = Allow end>' + sLineBreak + 'end' + sLineBreak + 'end');
   Binary := TMemoryStream.Create;
   try
     ObjectTextToBinary(Text, Binary);
@@ -961,18 +962,36 @@ begin
     Grid := Form.FindComponent('Grid') as TGridAccess;
     Check(Grid.Columns[0].MovePermission=Th5uColumnMovePermission.Deny,'MovePermission=Deny not loaded');
     Check(Grid.Columns[1].MovePermission=Th5uColumnMovePermission.Allow,'Column Allow not loaded');
-    Check(not Grid.Customization.AllowColumnMoving
-      and (Grid.Customization.ColumnMovingGesture=Th5uColumnMovingGesture.Drag),'Customization options not loaded');
+    Check(not Grid.Customization.AllowColumnMoving and (Grid.Customization.ColumnMovingGesture
+      =Th5uColumnMovingGesture.Drag),'Customization options not loaded');
     Columns := Th5uGridColumns.Create(Form);
     Options := Th5uCustomizationOptions.Create;
+    Selection := Th5uGridSelection.Create;
     try
+      Selection.Assign(Grid.Selection);
+      Check(Selection.RightClickSelect, 'RightClickSelect streaming/Assign failed');
       Columns.Assign(Grid.Columns);
       Options.Assign(Grid.Customization);
+      Check((Options.LastColumnResizeHitZoneLeft = 17) and (Options.TouchLastColumnResizeHitZoneLeft
+        = 28), 'Last column hit zones lost during streaming/Assign');
+      Options.LastColumnResizeHitZoneLeft := -2;
+      Options.TouchLastColumnResizeHitZoneLeft := -2;
+      Check((Options.LastColumnResizeHitZoneLeft = -1) and (Options.TouchLastColumnResizeHitZoneLeft
+        = -1), 'Last column hit zone sentinel must clamp at -1');
+      Check((Options.ColumnResizeHitZoneLeft = 9) and (Options.ColumnResizeHitZoneRight = 2) and (Options.TouchColumnResizeHitZoneLeft = 20)
+        and (Options.TouchColumnResizeHitZoneRight = 3), 'Resize hit zones lost during streaming/Assign');
+      Options.ColumnResizeHitZoneLeft := -1;
+      Options.ColumnResizeHitZoneRight := -1;
+      Options.TouchColumnResizeHitZoneLeft := -1;
+      Options.TouchColumnResizeHitZoneRight := -1;
+      Check((Options.ColumnResizeHitZoneLeft = 0) and (Options.ColumnResizeHitZoneRight = 0) and (Options.TouchColumnResizeHitZoneLeft = 0)
+        and (Options.TouchColumnResizeHitZoneRight = 0), 'Negative hit zone sizes must clamp to zero');
       Check(not Options.AllowRowMoving and (Options.RowMovingGesture=Th5uRowMovingGesture.Drag),'Assign lost row moving options');
-      Check((Columns[0].MovePermission=Th5uColumnMovePermission.Deny)
-        and (Columns[1].MovePermission=Th5uColumnMovePermission.Allow),'Assign lost column permissions');
+      Check((Columns[0].MovePermission=Th5uColumnMovePermission.Deny) and (Columns[1].MovePermission
+        =Th5uColumnMovePermission.Allow),'Assign lost column permissions');
       Check(not Options.AllowColumnMoving and (Options.ColumnMovingGesture=Th5uColumnMovingGesture.Drag),'Assign lost moving gesture');
     finally
+      Selection.Free;
       Options.Free;
       Columns.Free;
     end;
@@ -981,9 +1000,14 @@ begin
     Binary.Position := 0;
     Text.Size := 0;
     ObjectBinaryToText(Binary, Text);
-    Check(Text.DataString.Contains('ColumnMovingGesture = Drag')
-      and Text.DataString.Contains('MovePermission = Deny')
+    Check(Text.DataString.Contains('ColumnMovingGesture = Drag') and Text.DataString.Contains('MovePermission = Deny')
       and Text.DataString.Contains('MovePermission = Allow'),'New moving options not saved');
+    Check(Text.DataString.Contains('RightClickSelect = True'), 'RightClickSelect not saved');
+    Check(Text.DataString.Contains('LastColumnResizeHitZoneLeft = 17')
+      and Text.DataString.Contains('TouchLastColumnResizeHitZoneLeft = 28'), 'Last column hit zones not saved');
+    Check(Text.DataString.Contains('ColumnResizeHitZoneLeft = 9') and Text.DataString.Contains('ColumnResizeHitZoneRight = 2')
+      and Text.DataString.Contains('TouchColumnResizeHitZoneLeft = 20')
+      and Text.DataString.Contains('TouchColumnResizeHitZoneRight = 3'), 'Resize hit zones not saved');
     Check(not Text.DataString.Contains('CanMove ='),'Legacy alias should not be saved alongside MovePermission');
     Writeln('PASS: moving options DFM/FMX streaming and Assign');
   finally
@@ -1014,6 +1038,1170 @@ begin
   MouseCapture := False;
 {$ENDIF}
 end;
+
+procedure TGridAccess.HoverAt(const P: TPoint);
+begin
+  MouseMove([], P.X, P.Y);
+end;
+
+procedure TGridAccess.LeaveGrid;
+begin
+{$IFDEF TEST_FMX}
+  DoMouseLeave;
+{$ELSE}
+  Perform(CM_MOUSELEAVE, 0, 0);
+{$ENDIF}
+end;
+
+procedure TGridAccess.RightClickAt(const P: TPoint; Shift: TShiftState);
+begin
+  MouseDown(TMouseButton.mbRight, Shift, P.X, P.Y);
+  MouseUp(TMouseButton.mbRight, Shift, P.X, P.Y);
+end;
+
+function TGridAccess.HeaderBounds(AColumn: Integer): TRect;
+var
+  X, Y, HeaderRow: Integer;
+{$IFDEF TEST_FMX}
+  H: Th5uFmxHitTestInfo;
+{$ELSE}
+  H: Th5uHitTestInfo;
+{$ENDIF}
+begin
+  for HeaderRow := 0 to HeaderLayout.RowCount - 1 do
+  begin
+    Y := Round(Spacing.Top + HeaderRow * (HeaderRowHeight + Spacing.RowSpacing) + HeaderRowHeight / 2);
+    for X := 1 to Trunc(Width) - 1 do
+    begin
+{$IFDEF TEST_FMX}
+      H := GridHitTest(X, Y);
+      if (H.Kind <> Th5uFmxHitKind.Header) or (H.ColumnIndex <> AColumn) then Continue;
+{$ELSE}
+      H := HitTest(X, Y);
+      if (H.Kind <> Th5uHitKind.Header) or (H.ColumnIndex <> AColumn) then Continue;
+{$ENDIF}
+      if Assigned(H.HeaderCell) and (H.HeaderCell.ColumnSpan > 1) then Continue;
+      Exit(Rect(Round(H.Bounds.Left), Round(H.Bounds.Top), Round(H.Bounds.Right), Round(H.Bounds.Bottom)));
+    end;
+  end;
+  raise Exception.Create('Header missing');
+end;
+
+{$IFNDEF TEST_FMX}
+procedure TestVclMouseMessages;
+var
+  T: TFixture;
+  P, Q: TPoint;
+  Original, Scenario: Integer;
+  Probe: TMoveProbe;
+
+  procedure SendMouse(AMessage: Cardinal; const APoint: TPoint; AKeys: WPARAM = 0);
+  begin
+    T.Grid.Perform(AMessage, AKeys, MakeLParam(APoint.X, APoint.Y));
+  end;
+
+begin
+  for Scenario := 0 to 8 do
+  begin
+    T := TFixture.Create(Th5uCacheMode.None);
+    try
+      T.Grid.AllowEditing := False;
+      T.Grid.Customization.ColumnMovingGesture := Th5uColumnMovingGesture.Drag;
+      T.Grid.Cursor := crCross;
+      case Scenario of
+        0, 1, 2, 3:
+          begin
+            P := T.Grid.HeaderBounds(0).CenterPoint;
+            Q := T.Grid.HeaderBounds(2).CenterPoint;
+            SendMouse(WM_LBUTTONDOWN, P, MK_LBUTTON);
+            Check(T.Grid.MouseCapture, 'Native header press did not capture');
+            if Scenario <> 0 then
+              SendMouse(WM_MOUSEMOVE, T.Grid.HeaderBounds(1).CenterPoint, MK_LBUTTON);
+            Check(T.Grid.Columns.VisibleColumns[0] = T.Grid.Columns[0], 'Native move reordered before release');
+            if Scenario = 2 then Winapi.Windows.ReleaseCapture
+            else if Scenario = 3 then T.Grid.Press(vkEscape);
+            SendMouse(WM_LBUTTONUP, Q);
+            Check((T.Grid.Columns.VisibleColumns[0] <> T.Grid.Columns[0]) = (Scenario
+              < 2), 'Native column release lost its final coordinate or ignored cancellation');
+          end;
+        4:
+          begin
+            P := T.Grid.HeaderBounds(0).CenterPoint;
+            SendMouse(WM_LBUTTONDOWN, P, MK_LBUTTON);
+            SendMouse(WM_LBUTTONUP, P);
+            Check(T.Grid.Selection.IsColumnSelected('FLAG'), 'Native header click did not select');
+          end;
+        5:
+          begin
+            P := Point(T.Grid.HeaderBounds(0).Right, T.Grid.HeaderBounds(0).CenterPoint.Y);
+            Original := T.Grid.Columns[0].Width;
+            SendMouse(WM_LBUTTONDOWN, P, MK_LBUTTON);
+            SendMouse(WM_MOUSEMOVE, Point(P.X + 20, P.Y), MK_LBUTTON);
+            SendMouse(WM_LBUTTONUP, Point(P.X + 37, P.Y));
+            Check(T.Grid.Columns[0].Width = Original + 37, 'Native resize ignored final release position');
+          end;
+        6:
+          begin
+            T.Grid.AllowEditing := True;
+            T.Grid.ImmediateEdit := True;
+            P := T.CellPoint('DESCRIPTION');
+            SendMouse(WM_LBUTTONDOWN, P, MK_LBUTTON);
+            SendMouse(WM_LBUTTONUP, P);
+            Check(T.Editor.Visible, 'Native mouse release lost pending immediate edit');
+            T.EditorKey(vkEscape);
+          end;
+        7:
+          begin
+            T.Grid.AllowEditing := True;
+            T.Grid.ImmediateEdit := True;
+            P := T.CellPoint('DESCRIPTION');
+            Q := T.CellPoint('NUMBER', 1);
+            SendMouse(WM_LBUTTONDOWN, P, MK_LBUTTON);
+            SendMouse(WM_LBUTTONUP, Q);
+            Check(T.Grid.Selection.IsCellSelected(0, 1) and T.Grid.Selection.IsCellSelected(1, 2), 'Native range release lost its final cell');
+            Check(not T.Editor.Visible, 'Native range drag started editing');
+          end;
+        8:
+          begin
+            Probe := TMoveProbe.Create;
+            try
+              T.Grid.Customization.AllowRowMoving := True;
+              T.Grid.OnRowsMoved := Probe.RowsMoved;
+              P := Point(10, T.CellPoint('FLAG').Y);
+              Q := Point(10, T.CellPoint('FLAG', 2).Y);
+              // Alt is a keyboard state, not part of a Windows mouse message.
+              T.Grid.PointerDown(P, [ssAlt]);
+              SendMouse(WM_MOUSEMOVE, Q, MK_LBUTTON);
+              SendMouse(WM_LBUTTONUP, Q);
+              Check((Probe.Count = 1) and (Probe.Context.TargetRowIndex = 2), 'Native release lost row move');
+            finally
+              T.Grid.OnRowsMoved := nil;
+              Probe.Free;
+            end;
+          end;
+      end;
+      Check(not T.Grid.MouseCapture, 'Mouse capture survived native release/cancel');
+      Check(T.Grid.Cursor = crCross, 'Native release did not restore cursor');
+      Check(T.Posts = 0, 'Native move/cancel posted data');
+    finally
+      T.Free;
+    end;
+  end;
+  Writeln('PASS: VCL Windows mouse messages: column/row moves, final release position, clicks, resize, range/edit, capture and Escape');
+end;
+{$ENDIF}
+
+{$IFNDEF TEST_FMX}
+procedure TestVclMoveFeedback;
+var
+  T: TFixture;
+  P, Q, Marker: TPoint;
+  Scenario, Offset: Integer;
+  Baseline, Active: TColor;
+  ExpectedValid: Boolean;
+  B: TBitmap;
+
+  function PixelAt(const APoint: TPoint): TColor;
+  begin
+    B := TBitmap.Create;
+    try
+      B.SetSize(T.Grid.Width, T.Grid.Height);
+      T.Grid.PaintTo(B.Canvas.Handle, 0, 0);
+      Result := B.Canvas.Pixels[APoint.X, APoint.Y];
+    finally
+      B.Free;
+    end;
+  end;
+
+  procedure SendMouse(AMessage: Cardinal; const APoint: TPoint; AKeys: WPARAM = 0);
+  begin
+    T.Grid.Perform(AMessage, AKeys, MakeLParam(APoint.X, APoint.Y));
+  end;
+
+begin
+  for Scenario := 0 to 6 do
+  begin
+    T := TFixture.Create(Th5uCacheMode.None);
+    try
+      T.Grid.AllowEditing := False;
+      T.Grid.Cursor := crCross;
+      T.Grid.Theme := Th5uGridTheme(Scenario mod 4);
+      T.Grid.Customization.ColumnMovingGesture := Th5uColumnMovingGesture.Drag;
+      if Scenario = 3 then T.Grid.Columns[2].FixedKind := Th5uFixedKind.Right;
+      if Scenario = 4 then
+      begin
+        T.Grid.Selection.SelectColumn('FLAG');
+        T.Grid.Selection.SelectColumn('DESCRIPTION', True);
+      end;
+      T.PaintGrid;
+      P := T.Grid.HeaderBounds(0).CenterPoint;
+      Q := T.Grid.HeaderBounds(2).CenterPoint;
+      Marker := Point(T.Grid.HeaderBounds(2).Right - 1, 180);
+      if Marker.X >= T.Grid.Width - 2 then Marker.X := T.Grid.Width - 3;
+      Baseline := PixelAt(Marker);
+      Winapi.Windows.SetCursor(Screen.Cursors[crArrow]);
+      Offset := 16;
+      if Scenario = 6 then
+      begin
+        T.Grid.PointerDown(P, [ssTouch]);
+        Offset := 40;
+      end
+      else SendMouse(WM_LBUTTONDOWN, P, MK_LBUTTON);
+      Check(PixelAt(Marker) = Baseline, 'VCL feedback appeared before drag threshold');
+      SendMouse(WM_MOUSEMOVE, Q, MK_LBUTTON);
+      Check(Winapi.Windows.GetCursor = Screen.Cursors[crDrag], 'Windows still shows the old cursor during VCL drag');
+      Active := PixelAt(Marker);
+      ExpectedValid := Scenario <> 3;
+      Check((Active <> Baseline) = ExpectedValid, 'VCL insertion marker disagrees with drop permissions');
+      if ExpectedValid then
+        Check(PixelAt(Point(Q.X - 55, Q.Y + Offset + 10))
+          = ColorToRGB(h5uGetVclPalette(T.Grid.Theme).SelectedBackground), 'VCL moving caption is missing');
+      Check(T.Grid.Columns.VisibleColumns[0] = T.Grid.Columns[0], 'VCL feedback reordered before release');
+      SendMouse(WM_MOUSEMOVE, Point(Q.X, 100), MK_LBUTTON);
+      Check(PixelAt(Marker) = Baseline, 'VCL data area shows a valid drop marker');
+      SendMouse(WM_MOUSEMOVE, Q, MK_LBUTTON);
+      Check(PixelAt(Marker) = Active, 'VCL feedback did not follow the pointer back');
+      if Scenario = 1 then T.Grid.Press(vkEscape)
+      else if Scenario = 2 then Winapi.Windows.ReleaseCapture
+      else if Scenario = 5 then
+      begin
+        T.Grid.Columns[0].Free;
+        Check(PixelAt(Marker) = Baseline, 'VCL deleted source still shows a valid drop marker');
+      end;
+      SendMouse(WM_LBUTTONUP, Q);
+      if Scenario <> 5 then
+        Check((T.Grid.Columns.VisibleColumns[0] <> T.Grid.Columns[0]) = (Scenario in [0, 4, 6]), 'VCL feedback target and completed move disagree');
+      Check(PixelAt(Marker) = Baseline, 'VCL feedback survived release/cancel');
+      Check((T.Grid.Cursor = crCross) and not T.Grid.MouseCapture, 'VCL feedback left cursor/capture active');
+      if Scenario <> 2 then
+        Check(Winapi.Windows.GetCursor = Screen.Cursors[crCross], 'VCL release failed to restore the visible cursor');
+      if Scenario = 4 then
+        Check(T.Grid.Selection.IsColumnSelected('FLAG') and T.Grid.Selection.IsColumnSelected('DESCRIPTION'), 'VCL block feedback changed selection');
+      Check(T.Posts = 0, 'VCL column feedback edited data');
+    finally
+      T.Free;
+    end;
+  end;
+  Writeln('PASS: VCL drag feedback pixels, themes, block/touch move, fixed targets, release/cancel/deletion and visible cursor');
+end;
+
+procedure TestVclGroupedMoveFeedback;
+var
+  T: TFixture;
+  D: TVclDatasetDemoForm;
+  Cell: Th5uHeaderLayoutCell;
+  I: Integer;
+
+  procedure CheckMove(G: TGridAccess; ASource, ATarget, ASourceRow, ATargetRow, ASourceSpan: Integer);
+  var
+    BeforeImage, DragImage: TBitmap;
+    SourceBounds, TargetBounds: TRect;
+    P, Q: TPoint;
+    SourceColumn: Th5uGridColumn;
+    SourceTop, TargetTop, X, Y: Integer;
+
+    procedure Paint(B: TBitmap);
+    begin
+      B.SetSize(G.Width, G.Height);
+      G.PaintTo(B.Canvas.Handle, 0, 0);
+    end;
+
+  begin
+    G.AllowEditing := False;
+    G.SetFocus;
+    BeforeImage := TBitmap.Create;
+    DragImage := TBitmap.Create;
+    try
+      Paint(BeforeImage);
+      SourceBounds := G.HeaderBounds(ASource);
+      TargetBounds := G.HeaderBounds(ATarget);
+      SourceTop := SourceBounds.Top;
+      TargetTop := TargetBounds.Top;
+      P := Point(SourceBounds.CenterPoint.X, SourceTop + G.HeaderRowHeight div 2);
+      Q := Point(TargetBounds.CenterPoint.X, TargetTop + G.HeaderRowHeight div 2);
+      SourceColumn := G.Columns.VisibleColumns[ASource];
+      G.Perform(WM_LBUTTONDOWN, MK_LBUTTON, MakeLParam(P.X, P.Y));
+      Paint(BeforeImage);
+      G.Perform(WM_MOUSEMOVE, MK_LBUTTON, MakeLParam(Q.X, Q.Y));
+      Paint(DragImage);
+      for Y := G.Spacing.Top to SourceTop - 1 do
+        for X := SourceBounds.Left to SourceBounds.Right - 1 do
+          Check(BeforeImage.Canvas.Pixels[X, Y] = DragImage.Canvas.Pixels[X, Y], 'VCL source highlight extends into its parent group header');
+      for Y := G.Spacing.Top to TargetTop - 1 do
+        for X := TargetBounds.Right - 8 to TargetBounds.Right + 8 do
+          Check(BeforeImage.Canvas.Pixels[X, Y] = DragImage.Canvas.Pixels[X, Y], 'VCL insertion marker extends into its parent group header');
+      X := SourceBounds.Left + 8;
+      Y := SourceTop + 5 + (ASourceSpan - 1) * (G.HeaderRowHeight + G.Spacing.RowSpacing);
+      Check(BeforeImage.Canvas.Pixels[X, Y] <> DragImage.Canvas.Pixels[X, Y], 'VCL source highlight misses the actual header cell/row span');
+      Check(DragImage.Canvas.Pixels[TargetBounds.Right - 1, TargetTop + 3]
+        = ColorToRGB(h5uGetVclPalette(G.Theme).SelectedBackground), 'VCL marker does not start at the target header');
+      Check(G.Columns.VisibleColumns[ASource] = SourceColumn, 'Grouped VCL move happened before release');
+      G.Perform(WM_LBUTTONUP, 0, MakeLParam(Q.X, Q.Y));
+      Check(G.Columns.VisibleColumns[ATarget] = SourceColumn, 'Grouped VCL move did not reach its indicated target');
+      Check(not G.MouseCapture, 'Grouped VCL move retained mouse capture');
+    finally
+      DragImage.Free;
+      BeforeImage.Free;
+    end;
+  end;
+
+begin
+  D := TVclDatasetDemoForm.Create(nil);
+  try
+    D.Show;
+    Application.ProcessMessages;
+    Check(D.Grid.HeaderLayout.Enabled and (D.Grid.HeaderLayout.RowCount = 2), 'Dataset demo lacks grouped headers');
+    CheckMove(TGridAccess(D.Grid), 1, 2, 1, 1, 1);
+  finally
+    D.Free;
+  end;
+  T := TFixture.Create(Th5uCacheMode.None);
+  try
+    T.Grid.Customization.ColumnMovingGesture := Th5uColumnMovingGesture.Drag;
+    T.Grid.HeaderLayout.RowCount := 3;
+    T.Grid.Spacing.RowSpacing := 3;
+    Cell := T.Grid.HeaderLayout.Cells.Add;
+    Cell.Caption := 'Parent group';
+    Cell.ColumnSpan := 3;
+    for I := 0 to 2 do
+    begin
+      Cell := T.Grid.HeaderLayout.Cells.Add;
+      Cell.ColumnId := T.Grid.Columns[I].Id;
+      Cell.Caption := T.Grid.Columns[I].Caption;
+      Cell.LayoutColumn := I;
+      Cell.LayoutRow := 2;
+      if I = 0 then
+      begin
+        Cell.LayoutRow := 1;
+        Cell.RowSpan := 2;
+      end;
+    end;
+    T.Grid.HeaderLayout.Enabled := True;
+    T.PaintGrid;
+    CheckMove(T.Grid, 0, 2, 1, 2, 2);
+  finally
+    T.Free;
+  end;
+  Writeln('PASS: VCL grouped demo and three-row headers: source/target clipping, row spans, spacing and completed move');
+end;
+
+procedure TestVclCapturedCursors;
+var
+  T: TFixture;
+  P, Q: TPoint;
+  SavedCursor: TCursor;
+begin
+  SavedCursor := Screen.Cursor;
+  T := TFixture.Create(Th5uCacheMode.None);
+  try
+    T.Grid.AllowEditing := False;
+    T.Grid.Cursor := crCross;
+    T.Grid.Customization.ColumnMovingGesture := Th5uColumnMovingGesture.Drag;
+    P := T.Grid.HeaderBounds(0).CenterPoint;
+    Q := T.Grid.HeaderBounds(2).CenterPoint;
+    Screen.Cursor := crHourGlass;
+    T.Grid.Perform(WM_LBUTTONDOWN, MK_LBUTTON, MakeLParam(P.X, P.Y));
+    T.Grid.Perform(WM_MOUSEMOVE, MK_LBUTTON, MakeLParam(Q.X, Q.Y));
+    Check(Winapi.Windows.GetCursor = Screen.Cursors[crHourGlass], 'VCL drag overrode global wait cursor');
+    T.Grid.Press(vkEscape);
+    Screen.Cursor := crDefault;
+    P := Point(T.Grid.HeaderBounds(0).Right, P.Y);
+    Winapi.Windows.SetCursor(Screen.Cursors[crArrow]);
+    T.Grid.Perform(WM_LBUTTONDOWN, MK_LBUTTON, MakeLParam(P.X, P.Y));
+    Check(Winapi.Windows.GetCursor = Screen.Cursors[crHSplit], 'VCL resize press did not show actual split cursor');
+    T.Grid.Perform(WM_LBUTTONUP, 0, MakeLParam(P.X + 20, P.Y));
+    Check(Winapi.Windows.GetCursor = Screen.Cursors[crCross], 'VCL resize release did not restore actual cursor');
+    Writeln('PASS: VCL actual resize/release cursor and global Screen.Cursor precedence');
+  finally
+    T.Free;
+    Screen.Cursor := SavedCursor;
+  end;
+end;
+{$ENDIF}
+
+procedure TestGroupedHeaderMoving;
+var
+  T: TFixture;
+  Alpha, Beta, Cell, SourceHeader, TargetHeader: Th5uHeaderLayoutCell;
+  SourceColumns: array[0..2] of Th5uGridColumn;
+  SourceBounds, TargetBounds, LeafBounds: TRect;
+  P, Q, SourcePixel, ChildPixel, MarkerPixel: TPoint;
+  BeforeImage, DragImage: TBitmap;
+  Scenario, I, SourceIndex, TargetIndex, FirstAfter: Integer;
+  ExpectedMove, ExpectedFeedback: Boolean;
+
+  function BoundsFor(ACell: Th5uHeaderLayoutCell): TRect;
+  var
+    X, Y: Integer;
+{$IFDEF TEST_FMX}
+    H: Th5uFmxHitTestInfo;
+{$ELSE}
+    H: Th5uHitTestInfo;
+{$ENDIF}
+  begin
+    Y := Round(T.Grid.Spacing.Top + ACell.LayoutRow * (T.Grid.HeaderRowHeight + T.Grid.Spacing.RowSpacing) + T.Grid.HeaderRowHeight / 2);
+    for X := 1 to Trunc(T.Grid.Width) - 1 do
+    begin
+{$IFDEF TEST_FMX}
+      H := T.Grid.GridHitTest(X, Y);
+{$ELSE}
+      H := T.Grid.HitTest(X, Y);
+{$ENDIF}
+      if H.HeaderCell = ACell then Exit(Rect(Round(H.Bounds.Left), Round(H.Bounds.Top), Round(H.Bounds.Right), Round(H.Bounds.Bottom)));
+    end;
+    raise Exception.Create('Grouped header is not hittable: ' + ACell.Caption);
+  end;
+
+  function Snapshot: TBitmap;
+  begin
+{$IFDEF TEST_FMX}
+    Result := T.Grid.MakeScreenshot;
+{$ELSE}
+    Result := TBitmap.Create;
+    Result.SetSize(T.Grid.Width, T.Grid.Height);
+    T.Grid.PaintTo(Result.Canvas.Handle, 0, 0);
+{$ENDIF}
+  end;
+
+  function Pixel(B: TBitmap; const At: TPoint): Cardinal;
+{$IFDEF TEST_FMX}
+  var
+    Data: TBitmapData;
+{$ENDIF}
+  begin
+{$IFDEF TEST_FMX}
+    Check(B.Map(TMapAccess.Read, Data), 'Group feedback bitmap could not be mapped');
+    try Result := Data.GetPixel(At.X, At.Y); finally B.Unmap(Data); end;
+{$ELSE}
+    Result := B.Canvas.Pixels[At.X, At.Y];
+{$ENDIF}
+  end;
+
+  procedure Down;
+  begin
+{$IFDEF TEST_FMX}
+    if Scenario in [2, 3] then T.Grid.PointerDown(P, [ssTouch]) else T.Grid.PointerDown(P);
+{$ELSE}
+    if Scenario = 2 then T.Grid.PointerDown(P, [ssTouch])
+    else T.Grid.Perform(WM_LBUTTONDOWN, MK_LBUTTON, MakeLParam(P.X, P.Y));
+{$ENDIF}
+  end;
+
+  procedure Move;
+  begin
+{$IFDEF TEST_FMX}
+    if Scenario = 3 then T.Grid.PanGesture(PointF(P.X, P.Y), PointF(Q.X, Q.Y)) else T.Grid.PointerMove(Q);
+{$ELSE}
+    T.Grid.Perform(WM_MOUSEMOVE, MK_LBUTTON, MakeLParam(Q.X, Q.Y));
+{$ENDIF}
+  end;
+
+  procedure Up;
+  begin
+{$IFDEF TEST_FMX}
+    T.Grid.PointerUp(Q);
+{$ELSE}
+    T.Grid.Perform(WM_LBUTTONUP, 0, MakeLParam(Q.X, Q.Y));
+{$ENDIF}
+  end;
+
+begin
+  for Scenario := 0 to 16 do
+  begin
+    T := TFixture.Create(Th5uCacheMode.None);
+    try
+      T.Grid.AllowEditing := False;
+      T.Grid.Customization.ColumnMovingGesture := Th5uColumnMovingGesture.Drag;
+      for I := 3 to 6 do
+      begin
+        with T.Grid.Columns.Add do
+        begin
+          Id := 'C' + IntToStr(I);
+          Caption := Id;
+          VisibleIndex := I;
+        end;
+      end;
+      for I := 0 to 6 do T.Grid.Columns[I].Width := 65;
+      T.Grid.Columns[0].FixedKind := Th5uFixedKind.Left;
+      T.Grid.HeaderLayout.RowCount := 2;
+      T.Grid.Spacing.RowSpacing := 2;
+      Alpha := T.Grid.HeaderLayout.Cells.Add;
+      Alpha.Caption := 'Alpha';
+      Alpha.LayoutColumn := 1;
+      Alpha.ColumnSpan := 3;
+      Beta := T.Grid.HeaderLayout.Cells.Add;
+      Beta.Caption := 'Beta';
+      Beta.LayoutColumn := 4;
+      Beta.ColumnSpan := 3;
+      for I := 0 to 6 do
+      begin
+        Cell := T.Grid.HeaderLayout.Cells.Add;
+        Cell.ColumnId := T.Grid.Columns[I].Id;
+        Cell.Caption := T.Grid.Columns[I].Caption;
+        Cell.LayoutColumn := I;
+        if I = 0 then Cell.RowSpan := 2 else Cell.LayoutRow := 1;
+      end;
+      if Scenario = 14 then
+        for I := 2 to T.Grid.HeaderLayout.Cells.Count - 1 do T.Grid.HeaderLayout.Cells[I].ColumnId := '';
+      if Scenario = 15 then
+      begin
+        T.Grid.HeaderLayout.RowCount := 3;
+        Alpha.LayoutRow := 1;
+        Beta.LayoutRow := 1;
+        T.Grid.HeaderLayout.Cells[2].RowSpan := 3;
+        for I := 3 to T.Grid.HeaderLayout.Cells.Count - 1 do T.Grid.HeaderLayout.Cells[I].LayoutRow := 2;
+        Cell := T.Grid.HeaderLayout.Cells.Add;
+        Cell.Caption := 'Parent of Alpha and Beta';
+        Cell.LayoutColumn := 1;
+        Cell.ColumnSpan := 6;
+      end;
+      T.Grid.HeaderLayout.Enabled := True;
+      SourceIndex := 1;
+      TargetIndex := 4;
+      SourceHeader := Alpha;
+      TargetHeader := Beta;
+      if Scenario in [1, 16] then
+      begin
+        SourceIndex := 4;
+        TargetIndex := 1;
+        SourceHeader := Beta;
+        TargetHeader := Alpha;
+      end;
+      for I := 0 to 2 do SourceColumns[I] := T.Grid.Columns[SourceIndex + I];
+      if Scenario = 16 then T.Grid.Columns[1].Visible := False;
+      if Scenario in [8, 12] then SourceColumns[2].Visible := False;
+      if Scenario = 9 then SourceColumns[0].Visible := False;
+      if Scenario in [7, 12] then SourceColumns[2].MovePermission := Th5uColumnMovePermission.Deny;
+      T.PaintGrid;
+      T.Grid.SetFocus;
+      SourceBounds := BoundsFor(SourceHeader);
+      TargetBounds := BoundsFor(TargetHeader);
+      P := SourceBounds.CenterPoint;
+      Q := TargetBounds.CenterPoint;
+      // A child's boundary/spacer is inside the parent, not a resize edge there.
+      if Scenario = 0 then P.X := T.Grid.HeaderBounds(1).Right;
+      LeafBounds := T.Grid.HeaderBounds(SourceIndex);
+      SourcePixel := Point(SourceBounds.Left + 8, SourceBounds.Top + 4);
+      ChildPixel := Point(SourceBounds.Right - 8, LeafBounds.Top + 4);
+      if Scenario = 4 then
+      begin
+        SourceBounds := T.Grid.HeaderBounds(1);
+        TargetBounds := T.Grid.HeaderBounds(3);
+        P := SourceBounds.CenterPoint;
+        Q := TargetBounds.CenterPoint;
+        SourcePixel := Point(SourceBounds.Left + 8, SourceBounds.Top + 4);
+        ChildPixel := Point(SourceBounds.Left + 8, BoundsFor(Alpha).Top + 4);
+      end;
+      if Scenario = 6 then Q := T.Grid.HeaderBounds(TargetIndex).CenterPoint;
+      if Scenario = 10 then Q := T.Grid.HeaderBounds(0).CenterPoint;
+      MarkerPixel := Point(TargetBounds.Right - 1, TargetBounds.Top + 3);
+      if Scenario in [1, 16] then MarkerPixel.X := TargetBounds.Left + 1;
+      ExpectedMove := not (Scenario in [5, 6, 7, 10, 11, 12, 13]);
+      ExpectedFeedback := not (Scenario in [6, 7, 10, 11, 12]);
+      Down;
+      BeforeImage := Snapshot;
+      try
+        if Scenario = 11 then SourceHeader.Free;
+        Move;
+        DragImage := Snapshot;
+        try
+          Check((Pixel(BeforeImage, MarkerPixel) <> Pixel(DragImage, MarkerPixel))
+            = ExpectedFeedback, 'Group marker disagrees with valid drop/row/permissions, scenario ' + IntToStr(Scenario));
+          if ExpectedFeedback then
+          begin
+            Check(Pixel(BeforeImage, SourcePixel) <> Pixel(DragImage, SourcePixel), 'Source feedback is on the wrong header row');
+            Check(Pixel(BeforeImage, ChildPixel) = Pixel(DragImage, ChildPixel),
+              'Source feedback paints the other header row, scenario ' + IntToStr(Scenario));
+          end;
+        finally
+          DragImage.Free;
+        end;
+      finally
+        BeforeImage.Free;
+      end;
+      Check(T.Grid.Columns.VisibleColumns[0] = T.Grid.Columns[0], 'Group drag moved fixed ID');
+      if Scenario = 5 then T.Grid.Press(vkEscape);
+      if Scenario = 13 then T.Grid.LoseMoveCapture;
+      Up;
+      if Scenario in [8, 9] then
+      begin
+        SourceColumns[0].Visible := True;
+        SourceColumns[2].Visible := True;
+      end;
+      if Scenario = 16 then T.Grid.Columns[1].Visible := True;
+      FirstAfter := SourceIndex;
+      if ExpectedMove then
+      begin
+        if Scenario in [1, 16] then FirstAfter := 1
+        else if Scenario = 4 then FirstAfter := 3
+        else FirstAfter := 4;
+      end;
+      if Scenario <> 12 then
+        Check(T.Grid.Columns.VisibleColumns[FirstAfter] = SourceColumns[0], 'Wrong group/leaf moved, scenario ' + IntToStr(Scenario));
+      if ExpectedMove and (Scenario <> 4) then
+      begin
+        for I := 0 to 2 do
+          Check(T.Grid.Columns.VisibleColumns[FirstAfter + I] = SourceColumns[I], 'Group descendants lost order');
+        T.PaintGrid;
+        SourceBounds := BoundsFor(SourceHeader);
+        Check(SourceBounds.Left = T.Grid.HeaderBounds(FirstAfter).Left, 'Moved parent caption did not follow its data');
+        Check(SourceBounds.Right = T.Grid.HeaderBounds(FirstAfter + 2).Right, 'Moved parent lost its full span');
+      end;
+      Check(T.Grid.Columns.VisibleColumns[0] = T.Grid.Columns[0], 'Completed group move changed fixed ID');
+    finally
+      T.Free;
+    end;
+  end;
+  Writeln(
+    'PASS: grouped headers: mouse/touch/Pan, correct source row, child spacers, complete groups/leaves, '
+    + 'hidden members, fixed ID, permissions and cancel');
+end;
+
+procedure TestRightClickSelection;
+var
+  T: TFixture;
+  A, B, C, R: TPoint;
+begin
+  T := TFixture.Create(Th5uCacheMode.None);
+  try
+    T.Grid.AllowEditing := False;
+    A := T.CellPoint('FLAG');
+    B := T.CellPoint('DESCRIPTION');
+    C := T.CellPoint('NUMBER');
+    R := T.CellPoint('FLAG', 1);
+    Check(not T.Grid.Selection.RightClickSelect, 'RightClickSelect must default to False');
+    T.Grid.ClickAt(B);
+    T.Grid.Selection.SelectRow(T.Controller.GetRowKey(1), True);
+    T.Grid.Selection.SelectColumn('NUMBER', True);
+    T.Grid.RightClickAt(A);
+    Check(T.Grid.Selection.IsCellSelected(0, 1) and T.Grid.Selection.IsColumnSelected('NUMBER')
+      and T.Grid.Selection.IsRowSelected(T.Controller.GetRowKey(1)), 'Default right click changed mixed selection');
+    Check(T.Grid.Selection.FocusedCell.ColumnId = 'DESCRIPTION', 'Default right click changed cell focus');
+    T.Grid.Selection.RightClickSelect := True;
+    T.Grid.RightClickAt(A, [ssCtrl, ssShift]);
+    Check(T.Grid.Selection.IsCellSelected(0, 0) and (T.Grid.Selection.CellRanges.Count = 1) and (T.Grid.Selection.SelectedColumnCount = 0)
+      and (T.Grid.Selection.SelectedRowCount(3) = 0), 'Unselected right click must replace all selection kinds, regardless of modifiers');
+    Check(T.Grid.Selection.FocusedCell.ColumnId = 'FLAG', 'Right click did not focus new cell');
+    T.Grid.Selection.AddCellRange(Th5uCellRange.Create(0, 0, 1, 1), True);
+    T.Grid.Selection.SelectRow(T.Controller.GetRowKey(1), True);
+    T.Grid.Selection.SelectColumn('NUMBER', True);
+    T.Grid.RightClickAt(B);
+    Check(T.Grid.Selection.FocusedCell.ColumnId = 'DESCRIPTION', 'Selected cell right click did not change focus');
+    T.Grid.RightClickAt(C);
+    Check(T.Grid.Selection.FocusedCell.ColumnId = 'NUMBER', 'Selected column right click did not change focus');
+    T.Grid.RightClickAt(R);
+    Check((T.Grid.Selection.FocusedCell.RowIndex = 1) and (T.Grid.Selection.FocusedCell.ColumnId
+      = 'FLAG'), 'Selected row right click did not change focus');
+    Check((T.Grid.Selection.CellRanges.Count = 2) and T.Grid.Selection.IsColumnSelected('NUMBER')
+      and T.Grid.Selection.IsRowSelected(T.Controller.GetRowKey(1)), 'Right click inside mixed selection changed it');
+    T.Grid.RightClickAt(Point(590, 210));
+    Check((T.Grid.Selection.FocusedCell.RowIndex = 1) and (T.Grid.Selection.CellRanges.Count = 2), 'Blank area changed focus/selection');
+    Check(T.Posts = 0, 'Right click toggled a checkbox');
+    T.Grid.Selection.Clear;
+    T.Grid.Selection.SelectColumn('DESCRIPTION');
+    T.Grid.Columns[0].CanSelect := False;
+    T.Grid.RightClickAt(A);
+    Check(T.Grid.Selection.IsColumnSelected('DESCRIPTION') and (T.Grid.Selection.FocusedCell.ColumnId
+      = 'FLAG'), 'CanSelect=False must permit focus while preserving selection');
+    T.Grid.Columns[0].CanSelect := True;
+    T.Grid.Selection.AllowedKinds := [Th5uSelectionKind.Columns];
+    T.Grid.RightClickAt(C);
+    Check(T.Grid.Selection.IsColumnSelected('DESCRIPTION') and (T.Grid.Selection.FocusedCell.ColumnId
+      = 'NUMBER'), 'Right click bypassed AllowedKinds or failed to focus');
+    Writeln('PASS: right-click defaults, replacement, selected cells/rows/columns, modifiers, blank area, focus and permissions');
+  finally
+    T.Free;
+  end;
+end;
+
+procedure TestLastColumnHitZone;
+var
+  T: TFixture;
+  H: TRect;
+  P: TPoint;
+
+  procedure CheckHover(AColumn, ADelta: Integer; AExpected: Boolean);
+  begin
+    H := T.Grid.HeaderBounds(AColumn);
+    T.Grid.HoverAt(Point(H.Right + ADelta, H.CenterPoint.Y));
+    Check((T.Grid.Cursor = crHSplit) = AExpected, 'Last-column hit zone mismatch');
+  end;
+
+begin
+  T := TFixture.Create(Th5uCacheMode.None);
+  try
+    T.Grid.Cursor := crCross;
+    T.Grid.AllowEditing := False;
+    Check((T.Grid.Customization.LastColumnResizeHitZoneLeft = -1) and (T.Grid.Customization.TouchLastColumnResizeHitZoneLeft
+      = -1), 'Last-column hit zones must default to -1');
+    T.Grid.Customization.ColumnResizeHitZoneLeft := 2;
+    T.Grid.Customization.ColumnResizeHitZoneRight := 1;
+    CheckHover(2, -2, True);
+    CheckHover(2, -3, False);
+    T.Grid.Customization.LastColumnResizeHitZoneLeft := 10;
+    CheckHover(2, -10, True);
+    CheckHover(2, -11, False);
+    CheckHover(2, 1, True);
+    CheckHover(2, 2, False);
+    CheckHover(1, -3, False);
+    H := T.Grid.HeaderBounds(2);
+    P := Point(H.Right - 10, H.CenterPoint.Y);
+    T.Grid.PointerDown(P);
+    T.Grid.PointerUp(Point(P.X + 20, P.Y));
+    Check(T.Grid.Columns[2].Width = 170, 'Last-column mouse press ignored its larger left zone');
+    T.Grid.Customization.LastColumnResizeHitZoneLeft := 0;
+    T.PaintGrid;
+    CheckHover(2, -1, False);
+    CheckHover(2, 0, True);
+    T.Grid.Customization.LastColumnResizeHitZoneLeft := -1;
+    T.Grid.Customization.ColumnResizeHitZoneLeft := 5;
+    CheckHover(2, -5, True);
+    CheckHover(2, -6, False);
+    T.Grid.Customization.LastColumnResizeHitZoneLeft := 10;
+    T.Grid.Columns[2].Visible := False;
+    T.PaintGrid;
+    CheckHover(1, -10, True);
+    CheckHover(0, -6, False);
+    T.Grid.Columns[0].FixedKind := Th5uFixedKind.Right;
+    T.PaintGrid;
+    CheckHover(1, -10, True);
+    CheckHover(0, -6, False);
+{$IFDEF TEST_FMX}
+    T.Grid.Customization.TouchColumnResizeHitZoneLeft := 3;
+    T.Grid.Customization.TouchLastColumnResizeHitZoneLeft := 18;
+    H := T.Grid.HeaderBounds(1);
+    P := Point(H.Right - 18, H.CenterPoint.Y);
+    T.Grid.TouchDrag(PointF(P.X, P.Y), PointF(P.X + 25, P.Y));
+    Check(T.Grid.Columns[0].Width = 175, 'Last-column touch press ignored its larger left zone');
+    T.Grid.Customization.TouchLastColumnResizeHitZoneLeft := -1;
+    T.Grid.Customization.TouchColumnResizeHitZoneLeft := 7;
+    T.PaintGrid;
+    H := T.Grid.HeaderBounds(1);
+    P := Point(H.Right - 7, H.CenterPoint.Y);
+    T.Grid.TouchDrag(PointF(P.X, P.Y), PointF(P.X - 10, P.Y));
+    Check(T.Grid.Columns[0].Width = 165, 'Last-column touch zone did not inherit the current normal value');
+{$ENDIF}
+    Writeln('PASS: last-column left hit zone, -1 inheritance, zero, right side, hidden/fixed columns and mouse/touch');
+  finally
+    T.Free;
+  end;
+end;
+
+procedure TestResizeHitZones;
+var
+  T: TFixture;
+  H: TRect;
+  P: TPoint;
+  I, Offset: Integer;
+
+  procedure CheckHover(ADelta: Integer; AExpected: Boolean);
+  begin
+    T.Grid.HoverAt(Point(H.Right + ADelta, H.CenterPoint.Y));
+    Check((T.Grid.Cursor = crHSplit) = AExpected, 'Asymmetric mouse hit zone mismatch at ' + IntToStr(ADelta));
+  end;
+
+begin
+  T := TFixture.Create(Th5uCacheMode.None);
+  try
+    T.Grid.Cursor := crCross;
+    T.Grid.AllowEditing := False;
+    T.Grid.Customization.AllowColumnMoving := False;
+    Check((T.Grid.Customization.ColumnResizeHitZoneLeft = 4) and (T.Grid.Customization.ColumnResizeHitZoneRight = 4)
+      and (T.Grid.Customization.TouchColumnResizeHitZoneLeft = 12) and (T.Grid.Customization.TouchColumnResizeHitZoneRight
+      = 12), 'Resize hit zone defaults changed');
+    T.Grid.Customization.ColumnResizeHitZoneLeft := 9;
+    T.Grid.Customization.ColumnResizeHitZoneRight := 2;
+    H := T.Grid.HeaderBounds(0);
+    CheckHover(-10, False);
+    CheckHover(-9, True);
+    CheckHover(2, True);
+    CheckHover(3, False);
+    for I := 0 to 3 do
+    begin
+      case I of
+        0: Offset := -10;
+        1: Offset := -9;
+        2: Offset := 2;
+        else Offset := 3;
+      end;
+      T.Grid.Columns[0].Width := 150;
+      T.PaintGrid;
+      H := T.Grid.HeaderBounds(0);
+      P := Point(H.Right + Offset, H.CenterPoint.Y);
+      T.Grid.PointerDown(P);
+      T.Grid.PointerMove(Point(P.X + 25, P.Y));
+      T.Grid.PointerUp(Point(P.X + 25, P.Y));
+      Check((T.Grid.Columns[0].Width = 175) = (I in [1, 2]), 'Mouse press did not use the same hit zone as hover');
+    end;
+    T.Grid.Columns[0].Width := 150;
+    T.PaintGrid;
+    H := T.Grid.HeaderBounds(0);
+    T.Grid.Customization.ColumnResizeHitZoneLeft := 0;
+    T.Grid.Customization.ColumnResizeHitZoneRight := 0;
+    CheckHover(-1, False);
+    CheckHover(0, True);
+    CheckHover(1, False);
+{$IFDEF TEST_FMX}
+    T.Grid.Customization.TouchColumnResizeHitZoneLeft := 20;
+    T.Grid.Customization.TouchColumnResizeHitZoneRight := 3;
+    for I := 0 to 3 do
+    begin
+      case I of
+        0: Offset := -21;
+        1: Offset := -20;
+        2: Offset := 3;
+        else Offset := 4;
+      end;
+      T.Grid.Columns[0].Width := 150;
+      T.PaintGrid;
+      H := T.Grid.HeaderBounds(0);
+      P := Point(H.Right + Offset, H.CenterPoint.Y);
+      T.Grid.TouchDrag(PointF(P.X, P.Y), PointF(P.X + 25, P.Y));
+      Check((T.Grid.Columns[0].Width = 175) = (I in [1, 2]), 'Asymmetric touch hit zone mismatch');
+    end;
+{$ENDIF}
+    Writeln('PASS: configurable left/right mouse and touch hit zones, boundaries, zero size, hover and press agreement');
+  finally
+    T.Free;
+  end;
+end;
+
+procedure TestColumnResizing;
+var
+  T: TFixture;
+  H: TRect;
+  P, Q: TPoint;
+  I, Original: Integer;
+begin
+  T := TFixture.Create(Th5uCacheMode.None);
+  try
+    T.Grid.AllowEditing := False;
+    T.Grid.Cursor := crCross;
+    T.Grid.Customization.ColumnMovingGesture := Th5uColumnMovingGesture.Drag;
+    T.Grid.Columns[0].RightSpacing := 8;
+    T.PaintGrid;
+    H := T.Grid.HeaderBounds(0);
+    for I := -1 to 1 do
+    begin
+      T.Grid.HoverAt(Point(H.Right + I * 2, H.CenterPoint.Y));
+      Check(T.Grid.Cursor = crHSplit, 'Resize hover missing inside/outside header edge');
+      T.Grid.HoverAt(H.CenterPoint);
+      Check(T.Grid.Cursor = crCross, 'Hover did not restore custom cursor');
+    end;
+    P := Point(H.Right + 2, H.CenterPoint.Y);
+    T.Grid.HoverAt(P);
+    T.Grid.LeaveGrid;
+    Check(T.Grid.Cursor = crCross, 'Mouse leave did not restore cursor');
+    T.Grid.Columns[0].CanResize := False;
+    T.Grid.HoverAt(P);
+    Check(T.Grid.Cursor = crCross, 'CanResize=False showed resize cursor');
+    T.Grid.Columns[0].CanResize := True;
+    T.Grid.Customization.AllowColumnResizing := False;
+    T.Grid.HoverAt(P);
+    Check(T.Grid.Cursor = crCross, 'Resizing disabled but cursor visible');
+    T.Grid.Customization.AllowColumnResizing := True;
+    T.Grid.Selection.SelectColumn('DESCRIPTION');
+    Original := T.Grid.Columns[0].Width;
+    T.Grid.PointerDown(P);
+    Check(T.Grid.Cursor = crHSplit, 'Resize press did not set cursor');
+    Q := Point(P.X + 30, P.Y);
+    T.Grid.PointerMove(Q);
+    Check(T.Grid.Columns[0].Width = Original + 30, 'Column width did not follow pointer');
+    Q.X := P.X + 45;
+    T.Grid.PointerUp(Q);
+    Check(T.Grid.Columns[0].Width = Original + 45, 'Resize ignored final MouseUp coordinate');
+    Check(T.Grid.Cursor = crCross, 'Resize release did not restore custom cursor');
+    Check(T.Grid.Selection.IsColumnSelected('DESCRIPTION'), 'Resize changed selection');
+    Check(T.Grid.Columns.VisibleColumns[0] = T.Grid.Columns[0], 'Resize moved the column');
+    T.PaintGrid;
+    H := T.Grid.HeaderBounds(0);
+    P := Point(H.Right, H.CenterPoint.Y);
+    Original := T.Grid.Columns[0].Width;
+    T.Grid.PointerDown(P);
+    T.Grid.LoseMoveCapture;
+    T.Grid.PointerMove(Point(P.X + 25, P.Y));
+    T.Grid.PointerUp(Point(P.X + 25, P.Y));
+    Check((T.Grid.Columns[0].Width = Original) and (T.Grid.Cursor = crCross), 'Resize survived capture loss');
+    T.Grid.PointerDown(P);
+    T.Grid.Press(vkEscape);
+    T.Grid.PointerMove(Point(P.X + 25, P.Y));
+    T.Grid.PointerUp(Point(P.X + 25, P.Y));
+    Check((T.Grid.Columns[0].Width = Original) and (T.Grid.Cursor = crCross), 'Resize survived Escape');
+    T.Grid.Columns[0].MinWidth := 80;
+    T.Grid.Columns[0].MaxWidth := 210;
+    T.Grid.PointerDown(P);
+    T.Grid.PointerMove(Point(P.X + 80, P.Y));
+    T.Grid.PointerUp(Point(P.X + 80, P.Y));
+    Check(T.Grid.Columns[0].Width = 210, 'Resize bypassed MaxWidth');
+    T.PaintGrid;
+    H := T.Grid.HeaderBounds(0);
+    P := Point(H.Right, H.CenterPoint.Y);
+    T.Grid.PointerDown(P);
+    T.Grid.PointerUp(Point(P.X - 200, P.Y));
+    Check(T.Grid.Columns[0].Width = 80, 'Resize bypassed MinWidth');
+    T.Grid.Columns[1].Width := 900;
+    T.PaintGrid;
+    H := T.Grid.HeaderBounds(1);
+    T.Grid.HoverAt(Point(H.Right - 2, H.CenterPoint.Y));
+    Check(T.Grid.Cursor = crCross, 'Clipped viewport edge became a resize boundary');
+    H := T.Grid.HeaderBounds(0);
+    P := Point(H.Right, H.CenterPoint.Y);
+    T.Grid.PointerDown(P);
+    T.Grid.Columns[0].Free;
+    T.Grid.PointerMove(Point(P.X + 10, P.Y));
+    T.Grid.PointerUp(Point(P.X + 10, P.Y));
+    Check(T.Grid.Cursor = crCross, 'Deleted resize column left cursor active');
+    Writeln('PASS: resizing, both edge sides, hover/leave, release coordinates, selection, capture/Escape, bounds and deleted columns');
+  finally
+    T.Free;
+  end;
+end;
+
+{$IFDEF TEST_FMX}
+procedure TestHeaderPanFeedback;
+var
+  T: TFixture;
+  P, Q, R: TPoint;
+  B: TBitmap;
+  TouchMode, CancelMode, I: Integer;
+  Shift: TShiftState;
+  Baseline, Active: TAlphaColor;
+  H: TScrollBar;
+
+  function PixelAt(X, Y: Integer): TAlphaColor;
+  var
+    Data: TBitmapData;
+  begin
+    B := T.Grid.MakeScreenshot;
+    try
+      Check(B.Map(TMapAccess.Read, Data), 'Cannot map drag feedback');
+      try
+        Result := Data.GetPixel(X, Y);
+      finally
+        B.Unmap(Data);
+      end;
+    finally
+      B.Free;
+    end;
+  end;
+
+begin
+  for TouchMode := 0 to 1 do
+    for CancelMode := 0 to 2 do
+    begin
+      T := TFixture.Create(Th5uCacheMode.None);
+      try
+        T.Grid.AllowEditing := False;
+        T.Grid.Cursor := crCross;
+        T.Grid.Customization.ColumnMovingGesture := Th5uColumnMovingGesture.Drag;
+        if TouchMode = 1 then Shift := [ssTouch] else Shift := [];
+        P := T.Grid.HeaderBounds(0).CenterPoint;
+        Q := T.Grid.HeaderBounds(2).CenterPoint;
+        R := Point(T.Grid.HeaderBounds(2).Right, 180);
+        Baseline := PixelAt(R.X, R.Y);
+        T.Grid.PointerDown(P, Shift);
+        T.Grid.PanPoint(PointF(P.X, P.Y), [TInteractiveGestureFlag.gfBegin]);
+        Check(PixelAt(R.X, R.Y) = Baseline, 'Click showed a drag marker before threshold');
+        // Native Pan can supply the movement without a corresponding MouseMove.
+        T.Grid.PanPoint(PointF(Q.X, Q.Y), []);
+        Active := PixelAt(R.X, R.Y);
+        Check(Active <> Baseline, 'No insertion marker during native Pan');
+        Check(T.Grid.Columns.VisibleColumns[0] = T.Grid.Columns[0], 'Column reordered before release');
+        Check(T.Grid.Selection.SelectedColumnCount = 0, 'Move changed selection');
+        // An invalid drop in the data area must remove the insertion marker.
+        T.Grid.PanPoint(PointF(Q.X, 100), []);
+        Check(PixelAt(R.X, R.Y) = Baseline, 'Data area still shows an insertion marker');
+        T.Grid.PanPoint(PointF(Q.X, Q.Y), []);
+        Check(PixelAt(R.X, R.Y) = Active, 'Returning to header did not restore feedback');
+        for I := 0 to T.Grid.ComponentCount - 1 do
+          if T.Grid.Components[I] is TScrollBar then
+          begin
+            H := TScrollBar(T.Grid.Components[I]);
+            Check(H.Value = 0, 'Header move also scrolled');
+          end;
+        if CancelMode = 1 then T.Grid.Press(vkEscape)
+        else if CancelMode = 2 then T.Grid.LoseMoveCapture;
+        T.Grid.PanPoint(PointF(Q.X, Q.Y), [TInteractiveGestureFlag.gfEnd]);
+        T.Grid.PointerUp(Q, Shift);
+        Check((T.Grid.Columns.VisibleColumns[0] <> T.Grid.Columns[0]) = (CancelMode = 0), 'Native Pan cancelled a move or ignored cancellation');
+        Check(T.Grid.Cursor = crCross, 'Drag left the cursor active');
+        Check(T.Grid.Root.Captured = nil, 'Drag left capture active');
+        Check(PixelAt(R.X, R.Y) = Baseline, 'Drag feedback survived release/cancel');
+        Check(T.Posts = 0, 'Header Pan edited data');
+      finally
+        T.Free;
+      end;
+    end;
+  Writeln('PASS: FMX mouse/touch Pan column move, live feedback, invalid targets, release, Escape and capture loss');
+end;
+
+procedure TestScrolledTextLayout;
+var
+  T: TFixture;
+  BeforeImage, AfterImage: TBitmap;
+  BeforeData, AfterData: TBitmapData;
+  I, X, Y, Difference, FixedDifference: Integer;
+  Header: TRect;
+begin
+  T := TFixture.Create(Th5uCacheMode.None);
+  try
+    T.Grid.AllowEditing := False;
+    T.Grid.Columns[0].FixedKind := Th5uFixedKind.Left;
+    T.Grid.Columns[1].WordWrap := True;
+    T.Grid.Width := 370;
+    T.Grid.RowHeight.FixedHeight := 80;
+    T.PaintGrid;
+    Header := T.Grid.HeaderBounds(1);
+    BeforeImage := T.Grid.MakeScreenshot;
+    try
+      for I := 0 to T.Grid.ComponentCount - 1 do
+        if T.Grid.Components[I] is TScrollBar then
+          if TScrollBar(T.Grid.Components[I]).Orientation = TOrientation.Horizontal then
+            TScrollBar(T.Grid.Components[I]).Value := 40;
+      AfterImage := T.Grid.MakeScreenshot;
+      try
+        Check(BeforeImage.Map(TMapAccess.Read, BeforeData), 'Cannot map original text');
+        try
+          Check(AfterImage.Map(TMapAccess.Read, AfterData), 'Cannot map scrolled text');
+          try
+            Difference := 0;
+            FixedDifference := 0;
+            for Y := Header.Top + 2 to Header.Bottom + 77 do
+            begin
+              for X := Header.Left + 2 to Header.Right - 43 do
+                if BeforeData.GetPixel(X + 40, Y) <> AfterData.GetPixel(X, Y) then Inc(Difference);
+              for X := 2 to Header.Left - 2 do
+                if BeforeData.GetPixel(X, Y) <> AfterData.GetPixel(X, Y) then Inc(FixedDifference);
+            end;
+            Check(Difference < 25, Format('Horizontal scroll reflowed/recentered text (%d pixels)', [Difference]));
+            Check(FixedDifference = 0, 'Scrolling text painted over the fixed column');
+          finally
+            AfterImage.Unmap(AfterData);
+          end;
+        finally
+          BeforeImage.Unmap(BeforeData);
+        end;
+      finally
+        AfterImage.Free;
+      end;
+    finally
+      BeforeImage.Free;
+    end;
+    Check(T.Grid.Columns[1].Width = 150, 'Horizontal scrolling changed column width');
+    Writeln('PASS: FMX horizontal scrolling clips full-width text/header without reflow or painting over fixed columns');
+  finally
+    T.Free;
+  end;
+end;
+
+procedure TestTouchBodyAfterResize;
+var
+  T: TFixture;
+  P, Q: TPoint;
+  Widths: array[0..2] of Integer;
+  I, Attempt: Integer;
+  V, H: TScrollBar;
+begin
+  T := TFixture.Create(Th5uCacheMode.None);
+  try
+    T.Grid.AllowEditing := False;
+    T.Grid.Columns[0].FixedKind := Th5uFixedKind.Left;
+    T.Grid.Width := 370;
+    T.Grid.Height := 180;
+    T.Grid.RowHeight.FixedHeight := 80;
+    T.PaintGrid;
+    V := nil;
+    H := nil;
+    for I := 0 to T.Grid.ComponentCount - 1 do
+      if T.Grid.Components[I] is TScrollBar then
+        if TScrollBar(T.Grid.Components[I]).Orientation = TOrientation.Vertical then
+          V := TScrollBar(T.Grid.Components[I])
+        else H := TScrollBar(T.Grid.Components[I]);
+    Check(Assigned(V) and Assigned(H), 'Missing scrollbars');
+    P := Point(T.Grid.HeaderBounds(1).Right - 5, 12);
+    T.Grid.PointerDown(P, [ssTouch]);
+    Q := Point(P.X + 20, P.Y + 8);
+    T.Grid.PanPoint(PointF(P.X, P.Y), [TInteractiveGestureFlag.gfBegin]);
+    T.Grid.PanPoint(PointF(Q.X, Q.Y), []);
+    Check(T.Grid.Columns[1].Width = 170, 'Native header Pan did not resize');
+    Check((V.Value = 0) and (H.Value = 0), 'Header resizing also scrolled');
+    T.Grid.PointerUp(Q, [ssTouch]);
+    // Android can deliver gesture-end after MouseUp.
+    T.Grid.PanPoint(PointF(Q.X, Q.Y), [TInteractiveGestureFlag.gfEnd]);
+    for I := 0 to 2 do Widths[I] := T.Grid.Columns[I].Width;
+    for Attempt := 0 to 3 do
+    begin
+      V.Value := 0;
+      H.Value := 0;
+      T.PaintGrid;
+      P := Point(315, 120);
+      case Attempt of
+        1: P.X := T.Grid.HeaderBounds(1).Right;
+        2: P.X := T.Grid.HeaderBounds(0).Right;
+        3: P.Y := T.Grid.HeaderBounds(0).Bottom + T.Grid.Spacing.RowSpacing;
+      end;
+      Q := Point(P.X - 35, P.Y - 30);
+      T.Grid.PointerDown(P, [ssTouch]);
+      T.Grid.PanPoint(PointF(P.X, P.Y), [TInteractiveGestureFlag.gfBegin]);
+      T.Grid.PointerMove(Q, [ssTouch]);
+      T.Grid.PanPoint(PointF(Q.X, Q.Y), []);
+      T.Grid.PointerUp(Q, [ssTouch]);
+      T.Grid.PanPoint(PointF(Q.X, Q.Y), [TInteractiveGestureFlag.gfEnd]);
+      Check((V.Value > 0) and (H.Value > 0), 'Data swipe did not scroll both axes');
+      for I := 0 to 2 do
+        Check(T.Grid.Columns[I].Width = Widths[I], 'Data swipe resized a column');
+      V.Value := 0;
+      H.Value := 0;
+      T.PaintGrid;
+      for I := 0 to 2 do
+        Check(T.Grid.Columns[I].Width = Widths[I], 'Width changed after returning to scroll origin');
+    end;
+    Check(T.Posts = 0, 'Data swipe edited data');
+    Writeln('PASS: FMX touch data swipes after header resize, both axes, fixed first column and unchanged widths');
+  finally
+    T.Free;
+  end;
+end;
+
+procedure TestTouchHeaders;
+var
+  T: TFixture;
+  H: TRect;
+  P, Q: TPointF;
+  Original: Integer;
+begin
+  T := TFixture.Create(Th5uCacheMode.None);
+  try
+    T.Grid.AllowEditing := False;
+    T.Grid.Cursor := crCross;
+    T.Grid.Selection.SelectColumn('DESCRIPTION');
+    H := T.Grid.HeaderBounds(0);
+    P := PointF(H.Right - 10, H.CenterPoint.Y);
+    Original := T.Grid.Columns[0].Width;
+    T.Grid.TouchDrag(P, PointF(P.X + 35, P.Y));
+    Check(T.Grid.Columns[0].Width = Original + 35, 'Touch resize needs a larger edge target');
+    Check(T.Grid.Cursor = crCross, 'Touch resize changed mouse cursor');
+    Check(T.Grid.Selection.IsColumnSelected('DESCRIPTION'), 'Touch resize changed selection');
+    T.Grid.Selection.Clear;
+    T.PaintGrid;
+    H := T.Grid.HeaderBounds(0);
+    P := PointF(H.CenterPoint.X, H.CenterPoint.Y);
+    H := T.Grid.HeaderBounds(2);
+    Q := PointF(H.CenterPoint.X, H.CenterPoint.Y);
+    // Touch header dragging must work without Alt, including alongside native Pan events.
+    T.Grid.PointerDown(Point(Round(P.X), Round(P.Y)), [ssTouch]);
+    T.Grid.PanGesture(P, Q);
+    T.Grid.PointerMove(Point(Round(Q.X), Round(Q.Y)), [ssTouch]);
+    T.Grid.PointerUp(Point(Round(Q.X), Round(Q.Y)), [ssTouch]);
+    Check(T.Grid.Columns.VisibleColumns[0] <> T.Grid.Columns[0], 'Touch header did not move column without Alt');
+    Check(T.Grid.Cursor = crCross, 'Touch move left cursor active');
+    Check(T.Posts = 0, 'Touch header gesture edited data');
+    Writeln('PASS: touch header resizing and column moving without Alt, native Pan arbitration and selection');
+  finally
+    T.Free;
+  end;
+end;
+{$ENDIF}
 
 procedure TestBlockMoving;
 var
@@ -1163,17 +2351,14 @@ begin
     T.Grid.PointerMove(Rows[2],[ssAlt]);
     Check(T.Grid.Cursor=crDrag,'Row block drag cursor missing');
     T.Grid.PointerUp(Rows[2],[ssAlt]);
-    Check((Probe.Count=1) and (Probe.Context.FirstRowIndex=0)
-      and (Probe.Context.NewFirstRowIndex=1) and (Length(Probe.Context.RowKeys)=2)
-      and (Probe.Context.RowKeys[0]=Keys[0]) and (Probe.Context.RowKeys[1]=Keys[1])
-      and (Probe.Context.SourceRowIndexes[0]=0) and (Probe.Context.SourceRowIndexes[1]=1)
-      and (Probe.Context.TargetRowIndex=2) and (Probe.Context.TargetSourceRowIndex=2)
+    Check((Probe.Count=1) and (Probe.Context.FirstRowIndex=0) and (Probe.Context.NewFirstRowIndex=1) and (Length(Probe.Context.RowKeys)=2)
+      and (Probe.Context.RowKeys[0]=Keys[0]) and (Probe.Context.RowKeys[1]=Keys[1]) and (Probe.Context.SourceRowIndexes[0]=0)
+      and (Probe.Context.SourceRowIndexes[1]=1) and (Probe.Context.TargetRowIndex=2) and (Probe.Context.TargetSourceRowIndex=2)
       and (Probe.Context.TargetRowKey=Keys[2]) and Probe.Context.InsertAfter,'Incorrect downward row move context');
     Check((T.Posts=0) and (T.Controller.GetRowKey(0)=Keys[0]),'Grid reordered data without the developer handler');
     T.Grid.Selection.SelectRows([Keys[1],Keys[2]]);
     Drag(Rows[2],Rows[0]);
-    Check((Probe.Count=2) and (Probe.Context.FirstRowIndex=1)
-      and (Probe.Context.NewFirstRowIndex=0) and not Probe.Context.InsertAfter
+    Check((Probe.Count=2) and (Probe.Context.FirstRowIndex=1) and (Probe.Context.NewFirstRowIndex=0) and not Probe.Context.InsertAfter
       and (Probe.Context.TargetRowKey=Keys[0]),'Incorrect upward row move context');
     Before := Probe.Count;
     Drag(Rows[1],Rows[2]);
@@ -1279,14 +2464,14 @@ var
       begin
 {$IFDEF TEST_FMX}
         H := T.Grid.GridHitTest(X*4,Y*4);
-        Match := ((Kind=Th5uSelectionKind.Rows) and (H.Kind=Th5uFmxHitKind.RowIndicator) and (H.RowIndex=Row))
-          or ((Kind=Th5uSelectionKind.Columns) and (H.Kind=Th5uFmxHitKind.Header) and (H.ColumnIndex=Col))
-          or ((Kind=Th5uSelectionKind.CellRanges) and (H.Kind=Th5uFmxHitKind.DataCell) and (H.RowIndex=Row) and (H.ColumnIndex=Col));
+        Match := ((Kind=Th5uSelectionKind.Rows) and (H.Kind=Th5uFmxHitKind.RowIndicator) and (H.RowIndex=Row)) or ((Kind=Th5uSelectionKind.Columns)
+          and (H.Kind=Th5uFmxHitKind.Header) and (H.ColumnIndex=Col)) or ((Kind=Th5uSelectionKind.CellRanges) and (H.Kind=Th5uFmxHitKind.DataCell)
+          and (H.RowIndex=Row) and (H.ColumnIndex=Col));
 {$ELSE}
         H := T.Grid.HitTest(X*4,Y*4);
-        Match := ((Kind=Th5uSelectionKind.Rows) and (H.Kind=Th5uHitKind.RowIndicator) and (H.RowIndex=Row))
-          or ((Kind=Th5uSelectionKind.Columns) and (H.Kind=Th5uHitKind.Header) and (H.ColumnIndex=Col))
-          or ((Kind=Th5uSelectionKind.CellRanges) and (H.Kind=Th5uHitKind.DataCell) and (H.RowIndex=Row) and (H.ColumnIndex=Col));
+        Match := ((Kind=Th5uSelectionKind.Rows) and (H.Kind=Th5uHitKind.RowIndicator) and (H.RowIndex=Row)) or ((Kind=Th5uSelectionKind.Columns)
+          and (H.Kind=Th5uHitKind.Header) and (H.ColumnIndex=Col)) or ((Kind=Th5uSelectionKind.CellRanges) and (H.Kind=Th5uHitKind.DataCell)
+          and (H.RowIndex=Row) and (H.ColumnIndex=Col));
 {$ENDIF}
         if Match then
           if Kind=Th5uSelectionKind.Rows then Exit(Point(X*4,Round((H.Bounds.Top+H.Bounds.Bottom)/2)))
@@ -1298,14 +2483,13 @@ var
 
   procedure CheckRows(A, B, C: Boolean; const Msg: string);
   begin
-    Check((T.Grid.Selection.IsRowSelected(Keys[0])=A) and (T.Grid.Selection.IsRowSelected(Keys[1])=B)
-      and (T.Grid.Selection.IsRowSelected(Keys[2])=C),Msg);
+    Check((T.Grid.Selection.IsRowSelected(Keys[0])=A) and (T.Grid.Selection.IsRowSelected(Keys[1])=B) and (T.Grid.Selection.IsRowSelected(Keys[2])
+      =C),Msg);
   end;
 
   procedure CheckCols(A, B, C: Boolean; const Msg: string);
   begin
-    Check((T.Grid.Selection.IsColumnSelected(T.Grid.Columns[0].Id)=A)
-      and (T.Grid.Selection.IsColumnSelected(T.Grid.Columns[1].Id)=B)
+    Check((T.Grid.Selection.IsColumnSelected(T.Grid.Columns[0].Id)=A) and (T.Grid.Selection.IsColumnSelected(T.Grid.Columns[1].Id)=B)
       and (T.Grid.Selection.IsColumnSelected(T.Grid.Columns[2].Id)=C),Msg);
   end;
 
@@ -1387,17 +2571,18 @@ begin
     T.Grid.ClickAt(Cells[0,0]);
     T.Grid.ClickWithShift(Cells[2,2],[ssCtrl]);
     T.Grid.ClickWithShift(Cells[1,1],[ssCtrl,ssShift]);
-    Check(T.Grid.Selection.IsCellSelected(0,0) and T.Grid.Selection.IsCellSelected(1,1)
-      and T.Grid.Selection.IsCellSelected(2,1) and not T.Grid.Selection.IsCellSelected(0,2),'Ctrl+Shift cell range incorrect');
+    Check(T.Grid.Selection.IsCellSelected(0,0) and T.Grid.Selection.IsCellSelected(1,1) and T.Grid.Selection.IsCellSelected(2,1)
+      and not T.Grid.Selection.IsCellSelected(0,2),'Ctrl+Shift cell range incorrect');
     T.Grid.ClickWithShift(Cells[2,2],[ssCtrl,ssShift]);
-    Check(T.Grid.Selection.IsCellSelected(0,0) and not T.Grid.Selection.IsCellSelected(1,1),'Ctrl+Shift cell contraction lost base or retained old extent');
+    Check(T.Grid.Selection.IsCellSelected(0,0)
+      and not T.Grid.Selection.IsCellSelected(1,1),'Ctrl+Shift cell contraction lost base or retained old extent');
     T.Grid.Press(vkUp,[ssCtrl,ssShift]);
     T.Grid.Press(vkLeft,[ssCtrl,ssShift]);
     Check(T.Grid.Selection.IsCellSelected(0,0) and T.Grid.Selection.IsCellSelected(1,1),'Ctrl+Shift arrows replaced base selection');
     T.Grid.Press(vkRight,[ssCtrl,ssShift]);
     T.Grid.Press(vkDown,[ssCtrl,ssShift]);
-    Check(T.Grid.Selection.IsCellSelected(0,0) and T.Grid.Selection.IsCellSelected(2,2)
-      and not T.Grid.Selection.IsCellSelected(1,2) and not T.Grid.Selection.IsCellSelected(2,1),'Ctrl+Shift arrows did not contract');
+    Check(T.Grid.Selection.IsCellSelected(0,0) and T.Grid.Selection.IsCellSelected(2,2) and not T.Grid.Selection.IsCellSelected(1,2)
+      and not T.Grid.Selection.IsCellSelected(2,1),'Ctrl+Shift arrows did not contract');
     Check(T.Grid.Selection.CellRanges.Count=3,'Ctrl+Shift accumulated a range on every key press');
     T.Grid.ClickAt(Cells[0,0]);
     T.Grid.ClickWithShift(Cells[2,2],[ssShift]);
@@ -1529,7 +2714,8 @@ begin
     CheckCols(True,True,True,'Denied column moving blocked range selection');
     T.Grid.Columns[0].MovePermission := Th5uColumnMovePermission.Default;
     T.Grid.Customization.ColumnMovingGesture := Th5uColumnMovingGesture.AltDrag;
-    Writeln('PASS: live mouse range selection, Ctrl addition, release/capture, immediate and checkbox editing, configurable column moving and permissions');
+    Writeln(
+      'PASS: live mouse range selection, Ctrl addition, release/capture, immediate and checkbox editing, configurable column moving and permissions');
 
     T.Grid.Selection.CombinationMode := Th5uSelectionCombinationMode.Exclusive;
     T.Grid.ClickAt(Rows[0]);
@@ -1603,7 +2789,8 @@ begin
     Check(T.Grid.Selection.FocusedCell.RowIndex = 1, 'Escape cleared focus');
     T.Grid.Press(vkRight);
     T.Grid.Press(vkEscape);
-    Check(T.Grid.Selection.IsCellSelected(1,1), Format('Escape cleared single cell; focus=%d/%d, ranges=%d', [T.Grid.Selection.FocusedCell.RowIndex, T.Grid.Selection.FocusedCell.ColumnIndex, T.Grid.Selection.CellRanges.Count]));
+    Check(T.Grid.Selection.IsCellSelected(1,1), Format('Escape cleared single cell; focus=%d/%d, ranges=%d', [T.Grid.Selection.FocusedCell.RowIndex,
+      T.Grid.Selection.FocusedCell.ColumnIndex, T.Grid.Selection.CellRanges.Count]));
     T.Grid.Selection.SelectRow(T.Grid.Selection.FocusedCell.RowKey);
     T.Grid.Press(vkEscape);
     Check(not T.Grid.Selection.IsRowSelected(T.Grid.Selection.FocusedCell.RowKey), 'Escape retained row');
@@ -1694,12 +2881,9 @@ begin
     Binary.WriteComponent(G);
     Binary.Position := 0;
     ObjectBinaryToText(Binary, TextStream);
-    Check(Pos('object TScrollBar', TextStream.DataString) = 0,
-      'Internal scrollbars are persisted in the FMX resource');
-    Check(Pos('object TLabel', TextStream.DataString) = 0,
-      'Internal hint label is persisted in the FMX resource');
-    Check(Pos('object Th5uCell', TextStream.DataString) = 0,
-      'Internal cell editor is persisted in the FMX resource');
+    Check(Pos('object TScrollBar', TextStream.DataString) = 0, 'Internal scrollbars are persisted in the FMX resource');
+    Check(Pos('object TLabel', TextStream.DataString) = 0, 'Internal hint label is persisted in the FMX resource');
+    Check(Pos('object Th5uCell', TextStream.DataString) = 0, 'Internal cell editor is persisted in the FMX resource');
   finally
     TextStream.Free;
     Binary.Free;
@@ -1730,6 +2914,7 @@ begin
   for I := 0 to High(Columns) do
     if Columns[I].DataType = Th5uColumnDataType.Boolean then
     begin Index := I; Break; end;
+  Check(G.Customization.ColumnMovingGesture = Th5uColumnMovingGesture.Drag, 'Demo header must use normal drag');
   Check(Index >= 0, 'Demo Boolean column missing');
   G.SetFocus;
   G.Press(vkHome, [ssCtrl]);
@@ -2102,8 +3287,8 @@ begin
 {$IFDEF TEST_FMX}
             if TScrollBar(T.Grid.Components[I]).Orientation = TOrientation.Horizontal then
             begin
-              Check(TScrollBar(T.Grid.Components[I]).Max > TScrollBar(T.Grid.Components[I]).ViewportSize,
-                'FMX horizontal scrollbar has no scrollable range');
+              Check(TScrollBar(T.Grid.Components[I]).Max
+                > TScrollBar(T.Grid.Components[I]).ViewportSize, 'FMX horizontal scrollbar has no scrollable range');
               TScrollBar(T.Grid.Components[I]).Value := 70;
               Check(TScrollBar(T.Grid.Components[I]).Value > 0, 'Horizontal scroll value remains zero');
             end;
@@ -2116,28 +3301,24 @@ begin
 {$ENDIF}
         Probe.Found := False;
         T.PaintGrid;
-        Check(Probe.Bounds.Left >= T.Grid.RowIndicatorWidth + 90,
-          'Scrolling cell paints over fixed left column');
+        Check(Probe.Bounds.Left >= T.Grid.RowIndicatorWidth + 90, 'Scrolling cell paints over fixed left column');
         if Scenario = 6 then
           Check(Probe.Bounds.Right <= T.Grid.Width - 180, 'Scrolling cell paints over fixed right column');
       end;
       Check(Probe.Found, 'Clipped first row not painted');
       if Scenario in [2, 3] then
         Check(Probe.Bounds.Height < 80, 'Top row was not actually scrolled beneath the header');
-      Center := Point(Round((Probe.Bounds.Left + Probe.Bounds.Right)/2),
-        Round((Probe.Bounds.Top + Probe.Bounds.Bottom)/2));
+      Center := Point(Round((Probe.Bounds.Left + Probe.Bounds.Right)/2), Round((Probe.Bounds.Top + Probe.Bounds.Bottom)/2));
 {$IFDEF TEST_FMX}
       H := T.Grid.GridHitTest(Center.X, Center.Y);
 {$ELSE}
       H := T.Grid.HitTest(Center.X, Center.Y);
 {$ENDIF}
-      Check((Abs(H.Bounds.Left-Probe.Bounds.Left)<1) and (Abs(H.Bounds.Top-Probe.Bounds.Top)<1)
-        and (Abs(H.Bounds.Right-Probe.Bounds.Right)<1) and (Abs(H.Bounds.Bottom-Probe.Bounds.Bottom)<1),
-        Format('Paint/hit bounds disagree in clipping scenario %d', [Scenario]));
+      Check((Abs(H.Bounds.Left-Probe.Bounds.Left)<1) and (Abs(H.Bounds.Top-Probe.Bounds.Top)<1) and (Abs(H.Bounds.Right-Probe.Bounds.Right)<1)
+        and (Abs(H.Bounds.Bottom-Probe.Bounds.Bottom)<1), Format('Paint/hit bounds disagree in clipping scenario %d', [Scenario]));
       Original := T.Controller.GetValue(0,'FLAG').AsBoolean;
       T.Grid.ClickAt(Center);
-      Check(T.Controller.GetValue(0,'FLAG').AsBoolean <> Original,
-        Format('Click on visible checkbox failed in clipping scenario %d', [Scenario]));
+      Check(T.Controller.GetValue(0,'FLAG').AsBoolean <> Original, Format('Click on visible checkbox failed in clipping scenario %d', [Scenario]));
       T.Grid.ClickAt(Center, True);
       Check(T.Controller.GetValue(0,'FLAG').AsBoolean <> Original, 'Clipped rapid clicks were not counted');
       // The old full-column center is still inside the visible cell here, but
@@ -2261,8 +3442,8 @@ begin
             finally OnImage.Unmap(OnData); end;
           finally OffImage.Unmap(OffData); end;
 {$ENDIF}
-          Check(Difference >= 8, Format('Checkbox checkmark invisible: theme %d, selected %s, pixels %d',
-            [Ord(Theme), BoolToStr(Selected, True), Difference]));
+          Check(Difference
+            >= 8, Format('Checkbox checkmark invisible: theme %d, selected %s, pixels %d', [Ord(Theme), BoolToStr(Selected, True), Difference]));
         end;
       Writeln('PASS: checkbox pixels for all 4 themes, selected and unselected');
     finally
@@ -2296,6 +3477,25 @@ begin
     D.Show;
     Application.ProcessMessages;
     G := TGridAccess(D.Grid);
+    Check(G.Customization.ColumnMovingGesture = Th5uColumnMovingGesture.Drag, 'Dataset demo requires normal header drag');
+    Check(G.HeaderLayout.Enabled and (G.HeaderLayout.RowCount = 2) and (G.HeaderLayout.Cells.Count
+      = 13), 'Dataset demo must expose matching grouped headers');
+    Check((G.HeaderLayout.Cells[3].ColumnId = 'id') and (G.HeaderLayout.Cells[3].RowSpan = 2), 'Dataset demo ID must span both header rows');
+{$IFDEF TEST_FMX}
+    D.SeparatorsCheck.IsChecked := False;
+{$ELSE}
+    D.SeparatorsCheck.Checked := False;
+{$ENDIF}
+    D.OptionClick(nil);
+    Check((G.Spacing.RowSpacing = 0) and (G.Spacing.DefaultColumnRightSpacing = 0), 'Thin separators did not turn off');
+    Check(G.Columns.FindById('description').RightSpacing = 8, 'Wide description separator disappeared');
+{$IFDEF TEST_FMX}
+    D.SeparatorsCheck.IsChecked := True;
+{$ELSE}
+    D.SeparatorsCheck.Checked := True;
+{$ENDIF}
+    D.OptionClick(nil);
+    Check((G.Spacing.RowSpacing = 1) and (G.Columns.FindById('description').RightSpacing = 8), 'Separator restore failed');
     CheckDemoCheckbox(G);
     E := nil;
     for I := 0 to G.ComponentCount - 1 do
@@ -2416,6 +3616,23 @@ begin
     TestMobileInputAndEditors;
 {$ENDIF}
     TestColumnMovingStreaming;
+    TestRightClickSelection;
+    TestGroupedHeaderMoving;
+{$IFNDEF TEST_FMX}
+    TestVclMouseMessages;
+    TestVclMoveFeedback;
+    TestVclGroupedMoveFeedback;
+    TestVclCapturedCursors;
+{$ENDIF}
+    TestColumnResizing;
+    TestResizeHitZones;
+    TestLastColumnHitZone;
+{$IFDEF TEST_FMX}
+    TestTouchHeaders;
+    TestHeaderPanFeedback;
+    TestTouchBodyAfterResize;
+    TestScrolledTextLayout;
+{$ENDIF}
     TestMixedSelection;
     TestBlockMoving;
     TestElementStyleAndModes;

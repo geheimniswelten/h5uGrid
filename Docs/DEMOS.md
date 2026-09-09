@@ -115,6 +115,44 @@ Zweck:
 - Append-/Update-Verhalten
 - Test von Scrolling und Cache bei sich ändernder Datenmenge
 
+## Maus und Touch
+
+Alle sechs Demos setzen `Grid.Customization.ColumnMovingGesture := Th5uColumnMovingGesture.Drag`.
+Einfaches Ziehen am Spaltenkopf verschiebt die Spalte. Ctrl-Klick markiert einzelne Spalten;
+Shift-Klick erweitert die Header-Auswahl. Die Komponente selbst verwendet weiterhin
+`AltDrag` als Standard; bei dieser Einstellung markiert normales Ziehen einen Spaltenbereich.
+
+Am rechten Rand eines Spaltenkopfs zeigt `crHSplit` die Größenänderung an. Der Bereich
+erstreckt sich vier Koordinateneinheiten zu beiden Seiten des Rands. In FMX beträgt die
+Touch-Trefferzone zwölf Einheiten je Seite. Beide Seiten sind über
+`Customization.ColumnResizeHitZoneLeft/Right` und
+`Customization.TouchColumnResizeHitZoneLeft/Right` getrennt einstellbar.
+Für die letzte eingeblendete Spalte überschreiben `LastColumnResizeHitZoneLeft`
+und `TouchLastColumnResizeHitZoneLeft` den linken Abstand; Standard `-1` übernimmt den normalen Wert. Touch-Ziehen am Header verschiebt ohne Alt;
+Wischen im Datenbereich scrollt. Die fixierte ID bleibt dabei stehen; andere Spalten
+wandern dahinter, ohne ihre gespeicherte Breite zu ändern. Beschriftungen behalten
+ihre Breite und werden am Rand abgeschnitten.
+
+Die beiden ClientDataset-Demos zeigen ein schaltbares zweizeiliges Headerlayout.
+Die ID steht separat fest über beide Zeilen. Die Gruppen „Stammdaten“, „Mengen und
+Bewertung“ und „Status / Medien“ lassen sich mitsamt Unterheadern und Datenspalten
+verschieben. Unterheader lassen sich innerhalb ihrer Gruppe umordnen. Gruppen bleiben
+zusammenhängend und überschreiten keine fixierten Bereiche. Verdeckte Kind-Spaltengrenzen
+sind im oberen Gruppenheader keine Resize-Treffer; dort zählt der sichtbare Gruppenrand.
+
+In VCL und FMX bleibt beim Ziehen der Ausgangsheader markiert. Eine Beschriftung folgt der
+Maus bzw. dem Finger, und eine senkrechte Linie zeigt die gültige Einfügeposition.
+Erst beim Loslassen wird die Reihenfolge geändert. Bei einem markierten Block zeigt
+die Beschriftung zusätzlich die Anzahl weiterer Spalten an. Ungültige Ziele haben
+keine Einfügelinie; Escape oder Capture-Verlust entfernt die Rückmeldung.
+In FMX aktualisieren native Pan-Ereignisse von Maus und Touch die am Header begonnene
+Aktion, ohne gleichzeitig zu scrollen. VCL aktualisiert auch während Capture den
+sichtbaren Drag-/Resize-Cursor und stellt ihn beim Abschluss wieder her.
+
+In den Dataset-Demos schaltet „1 px Trennlinien“ die allgemeinen Linien. Der explizite
+8-Pixel-Spaltentrenner zwischen Beschreibung und Menge bleibt sichtbar, ebenso die
+aktivierten breiteren Zeilentrenner.
+
 ## Empfohlene Testreihenfolge
 
 1. VCL ClientDataset bauen und starten.

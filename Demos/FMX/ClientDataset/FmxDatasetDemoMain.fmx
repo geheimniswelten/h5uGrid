@@ -142,6 +142,16 @@ object FmxDatasetDemoForm: TFmxDatasetDemoForm
       Size.PlatformDefault = False
       OnChange = OptionClick
     end
+    object MultiHeaderCheck: TCheckBox
+      IsChecked = True
+      Position.X = 800.000000000000000000
+      Position.Y = 52.000000000000000000
+      Size.Width = 190.000000000000000000
+      Size.Height = 24.000000000000000000
+      Size.PlatformDefault = False
+      Text = 'Mehrzeiliger Header'
+      OnChange = OptionClick
+    end
     object ToggleGroupsButton: TButton
       Position.X = 666.000000000000000000
       Position.Y = 48.000000000000000000
@@ -267,7 +277,96 @@ object FmxDatasetDemoForm: TFmxDatasetDemoForm
         ReadOnly = True
         DataType = Integer
       end>
-    HeaderLayout.Cells = <>
+    HeaderLayout.Enabled = True
+    HeaderLayout.RowCount = 2
+    HeaderLayout.Cells = <
+      item
+        Id = 'master'
+        Caption = 'Stammdaten'
+        LayoutColumn = 1
+        ColumnSpan = 3
+      end
+      item
+        Id = 'values'
+        Caption = 'Mengen und Bewertung'
+        LayoutColumn = 4
+        ColumnSpan = 3
+      end
+      item
+        Id = 'state'
+        Caption = 'Status / Medien'
+        LayoutColumn = 7
+        ColumnSpan = 3
+      end
+      item
+        Id = ''
+        Caption = 'ID'
+        ColumnId = 'id'
+        RowSpan = 2
+      end
+      item
+        Id = ''
+        Caption = 'Name'
+        ColumnId = 'name'
+        LayoutRow = 1
+        LayoutColumn = 1
+      end
+      item
+        Id = ''
+        Caption = 'Kategorie'
+        ColumnId = 'category'
+        LayoutRow = 1
+        LayoutColumn = 2
+      end
+      item
+        Id = ''
+        Caption = 'Beschreibung'
+        ColumnId = 'description'
+        LayoutRow = 1
+        LayoutColumn = 3
+      end
+      item
+        Id = ''
+        Caption = 'Menge'
+        ColumnId = 'quantity'
+        LayoutRow = 1
+        LayoutColumn = 4
+      end
+      item
+        Id = ''
+        Caption = 'Einzelpreis'
+        ColumnId = 'unit_price'
+        LayoutRow = 1
+        LayoutColumn = 5
+      end
+      item
+        Id = ''
+        Caption = 'Priorit'#228't'
+        ColumnId = 'priority'
+        LayoutRow = 1
+        LayoutColumn = 6
+      end
+      item
+        Id = ''
+        Caption = 'Aktiv'
+        ColumnId = 'active'
+        LayoutRow = 1
+        LayoutColumn = 7
+      end
+      item
+        Id = ''
+        Caption = 'Aktualisiert'
+        ColumnId = 'updated_at'
+        LayoutRow = 1
+        LayoutColumn = 8
+      end
+      item
+        Id = ''
+        Caption = 'Bild'
+        ColumnId = 'picture'
+        LayoutRow = 1
+        LayoutColumn = 9
+      end>
     Selection.AllowedKinds = [Rows, Columns, CellRanges]
     RowHeight.Mode = Automatic
     RowHeight.MinHeight = 26

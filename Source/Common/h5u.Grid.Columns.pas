@@ -17,6 +17,7 @@ uses
 type
   Th5uGridColumn = class;
   Th5uGridColumns = class;
+  Th5uHeaderLayout = class;
 
   Th5uCellEvent = procedure(Sender: TObject; AColumn: Th5uGridColumn; ARowIndex: Int64) of object;
   Th5uCellPermissionEvent = procedure(Sender: TObject; AColumn: Th5uGridColumn; ARowIndex: Int64; var AAllow: Boolean) of object;
@@ -154,7 +155,7 @@ type
     procedure NormalizeVisibleIndexes;
     procedure MoveColumn(AColumn: Th5uGridColumn; ANewVisibleIndex: Integer);
     // ANewVisibleIndex is the block's first index after removal and insertion.
-    procedure MoveColumns(const AColumns: array of Th5uGridColumn; ANewVisibleIndex: Integer);
+    procedure MoveColumns(const AColumns: array of Th5uGridColumn; ANewVisibleIndex: Integer; AHeaderLayout: Th5uHeaderLayout = nil);
     property Items[AIndex: Integer]: Th5uGridColumn read GetItem write SetItem; default;
     property OnGetMode: Th5uGetColumnModeEvent read FOnGetMode write FOnGetMode;
     property OnChanged: Th5uColumnChangedEvent read FOnChanged write FOnChanged;
@@ -205,10 +206,16 @@ type
     FEnabled: Boolean;
     procedure SetCells(const AValue: Th5uHeaderLayoutCells);
     procedure SetRowCount(const AValue: Integer);
+    function UsesColumnBindings(ACell: Th5uHeaderLayoutCell): Boolean;
   public
     constructor Create(AOwner: TPersistent);
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
+    function ContainsCell(ACell: Th5uHeaderLayoutCell): Boolean;
+    function ColumnRange(ACell: Th5uHeaderLayoutCell; const AColumns: TArray<Th5uGridColumn>; out AFirst, ALast: Integer): Boolean;
+    function CanMoveColumns(const AColumns: TArray<Th5uGridColumn>; AFirst, ACount, ANewIndex: Integer): Boolean;
+    procedure ColumnsMoved(const ABefore, AAfter: TArray<Th5uGridColumn>);
+    function MovesWithColumns(AColumn: Th5uGridColumn; const AColumns: TArray<Th5uGridColumn>; AFirst, ACount: Integer): Boolean;
     property Owner: TPersistent read FOwner;
   published
     property Enabled: Boolean read FEnabled write FEnabled default False;
@@ -502,27 +509,34 @@ begin
   MoveColumns([AColumn], ANewVisibleIndex);
 end;
 
-procedure Th5uGridColumns.MoveColumns(const AColumns: array of Th5uGridColumn; ANewVisibleIndex: Integer);
+procedure Th5uGridColumns.MoveColumns(const AColumns: array of Th5uGridColumn; ANewVisibleIndex: Integer; AHeaderLayout: Th5uHeaderLayout);
 var
   LColumns: TArray<Th5uGridColumn>;
-  LList: TList<Th5uGridColumn>;
-  I, LFirst: Integer;
+  LList, LAll, LMoving: TList<Th5uGridColumn>;
+  I, J, LFirst, LInsert: Integer;
+  LMove: Boolean;
+  LAnchor: Th5uGridColumn;
 begin
-  if Length(AColumns) = 0 then Exit;
+  if Length(AColumns) = 0 then
+    Exit;
   LColumns := VisibleColumns;
   LFirst := -1;
   for I := 0 to High(LColumns) do
-    if LColumns[I] = AColumns[0] then LFirst := I;
-  if (LFirst < 0) or (LFirst + Length(AColumns) > Length(LColumns)) then Exit;
+    if LColumns[I] = AColumns[0] then
+      LFirst := I;
+  if (LFirst < 0) or (LFirst + Length(AColumns) > Length(LColumns)) then
+    Exit;
   for I := 0 to High(AColumns) do
   begin
     // Validate ownership/contiguity before dereferencing supplied columns.
-    if LColumns[LFirst + I] <> AColumns[I] then Exit;
-    if (AColumns[I].MovePermission = Th5uColumnMovePermission.Deny)
-      or (AColumns[I].FixedKind <> AColumns[0].FixedKind) then Exit;
+    if LColumns[LFirst + I] <> AColumns[I] then
+      Exit;
+    if (AColumns[I].MovePermission = Th5uColumnMovePermission.Deny) or (AColumns[I].FixedKind <> AColumns[0].FixedKind) then
+      Exit;
   end;
   ANewVisibleIndex := EnsureRange(ANewVisibleIndex, 0, Length(LColumns) - Length(AColumns));
-  if ANewVisibleIndex = LFirst then Exit;
+  if ANewVisibleIndex = LFirst then
+    Exit;
   LList := TList<Th5uGridColumn>.Create;
   try
     LList.AddRange(LColumns);
@@ -531,7 +545,50 @@ begin
     // Moving never changes which columns are fixed or crosses a fixed region.
     for I := 0 to LList.Count - 1 do
       if LList[I].FixedKind <> LColumns[I].FixedKind then Exit;
-    for I := 0 to LList.Count - 1 do LList[I].FVisibleIndex := I;
+    if Assigned(AHeaderLayout) and AHeaderLayout.Enabled then
+    begin
+      if not AHeaderLayout.CanMoveColumns(LColumns, LFirst, Length(AColumns), ANewVisibleIndex) then Exit;
+      LAll := TList<Th5uGridColumn>.Create;
+      LMoving := TList<Th5uGridColumn>.Create;
+      try
+        for I := 0 to Count - 1 do
+          LAll.Add(Items[I]);
+        LAll.Sort(TComparer<Th5uGridColumn>.Construct(CompareVisibleColumns));
+        for I := LAll.Count - 1 downto 0 do
+        begin
+          LMove := AHeaderLayout.MovesWithColumns(LAll[I], LColumns, LFirst, Length(AColumns));
+          for J := 0 to High(AColumns) do
+            LMove := LMove or (LAll[I] = AColumns[J]);
+          if not LMove then
+            Continue;
+          if (LAll[I].MovePermission = Th5uColumnMovePermission.Deny) or (LAll[I].FixedKind <> AColumns[0].FixedKind) then
+            Exit;
+          LMoving.Insert(0, LAll[I]);
+          LAll.Delete(I);
+        end;
+        LInsert := LAll.Count;
+        if ANewVisibleIndex + Length(AColumns) < LList.Count then
+        begin
+          LAnchor := LList[ANewVisibleIndex + Length(AColumns)];
+          LInsert := LAll.IndexOf(LAnchor);
+          while (LInsert > 0) and AHeaderLayout.MovesWithColumns(LAll[LInsert - 1], LList.ToArray,
+            ANewVisibleIndex + Length(AColumns), LList.Count - ANewVisibleIndex - Length(AColumns))
+          do
+            Dec(LInsert);
+        end;
+        LAll.InsertRange(LInsert, LMoving.ToArray);
+        AHeaderLayout.ColumnsMoved(LColumns, LList.ToArray);
+        // Include hidden descendants so showing them again restores the moved group.
+        for I := 0 to LAll.Count - 1 do
+          LAll[I].FVisibleIndex := I;
+      finally
+        LMoving.Free;
+        LAll.Free;
+      end;
+    end
+    else
+      for I := 0 to LList.Count - 1 do
+        LList[I].FVisibleIndex := I;
     Changed;
   finally
     LList.Free;
@@ -617,6 +674,166 @@ begin
 end;
 
 { Th5uHeaderLayout }
+
+function Th5uHeaderLayout.ContainsCell(ACell: Th5uHeaderLayoutCell): Boolean;
+var
+  I: Integer;
+begin
+  for I := 0 to FCells.Count - 1 do
+    if FCells[I] = ACell then
+      Exit(True);
+  Result := False;
+end;
+
+function Th5uHeaderLayout.UsesColumnBindings(ACell: Th5uHeaderLayoutCell): Boolean;
+var
+  LCell: Th5uHeaderLayoutCell;
+  I: Integer;
+begin
+  if ACell.ColumnId <> '' then Exit(True);
+  for I := 0 to FCells.Count - 1 do
+  begin
+    LCell := FCells[I];
+    if (LCell.ColumnId <> '') and (LCell.LayoutRow >= ACell.LayoutRow)
+      and (LCell.LayoutColumn >= ACell.LayoutColumn) 
+      and (LCell.LayoutColumn < ACell.LayoutColumn + Max(1, ACell.ColumnSpan))
+    then
+      Exit(True);
+  end;
+  Result := False;
+end;
+
+function Th5uHeaderLayout.ColumnRange(ACell: Th5uHeaderLayoutCell; const AColumns: TArray<Th5uGridColumn>; out AFirst, ALast: Integer): Boolean;
+var
+  LCell: Th5uHeaderLayoutCell;
+  I, J: Integer;
+begin
+  AFirst := Length(AColumns);
+  ALast := -1;
+  if not Assigned(ACell) then
+    Exit(False);
+  // ColumnId binds a leaf to its data column. A group inherits the bindings of
+  // its descendants; LayoutColumn remains their logical position in the definition.
+  // Consequently reordering and hiding a column cannot detach its caption/group.
+  if UsesColumnBindings(ACell) then
+  begin
+    for I := 0 to FCells.Count - 1 do
+    begin
+      LCell := FCells[I];
+      if ACell.ColumnId <> '' then
+      begin
+        if LCell <> ACell then
+          Continue;
+      end
+      else
+        if (LCell.LayoutRow < ACell.LayoutRow) or (LCell.LayoutColumn < ACell.LayoutColumn)
+          or (LCell.LayoutColumn >= ACell.LayoutColumn + Max(1, ACell.ColumnSpan))
+        then
+          Continue;
+      if LCell.ColumnId = '' then
+        Continue;
+      for J := 0 to High(AColumns) do
+        if SameText(AColumns[J].Id, LCell.ColumnId) then
+        begin
+          AFirst := Min(AFirst, J);
+          ALast := Max(ALast, J);
+        end;
+    end;
+  end
+  else
+  begin
+    AFirst := ACell.LayoutColumn;
+    ALast := Min(High(AColumns), AFirst + Max(1, ACell.ColumnSpan) - 1);
+  end;
+  if (ACell.ColumnId <> '') and (AFirst <= ALast) then
+    ALast := Min(High(AColumns), AFirst + Max(1, ACell.ColumnSpan) - 1);
+  Result := (AFirst >= 0) and (AFirst <= ALast);
+end;
+
+function Th5uHeaderLayout.CanMoveColumns(const AColumns: TArray<Th5uGridColumn>; AFirst, ACount, ANewIndex: Integer): Boolean;
+var
+  I, J, LFirst, LLast, LMin, LMax, LIndex: Integer;
+
+  function MovedIndex(AIndex: Integer): Integer;
+  begin
+    if (AIndex >= AFirst) and (AIndex < AFirst + ACount) then
+      Exit(ANewIndex + AIndex - AFirst);
+    Result := AIndex;
+    if Result >= AFirst + ACount then
+      Dec(Result, ACount);
+    if Result >= ANewIndex then
+      Inc(Result, ACount);
+  end;
+
+begin
+  Result := False;
+  if (AFirst < 0) or (ACount < 1) or (AFirst + ACount > Length(AColumns)) or (ANewIndex < 0) or (ANewIndex + ACount > Length(AColumns)) then
+    Exit;
+  // A header must still cover a contiguous range after the move. This preserves
+  // parent groups while allowing both sibling groups and their leaves to move.
+  for I := 0 to FCells.Count - 1 do
+    if ColumnRange(FCells[I], AColumns, LFirst, LLast) then
+    begin
+      LMin := Length(AColumns);
+      LMax := -1;
+      for J := LFirst to LLast do
+      begin
+        LIndex := MovedIndex(J);
+        LMin := Min(LMin, LIndex);
+        LMax := Max(LMax, LIndex);
+      end;
+      if LMax - LMin <> LLast - LFirst then
+        Exit;
+    end;
+  Result := True;
+end;
+
+function Th5uHeaderLayout.MovesWithColumns(AColumn: Th5uGridColumn; const AColumns: TArray<Th5uGridColumn>; AFirst, ACount: Integer): Boolean;
+var
+  LGroup, LLeaf: Th5uHeaderLayoutCell;
+  I, J, LFirst, LLast: Integer;
+begin
+  Result := False;
+  if AColumn.Visible then
+    Exit;
+  for I := 0 to FCells.Count - 1 do
+  begin
+    LGroup := FCells[I];
+    if (LGroup.ColumnSpan <= 1) or not ColumnRange(LGroup, AColumns, LFirst, LLast) or (LFirst < AFirst) or (LLast >= AFirst + ACount) then
+      Continue;
+    for J := 0 to FCells.Count - 1 do
+    begin
+      LLeaf := FCells[J];
+      if SameText(LLeaf.ColumnId, AColumn.Id) and (LLeaf.LayoutRow >= LGroup.LayoutRow) and (LLeaf.LayoutColumn >= LGroup.LayoutColumn)
+        and (LLeaf.LayoutColumn < LGroup.LayoutColumn + Max(1, LGroup.ColumnSpan))
+      then
+        Exit(True);
+    end;
+  end;
+end;
+
+procedure Th5uHeaderLayout.ColumnsMoved(const ABefore, AAfter: TArray<Th5uGridColumn>);
+var
+  I, J, K, LFirst, LLast, LNewFirst: Integer;
+  LPositions: TArray<Integer>;
+begin
+  SetLength(LPositions, FCells.Count);
+  for I := 0 to FCells.Count - 1 do
+  begin
+    LPositions[I] := FCells[I].LayoutColumn;
+    if UsesColumnBindings(FCells[I]) or not ColumnRange(FCells[I], ABefore, LFirst, LLast) then
+      Continue;
+    LNewFirst := Length(AAfter);
+    for J := LFirst to LLast do
+      for K := 0 to High(AAfter) do
+        if ABefore[J] = AAfter[K] then
+          LNewFirst := Min(LNewFirst, K);
+    if LNewFirst < Length(AAfter) then
+      LPositions[I] := LNewFirst;
+  end;
+  for I := 0 to FCells.Count - 1 do
+    FCells[I].LayoutColumn := LPositions[I];
+end;
 
 procedure Th5uHeaderLayout.Assign(Source: TPersistent);
 begin

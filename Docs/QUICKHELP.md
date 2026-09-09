@@ -608,6 +608,51 @@ Bei unerwartetem Verhalten zuerst prüfen:
 5. Wird ein Factoryobjekt in `FactoryScope.OnBindInstance` vollständig auf den neuen Kontext eingestellt?
 6. Ist der passende VCL- beziehungsweise FMX-Unit-Scope aktiv?
 
+## Rechtsklick-Selektion und Spaltenbedienung
+
+```pascal
+Grid1.Selection.RightClickSelect := True; // Standard: False
+Grid1.Customization.ColumnMovingGesture := Th5uColumnMovingGesture.Drag;
+Grid1.Customization.AllowColumnResizing := True;
+Grid1.Customization.ColumnResizeHitZoneLeft := 4;
+Grid1.Customization.ColumnResizeHitZoneRight := 4;
+Grid1.Customization.TouchColumnResizeHitZoneLeft := 12;
+Grid1.Customization.TouchColumnResizeHitZoneRight := 12;
+Grid1.Customization.LastColumnResizeHitZoneLeft := -1;
+Grid1.Customization.TouchLastColumnResizeHitZoneLeft := -1;
+```
+
+Bei `RightClickSelect = False` verändert ein Rechtsklick weder Zellselektion noch Zellfokus.
+Bei `True` erhält die angeklickte Datenzelle den Fokus. Ist sie bereits durch einen
+Zellbereich, eine Zeilen- oder Spaltenauswahl ausgewählt, bleibt die gesamte Auswahl
+erhalten. Andernfalls ersetzt die einzelne Zelle alle bisherigen Auswahlarten, auch mit
+gedrücktem Ctrl/Shift. Rechtsklick auf leeren Hintergrund erhält Auswahl und Zellfokus.
+`AllowedKinds`, `Column.CanSelect` und die vorhandene `OnCanFocus`-Prüfung gelten weiterhin.
+Der Rechtsklick startet keinen Editor und schaltet keine Checkbox um.
+
+Die Komponente verwendet standardmäßig `AltDrag` zum Verschieben; die Demos verwenden
+`Drag`. Ctrl/Shift am Header bleiben für die Spaltenauswahl verfügbar. Größenänderungen
+am sichtbaren rechten Header-Rand haben Vorrang vor Auswahl und Verschieben. `crHSplit`
+zeigt die horizontale Größenänderung an; `AllowColumnResizing`, `Column.CanResize`,
+`MinWidth` und `MaxWidth` begrenzen sie. Beim Verlassen oder Beenden der Aktion wird
+der vorherige Cursor wiederhergestellt.
+
+Die vier HitZone-Properties geben den Abstand links bzw. rechts vom tatsächlichen
+Spaltenrand an. Maus und Touch sind getrennt konfigurierbar. Negative Werte werden
+auf null begrenzt; null lässt auf der betreffenden Seite nur den Rand selbst zu.
+Bei überlappenden Trefferzonen gewinnt der nächstgelegene sichtbare Spaltenrand.
+VCL verwendet Pixel, FMX logische Koordinateneinheiten.
+
+`LastColumnResizeHitZoneLeft` und `TouchLastColumnResizeHitZoneLeft` überschreiben nur
+den linken Abstand am rechten Rand der letzten eingeblendeten Spalte. Standard `-1`
+übernimmt jeweils den aktuellen normalen linken Maus-/Touch-Wert; `0` erlaubt dort
+nur den Rand selbst. Werte unter `-1` werden auf `-1` begrenzt. Ausgeblendete Spalten
+zählen nicht mit, rechts fixierte Spalten stehen am Ende. Horizontales Scrollen macht
+eine mittlere Spalte nicht zur letzten Spalte. Der rechte Trefferabstand bleibt unverändert.
+
+FMX-Touch verwendet größere Resize-Trefferzonen und benötigt zum Verschieben am Header
+keine Alt-Taste. Wischen im Datenbereich scrollt weiterhin, Tippen wählt die Zelle aus.
+
 ## 21. Quellformatierung
 
 Für Pascal-Quellen gelten maximal 150 Zeichen einschließlich Einrückung. Properties und Methodensignaturen einschließlich Implementationsköpfen bleiben bis 180 Zeichen einzeilig. Bei umgebrochenen Ausdrücken stehen Operatoren am Anfang der Folgezeile.
@@ -618,3 +663,18 @@ python Build\format_pascal.py --check
 ```
 
 Der Formatter bearbeitet nur Deklarationsblöcke. Ausführbare Anweisungen bleiben unverändert. Details: [CODING-STYLE.md](CODING-STYLE.md).
+
+### Mehrzeilige Spaltenheader
+
+VCL und FMX unterstützen `HeaderLayout.Enabled`, `RowCount` und `Cells` mit
+`LayoutRow`, `LayoutColumn`, `RowSpan` und `ColumnSpan`. `ColumnId` bindet einen
+Unterheader an die Datenspalte. Bei Gruppen bezeichnet `LayoutColumn` die logische
+Position ihrer Unterheader in der Definition; die gezeichnete Position folgt der
+aktuellen Spaltenreihenfolge. Ausgeblendete Gruppenmitglieder behalten ihre Zuordnung.
+
+Ziehen am Gruppenheader verschiebt die gesamte Gruppe. Ziehen an einem Unterheader
+ordnet die entsprechende Spalte um. Die Headerbereiche bleiben zusammenhängend;
+fixierte Bereiche und Verschiebeberechtigungen gelten auch für Gruppenmitglieder.
+`HitTest` bzw. `GridHitTest` liefern in `HeaderCell` die tatsächlich getroffene
+Layoutzelle und in `Bounds` deren sichtbares Rechteck. Markierung und Einfügelinie
+beginnen auf dieser Header-Ebene. Das gilt für Maus und Touch einschließlich FMX-Pan.
