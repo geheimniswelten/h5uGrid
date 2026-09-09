@@ -26,6 +26,7 @@ uses
   Vcl.Imaging.jpeg,
   Vcl.Imaging.GIFImg,
   h5u.Grid.AdjacentGroups,
+  h5u.Grid.Values,
   h5u.Grid.Columns,
   h5u.Grid.Data.Core,
   h5u.Grid.Factory,
@@ -1341,47 +1342,16 @@ begin
 end;
 
 procedure Th5uVclGrid.GetColumnMode(AColumn: Th5uGridColumn; var AMode: string);
-var
-  LKey: string;
-  procedure Add(const AToken: string);
-  begin
-    if AMode <> '' then AMode := AMode + ' ';
-    AMode := AMode + AToken;
-  end;
 begin
-  AMode := '';
-  if not Assigned(AColumn) then Exit;
-  LKey := '';
-  if Assigned(FDataController) then
-    if IsPublishedProp(FDataController, 'KeyFieldName') then
-      LKey := GetStrProp(FDataController, 'KeyFieldName')
-    else if IsPublishedProp(FDataController, 'KeyPropertyName') then
-      LKey := GetStrProp(FDataController, 'KeyPropertyName');
-  if (LKey <> '') and SameText(AColumn.FieldName, LKey) then
-    Add('KeyField');
-  if (FTree.LevelColumnId <> '') and SameText(AColumn.Id, FTree.LevelColumnId) then
-    Add('TreeLevel');
-  if (FAdjacentGroupFolding.IdColumnId <> '') and SameText(AColumn.Id, FAdjacentGroupFolding.IdColumnId) then
-    Add('GroupId');
-  if (FRowStyles.StyleKeyColumnId <> '') and SameText(AColumn.Id, FRowStyles.StyleKeyColumnId) then
-    Add('StyleKey');
-  if (FScrollHints.VerticalColumnId <> '') and SameText(AColumn.Id, FScrollHints.VerticalColumnId) then
-    Add('ScrollHint');
+  AMode := h5uColumnMode(AColumn, FDataController, FTree.LevelColumnId, FAdjacentGroupFolding.IdColumnId,
+    FRowStyles.StyleKeyColumnId, FScrollHints.VerticalColumnId);
 end;
 
 function Th5uVclGrid.ColumnModeSymbols(AColumn: Th5uGridColumn): string;
-var
-  LMode: string;
 begin
   Result := '';
-  if not Assigned(AColumn) or not (FShowColumnModes or (csDesigning in ComponentState)) then
-    Exit;
-  LMode := ' ' + AColumn.Mode + ' ';
-  if Pos(' KeyField ',   LMode) > 0 then Result := Result + #$26BF;
-  if Pos(' TreeLevel ',  LMode) > 0 then Result := Result + #$21B3;
-  if Pos(' GroupId ',    LMode) > 0 then Result := Result + #$2261;
-  if Pos(' StyleKey ',   LMode) > 0 then Result := Result + #$25C6;
-  if Pos(' ScrollHint ', LMode) > 0 then Result := Result + #$2195;
+  if Assigned(AColumn) and (FShowColumnModes or (csDesigning in ComponentState)) then
+    Result := h5uColumnModeSymbols(AColumn.Mode);
 end;
 
 procedure Th5uVclGrid.ColumnsChanged(Sender: TObject; AColumn: Th5uGridColumn);
@@ -1420,95 +1390,42 @@ begin
 end;
 
 function Th5uVclGrid.AllowCellEdit(AColumn: Th5uGridColumn; ARow: Int64): Boolean;
-var
-  LAllow: Boolean;
 begin
   Result := False;
   if not CanUpdateLayout then
     Exit;
-  LAllow := FAllowEditing and not AColumn.ReadOnly and CanEditViewValue(ARow, AColumn.FieldName);
-  if Assigned(AColumn.OnCanEdit) then
-    AColumn.OnCanEdit(AColumn, AColumn, ARow, LAllow);
-  if Assigned(FOnCanEdit) then
-    FOnCanEdit(Self, AColumn, ARow, LAllow);
-  Result := LAllow;
+  Result := h5uCellPermission(Self, AColumn, ARow,
+    FAllowEditing and not AColumn.ReadOnly and CanEditViewValue(ARow, AColumn.FieldName),
+    AColumn.OnCanEdit, FOnCanEdit);
 end;
 
 function Th5uVclGrid.GetCellValue(AColumn: Th5uGridColumn; ARow: Int64; ADisplay: Boolean): TValue;
 begin
   Result := GetViewValue(ARow, AColumn.FieldName);
-  if not CanUpdateLayout then
-    Exit;
-  if Assigned(AColumn.OnGetValue) then
-    AColumn.OnGetValue(AColumn, AColumn, ARow, Result, ADisplay)
-  else if Assigned(FOnGetValue) then
-    FOnGetValue(Self, AColumn, ARow, Result, ADisplay);
+  if CanUpdateLayout then
+    h5uOverrideCellValue(Self, AColumn, ARow, ADisplay, FOnGetValue, Result);
 end;
 
 function Th5uVclGrid.GetCellText(AColumn: Th5uGridColumn; ARow: Int64; ADisplay: Boolean): string;
 begin
-  if Assigned(AColumn.OnGetValue) or Assigned(FOnGetValue) then
-  begin
-    if ADisplay then
-      Result := h5uValueToDisplayText(GetCellValue(AColumn, ARow, True), AColumn.DisplayFormat)
-    else
-      Result := h5uValueToDisplayText(GetCellValue(AColumn, ARow, False));
-  end
-  else if ADisplay then
-    Result := GetViewDisplayText(ARow, AColumn.FieldName, AColumn.DisplayFormat)
-  else
-    Result := h5uValueToDisplayText(GetViewValue(ARow, AColumn.FieldName));
+  Result := h5uCellText(AColumn, ARow, ADisplay, Assigned(AColumn.OnGetValue) or Assigned(FOnGetValue),
+    GetCellValue, GetViewValue, GetViewDisplayText);
 end;
 
 procedure Th5uVclGrid.PutCellValue(AColumn: Th5uGridColumn; ARow: Int64; const AValue: TValue);
 var
   LValue: TValue;
-  LValid: Boolean;
-  LError: string;
 begin
-  if not CanUpdateLayout then Exit;
-  LValue := AValue;
-  LValid := True;
-  LError := '';
-  if Assigned(AColumn.OnValidate) then
-    AColumn.OnValidate(AColumn, AColumn, ARow, LValue, LValid, LError)
-  else if Assigned(FOnValidate) then
-    FOnValidate(Self, AColumn, ARow, LValue, LValid, LError);
-  if not LValid then
-  begin
-    if LError = '' then
-      LError := 'Invalid cell value';
-    raise EConvertError.Create(LError);
-  end;
-  if Assigned(AColumn.OnSetValue) then
-    AColumn.OnSetValue(AColumn, AColumn, ARow, LValue)
-  else if Assigned(FOnSetValue) then
-    FOnSetValue(Self, AColumn, ARow, LValue);
+  if not CanUpdateLayout then
+    Exit;
+  LValue := h5uPrepareCellValue(Self, AColumn, ARow, AValue, FOnValidate, FOnSetValue);
   SetViewValue(ARow, AColumn.FieldName, LValue);
 end;
 
 procedure Th5uVclGrid.NotifyCellClick(AColumn: Th5uGridColumn; ARow: Int64; AHeader, AIndicator: Boolean);
 begin
-  if not CanUpdateLayout then Exit;
-  if AIndicator then
-  begin
-    if Assigned(FOnRowIndicatorClick) then FOnRowIndicatorClick(Self, nil, ARow);
-  end
-  else if Assigned(AColumn) then
-    if AHeader then
-    begin
-      if Assigned(AColumn.OnColumnHeaderClick) then
-        AColumn.OnColumnHeaderClick(AColumn, AColumn, -1);
-      if Assigned(FOnColumnHeaderClick) then
-        FOnColumnHeaderClick(Self, AColumn, -1);
-    end
-    else
-    begin
-      if Assigned(AColumn.OnCellClick) then
-        AColumn.OnCellClick(AColumn, AColumn, ARow);
-      if Assigned(FOnCellClick) then
-        FOnCellClick(Self, AColumn, ARow);
-    end;
+  if CanUpdateLayout then
+    h5uNotifyCellClick(Self, AColumn, ARow, AHeader, AIndicator, FOnCellClick, FOnColumnHeaderClick, FOnRowIndicatorClick);
 end;
 
 
@@ -4493,52 +4410,8 @@ begin
 end;
 
 function Th5uVclGrid.ParseEditorValue(AColumn: Th5uGridColumn; const AText: string): TValue;
-var
-  LInteger: Int64;
-  LFloat: Double;
-  LCurrency: Currency;
-  LDateTime: TDateTime;
 begin
-  case AColumn.DataType of
-    Th5uColumnDataType.Integer:
-      begin
-        if not TryStrToInt64(AText, LInteger) then
-          raise EConvertError.CreateFmt('"%s" ist keine ganze Zahl.', [AText]);
-        Result := TValue.From<Int64>(LInteger);
-      end;
-
-    Th5uColumnDataType.Float:
-      begin
-        if not TryStrToFloat(AText, LFloat) then
-          raise EConvertError.CreateFmt('"%s" ist keine Zahl.', [AText]);
-        Result := TValue.From<Double>(LFloat);
-      end;
-
-    Th5uColumnDataType.Currency:
-      begin
-        if not TryStrToCurr(AText, LCurrency) then
-          raise EConvertError.CreateFmt('"%s" ist kein gültiger Betrag.', [AText]);
-        Result := TValue.From<Currency>(LCurrency);
-      end;
-
-    Th5uColumnDataType.Time:
-      begin
-        if not TryStrToTime(AText, LDateTime) then
-          raise EConvertError.CreateFmt('"%s" ist keine gültige Uhrzeit.', [AText]);
-        Result := TValue.From<TDateTime>(LDateTime);
-      end;
-
-    Th5uColumnDataType.Date,
-    Th5uColumnDataType.DateTime:
-      begin
-        if not TryStrToDateTime(AText, LDateTime) then
-          raise EConvertError.CreateFmt('"%s" ist kein gültiges Datum.', [AText]);
-        Result := TValue.From<TDateTime>(LDateTime);
-      end;
-
-    else
-      Result := TValue.From<string>(AText);
-  end;
+  Result := h5uParseEditorValue(AColumn.DataType, AText, True);
 end;
 
 procedure Th5uVclGrid.RebuildAfterLayoutChange;
