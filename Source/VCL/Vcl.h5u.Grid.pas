@@ -27,6 +27,7 @@ uses
   Vcl.Imaging.GIFImg,
   h5u.Grid.AdjacentGroups,
   h5u.Grid.Values,
+  h5u.Grid.Moving,
   h5u.Grid.Columns,
   h5u.Grid.Data.Core,
   h5u.Grid.Factory,
@@ -3333,43 +3334,20 @@ begin
 end;
 
 function Th5uVclGrid.CanMoveColumn(AColumn: Th5uGridColumn): Boolean;
-var
-  I: Integer;
 begin
-  Result := False;
-  // The source column may have been removed while the mouse was captured.
-  for I := 0 to FColumns.Count - 1 do
-    if FColumns[I] = AColumn then
-    begin
-      case AColumn.MovePermission of
-        Th5uColumnMovePermission.Default: Result := FCustomization.AllowColumnMoving;
-        Th5uColumnMovePermission.Allow: Result := True;
-        Th5uColumnMovePermission.Deny: Result := False;
-      end;
-      Exit;
-    end;
+  Result := h5uCanMoveColumn(FColumns, FCustomization.AllowColumnMoving, AColumn);
 end;
 
 function Th5uVclGrid.IsColumnMoveGesture(AColumn: Th5uGridColumn; AShift: TShiftState): Boolean;
 begin
-  Result := False;
-  if (AShift * [ssCtrl, ssShift] <> []) or not CanMoveColumn(AColumn) then
-    Exit;
-  if FCustomization.ColumnMovingGesture = Th5uColumnMovingGesture.AltDrag then
-    Result := ssAlt in AShift
-  else
-    Result := not (ssAlt in AShift);
+  Result := h5uMoveGestureAllowed(CanMoveColumn(AColumn),
+    FCustomization.ColumnMovingGesture = Th5uColumnMovingGesture.AltDrag, AShift);
 end;
 
 function Th5uVclGrid.IsRowMoveGesture(AShift: TShiftState): Boolean;
 begin
-  Result := False;
-  if not Assigned(FOnRowsMoved) or not FCustomization.AllowRowMoving or (AShift * [ssCtrl, ssShift] <> []) then
-    Exit;
-  if FCustomization.RowMovingGesture = Th5uRowMovingGesture.AltDrag then
-    Result := ssAlt in AShift
-  else
-   Result := not (ssAlt in AShift);
+  Result := h5uMoveGestureAllowed(Assigned(FOnRowsMoved) and FCustomization.AllowRowMoving,
+    FCustomization.RowMovingGesture = Th5uRowMovingGesture.AltDrag, AShift);
 end;
 
 function Th5uVclGrid.GetHeaderCellBounds(ACell: Th5uHeaderLayoutCell): TRect;
@@ -3417,51 +3395,20 @@ end;
 
 function Th5uVclGrid.BeginColumnMove(AColumnIndex: Integer; X, Y: Integer): Boolean;
 var
-  LColumns: TArray<Th5uGridColumn>;
-  LFirst, LLast, I: Integer;
+  LPlan: Th5uColumnMovePlan;
   LHit: Th5uHitTestInfo;
 begin
   Result := False;
-  LColumns := FColumns.VisibleColumns;
-  if (AColumnIndex < 0) or (AColumnIndex >= Length(LColumns)) then Exit;
   LHit := HitTest(X, Y);
-  FMovingHeaderCell := nil;
-  LFirst := AColumnIndex;
-  LLast := LFirst;
-  if Assigned(LHit.HeaderCell) and (LHit.HeaderCell.ColumnSpan > 1) then
-  begin
-    if not FHeaderLayout.ColumnRange(LHit.HeaderCell, LColumns, LFirst, LLast) then
-      Exit;
-  end
-  else if FSelection.IsColumnSelected(LColumns[LFirst].Id) then
-  begin
-    while (LFirst > 0) and FSelection.IsColumnSelected(LColumns[LFirst - 1].Id) do
-      Dec(LFirst);
-    while (LLast < High(LColumns)) and FSelection.IsColumnSelected(LColumns[LLast + 1].Id) do
-      Inc(LLast);
-    // Include the entire selected block or do not start at all (also for hidden selections).
-    if LLast - LFirst + 1 <> FSelection.SelectedColumnCount then
-      Exit;
-  end;
-  for I := LFirst to LLast do
-    if not CanMoveColumn(LColumns[I]) or (LColumns[I].FixedKind <> LColumns[LFirst].FixedKind) then
-      Exit;
-  if Assigned(LHit.HeaderCell) then
-    for I := 0 to FColumns.Count - 1 do
-      if FHeaderLayout.MovesWithColumns(FColumns[I], LColumns, LFirst, LLast - LFirst + 1)
-        and (not CanMoveColumn(FColumns[I]) or (FColumns[I].FixedKind <> LColumns[LFirst].FixedKind))
-      then
-        Exit;
-  FMovingHeaderCell := LHit.HeaderCell;
-  FMovingColumns := Copy(LColumns, LFirst, LLast - LFirst + 1);
+  if not h5uPlanColumnMove(FColumns, FHeaderLayout, FSelection, FCustomization, AColumnIndex, LHit.HeaderCell, LPlan) then
+    Exit;
+  FMovingColumns := LPlan.Columns;
+  FMovingHeaderCell := LPlan.HeaderCell;
+  FMoveCaption := LPlan.Caption;
   FMovePoint := Point(X, Y);
-  FMoveCaption := LColumns[LFirst].Caption;
-  if LLast > LFirst then
-    FMoveCaption := FMoveCaption + Format(' (+%d)', [LLast - LFirst]);
-  FMovePreviewWidth := EnsureRange(LColumns[LFirst].Width, MulDiv(80, CurrentPPI, 96), MulDiv(260, CurrentPPI, 96));
+  FMovePreviewWidth := EnsureRange(LPlan.Columns[0].Width, MulDiv(80, CurrentPPI, 96), MulDiv(260, CurrentPPI, 96));
   if Assigned(FMovingHeaderCell) and (FMovingHeaderCell.ColumnSpan > 1) then
   begin
-    FMoveCaption := FMovingHeaderCell.Caption;
     FMovePreviewWidth := EnsureRange(LHit.Bounds.Width, MulDiv(80, CurrentPPI, 96), MulDiv(260, CurrentPPI, 96));
   end;
   FSelectionDragOrigin := Point(X, Y);
@@ -3471,42 +3418,15 @@ end;
 
 function Th5uVclGrid.BeginRowMove(ARowIndex: Int64; X, Y: Integer): Boolean;
 var
-  LFirst, LLast, LCount, LSelectedCount: Int64;
-  I: Integer;
+  LPlan: Th5uRowMovePlan;
 begin
   Result := False;
   if not CanUpdateLayout or not Assigned(FOnRowsMoved) or not FCustomization.AllowRowMoving then
     Exit;
-  LCount := GetViewRowCount;
-  if (ARowIndex < 0) or (ARowIndex >= LCount) then
+  if not h5uPlanRowMove(FSelection, ARowIndex, GetViewRowCount, GetViewRowKey, LPlan) then
     Exit;
-  LFirst := ARowIndex;
-  LLast := LFirst;
-  if FSelection.IsRowSelected(GetViewRowKey(LFirst)) then
-  begin
-    LSelectedCount := FSelection.SelectedRowCount(LCount);
-    if (LSelectedCount >= LCount) or (LSelectedCount <= 0) then
-      Exit;
-    // Visit only the selected neighbours; virtual grids must not scan every row.
-    while (LFirst > 0) and FSelection.IsRowSelected(GetViewRowKey(LFirst - 1)) do
-      Dec(LFirst);
-    while (LLast < LCount - 1) and FSelection.IsRowSelected(GetViewRowKey(LLast + 1)) do
-      Inc(LLast);
-    if LLast - LFirst + 1 <> LSelectedCount then Exit;
-  end;
-  if LLast - LFirst >= MaxInt then
-    Exit;
-  SetLength(FMovingRowKeys, LLast - LFirst + 1);
-  for I := 0 to High(FMovingRowKeys) do
-  begin
-    FMovingRowKeys[I] := GetViewRowKey(LFirst + I);
-    if FMovingRowKeys[I].IsEmpty then
-    begin
-      FMovingRowKeys := nil;
-      Exit;
-    end;
-  end;
-  FMovingFirstRowIndex := LFirst;
+  FMovingRowKeys := LPlan.RowKeys;
+  FMovingFirstRowIndex := LPlan.FirstRowIndex;
   FSelectionDragOrigin := Point(X, Y);
   MouseCapture := True;
   Result := True;
@@ -3573,8 +3493,7 @@ end;
 function Th5uVclGrid.ColumnMoveTarget(X, Y: Integer; out ANewIndex, AMarkerX, AMarkerTop: Integer): Boolean;
 var
   LHit: Th5uHitTestInfo;
-  LColumns: TArray<Th5uGridColumn>;
-  LFirst, LTargetFirst, LTargetLast, I: Integer;
+  LAfter: Boolean;
 begin
   Result := False;
   ANewIndex := -1;
@@ -3587,59 +3506,16 @@ begin
   LHit := HitTest(X, Y);
   if (LHit.Kind <> Th5uHitKind.Header) or not Assigned(LHit.Column) then
     Exit;
-  LColumns := FColumns.VisibleColumns;
-  LFirst := -1;
-  for I := 0 to High(LColumns) do
-    if LColumns[I] = FMovingColumns[0] then
-      LFirst := I;
-  if (LFirst < 0) or (LFirst + Length(FMovingColumns) > Length(LColumns)) then
-    Exit;
-  for I := 0 to High(FMovingColumns) do
+  Result := h5uColumnMoveTarget(FColumns, FHeaderLayout, FCustomization, FMovingColumns, FMovingHeaderCell,
+    LHit.Column, LHit.ColumnIndex, LHit.HeaderCell, ANewIndex, LAfter);
+  if Result then
   begin
-    if LColumns[LFirst + I] <> FMovingColumns[I] then
-      Exit;
-    if not CanMoveColumn(FMovingColumns[I]) then
-      Exit;
-    if FMovingColumns[I].FixedKind <> LHit.Column.FixedKind then
-      Exit;
+    AMarkerTop := LHit.Bounds.Top;
+    if LAfter then
+      AMarkerX := LHit.Bounds.Right
+    else
+      AMarkerX := LHit.Bounds.Left;
   end;
-  if Assigned(FMovingHeaderCell) then
-    for I := 0 to FColumns.Count - 1 do
-      if FHeaderLayout.MovesWithColumns(FColumns[I], LColumns, LFirst, Length(FMovingColumns))
-        and (not CanMoveColumn(FColumns[I]) or (FColumns[I].FixedKind <> LColumns[LFirst].FixedKind))
-      then
-        Exit;
-  LTargetFirst := LHit.ColumnIndex;
-  LTargetLast := LTargetFirst;
-  if Assigned(FMovingHeaderCell) then
-  begin
-    if not Assigned(LHit.HeaderCell) then
-      Exit;
-    if FMovingHeaderCell.ColumnSpan > 1 then
-    begin
-      if LHit.HeaderCell.LayoutRow <> FMovingHeaderCell.LayoutRow then
-        Exit;
-    end
-    else if (LHit.HeaderCell.ColumnSpan > 1) or (LHit.HeaderCell.LayoutRow >= FMovingHeaderCell.LayoutRow + Max(1, FMovingHeaderCell.RowSpan))
-      or (FMovingHeaderCell.LayoutRow >= LHit.HeaderCell.LayoutRow + Max(1, LHit.HeaderCell.RowSpan))
-    then
-      Exit;
-    if not FHeaderLayout.ColumnRange(LHit.HeaderCell, LColumns, LTargetFirst, LTargetLast) then
-      Exit;
-  end;
-  if (LTargetFirst < LFirst + Length(FMovingColumns)) and (LTargetLast >= LFirst) then
-    Exit;
-  ANewIndex := LTargetFirst;
-  AMarkerX := LHit.Bounds.Left;
-  AMarkerTop := LHit.Bounds.Top;
-  if LTargetFirst > LFirst then
-  begin
-    ANewIndex := LTargetLast + 1 - Length(FMovingColumns);
-    AMarkerX := LHit.Bounds.Right;
-  end;
-  if FHeaderLayout.Enabled and not FHeaderLayout.CanMoveColumns(LColumns, LFirst, Length(FMovingColumns), ANewIndex) then
-    Exit;
-  Result := True;
 end;
 
 procedure Th5uVclGrid.DrawColumnMoveFeedback;
@@ -3763,7 +3639,7 @@ var
   LHit: Th5uHitTestInfo;
   LMovingColumns: TArray<Th5uGridColumn>;
   LContext: Th5uRowsMovedContext;
-  LNewIndex, LMarkerX, LMarkerTop, I: Integer;
+  LNewIndex, LMarkerX, LMarkerTop: Integer;
   LDragging, LColumnTargetValid: Boolean;
 begin
   Result := (Length(FMovingColumns) > 0) or (Length(FMovingRowKeys) > 0);
@@ -3805,25 +3681,8 @@ begin
       or not (LHit.Kind in [Th5uHitKind.RowIndicator, Th5uHitKind.DataCell])
     then
      Exit;
-    if (LContext.FirstRowIndex < 0) or (LContext.FirstRowIndex + Length(LContext.RowKeys) > GetViewRowCount) then
+    if not h5uRowMoveTarget(GetViewRowCount, LHit.RowIndex, LHit.RowKey, GetViewRowKey, GetViewSourceRowIndex, LContext) then
       Exit;
-    if (LHit.RowIndex >= LContext.FirstRowIndex) and (LHit.RowIndex < LContext.FirstRowIndex + Length(LContext.RowKeys)) then
-      Exit;
-    SetLength(LContext.SourceRowIndexes, Length(LContext.RowKeys));
-    for I := 0 to High(LContext.RowKeys) do
-    begin
-      // A live sort/filter or removed row invalidates the original drag range.
-      if GetViewRowKey(LContext.FirstRowIndex + I) <> LContext.RowKeys[I] then
-        Exit;
-      LContext.SourceRowIndexes[I] := GetViewSourceRowIndex(LContext.FirstRowIndex + I);
-    end;
-    LContext.TargetRowIndex := LHit.RowIndex;
-    LContext.TargetRowKey := LHit.RowKey;
-    LContext.TargetSourceRowIndex := GetViewSourceRowIndex(LHit.RowIndex);
-    LContext.InsertAfter := LHit.RowIndex > LContext.FirstRowIndex;
-    LContext.NewFirstRowIndex := LHit.RowIndex;
-    if LContext.InsertAfter then
-      Dec(LContext.NewFirstRowIndex, Length(LContext.RowKeys) - 1);
     FOnRowsMoved(Self, LContext);
   end;
 end;

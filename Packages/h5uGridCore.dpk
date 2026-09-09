@@ -42,6 +42,7 @@ contains
   h5u.Grid.Options in '..\Source\Common\h5u.Grid.Options.pas',
   h5u.Grid.AdjacentGroups in '..\Source\Common\h5u.Grid.AdjacentGroups.pas',
   h5u.Grid.Values in '..\Source\Common\h5u.Grid.Values.pas',
+  h5u.Grid.Moving in '..\Source\Common\h5u.Grid.Moving.pas',
   h5u.Grid.Data.Core in '..\Source\Common\h5u.Grid.Data.Core.pas',
   h5u.Grid.Data.Dataset in '..\Source\Common\h5u.Grid.Data.Dataset.pas',
   h5u.Grid.Data.Memory in '..\Source\Common\h5u.Grid.Data.Memory.pas',
