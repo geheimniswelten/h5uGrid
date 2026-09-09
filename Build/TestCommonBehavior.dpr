@@ -5,6 +5,9 @@ program TestCommonBehavior;
 
 uses
   System.SysUtils,
+  System.Math,
+  h5u.Grid.Layout,
+  h5u.Grid.RowMetrics,
   System.Rtti,
   h5u.Grid.AdjacentGroups,
   h5u.Grid.Data.Core,
@@ -236,11 +239,148 @@ begin
   end;
 end;
 
+type
+  TMetricData = class
+    Measures: Integer;
+    Forced: Boolean;
+    ForceHeight: Double;
+    Cache: Boolean;
+    ExtentValue: Double;
+    Prepared: Int64;
+    function Measure(ARow: Int64; AColumn: Th5uGridColumn): Double;
+    procedure Adjust(ARow: Int64; const AKey: Th5uRowKey; AEstimated: Boolean; var AHeight: Double; var ACacheResult: Boolean);
+    function Extent(ARow: Int64; AAllowMeasure: Boolean): Double;
+    procedure Prepare(AFirst, ACount: Int64);
+  end;
+
+function TMetricData.Measure(ARow: Int64; AColumn: Th5uGridColumn): Double;
+begin
+  Inc(Measures);
+  Result := StrToInt(AColumn.Caption);
+end;
+
+procedure TMetricData.Adjust(ARow: Int64; const AKey: Th5uRowKey; AEstimated: Boolean; var AHeight: Double; var ACacheResult: Boolean);
+begin
+  if Forced then AHeight := ForceHeight;
+  ACacheResult := Cache;
+end;
+
+function TMetricData.Extent(ARow: Int64; AAllowMeasure: Boolean): Double;
+begin
+  Result := ExtentValue;
+end;
+
+procedure TMetricData.Prepare(AFirst, ACount: Int64);
+begin
+  Prepared := ACount;
+end;
+
+procedure TestRowMetrics;
+const
+  LargeCount: Int64 = 9007199254740993;
+var
+  LData: TMetricData;
+  LColumns: Th5uGridColumns;
+  LOptions: Th5uRowHeightOptions;
+  LMetrics: Th5uGridRowMetrics;
+  LTotal: Th5uTotalRowHeight;
+  LKey: Th5uRowKey;
+  LBefore, LTop: Integer;
+  LFloatTop: Double;
+begin
+  LData := TMetricData.Create;
+  LColumns := Th5uGridColumns.Create(nil);
+  LOptions := Th5uRowHeightOptions.Create;
+  LMetrics := Th5uGridRowMetrics.Create;
+  try
+    LData.Cache := True;
+    LColumns.Add.Caption := '40';
+    LColumns[0].AutoHeight := True;
+    LColumns.Add.Caption := '80';
+    LColumns.Add.Caption := '100';
+    LColumns[2].Visible := False;
+    LOptions.Mode := Th5uRowHeightMode.Automatic;
+    LOptions.MinHeight := 1;
+    LOptions.MaxHeight := 100;
+    LOptions.EstimatedHeight := 17;
+    LKey := Th5uRowKey.FromString('metric-row');
+    Check(LMetrics.GetHeight(LOptions, LColumns, 0, LKey, True, LData.Measure, LData.Adjust) = 40, 'explicit height contributors');
+    LBefore := LData.Measures;
+    Check(LMetrics.GetHeight(LOptions, LColumns, 3, LKey, True, LData.Measure, LData.Adjust) = 40, 'cache follows row key');
+    Check(LData.Measures = LBefore, 'height cache not reused');
+    LOptions.MeasureScope := Th5uAutoHeightMeasureScope.AllVisibleColumns;
+    LMetrics.Clear;
+    Check(LMetrics.GetHeight(LOptions, LColumns, 0, LKey, True, LData.Measure, LData.Adjust) = 80, 'all visible contributors and hidden exclusion');
+    LMetrics.Remove(LKey.ToString);
+    LData.Cache := False;
+    LData.Forced := True;
+    LData.ForceHeight := 0;
+    Check(LMetrics.GetHeight(LOptions, LColumns, 0, LKey, True, LData.Measure, LData.Adjust) = 1, 'event minimum height');
+    LData.ForceHeight := 12.5;
+    Check(LMetrics.GetHeight(LOptions, LColumns, 0, LKey, True, LData.Measure, LData.Adjust) = 12.5, 'fractional event height and cache opt-out');
+    LData.Forced := False;
+    Check(LMetrics.GetHeight(LOptions, LColumns, 0, LKey, False, LData.Measure, LData.Adjust) = 17, 'estimated height');
+    LData.ExtentValue := 10.25;
+    LTotal := h5uTotalRowHeight(LOptions, 3001, 0, True, LData.Prepare, LData.Extent);
+    Check((LData.Prepared = 3001) and SameValue(LTotal.AsFloat, 3001 * 10.25), 'shared exact measurement threshold and fractional sum');
+    LTotal := h5uTotalRowHeight(LOptions, h5uExactRowHeightLimit + 1, 0, True, LData.Prepare, LData.Extent);
+    Check(LTotal.Whole = (h5uExactRowHeightLimit + 1) * LOptions.EstimatedHeight, 'large automatic-height estimate');
+    LOptions.Mode := Th5uRowHeightMode.Fixed;
+    LTotal := h5uTotalRowHeight(LOptions, LargeCount, 0, False, LData.Prepare, LData.Extent);
+    Check(LTotal.Whole = LargeCount * LOptions.FixedHeight, 'Int64 total lost precision above 2^53');
+    LData.ExtentValue := 20;
+    Check((h5uFindFirstVisibleRow(5, Int64(40), 100, LData.Extent, LTop) = 2) and (LTop = 100), 'integer row boundary');
+    LData.ExtentValue := 20.25;
+    Check((h5uFindFirstVisibleRow(5, 40.75, 100.0, LData.Extent, LFloatTop) = 2) and SameValue(LFloatTop, 99.75), 'fractional row offset');
+    Check((h5uFindFirstVisibleRow(5, -1.0, 100.0, LData.Extent, LFloatTop) = 0) and (LFloatTop = 100), 'negative offset clamp');
+    Writeln('PASS: common row metrics, measurement scope, cache, override minimum, fractions and large Int64 totals');
+  finally
+    LMetrics.Free;
+    LOptions.Free;
+    LColumns.Free;
+    LData.Free;
+  end;
+end;
+
+procedure TestColumnLayout;
+var
+  LColumns: Th5uGridColumns;
+  LLayout: TArray<Th5uColumnLayoutInfo>;
+  LLeft, LRight: Double;
+begin
+  LColumns := Th5uGridColumns.Create(nil);
+  try
+    LColumns.Add.Width := 50;
+    LColumns[0].FixedKind := Th5uFixedKind.Left;
+    LColumns[0].RightSpacing := 3;
+    LColumns.Add.Width := 100;
+    LColumns.Add.Width := 40;
+    LColumns[2].FixedKind := Th5uFixedKind.Right;
+    LColumns[2].RightSpacing := 0;
+    LLayout := h5uBuildColumnLayout(LColumns, 1, 0, 200, 10, 20, True);
+    Check((LLayout[0].Left = 10) and (LLayout[1].Left = 43) and (LLayout[2].Left = 160), 'fixed/scrollable column positions');
+    LLeft := 0; LRight := 200;
+    h5uColumnViewport(LColumns, LColumns[1], 1, 10, LLeft, LRight);
+    Check((LLeft = 63) and (LRight = 160), 'scrollable viewport between fixed columns');
+    LLayout := h5uBuildColumnLayout(LColumns, 1, 0, 200, 10, 20.25, True);
+    Check(LLayout[1].Left = 42.75, 'fractional horizontal offset');
+    LLayout := h5uBuildColumnLayout(LColumns, 1, 16777217, 16777417, 10, 20, True);
+    Check(LLayout[0].Left = 16777227, 'integer layout must not narrow to Single');
+    Check(h5uRevealOffset(50, 40, 20, 100) = 40, 'reveal before viewport');
+    Check(h5uRevealOffset(50, 140, 20, 100) = 60, 'reveal after viewport');
+    Writeln('PASS: common column layout, fixed boundaries, custom spacing, fractional coordinates and pixel precision');
+  finally
+    LColumns.Free;
+  end;
+end;
+
 begin
   try
     TestResizeBoundaries;
     TestNavigation;
     TestIndependentViews;
+    TestRowMetrics;
+    TestColumnLayout;
   except
     on E: Exception do
     begin

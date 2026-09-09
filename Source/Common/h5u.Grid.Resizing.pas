@@ -3,6 +3,7 @@ unit h5u.Grid.Resizing;
 interface
 
 uses
+  System.Classes,
   System.Math,
   h5u.Grid.Columns,
   h5u.Grid.Options;

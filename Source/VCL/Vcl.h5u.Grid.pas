@@ -31,6 +31,8 @@ uses
   h5u.Grid.Resizing,
   h5u.Grid.Navigation,
   h5u.Grid.View,
+  h5u.Grid.Layout,
+  h5u.Grid.RowMetrics,
   h5u.Grid.Columns,
   h5u.Grid.Data.Core,
   h5u.Grid.Factory,
@@ -261,7 +263,7 @@ type
     FAllColumns: TArray<Th5uVisibleColumnInfo>;
     FVisibleRows: TArray<Th5uVisibleRowInfo>;
     FCellPool: TObjectList<Th5uVclVisualCell>;
-    FRowHeightCache: TDictionary<string, Integer>;
+    FRowMetrics: Th5uGridRowMetrics;
     FUpdatingScrollBars: Boolean;
     FInitialized: Boolean;
 
@@ -306,6 +308,12 @@ type
     procedure SetOnAdjacentGroupStateChanged(const AValue: Th5uAdjacentGroupStateChangedEvent);
 
     function ViewDataController: Th5uCustomDataController;
+    function IndicatorExtent: Double;
+    function MetricCellHeight(ARow: Int64; AColumn: Th5uGridColumn): Double;
+    procedure MetricAdjustHeight(ARow: Int64; const AKey: Th5uRowKey; AEstimated: Boolean;
+      var AHeight: Double; var ACacheResult: Boolean);
+    function MetricRowExtent(ARow: Int64; AAllowMeasure: Boolean): Double;
+    function MetricRowSpacing(ARow: Int64; const AKey: Th5uRowKey): Double;
     procedure ColumnsChanged(Sender: TObject; AColumn: Th5uGridColumn);
     procedure DataChanged(Sender: TObject; const AChange: Th5uDataChange);
     procedure OptionsChanged(Sender: TObject);
@@ -374,26 +382,18 @@ type
     function GetTotalColumnWidth: Integer;
     function GetEffectiveColumnRightSpacing(AColumn: Th5uGridColumn): Integer;
     procedure InvalidateAdjacentGroupMap(AClearStates: Boolean = False);
-    procedure EnsureAdjacentGroupMap;
-    function ResolveAdjacentGroupFieldName: string;
-    function TryGetAdjacentGroupIdForControllerRow(AControllerRowIndex: Int64; out AGroupId: TValue): Boolean;
     function GetViewRowCount: Int64;
-    function MapViewToControllerRowIndex(AViewRowIndex: Int64; AAllowLookAhead: Boolean = False): Int64;
     function GetViewSourceRowIndex(AViewRowIndex: Int64): Int64;
     function GetViewRowKey(AViewRowIndex: Int64): Th5uRowKey;
     function GetViewValue(AViewRowIndex: Int64; const AFieldName: string): TValue;
     procedure SetViewValue(AViewRowIndex: Int64; const AFieldName: string; const AValue: TValue);
     function CanEditViewValue(AViewRowIndex: Int64; const AFieldName: string): Boolean;
     function GetViewDisplayText(AViewRowIndex: Int64; const AFieldName, ADisplayFormat: string): string;
-    function IsViewRowAvailable(AViewRowIndex: Int64): Boolean;
     procedure PrepareViewRange(AFirstViewRow, ACount: Int64);
     function TryGetAdjacentGroupRowInfo(AViewRowIndex: Int64; out AInfo: Th5uAdjacentGroupRowInfo): Boolean;
     procedure PopulateAdjacentGroupContext(var AContext: Th5uFactoryContext; AViewRowIndex: Int64);
-    function GetAdjacentGroupEndBandInfo(AViewRowIndex: Int64; out AInfo: Th5uAdjacentGroupRowInfo): Boolean;
     procedure DoAdjacentGroupStateChanged(const AInfo: Th5uAdjacentGroupRowInfo);
     function GetRowSpacingFor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey): Integer;
-    function TryGetTreeLevelFor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey; out ALevel: Integer): Boolean;
-    function GetTreeBranchEndInfo(AViewRowIndex: Int64; const ARowKey: Th5uRowKey; out ATreeLevel: Integer; out AClosedTreeLevels: Integer): Boolean;
     function GetEffectiveRowSeparatorFor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey; out AElementKind: Th5uElementKind; out AColor: TColor; out AStyleName: string;
       out ATreeLevel: Integer; out AClosedTreeLevels: Integer): Integer;
     function GetGridLines: Boolean;
@@ -1222,84 +1222,35 @@ end;
 
 procedure Th5uVclGrid.BuildColumnLayout;
 var
-  LColumns: TArray<Th5uGridColumn>;
-  LInfos: TList<Th5uVisibleColumnInfo>;
-  LAll: TList<Th5uVisibleColumnInfo>;
-  LViewRect: TRect;
-  LDataLeft: Integer;
-  LDataRight: Integer;
-  LLeftX: Integer;
-  LNormalX: Integer;
-  LRightX: Integer;
-  LColumn: Th5uGridColumn;
-  LInfo: Th5uVisibleColumnInfo;
-  LVisibilityRect: TRect;
-  LSpacing: Integer;
-  I: Integer;
+  LLayout: TArray<Th5uColumnLayoutInfo>;
+  LView: TRect;
+  I, LVisibleCount: Integer;
 begin
-  LColumns := FColumns.VisibleColumns;
-  LInfos := TList<Th5uVisibleColumnInfo>.Create;
-  LAll := TList<Th5uVisibleColumnInfo>.Create;
-  try
-    LViewRect := GetViewportRect;
-    LDataLeft := LViewRect.Left;
-    if FShowRowIndicator then
-      Inc(LDataLeft, FRowIndicatorWidth + FSpacing.DefaultColumnRightSpacing);
-    LDataRight := LViewRect.Right;
-
-    LLeftX := LDataLeft;
-    for I := 0 to High(LColumns) do
-      if LColumns[I].FixedKind = Th5uFixedKind.Left then
-        Inc(LLeftX, LColumns[I].Width + GetEffectiveColumnRightSpacing(LColumns[I]));
-
-    LRightX := LDataRight;
-    for I := High(LColumns) downto 0 do
-      if LColumns[I].FixedKind = Th5uFixedKind.Right then
-        Dec(LRightX, LColumns[I].Width + GetEffectiveColumnRightSpacing(LColumns[I]));
-
-    LNormalX := LLeftX - FHorizontalOffset;
-    LLeftX := LDataLeft;
-
-    for I := 0 to High(LColumns) do
+  LView := GetViewportRect;
+  LLayout := h5uBuildColumnLayout(FColumns, FSpacing.DefaultColumnRightSpacing, LView.Left, LView.Right,
+    IndicatorExtent, FHorizontalOffset, LView.Bottom > LView.Top);
+  SetLength(FAllColumns, Length(LLayout));
+  SetLength(FVisibleColumns, Length(LLayout));
+  LVisibleCount := 0;
+  for I := 0 to High(LLayout) do
+  begin
+    FAllColumns[I].Column := LLayout[I].Column;
+    FAllColumns[I].VisibleIndex := LLayout[I].VisibleIndex;
+    FAllColumns[I].Bounds := Rect(Round(LLayout[I].Left), LView.Top, Round(LLayout[I].Right), LView.Bottom);
+    if LLayout[I].Visible then
     begin
-      LColumn := LColumns[I];
-      LSpacing := GetEffectiveColumnRightSpacing(LColumn);
-      LInfo.Column := LColumn;
-      LInfo.VisibleIndex := I;
-
-      case LColumn.FixedKind of
-        Th5uFixedKind.Left:
-          begin
-            LInfo.Bounds := Rect(LLeftX, LViewRect.Top, LLeftX + LColumn.Width, LViewRect.Bottom);
-            Inc(LLeftX, LColumn.Width + LSpacing);
-          end;
-
-        Th5uFixedKind.Right:
-          begin
-            LInfo.Bounds := Rect(LRightX, LViewRect.Top, LRightX + LColumn.Width, LViewRect.Bottom);
-            Inc(LRightX, LColumn.Width + LSpacing);
-          end;
-
-        else
-          begin
-            LInfo.Bounds := Rect(LNormalX, LViewRect.Top, LNormalX + LColumn.Width, LViewRect.Bottom);
-            Inc(LNormalX, LColumn.Width + LSpacing);
-          end;
-      end;
-
-      LAll.Add(LInfo);
-      LVisibilityRect := LInfo.Bounds;
-      Inc(LVisibilityRect.Right, LSpacing);
-      if h5uRectIntersects(LVisibilityRect, LViewRect) then
-        LInfos.Add(LInfo);
+      FVisibleColumns[LVisibleCount] := FAllColumns[I];
+      Inc(LVisibleCount);
     end;
-
-    FAllColumns := LAll.ToArray;
-    FVisibleColumns := LInfos.ToArray;
-  finally
-    LAll.Free;
-    LInfos.Free;
   end;
+  SetLength(FVisibleColumns, LVisibleCount);
+end;
+
+function Th5uVclGrid.IndicatorExtent: Double;
+begin
+  Result := 0;
+  if FShowRowIndicator then
+    Result := FRowIndicatorWidth + FSpacing.DefaultColumnRightSpacing;
 end;
 
 procedure Th5uVclGrid.CancelEditor;
@@ -1576,7 +1527,7 @@ begin
   FDataLink := Th5uDataControllerLink.Create;
   FDataLink.OnChanged := DataChanged;
   FCellPool := TObjectList<Th5uVclVisualCell>.Create(True);
-  FRowHeightCache := TDictionary<string, Integer>.Create;
+  FRowMetrics := Th5uGridRowMetrics.Create;
 
   FTheme := Th5uGridTheme.ApplicationStyle;
   FHeaderRowHeight := 26;
@@ -1648,7 +1599,7 @@ begin
   FDataLink.Controller := nil;
   FView.Free;
   FAdjacentGroupFolding.Free;
-  FRowHeightCache.Free;
+  FRowMetrics.Free;
   FCellPool.Free;
   FDataLink.Free;
   FTree.Free;
@@ -2221,21 +2172,14 @@ end;
 
 function Th5uVclGrid.GetColumnViewportRect(AColumn: Th5uGridColumn): TRect;
 var
-  LColumn: Th5uGridColumn;
+  LLeft, LRight: Double;
 begin
   Result := GetViewportRect;
-  if FShowRowIndicator then
-    Result.Left := Result.Left + FRowIndicatorWidth + FSpacing.DefaultColumnRightSpacing;
-  // Scrollable columns occupy only the space between the fixed columns.
-  if AColumn.FixedKind = Th5uFixedKind.None then
-    for LColumn in FColumns.VisibleColumns do
-      case LColumn.FixedKind of
-        Th5uFixedKind.Left:
-          Result.Left := Result.Left + LColumn.Width + GetEffectiveColumnRightSpacing(LColumn);
-        Th5uFixedKind.Right:
-          Result.Right := Result.Right - LColumn.Width - GetEffectiveColumnRightSpacing(LColumn);
-      end;
-  Result.Left := Min(Result.Left, Result.Right);
+  LLeft := Result.Left;
+  LRight := Result.Right;
+  h5uColumnViewport(FColumns, AColumn, FSpacing.DefaultColumnRightSpacing, IndicatorExtent, LLeft, LRight);
+  Result.Left := Round(LLeft);
+  Result.Right := Round(LRight);
 end;
 
 function Th5uVclGrid.GetVisibleCellBounds(AColumn: Th5uGridColumn; const AColumnBounds, ARowBounds: TRect): TRect;
@@ -2283,43 +2227,12 @@ begin
 end;
 
 function Th5uVclGrid.FindFirstVisibleRow(AOffset: Int64; out ATop: Integer): Int64;
-var
-  LIndex: Int64;
-  LCount: Int64;
-  LHeight: Integer;
-  LSpacing: Integer;
-  LExtent: Integer;
-  LRemaining: Int64;
-  LKey: Th5uRowKey;
-  LElementKind: Th5uElementKind;
-  LColor: TColor;
-  LStyleName: string;
-  LTreeLevel: Integer;
-  LClosedTreeLevels: Integer;
 begin
   Result := -1;
   ATop := GetDataViewportRect.Top;
   if not Assigned(FDataController) then
     Exit;
-
-  LCount := GetViewRowCount;
-  LRemaining := Max(0, AOffset);
-  LIndex := 0;
-
-  while LIndex < LCount do
-  begin
-    LKey := GetViewRowKey(LIndex);
-    LHeight := GetRowHeightFor(LIndex, LKey, LCount <= 5000);
-    LSpacing := GetEffectiveRowSeparatorFor(LIndex, LKey, LElementKind, LColor, LStyleName, LTreeLevel, LClosedTreeLevels);
-    LExtent := LHeight + LSpacing;
-    if LRemaining < LExtent then
-    begin
-      ATop := GetDataViewportRect.Top - Integer(LRemaining);
-      Exit(LIndex);
-    end;
-    Dec(LRemaining, LExtent);
-    Inc(LIndex);
-  end;
+  Result := h5uFindFirstVisibleRow(GetViewRowCount, AOffset, GetDataViewportRect.Top, MetricRowExtent, ATop);
 end;
 
 function Th5uVclGrid.GetDataCellClass(const AContext: Th5uFactoryContext): Th5uVclVisualCellClass;
@@ -2338,43 +2251,16 @@ end;
 
 function Th5uVclGrid.GetEstimatedTotalRowHeight: Int64;
 var
-  LCount: Int64;
-  LIndex: Int64;
-  LKey: Th5uRowKey;
-  LHeight: Integer;
-  LSpacing: Integer;
-  LElementKind: Th5uElementKind;
-  LColor: TColor;
-  LStyleName: string;
-  LTreeLevel: Integer;
-  LClosedTreeLevels: Integer;
+  LTotal: Th5uTotalRowHeight;
+  LVariableSpacing: Boolean;
 begin
   Result := 0;
   if not Assigned(FDataController) then
     Exit;
-
-  LCount := GetViewRowCount;
-  if (FRowHeight.Mode = Th5uRowHeightMode.Fixed) and not Assigned(FOnGetRowSpacing) and not (FTree.Enabled and FTree.BranchEndBand.Enabled)
-    and not (FAdjacentGroupFolding.Enabled and (FAdjacentGroupFolding.EndBand.Visibility <> Th5uAdjacentGroupEndBandVisibility.Never))
-  then
-    Exit(LCount * (FRowHeight.FixedHeight + FSpacing.RowSpacing));
-
-  if LCount <= 5000 then
-  begin
-    PrepareViewRange(0, LCount);
-    for LIndex := 0 to LCount - 1 do
-    begin
-      LKey := GetViewRowKey(LIndex);
-      if FRowHeight.Mode = Th5uRowHeightMode.Fixed then
-        LHeight := FRowHeight.FixedHeight
-      else
-        LHeight := GetRowHeightFor(LIndex, LKey, True);
-      LSpacing := GetEffectiveRowSeparatorFor(LIndex, LKey, LElementKind, LColor, LStyleName, LTreeLevel, LClosedTreeLevels);
-      Inc(Result, LHeight + LSpacing);
-    end;
-  end
-  else
-    Result := LCount * (FRowHeight.EstimatedHeight + FSpacing.RowSpacing);
+  LVariableSpacing := Assigned(FOnGetRowSpacing) or (FTree.Enabled and FTree.BranchEndBand.Enabled)
+    or (FAdjacentGroupFolding.Enabled and (FAdjacentGroupFolding.EndBand.Visibility <> Th5uAdjacentGroupEndBandVisibility.Never));
+  LTotal := h5uTotalRowHeight(FRowHeight, GetViewRowCount, FSpacing.RowSpacing, LVariableSpacing, PrepareViewRange, MetricRowExtent);
+  Result := LTotal.Whole;
 end;
 
 function Th5uVclGrid.GetFixedCellClass(const AContext: Th5uFactoryContext): Th5uVclVisualCellClass;
@@ -2388,18 +2274,8 @@ begin
 end;
 
 function Th5uVclGrid.GetHeaderHeight: Integer;
-var
-  LRowCount: Integer;
 begin
-  if not FShowHeader then
-    Exit(0);
-
-  if FHeaderLayout.Enabled and (FHeaderLayout.Cells.Count > 0) then
-    LRowCount := Max(1, FHeaderLayout.RowCount)
-  else
-    LRowCount := 1;
-
-  Result := LRowCount * (FHeaderRowHeight + FSpacing.RowSpacing);
+  Result := Round(h5uHeaderHeight(FHeaderLayout, FShowHeader, FHeaderRowHeight, FSpacing.RowSpacing));
 end;
 
 function Th5uVclGrid.GetOnConfigureInstance: Th5uConfigureInstanceEvent;
@@ -2418,58 +2294,51 @@ begin
 end;
 
 function Th5uVclGrid.GetRowHeightFor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey; AAllowMeasure: Boolean): Integer;
-var
-  LCacheKey: string;
-  LColumn: Th5uGridColumn;
-  LColumns: TArray<Th5uGridColumn>;
-  LProposed: Integer;
-  LCellHeight: Integer;
-  LCacheResult: Boolean;
-  LContext: Th5uGetRowHeightContext;
 begin
-  if FRowHeight.Mode = Th5uRowHeightMode.Fixed then
-    Exit(FRowHeight.FixedHeight);
+  Result := Round(FRowMetrics.GetHeight(FRowHeight, FColumns, AViewRowIndex, ARowKey, AAllowMeasure, MetricCellHeight, MetricAdjustHeight));
+end;
 
-  LCacheKey := ARowKey.ToString;
-  if LCacheKey = '' then
-    LCacheKey := '#' + IntToStr(AViewRowIndex);
+function Th5uVclGrid.MetricCellHeight(ARow: Int64; AColumn: Th5uGridColumn): Double;
+begin
+  Result := MeasureCellHeight(ARow, AColumn);
+end;
 
-  if FRowHeightCache.TryGetValue(LCacheKey, Result) then
+procedure Th5uVclGrid.MetricAdjustHeight(ARow: Int64; const AKey: Th5uRowKey; AEstimated: Boolean;
+  var AHeight: Double; var ACacheResult: Boolean);
+var
+  LContext: Th5uGetRowHeightContext;
+  LHeight: Integer;
+begin
+  if not Assigned(FOnGetRowHeight) then
     Exit;
+  LHeight := Round(AHeight);
+  LContext := Default(Th5uGetRowHeightContext);
+  LContext.Grid := Self;
+  LContext.DataController := FDataController;
+  LContext.RowKey := AKey;
+  LContext.ViewRowIndex := ARow;
+  LContext.SourceRowIndex := GetViewSourceRowIndex(ARow);
+  LContext.IsEstimated := AEstimated;
+  FOnGetRowHeight(Self, LContext, LHeight, ACacheResult);
+  AHeight := LHeight;
+end;
 
-  if not AAllowMeasure then
-    LProposed := FRowHeight.EstimatedHeight
-  else
-  begin
-    LProposed := FRowHeight.MinHeight;
-    LColumns := FColumns.VisibleColumns;
-    for LColumn in LColumns do
-    begin
-      if (FRowHeight.MeasureScope = Th5uAutoHeightMeasureScope.ExplicitContributorColumns) and not LColumn.AutoHeight then
-        Continue;
+function Th5uVclGrid.MetricRowExtent(ARow: Int64; AAllowMeasure: Boolean): Double;
+var
+  LKey: Th5uRowKey;
+  LKind: Th5uElementKind;
+  LColor: TColor;
+  LStyle: string;
+  LLevel, LClosed: Integer;
+begin
+  LKey := GetViewRowKey(ARow);
+  Result := GetRowHeightFor(ARow, LKey, AAllowMeasure)
+    + GetEffectiveRowSeparatorFor(ARow, LKey, LKind, LColor, LStyle, LLevel, LClosed);
+end;
 
-      LCellHeight := MeasureCellHeight(AViewRowIndex, LColumn);
-      LProposed := Max(LProposed, LCellHeight);
-    end;
-  end;
-
-  LProposed := EnsureRange(LProposed, FRowHeight.MinHeight, FRowHeight.MaxHeight);
-
-  LCacheResult := True;
-  if Assigned(FOnGetRowHeight) then
-  begin
-    LContext.Grid := Self;
-    LContext.DataController := FDataController;
-    LContext.RowKey := ARowKey;
-    LContext.ViewRowIndex := AViewRowIndex;
-    LContext.SourceRowIndex := GetViewSourceRowIndex(AViewRowIndex);
-    LContext.IsEstimated := not AAllowMeasure;
-    FOnGetRowHeight(Self, LContext, LProposed, LCacheResult);
-  end;
-
-  Result := Max(1, LProposed);
-  if LCacheResult then
-    FRowHeightCache.AddOrSetValue(LCacheKey, Result);
+function Th5uVclGrid.MetricRowSpacing(ARow: Int64; const AKey: Th5uRowKey): Double;
+begin
+  Result := GetRowSpacingFor(ARow, AKey);
 end;
 
 function Th5uVclGrid.GetRowStyle(AViewRowIndex: Int64; out AStyleKey: TValue): string;
@@ -2500,10 +2369,7 @@ end;
 
 function Th5uVclGrid.GetEffectiveColumnRightSpacing(AColumn: Th5uGridColumn): Integer;
 begin
-  if Assigned(AColumn) and (AColumn.RightSpacing >= 0) then
-    Result := AColumn.RightSpacing
-  else
-    Result := FSpacing.DefaultColumnRightSpacing;
+  Result := h5uColumnRightSpacing(AColumn, FSpacing.DefaultColumnRightSpacing);
 end;
 
 procedure Th5uVclGrid.InvalidateAdjacentGroupMap(AClearStates: Boolean);
@@ -2511,29 +2377,9 @@ begin
   FView.InvalidateAdjacentGroupMap(AClearStates);
 end;
 
-procedure Th5uVclGrid.EnsureAdjacentGroupMap;
-begin
-  FView.EnsureAdjacentGroupMap;
-end;
-
-function Th5uVclGrid.ResolveAdjacentGroupFieldName: string;
-begin
-  Result := FView.ResolveAdjacentGroupFieldName;
-end;
-
-function Th5uVclGrid.TryGetAdjacentGroupIdForControllerRow(AControllerRowIndex: Int64; out AGroupId: TValue): Boolean;
-begin
-  Result := FView.TryGetAdjacentGroupIdForControllerRow(AControllerRowIndex, AGroupId);
-end;
-
 function Th5uVclGrid.GetViewRowCount: Int64;
 begin
   Result := FView.GetViewRowCount;
-end;
-
-function Th5uVclGrid.MapViewToControllerRowIndex(AViewRowIndex: Int64; AAllowLookAhead: Boolean): Int64;
-begin
-  Result := FView.MapViewToControllerRowIndex(AViewRowIndex, AAllowLookAhead);
 end;
 
 function Th5uVclGrid.GetViewSourceRowIndex(AViewRowIndex: Int64): Int64;
@@ -2566,11 +2412,6 @@ begin
   Result := FView.GetViewDisplayText(AViewRowIndex, AFieldName, ADisplayFormat);
 end;
 
-function Th5uVclGrid.IsViewRowAvailable(AViewRowIndex: Int64): Boolean;
-begin
-  Result := FView.IsViewRowAvailable(AViewRowIndex);
-end;
-
 procedure Th5uVclGrid.PrepareViewRange(AFirstViewRow, ACount: Int64);
 begin
   FView.PrepareViewRange(AFirstViewRow, ACount);
@@ -2584,11 +2425,6 @@ end;
 procedure Th5uVclGrid.PopulateAdjacentGroupContext(var AContext: Th5uFactoryContext; AViewRowIndex: Int64);
 begin
   FView.PopulateAdjacentGroupContext(AContext, AViewRowIndex);
-end;
-
-function Th5uVclGrid.GetAdjacentGroupEndBandInfo(AViewRowIndex: Int64; out AInfo: Th5uAdjacentGroupRowInfo): Boolean;
-begin
-  Result := FView.GetAdjacentGroupEndBandInfo(AViewRowIndex, AInfo);
 end;
 
 procedure Th5uVclGrid.DoAdjacentGroupStateChanged(const AInfo: Th5uAdjacentGroupRowInfo);
@@ -2614,51 +2450,25 @@ begin
   Result := EnsureRange(Result, 0, 1000);
 end;
 
-function Th5uVclGrid.TryGetTreeLevelFor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey; out ALevel: Integer): Boolean;
-begin
-  Result := FView.TryGetTreeLevelFor(AViewRowIndex, ARowKey, ALevel);
-end;
-
-function Th5uVclGrid.GetTreeBranchEndInfo(AViewRowIndex: Int64; const ARowKey: Th5uRowKey; out ATreeLevel: Integer; out AClosedTreeLevels: Integer): Boolean;
-begin
-  Result := FView.GetTreeBranchEndInfo(AViewRowIndex, ARowKey, ATreeLevel, AClosedTreeLevels);
-end;
-
 function Th5uVclGrid.GetEffectiveRowSeparatorFor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey; out AElementKind: Th5uElementKind;
    out AColor: TColor; out AStyleName: string; out ATreeLevel: Integer; out AClosedTreeLevels: Integer): Integer;
 var
-  LAdjacentInfo: Th5uAdjacentGroupRowInfo;
+  LSeparator: Th5uRowSeparatorInfo;
 begin
-  AElementKind := Th5uElementKind.RowSpacing;
-  AColor := ResolveRowSpacingColor;
-  AStyleName := '';
-  ATreeLevel := -1;
-  AClosedTreeLevels := 0;
-
-  if FAdjacentGroupFolding.Enabled and GetAdjacentGroupEndBandInfo(AViewRowIndex, LAdjacentInfo) then
-  begin
-    // The adjacent-run end band has precedence over the ordinary row
-    // separator and over a tree branch-end band at the same boundary. It is
-    // an alternative separator, never an additional one.
-    Result := FAdjacentGroupFolding.EndBand.Height;
-    AElementKind := Th5uElementKind.AdjacentGroupEndBand;
-    AColor := ResolveAdjacentGroupEndColor(AViewRowIndex, ARowKey);
-    AStyleName := FAdjacentGroupFolding.EndBand.StyleName;
-    Exit;
+  LSeparator := h5uRowSeparator(FView, FTree, FAdjacentGroupFolding, AViewRowIndex, ARowKey, MetricRowSpacing);
+  AElementKind := LSeparator.Kind;
+  AStyleName := LSeparator.StyleName;
+  ATreeLevel := LSeparator.TreeLevel;
+  AClosedTreeLevels := LSeparator.ClosedTreeLevels;
+  Result := Round(LSeparator.Height);
+  case AElementKind of
+    Th5uElementKind.AdjacentGroupEndBand:
+      AColor := ResolveAdjacentGroupEndColor(AViewRowIndex, ARowKey);
+    Th5uElementKind.TreeBranchEndBand:
+      AColor := ResolveTreeBranchEndColor(AViewRowIndex, ARowKey);
+    else
+      AColor := ResolveRowSpacingColor;
   end;
-
-  if FTree.Enabled and FTree.BranchEndBand.Enabled and GetTreeBranchEndInfo(AViewRowIndex, ARowKey, ATreeLevel, AClosedTreeLevels) then
-  begin
-    // The branch-end band replaces regular RowSpacing. It is deliberately
-    // not added to it, so a height of 0 also removes the separator entirely.
-    Result := FTree.BranchEndBand.Height;
-    AElementKind := Th5uElementKind.TreeBranchEndBand;
-    AColor := ResolveTreeBranchEndColor(AViewRowIndex, ARowKey);
-    AStyleName := FTree.BranchEndBand.StyleName;
-    Exit;
-  end;
-
-  Result := GetRowSpacingFor(AViewRowIndex, ARowKey);
 end;
 
 function Th5uVclGrid.GetGridLines: Boolean;
@@ -2855,12 +2665,12 @@ end;
 
 procedure Th5uVclGrid.InvalidateAllRowHeights;
 begin
-  FRowHeightCache.Clear;
+  FRowMetrics.Clear;
 end;
 
 procedure Th5uVclGrid.InvalidateRowHeight(const ARowKey: Th5uRowKey);
 begin
-  FRowHeightCache.Remove(ARowKey.ToString);
+  FRowMetrics.Remove(ARowKey.ToString);
   Invalidate;
 end;
 
@@ -2869,7 +2679,7 @@ var
   LRow: Th5uVisibleRowInfo;
 begin
   for LRow in FVisibleRows do
-    FRowHeightCache.Remove(LRow.RowKey.ToString);
+    FRowMetrics.Remove(LRow.RowKey.ToString);
   Invalidate;
 end;
 
@@ -4306,12 +4116,8 @@ var
   LColumns: TArray<Th5uGridColumn>;
   LView: TRect;
   LTop, LHeight, LLeft, LRight: Integer;
-  LRow: Int64;
   LKey: Th5uRowKey;
-  LElement: Th5uElementKind;
-  LColor: TColor;
-  LStyle: string;
-  LLevel, LClosed, I: Integer;
+  I: Integer;
 begin
   Result := False;
   AHit := Th5uHitTestInfo.Empty;
@@ -4321,19 +4127,11 @@ begin
   if not LCell.IsValid or (LCell.RowIndex >= GetViewRowCount) or (LCell.ColumnIndex >= Length(LColumns)) then
     Exit;
   LView := GetDataViewportRect;
-  LTop := 0;
-  for LRow := 0 to LCell.RowIndex - 1 do
-  begin
-    LKey := GetViewRowKey(LRow);
-    LTop := LTop + GetRowHeightFor(LRow, LKey) + GetEffectiveRowSeparatorFor(LRow, LKey, LElement, LColor, LStyle, LLevel, LClosed);
-  end;
+  LTop := Round(h5uRowTop(LCell.RowIndex, MetricRowExtent));
   PrepareViewRange(LCell.RowIndex, 1);
   LKey := GetViewRowKey(LCell.RowIndex);
   LHeight := GetRowHeightFor(LCell.RowIndex, LKey);
-  if LTop < FVerticalOffset then
-    FVerticalOffset := LTop
-  else if LTop + LHeight > FVerticalOffset + LView.Height then
-    FVerticalOffset := Max(0, LTop + LHeight - LView.Height);
+  FVerticalOffset := Round(h5uRevealOffset(FVerticalOffset, LTop, LHeight, LView.Height));
   BuildColumnLayout;
   LLeft := LView.Left;
   if FShowRowIndicator then

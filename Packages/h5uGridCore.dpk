@@ -46,6 +46,8 @@ contains
   h5u.Grid.Resizing in '..\Source\Common\h5u.Grid.Resizing.pas',
   h5u.Grid.Navigation in '..\Source\Common\h5u.Grid.Navigation.pas',
   h5u.Grid.View in '..\Source\Common\h5u.Grid.View.pas',
+  h5u.Grid.Layout in '..\Source\Common\h5u.Grid.Layout.pas',
+  h5u.Grid.RowMetrics in '..\Source\Common\h5u.Grid.RowMetrics.pas',
   h5u.Grid.Data.Core in '..\Source\Common\h5u.Grid.Data.Core.pas',
   h5u.Grid.Data.Dataset in '..\Source\Common\h5u.Grid.Data.Dataset.pas',
   h5u.Grid.Data.Memory in '..\Source\Common\h5u.Grid.Data.Memory.pas',

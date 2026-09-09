@@ -2,7 +2,9 @@
 param(
     [Parameter(Mandatory)]
     [string]$DelphiBin,
-    [string]$OutputRoot = (Join-Path $PSScriptRoot 'Output\Editing')
+    [string]$OutputRoot = (Join-Path $PSScriptRoot 'Output\Editing'),
+    [ValidateRange(1, 300)]
+    [int]$TimeoutSeconds = 60
 )
 
 Set-StrictMode -Version Latest
@@ -32,10 +34,10 @@ try {
         $taskProcess = Start-Process -FilePath (Join-Path $taskOutput "$taskTest.exe") -WindowStyle Hidden -PassThru `
             -RedirectStandardOutput $taskStdout -RedirectStandardError $taskStderr
         try {
-            if (-not $taskProcess.WaitForExit(30000)) {
+            if (-not $taskProcess.WaitForExit($TimeoutSeconds * 1000)) {
                 $taskProcess.Kill()
                 $taskProcess.WaitForExit()
-                throw "Zeitlimit von 30 Sekunden erreicht: $taskTest"
+                throw "Zeitlimit von $TimeoutSeconds Sekunden erreicht: $taskTest"
             }
             Get-Content -LiteralPath $taskStdout
             Get-Content -LiteralPath $taskStderr
