@@ -5,6 +5,12 @@ program TestCommonBehavior;
 
 uses
   System.SysUtils,
+  System.Classes,
+  System.DateUtils,
+  System.UITypes,
+  h5u.Grid.Types,
+  h5u.Grid.Selection,
+  h5u.Grid.Navigation,
   h5u.Grid.Columns,
   h5u.Grid.Options,
   h5u.Grid.Resizing;
@@ -64,9 +70,90 @@ begin
   end;
 end;
 
+type
+  TNavigationData = class
+    function RowKey(ARow: Int64): Th5uRowKey;
+    function Extent(ARow: Int64): Double;
+    procedure Prepare(AFirst, ACount: Int64);
+    function Text(AColumn: Th5uGridColumn; ARow: Int64; ADisplay: Boolean): string;
+  end;
+
+function TNavigationData.RowKey(ARow: Int64): Th5uRowKey;
+begin
+  Result := Th5uRowKey.FromInt64(ARow + 100);
+end;
+
+function TNavigationData.Extent(ARow: Int64): Double;
+begin
+  Result := 20;
+end;
+
+procedure TNavigationData.Prepare(AFirst, ACount: Int64);
+begin
+  Check((AFirst >= 0) and (ACount = 1), 'search preparation range');
+end;
+
+function TNavigationData.Text(AColumn: Th5uGridColumn; ARow: Int64; ADisplay: Boolean): string;
+begin
+  case ARow of
+    0: Result := 'Alpha';
+    1: Result := 'Beta';
+    2: Result := 'Alpine';
+    else Result := '';
+  end;
+end;
+
+procedure TestNavigation;
+var
+  LData: TNavigationData;
+  LColumns: Th5uGridColumns;
+  LSelection: Th5uGridSelection;
+  LNav, LOther: Th5uGridNavigation;
+  LAction: Th5uNavigationAction;
+  LCell: Th5uCellAddress;
+  LRange: Th5uCellRange;
+  LRow: Int64;
+  LColumn: Integer;
+begin
+  LData := TNavigationData.Create;
+  LColumns := Th5uGridColumns.Create(nil);
+  LSelection := Th5uGridSelection.Create;
+  try
+    LColumns.Add.Id := 'a';
+    LColumns.Add.Id := 'b';
+    LNav := Default(Th5uGridNavigation);
+    LOther := Default(Th5uGridNavigation);
+    Check(LNav.Navigate(LColumns, LSelection, 10, LData.RowKey, LData.Extent, 45, vkF2, [], LAction), 'F2 not handled');
+    Check((LAction.Kind = Th5uNavigationActionKind.Focus) and LAction.EditAfterFocus and not LAction.AutomaticEdit, 'F2 initial focus and manual edit');
+    Check(h5uPlanCellFocus(LColumns, LSelection, 10, LData.RowKey, 0, 0, False, LCell, LRange), 'focus plan');
+    LSelection.SetFocus(LCell, True);
+    LNav.Navigate(LColumns, LSelection, 10, LData.RowKey, LData.Extent, 45, vkNext, [ssShift, ssCtrl], LAction);
+    Check((LAction.Cell.RowIndex = 3) and LAction.Extend and LAction.Add, 'page navigation and additive extension');
+    LNav.SelectHeaderRange(LColumns, LSelection, 10, LData.RowKey, Th5uSelectionKind.Columns, -1, 0, []);
+    LNav.Navigate(LColumns, LSelection, 10, LData.RowKey, LData.Extent, 45, vkRight, [ssShift], LAction);
+    Check((LAction.Kind = Th5uNavigationActionKind.Header) and (LAction.Cell.ColumnIndex = 1), 'header navigation action');
+    Check(not LOther.HeaderSelectionActive, 'navigation state shared between grids');
+    LNav.Cancel(LSelection);
+    Check(not LNav.HeaderSelectionActive, 'cancel did not reset header selection');
+    Check(LNav.SearchCharacter(LColumns, LSelection, 3, LData.Prepare, LData.Text, 'a', 100, LRow, LColumn) and (LRow = 2), 'new search must start after focused row');
+    h5uPlanCellFocus(LColumns, LSelection, 3, LData.RowKey, LRow, LColumn, False, LCell, LRange);
+    LSelection.SetFocus(LCell, True);
+    Check(LNav.SearchCharacter(LColumns, LSelection, 3, LData.Prepare, LData.Text, 'l', 100 + 200 / MSecsPerDay, LRow, LColumn)
+      and (LRow = 2) and (LNav.SearchText = 'al'), 'continued search must include focused row');
+    Check(LNav.SearchCharacter(LColumns, LSelection, 3, LData.Prepare, LData.Text, 'b', 100 + 1500 / MSecsPerDay, LRow, LColumn)
+      and (LRow = 1) and (LNav.SearchText = 'b'), 'search timeout and wrap');
+    Writeln('PASS: common navigation, page distance, header extension, independent state and search timeout');
+  finally
+    LSelection.Free;
+    LColumns.Free;
+    LData.Free;
+  end;
+end;
+
 begin
   try
     TestResizeBoundaries;
+    TestNavigation;
   except
     on E: Exception do
     begin

@@ -29,6 +29,7 @@ uses
   h5u.Grid.Values,
   h5u.Grid.Moving,
   h5u.Grid.Resizing,
+  h5u.Grid.Navigation,
   h5u.Grid.Columns,
   h5u.Grid.Data.Core,
   h5u.Grid.Factory,
@@ -194,9 +195,7 @@ type
     FFactoryScope: Th5uFactoryScope;
     FSharedClassFactory: Th5uClassFactory;
     FSelection: Th5uGridSelection;
-    FHeaderSelectionActive: Boolean;
-    FHeaderSelectionKind: Th5uSelectionKind;
-    FHeaderAnchor, FHeaderFocus: Th5uCellAddress;
+    FNavigation: Th5uGridNavigation;
 
     FRowHeight: Th5uRowHeightOptions;
     FScrolling: Th5uScrollingOptions;
@@ -217,8 +216,6 @@ type
     FShowRowIndicator: Boolean;
     FAllowEditing: Boolean;
     FImmediateEdit: Boolean;
-    FSearchText: string;
-    FSearchTime: TDateTime;
 
     FOnCanFocus: Th5uCellPermissionEvent;
     FOnCanEdit: Th5uCellPermissionEvent;
@@ -237,6 +234,7 @@ type
     function FocusedCellHit(out AHit: Th5uHitTestInfo): Boolean;
     function CellHit(const LCell: Th5uCellAddress; out AHit: Th5uHitTestInfo): Boolean;
     procedure EditFocusedCell(AAutomatic: Boolean);
+    function NavigationRowExtent(ARow: Int64): Double;
     function HandleNavigationKey(AKey: Word; AShift: TShiftState): Boolean;
     procedure SearchCharacter(AChar: Char);
   private
@@ -1376,18 +1374,14 @@ begin
     Exit;
   if (FSelection.FocusedCell.RowIndex <> ACell.RowIndex) or (FSelection.FocusedCell.ColumnId <> ACell.ColumnId) then
   begin
-    LAllow := True;
-    if Assigned(LColumn.OnCanFocus) then
-      LColumn.OnCanFocus(LColumn, LColumn, ACell.RowIndex, LAllow);
-    if Assigned(FOnCanFocus) then
-      FOnCanFocus(Self, LColumn, ACell.RowIndex, LAllow);
+    LAllow := h5uCellPermission(Self, LColumn, ACell.RowIndex, True, LColumn.OnCanFocus, FOnCanFocus);
     Result := LAllow;
     if not Result then
       Exit;
     if Assigned(FEditColumn) then
       CommitEditor;
   end;
-  FHeaderSelectionActive := False;
+  FNavigation.HeaderSelectionActive := False;
   FSelection.SetFocus(ACell, AUpdateAnchor);
   Result := True;
 end;
@@ -3291,7 +3285,6 @@ end;
 procedure Th5uVclGrid.SelectRightClickCell(const AHit: Th5uHitTestInfo);
 var
   LCell: Th5uCellAddress;
-  LSelected: Boolean;
 begin
   if not FSelection.RightClickSelect or (AHit.Kind <> Th5uHitKind.DataCell) then
     Exit;
@@ -3299,12 +3292,7 @@ begin
   LCell.RowKey := AHit.RowKey;
   LCell.ColumnIndex := AHit.ColumnIndex;
   LCell.ColumnId := AHit.Column.Id;
-  LSelected := FSelection.IsCellSelected(LCell.RowIndex, LCell.ColumnIndex)
-    or FSelection.IsRowSelected(LCell.RowKey) or FSelection.IsColumnSelected(LCell.ColumnId);
-  if not TryFocusCell(LCell, not LSelected) then
-    Exit;
-  if not LSelected and AHit.Column.CanSelect then
-    FSelection.AddCellRange(Th5uCellRange.Create(LCell.RowIndex, LCell.RowIndex, LCell.ColumnIndex, LCell.ColumnIndex));
+  h5uSelectRightClick(FSelection, LCell, AHit.Column.CanSelect, TryFocusCell);
 end;
 
 function Th5uVclGrid.CanMoveColumn(AColumn: Th5uGridColumn): Boolean;
@@ -3757,82 +3745,9 @@ end;
 
 
 procedure Th5uVclGrid.SelectHeaderRange(AKind: Th5uSelectionKind; ARow: Int64; AColumn: Integer; AShift: TShiftState);
-var
-  LColumns: TArray<Th5uGridColumn>;
-  LKeys: TArray<Th5uRowKey>;
-  LIds: TList<string>;
-  LRow, LFirstRow, LLastRow: Int64;
-  I, LAnchorColumn: Integer;
-  LExtend: Boolean;
 begin
-  if not CanUpdateLayout or not (AKind in FSelection.AllowedKinds) then
-    Exit;
-  LColumns := FColumns.VisibleColumns;
-  if AKind = Th5uSelectionKind.Rows then
-  begin
-    if (ARow < 0) or (ARow >= GetViewRowCount) then
-      Exit;
-  end
-  else if (AColumn < 0) or (AColumn >= Length(LColumns)) then
-    Exit
-  else if not LColumns[AColumn].CanSelect then
-    Exit;
-
-  LExtend := (ssShift in AShift) and FHeaderSelectionActive and (FHeaderSelectionKind = AKind);
-  if not LExtend then
-    FHeaderAnchor := Th5uCellAddress.Empty;
-  FHeaderSelectionActive := True;
-  FHeaderSelectionKind := AKind;
-  FHeaderFocus := Th5uCellAddress.Empty;
-  if AKind = Th5uSelectionKind.Rows then
-  begin
-    FHeaderFocus.RowIndex := ARow;
-    FHeaderFocus.RowKey := GetViewRowKey(ARow);
-    // A removed/replaced row must not leave an anchor pointing at another row.
-    if (FHeaderAnchor.RowIndex < 0) or (FHeaderAnchor.RowIndex >= GetViewRowCount) then
-      FHeaderAnchor := FHeaderFocus
-    else if GetViewRowKey(FHeaderAnchor.RowIndex) <> FHeaderAnchor.RowKey then
-      FHeaderAnchor := FHeaderFocus;
-    if (ssCtrl in AShift) and not (ssShift in AShift) then
-      FSelection.ToggleRow(FHeaderFocus.RowKey)
-    else
-    begin
-      LFirstRow := Min(FHeaderAnchor.RowIndex, ARow);
-      LLastRow := Max(FHeaderAnchor.RowIndex, ARow);
-      SetLength(LKeys, LLastRow - LFirstRow + 1);
-      for LRow := LFirstRow to LLastRow do
-        LKeys[LRow - LFirstRow] := GetViewRowKey(LRow);
-      FSelection.SelectRows(LKeys, ssCtrl in AShift, LExtend);
-    end;
-  end
-  else
-  begin
-    FHeaderFocus.ColumnIndex := AColumn;
-    FHeaderFocus.ColumnId := LColumns[AColumn].Id;
-    LAnchorColumn := -1;
-    for I := 0 to High(LColumns) do
-      if LColumns[I].Id = FHeaderAnchor.ColumnId then
-        LAnchorColumn := I;
-    if LAnchorColumn < 0 then
-    begin
-      FHeaderAnchor := FHeaderFocus;
-      LAnchorColumn := AColumn;
-    end;
-    if (ssCtrl in AShift) and not (ssShift in AShift) then
-      FSelection.ToggleColumn(FHeaderFocus.ColumnId)
-    else
-    begin
-      LIds := TList<string>.Create;
-      try
-        for I := Min(LAnchorColumn, AColumn) to Max(LAnchorColumn, AColumn) do
-          if LColumns[I].CanSelect then
-            LIds.Add(LColumns[I].Id);
-        FSelection.SelectColumns(LIds.ToArray, ssCtrl in AShift, LExtend);
-      finally
-        LIds.Free;
-      end;
-    end;
-  end;
+  if CanUpdateLayout then
+    FNavigation.SelectHeaderRange(FColumns, FSelection, GetViewRowCount, GetViewRowKey, AKind, ARow, AColumn, AShift);
 end;
 
 
@@ -4390,33 +4305,13 @@ end;
 procedure Th5uVclGrid.SelectionChanged(Sender: TObject);
 var
   LOld, LNew: Th5uCellAddress;
-  LColumn: Th5uGridColumn;
 begin
   Invalidate;
   if not CanUpdateLayout then Exit;
   LOld := FLastNotifiedCell;
   LNew := FSelection.FocusedCell;
   FLastNotifiedCell := LNew;
-  if (LOld.RowIndex <> LNew.RowIndex) or (LOld.ColumnId <> LNew.ColumnId) or (LOld.RowKey <> LNew.RowKey) then
-  begin
-    if LOld.IsValid then
-    begin
-      LColumn := FColumns.FindById(LOld.ColumnId);
-      if Assigned(LColumn) and Assigned(LColumn.OnCellExit) then
-        LColumn.OnCellExit(LColumn, LColumn, LOld.RowIndex);
-      if Assigned(FOnCellExit) then
-        FOnCellExit(Self, LColumn, LOld.RowIndex);
-    end;
-    if LNew.IsValid then
-    begin
-      LColumn := FColumns.FindById(LNew.ColumnId);
-      if Assigned(LColumn) and Assigned(LColumn.OnCellEnter) then
-        LColumn.OnCellEnter(LColumn, LColumn, LNew.RowIndex);
-      if Assigned(FOnCellEnter) then
-        FOnCellEnter(Self, LColumn, LNew.RowIndex);
-    end;
-  end;
-  if Assigned(FOnSelectionChange) then FOnSelectionChange(Self);
+  h5uNotifyFocusChange(Self, FColumns, LOld, LNew, FOnCellExit, FOnCellEnter, FOnSelectionChange);
 end;
 
 procedure Th5uVclGrid.SetColumns(const AValue: Th5uGridColumns);
@@ -4760,24 +4655,14 @@ end;
 function Th5uVclGrid.FocusCell(ARow: Int64; AColumn: Integer; AExtend, AEdit: Boolean; AAdd: Boolean): Boolean;
 var
   LCell: Th5uCellAddress;
-  LColumns: TArray<Th5uGridColumn>;
   LRange: Th5uCellRange;
   LHit: Th5uHitTestInfo;
 begin
   Result := False;
-  if not CanUpdateLayout or not Assigned(FDataController) or (GetViewRowCount = 0) then
+  if not CanUpdateLayout or not Assigned(FDataController) then
     Exit;
-  LColumns := FColumns.VisibleColumns;
-  if Length(LColumns) = 0 then
+  if not h5uPlanCellFocus(FColumns, FSelection, GetViewRowCount, GetViewRowKey, ARow, AColumn, AExtend, LCell, LRange) then
     Exit;
-  LCell.RowIndex := EnsureRange(ARow, Int64(0), GetViewRowCount - 1);
-  LCell.ColumnIndex := EnsureRange(AColumn, 0, High(LColumns));
-  LCell.RowKey := GetViewRowKey(LCell.RowIndex);
-  LCell.ColumnId := LColumns[LCell.ColumnIndex].Id;
-  if AExtend and FSelection.AnchorCell.IsValid then
-    LRange := Th5uCellRange.Create(FSelection.AnchorCell.RowIndex, LCell.RowIndex, FSelection.AnchorCell.ColumnIndex, LCell.ColumnIndex)
-  else
-    LRange := Th5uCellRange.Create(LCell.RowIndex, LCell.RowIndex, LCell.ColumnIndex, LCell.ColumnIndex);
   if not TryFocusCell(LCell, not AExtend) then Exit;
   FSelection.AddCellRange(LRange, AAdd, AExtend);
   Result := FocusedCellHit(LHit);
@@ -4799,14 +4684,15 @@ begin
   StartEdit(LHit);
 end;
 
+function Th5uVclGrid.NavigationRowExtent(ARow: Int64): Double;
+begin
+  Result := GetRowHeightFor(ARow, GetViewRowKey(ARow)) + FSpacing.RowSpacing;
+end;
+
 function Th5uVclGrid.HandleNavigationKey(AKey: Word; AShift: TShiftState): Boolean;
 var
-  LCell: Th5uCellAddress;
+  LAction: Th5uNavigationAction;
   LHit: Th5uHitTestInfo;
-  LColumns: TArray<Th5uGridColumn>;
-  LRow, LCount: Int64;
-  LColumn: Integer;
-  LDistance: Integer;
 begin
   Result := False;
   if not CanUpdateLayout or (ssAlt in AShift) then
@@ -4814,128 +4700,39 @@ begin
   if AKey = vkEscape then
   begin
     EndSelectionDrag;
-    FSearchText := '';
-    FHeaderSelectionActive := False;
-    FSelection.ClearExtendedSelection;
+    FNavigation.Cancel(FSelection);
     Exit(True);
   end;
-  if not (AKey in [vkLeft, vkRight, vkUp, vkDown, vkPrior, vkNext, vkHome, vkEnd, vkF2]) then
+  Result := FNavigation.Navigate(FColumns, FSelection, GetViewRowCount, GetViewRowKey, NavigationRowExtent,
+    GetDataViewportRect.Height, AKey, AShift, LAction);
+  if not Result then
     Exit;
-  Result := True;
-  FSearchText := '';
-  LCount := GetViewRowCount;
-  LColumns := FColumns.VisibleColumns;
-  if (LCount = 0) or (Length(LColumns) = 0) then
-    Exit;
-  LCell := FSelection.FocusedCell;
-  if FHeaderSelectionActive and (ssShift in AShift) and (AKey <> vkF2) then
-  begin
-    if not LCell.IsValid then
-    begin
-      LCell.RowIndex := 0;
-      LCell.ColumnIndex := 0;
-    end;
-    if FHeaderSelectionKind = Th5uSelectionKind.Rows then
-      LCell.RowIndex := FHeaderFocus.RowIndex
-    else
-      LCell.ColumnIndex := FHeaderFocus.ColumnIndex;
-    LCell.RowIndex := EnsureRange(LCell.RowIndex, Int64(0), LCount - 1);
-    LCell.ColumnIndex := EnsureRange(LCell.ColumnIndex, 0, High(LColumns));
-    LCell.RowKey := GetViewRowKey(LCell.RowIndex);
-    LCell.ColumnId := LColumns[LCell.ColumnIndex].Id;
-  end;
-  if not LCell.IsValid then
-  begin
-    FocusCell(0, 0, False, AKey <> vkF2);
-    if AKey = vkF2 then
+  case LAction.Kind of
+    Th5uNavigationActionKind.Focus:
+      begin
+        FocusCell(LAction.Cell.RowIndex, LAction.Cell.ColumnIndex, LAction.Extend, LAction.AutomaticEdit, LAction.Add);
+        if LAction.EditAfterFocus then
+          EditFocusedCell(False);
+      end;
+    Th5uNavigationActionKind.Edit:
       EditFocusedCell(False);
-    Exit;
+    Th5uNavigationActionKind.Header:
+      begin
+        SelectHeaderRange(FNavigation.HeaderSelectionKind, LAction.Cell.RowIndex, LAction.Cell.ColumnIndex, AShift);
+        CellHit(LAction.Cell, LHit);
+      end;
   end;
-  LRow := EnsureRange(LCell.RowIndex, Int64(0), LCount - 1);
-  LColumn := EnsureRange(LCell.ColumnIndex, 0, High(LColumns));
-  case AKey of
-    vkLeft:  Dec(LColumn);
-    vkRight: Inc(LColumn);
-    vkUp:    Dec(LRow);
-    vkDown:  Inc(LRow);
-    vkHome:
-    begin
-      LColumn := 0;
-      if ssCtrl in AShift then
-        LRow := 0;
-    end;
-    vkEnd:
-    begin
-      LColumn := High(LColumns);
-      if ssCtrl in AShift then
-        LRow := LCount - 1; 
-    end;
-    vkPrior, vkNext:
-    begin
-      LDistance := 0;
-      repeat
-        LDistance := LDistance + GetRowHeightFor(LRow, GetViewRowKey(LRow)) + FSpacing.RowSpacing;
-        if AKey = vkPrior then
-          Dec(LRow)
-        else
-          Inc(LRow);
-      until (LRow <= 0) or (LRow >= LCount - 1) or (LDistance >= GetDataViewportRect.Height);
-    end;
-    vkF2:
-    begin
-      EditFocusedCell(False);
-      Exit;
-    end;
-  end;
-  if FHeaderSelectionActive and (ssShift in AShift) then
-  begin
-    LCell.RowIndex := EnsureRange(LRow, Int64(0), LCount - 1);
-    LCell.ColumnIndex := EnsureRange(LColumn, 0, High(LColumns));
-    LCell.RowKey := GetViewRowKey(LCell.RowIndex);
-    LCell.ColumnId := LColumns[LCell.ColumnIndex].Id;
-    SelectHeaderRange(FHeaderSelectionKind, LCell.RowIndex, LCell.ColumnIndex, AShift);
-    CellHit(LCell, LHit);
-  end
-  else
-    FocusCell(LRow, LColumn, ssShift in AShift, True, (ssCtrl in AShift) and (ssShift in AShift));
 end;
 
 procedure Th5uVclGrid.SearchCharacter(AChar: Char);
 var
-  LColumns: TArray<Th5uGridColumn>;
-  LCell: Th5uCellAddress;
-  LCount, LRow, LStart, I: Int64;
+  LRow: Int64;
   LColumn: Integer;
-  LText: string;
-  LContinue: Boolean;
 begin
   if (AChar < #32) or Assigned(FEditColumn) or not CanUpdateLayout then
     Exit;
-  LCount := GetViewRowCount;
-  LColumns := FColumns.VisibleColumns;
-  if (LCount = 0) or (Length(LColumns) = 0) then
-    Exit;
-  LCell := FSelection.FocusedCell;
-  LColumn := EnsureRange(LCell.ColumnIndex, 0, High(LColumns));
-  LContinue := (FSearchText <> '') and ((Now - FSearchTime) * MSecsPerDay < 1000);
-  if not LContinue then
-    FSearchText := '';
-  FSearchText := FSearchText + AChar;
-  FSearchTime := Now;
-  LStart := Max(Int64(0), LCell.RowIndex);
-  if LCell.IsValid and not LContinue then
-    LStart := (LStart + 1) mod LCount;
-  for I := 0 to LCount - 1 do
-  begin
-    LRow := (LStart + I) mod LCount;
-    PrepareViewRange(LRow, 1);
-    LText := GetCellText(LColumns[LColumn], LRow, True);
-    if SameText(Copy(LText, 1, Length(FSearchText)), FSearchText) then
-    begin
-      FocusCell(LRow, LColumn, False, False);
-      Exit;
-    end;
-  end;
+  if FNavigation.SearchCharacter(FColumns, FSelection, GetViewRowCount, PrepareViewRange, GetCellText, AChar, Now, LRow, LColumn) then
+    FocusCell(LRow, LColumn, False, False);
 end;
 
 procedure Th5uVclGrid.WMGetDlgCode(var Message: TWMGetDlgCode);
