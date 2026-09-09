@@ -5,6 +5,11 @@ program TestCommonBehavior;
 
 uses
   System.SysUtils,
+  System.Rtti,
+  h5u.Grid.AdjacentGroups,
+  h5u.Grid.Data.Core,
+  h5u.Grid.Data.Memory,
+  h5u.Grid.View,
   System.Classes,
   System.DateUtils,
   System.UITypes,
@@ -150,10 +155,92 @@ begin
   end;
 end;
 
+type
+  TViewData = class
+    Controller: Th5uMemoryController;
+    Events: Integer;
+    function GetController: Th5uCustomDataController;
+    procedure GroupChanged(Sender: TObject; const AContext: Th5uAdjacentGroupStateChangedContext);
+  end;
+
+function TViewData.GetController: Th5uCustomDataController;
+begin
+  Result := Controller;
+end;
+
+procedure TViewData.GroupChanged(Sender: TObject; const AContext: Th5uAdjacentGroupStateChangedContext);
+begin
+  Check((Sender = Self) and (AContext.Grid = Self) and (AContext.DataController = Controller), 'group event owner/context');
+  Inc(Events);
+end;
+
+procedure TestIndependentViews;
+var
+  LData: TViewData;
+  LColumns: Th5uGridColumns;
+  LTree: Th5uTreeOptions;
+  LGroups: Th5uAdjacentGroupFoldingOptions;
+  LView, LOther: Th5uGridView;
+  LInfo: Th5uAdjacentGroupRowInfo;
+  LChanges: TArray<Th5uAdjacentGroupRowInfo>;
+  LLevel, LClosed: Integer;
+begin
+  LData := TViewData.Create;
+  LData.Controller := Th5uMemoryController.Create(nil);
+  LColumns := Th5uGridColumns.Create(nil);
+  LTree := Th5uTreeOptions.Create;
+  LGroups := Th5uAdjacentGroupFoldingOptions.Create;
+  LView := nil;
+  LOther := nil;
+  try
+    LData.Controller.AppendValues(['group', 'level'], [TValue.From<string>('A'), TValue.From<Integer>(0)]);
+    LData.Controller.AppendValues(['group', 'level'], [TValue.From<string>('A'), TValue.From<Integer>(1)]);
+    LData.Controller.AppendValues(['group', 'level'], [TValue.From<string>('B'), TValue.From<Integer>(0)]);
+    LData.Controller.AppendValues(['group', 'level'], [TValue.From<string>('B'), TValue.From<Integer>(1)]);
+    LData.Controller.AppendValues(['group', 'level'], [TValue.From<string>('A'), TValue.From<Integer>(0)]);
+    LGroups.Enabled := True;
+    LGroups.IdColumnId := 'group';
+    LGroups.InitialState := Th5uAdjacentGroupInitialState.Expanded;
+    LTree.Enabled := True;
+    LTree.LevelColumnId := 'level';
+    LView := Th5uGridView.Create(LData, LColumns, LTree, LGroups, LData.GetController);
+    LOther := Th5uGridView.Create(LData, LColumns, LTree, LGroups, LData.GetController);
+    LView.OnAdjacentGroupStateChanged := LData.GroupChanged;
+    Check((LView.GetViewRowCount = 5) and (LOther.GetViewRowCount = 5), 'initial view count');
+    Check(LView.ChangeAdjacentGroup(0, False, True, LInfo), 'collapse first run');
+    LView.DoAdjacentGroupStateChanged(LInfo);
+    Check((LData.Events = 1) and (LView.GetViewRowCount = 4) and (LOther.GetViewRowCount = 5), 'per-view folding and event');
+    Check((LView.GetViewSourceRowIndex(1) = 2) and (LView.GetViewRowKey(1) = LData.Controller.GetRowKey(2)), 'collapsed row/source mapping');
+    Check(LView.GetViewValue(1, 'group').AsString = 'B', 'view value mapping');
+    Check(LView.CanEditViewValue(1, 'level'), 'view edit permission');
+    LView.SetViewValue(1, 'level', TValue.From<Integer>(0));
+    Check(LView.GetTreeBranchEndInfo(2, LView.GetViewRowKey(2), LLevel, LClosed)
+      and (LLevel = 1) and (LClosed = 1), 'tree branch closes at next visible row');
+    Check(not LView.IsViewRowAvailable(4), 'folded look-ahead passed end');
+    LChanges := LView.ChangeAllAdjacentGroups(True);
+    Check((Length(LChanges) = 1) and (LView.GetViewRowCount = 3), 'collapse only remaining foldable run');
+    LChanges := LView.ChangeAllAdjacentGroups(False);
+    Check((Length(LChanges) = 2) and (LView.GetViewRowCount = 5), 'expand independent repeated IDs');
+    LData.Controller.Clear;
+    LView.InvalidateAdjacentGroupMap(True);
+    Check(LView.GetViewRowCount = 0, 'empty data after invalidation');
+    Writeln('PASS: common independent views, repeated group IDs, row mapping, tree closure and event owner');
+  finally
+    LOther.Free;
+    LView.Free;
+    LGroups.Free;
+    LTree.Free;
+    LColumns.Free;
+    LData.Controller.Free;
+    LData.Free;
+  end;
+end;
+
 begin
   try
     TestResizeBoundaries;
     TestNavigation;
+    TestIndependentViews;
   except
     on E: Exception do
     begin

@@ -133,6 +133,7 @@
         <DCCReference Include="..\Source\Common\h5u.Grid.Moving.pas"/>
         <DCCReference Include="..\Source\Common\h5u.Grid.Resizing.pas"/>
         <DCCReference Include="..\Source\Common\h5u.Grid.Navigation.pas"/>
+        <DCCReference Include="..\Source\Common\h5u.Grid.View.pas"/>
         <DCCReference Include="..\Source\Common\h5u.Grid.Data.Core.pas"/>
         <DCCReference Include="..\Source\Common\h5u.Grid.Data.Dataset.pas"/>
         <DCCReference Include="..\Source\Common\h5u.Grid.Data.Memory.pas"/>
