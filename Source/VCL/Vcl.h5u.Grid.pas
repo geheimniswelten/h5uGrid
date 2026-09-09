@@ -28,6 +28,7 @@ uses
   h5u.Grid.AdjacentGroups,
   h5u.Grid.Values,
   h5u.Grid.Moving,
+  h5u.Grid.Resizing,
   h5u.Grid.Columns,
   h5u.Grid.Data.Core,
   h5u.Grid.Factory,
@@ -309,6 +310,7 @@ type
     procedure UpdateSelectionDrag(X, Y: Integer);
     procedure EndSelectionDrag;
     function ColumnResizeAt(X, Y: Integer; ATouch: Boolean): Th5uGridColumn;
+    function IsResizeHeaderEdge(AX, AY: Double): Boolean;
     function BeginColumnResize(X, Y: Integer; ATouch: Boolean): Boolean;
     procedure UpdateColumnResize(X: Integer);
     procedure SetResizeCursor(AActive: Boolean);
@@ -3213,56 +3215,38 @@ end;
 
 function Th5uVclGrid.ColumnResizeAt(X, Y: Integer; ATouch: Boolean): Th5uGridColumn;
 var
-  LInfo: Th5uVisibleColumnInfo;
+  LCandidates: TArray<Th5uResizeCandidate>;
   LView: TRect;
-  LHeader: Th5uHeaderLayoutCell;
-  LLeftTolerance, LRightTolerance, LLastLeftTolerance, LEffectiveLeft, LDelta, LDistance, LBest: Integer;
+  I: Integer;
 begin
   Result := nil;
   if not CanUpdateLayout or not FShowHeader or not FCustomization.AllowColumnResizing then
     Exit;
   if not GetViewportRect.Contains(Point(X, Y)) or (Y >= GetDataViewportRect.Top) then
     Exit;
-  if ATouch then
-  begin
-    LLastLeftTolerance := FCustomization.TouchLastColumnResizeHitZoneLeft;
-    LLeftTolerance := FCustomization.TouchColumnResizeHitZoneLeft;
-    LRightTolerance := FCustomization.TouchColumnResizeHitZoneRight;
-  end
-  else
-  begin
-    LLastLeftTolerance := FCustomization.LastColumnResizeHitZoneLeft;
-    LLeftTolerance := FCustomization.ColumnResizeHitZoneLeft;
-    LRightTolerance := FCustomization.ColumnResizeHitZoneRight;
-  end;
-  LBest := Max(LLeftTolerance, LRightTolerance);
   BuildColumnLayout;
-  for LInfo in FVisibleColumns do
+  SetLength(LCandidates, Length(FVisibleColumns));
+  for I := 0 to High(FVisibleColumns) do
   begin
-    if not LInfo.Column.CanResize then
-      Continue;
-    LEffectiveLeft := LLeftTolerance;
-    // Use the last non-hidden column, not the last one inside the scrolled viewport.
-    if (LInfo.VisibleIndex = High(FAllColumns)) and (LLastLeftTolerance >= 0) then
-      LEffectiveLeft := LLastLeftTolerance;
-    LDelta := X - LInfo.Bounds.Right;
-    if (LDelta < -LEffectiveLeft) or (LDelta > LRightTolerance) then
-      Continue;
-    if FHeaderLayout.Enabled and (FHeaderLayout.Cells.Count > 0) then
-    begin
-      LHeader := HeaderCellAtPoint(LInfo.Bounds.Right - 1, Y);
-      if not Assigned(LHeader) or (Abs(GetHeaderCellBounds(LHeader).Right - LInfo.Bounds.Right) > 0.1) then
-        Continue;
-    end;
-    LDistance := Abs(LDelta);
-    if Assigned(Result) and (LDistance >= LBest) then
-      Continue;
-    LView := GetColumnViewportRect(LInfo.Column);
-    // A clipped column's viewport edge is not its resize boundary.
-    if (LInfo.Bounds.Right <= LView.Left) or (LInfo.Bounds.Right > LView.Right) then
-      Continue;
-    Result := LInfo.Column;
-    LBest := LDistance;
+    LCandidates[I].Column := FVisibleColumns[I].Column;
+    LCandidates[I].VisibleIndex := FVisibleColumns[I].VisibleIndex;
+    LCandidates[I].Right := FVisibleColumns[I].Bounds.Right;
+    LView := GetColumnViewportRect(FVisibleColumns[I].Column);
+    LCandidates[I].ViewLeft := LView.Left;
+    LCandidates[I].ViewRight := LView.Right;
+  end;
+  Result := h5uColumnResizeAt(FCustomization, LCandidates, High(FAllColumns), X, Y, ATouch, IsResizeHeaderEdge);
+end;
+
+function Th5uVclGrid.IsResizeHeaderEdge(AX, AY: Double): Boolean;
+var
+  LHeader: Th5uHeaderLayoutCell;
+begin
+  Result := True;
+  if FHeaderLayout.Enabled and (FHeaderLayout.Cells.Count > 0) then
+  begin
+    LHeader := HeaderCellAtPoint(Round(AX - 1), Round(AY));
+    Result := Assigned(LHeader) and (Abs(GetHeaderCellBounds(LHeader).Right - AX) <= 0.1);
   end;
 end;
 
@@ -3295,22 +3279,12 @@ begin
 end;
 
 procedure Th5uVclGrid.UpdateColumnResize(X: Integer);
-var
-  I: Integer;
 begin
-  if not Assigned(FResizingColumn) then Exit;
+  if not Assigned(FResizingColumn) then
+    Exit;
   if CanUpdateLayout and FCustomization.AllowColumnResizing and MouseCapture then
-    for I := 0 to FColumns.Count - 1 do
-      if FColumns[I] = FResizingColumn then
-      begin
-        if FColumns[I].Visible and FColumns[I].CanResize then
-        begin
-          FColumns[I].Width := FResizeOriginalWidth + (X - FResizeStartX);
-          Exit;
-        end;
-        Break;
-      end;
-  // Capture, permissions or the source column may disappear during a drag.
+    if h5uTryResizeColumn(FColumns, FResizingColumn, FResizeOriginalWidth, X - FResizeStartX) then
+      Exit;
   EndSelectionDrag;
 end;
 
