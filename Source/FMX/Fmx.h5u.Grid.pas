@@ -3439,7 +3439,7 @@ end;
 
 function Th5uFmxGrid.ParseEditorValue(AColumn: Th5uGridColumn; const AText: string): TValue;
 begin
-  Result := h5uParseEditorValue(AColumn.DataType, AText, False);
+  Result := h5uParseEditorValue(AColumn.DataType, AText);
 end;
 
 procedure Th5uFmxGrid.Resize;

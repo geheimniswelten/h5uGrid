@@ -3685,7 +3685,7 @@ end;
 
 function Th5uVclGrid.ParseEditorValue(AColumn: Th5uGridColumn; const AText: string): TValue;
 begin
-  Result := h5uParseEditorValue(AColumn.DataType, AText, True);
+  Result := h5uParseEditorValue(AColumn.DataType, AText);
 end;
 
 procedure Th5uVclGrid.RebuildAfterLayoutChange;

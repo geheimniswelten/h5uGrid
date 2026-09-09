@@ -18,7 +18,7 @@ type
   Th5uGetViewValueMethod = function(ARow: Int64; const AFieldName: string): TValue of object;
   Th5uGetViewTextMethod = function(ARow: Int64; const AFieldName, ADisplayFormat: string): string of object;
 
-function h5uParseEditorValue(ADataType: Th5uColumnDataType; const AText: string; AIncludeValueInError: Boolean = True): TValue;
+function h5uParseEditorValue(ADataType: Th5uColumnDataType; const AText: string): TValue;
 function h5uColumnMode(AColumn: Th5uGridColumn; AController: TObject; const ATreeColumnId, AGroupColumnId, AStyleColumnId, AHintColumnId: string): string;
 function h5uColumnModeSymbols(const AMode: string): string;
 function h5uCellPermission(AGrid: TObject; AColumn: Th5uGridColumn; ARow: Int64; AAllow: Boolean;
@@ -34,7 +34,7 @@ procedure h5uNotifyCellClick(AGrid: TObject; AColumn: Th5uGridColumn; ARow: Int6
 
 implementation
 
-function h5uParseEditorValue(ADataType: Th5uColumnDataType; const AText: string; AIncludeValueInError: Boolean = True): TValue;
+function h5uParseEditorValue(ADataType: Th5uColumnDataType; const AText: string): TValue;
 var
   LInteger: Int64;
   LFloat: Double;
@@ -45,30 +45,21 @@ begin
     Th5uColumnDataType.Integer:
       begin
         if not TryStrToInt64(AText, LInteger) then
-          if AIncludeValueInError then
-            raise EConvertError.CreateFmt('"%s" ist keine ganze Zahl.', [AText])
-          else
-            raise EConvertError.Create('Ungültige ganze Zahl.');
+          raise EConvertError.CreateFmt('"%s" ist keine ganze Zahl.', [AText]);
         Result := TValue.From<Int64>(LInteger);
       end;
 
     Th5uColumnDataType.Float:
       begin
         if not TryStrToFloat(AText, LFloat) then
-          if AIncludeValueInError then
-            raise EConvertError.CreateFmt('"%s" ist keine Zahl.', [AText])
-          else
-            raise EConvertError.Create('Ungültige Zahl.');
+          raise EConvertError.CreateFmt('"%s" ist keine Zahl.', [AText]);
         Result := TValue.From<Double>(LFloat);
       end;
 
     Th5uColumnDataType.Currency:
       begin
         if not TryStrToCurr(AText, LCurrency) then
-          if AIncludeValueInError then
-            raise EConvertError.CreateFmt('"%s" ist kein gültiger Betrag.', [AText])
-          else
-            raise EConvertError.Create('Ungültiger Betrag.');
+          raise EConvertError.CreateFmt('"%s" ist kein gültiger Betrag.', [AText]);
         Result := TValue.From<Currency>(LCurrency);
       end;
 
@@ -83,10 +74,7 @@ begin
     Th5uColumnDataType.DateTime:
       begin
         if not TryStrToDateTime(AText, LDateTime) then
-          if AIncludeValueInError then
-            raise EConvertError.CreateFmt('"%s" ist kein gültiges Datum.', [AText])
-          else
-            raise EConvertError.Create('Ungültiges Datum.');
+          raise EConvertError.CreateFmt('"%s" ist kein gültiges Datum.', [AText]);
         Result := TValue.From<TDateTime>(LDateTime);
       end;
 

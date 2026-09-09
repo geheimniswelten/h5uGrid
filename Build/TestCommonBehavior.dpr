@@ -5,6 +5,7 @@ program TestCommonBehavior;
 
 uses
   System.SysUtils,
+  h5u.Grid.Values,
   System.Math,
   h5u.Grid.Layout,
   h5u.Grid.RowMetrics,
@@ -374,6 +375,34 @@ begin
   end;
 end;
 
+procedure TestValueConversion;
+var
+  LType: Th5uColumnDataType;
+  LValue: TValue;
+  LFailed: Boolean;
+begin
+  Check(h5uParseEditorValue(Th5uColumnDataType.Integer, '9223372036854775807').AsInt64 = High(Int64), 'Int64 parsing');
+  Check(SameValue(h5uParseEditorValue(Th5uColumnDataType.Float, FloatToStr(1.5)).AsExtended, 1.5), 'locale float parsing');
+  Check(h5uParseEditorValue(Th5uColumnDataType.Currency, CurrToStr(12.25)).AsType<Currency> = 12.25, 'currency parsing');
+  Check(h5uParseEditorValue(Th5uColumnDataType.Text, ' abc ').AsString = ' abc ', 'text whitespace preservation');
+  for LType in [Th5uColumnDataType.Integer, Th5uColumnDataType.Float, Th5uColumnDataType.Currency,
+    Th5uColumnDataType.Date, Th5uColumnDataType.DateTime, Th5uColumnDataType.Time] do
+  begin
+    LFailed := False;
+    try
+      LValue := h5uParseEditorValue(LType, 'invalid-input');
+    except
+      on E: EConvertError do
+      begin
+        LFailed := True;
+        Check(Pos('"invalid-input"', E.Message) > 0, 'conversion error must include rejected text');
+      end;
+    end;
+    Check(LFailed, 'invalid input was accepted');
+  end;
+  Writeln('PASS: common value conversion, locale, Int64 bounds and consistent rejected-input errors');
+end;
+
 begin
   try
     TestResizeBoundaries;
@@ -381,6 +410,7 @@ begin
     TestIndependentViews;
     TestRowMetrics;
     TestColumnLayout;
+    TestValueConversion;
   except
     on E: Exception do
     begin
