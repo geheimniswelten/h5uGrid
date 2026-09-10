@@ -4,11 +4,14 @@ param(
     [string]$DelphiBin,
     [string]$OutputRoot = (Join-Path $PSScriptRoot 'Output\Editing'),
     [ValidateRange(1, 300)]
-    [int]$TimeoutSeconds = 60
+    [int]$TimeoutSeconds = 60,
+    [ValidateSet(5, 10)]
+    [int]$NoticeSeconds = 10
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'visual-test-notice.ps1')
 $taskCompiler = Join-Path $DelphiBin 'dcc32.exe'
 if (-not (Test-Path -LiteralPath $taskCompiler)) {
     throw "Compiler fehlt: $taskCompiler"
@@ -31,6 +34,7 @@ try {
         }
         $taskStdout = Join-Path $taskOutput "$taskTest.stdout.log"
         $taskStderr = Join-Path $taskOutput "$taskTest.stderr.log"
+        Show-GridVisualTestNotice -TestName $taskTest -Seconds $NoticeSeconds
         $taskProcess = Start-Process -FilePath (Join-Path $taskOutput "$taskTest.exe") -WindowStyle Hidden -PassThru `
             -RedirectStandardOutput $taskStdout -RedirectStandardError $taskStderr
         try {

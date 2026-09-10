@@ -149,3 +149,27 @@ Beim Build mit einer konkreten Delphi-Version sind insbesondere zu prüfen:
 - Package-Suffixe und IDE-spezifische Ausgabepfade.
 
 Versionsspezifische Compilerdiagnosen sollten mit Dateiname, Zeilennummer und Delphi-Version dokumentiert werden.
+
+## Hinweis vor visuellen Tests
+
+`test-editing.ps1`, `test-virtual-loading.ps1` und der visuelle Teil von
+`test-dataset-loading.ps1` zeigen unmittelbar vor jedem Testprogramm einen
+**10-Sekunden-Countdown**. Mit `-NoticeSeconds 5` lässt sich der Vorlauf auf
+5 Sekunden verkürzen.
+
+Der Hinweis steht zentriert im Arbeitsbereich des Monitors mit dem Mauszeiger,
+bleibt im Vordergrund und übernimmt keinen Tastaturfokus. Die Vorlaufzeit zählt
+ab dem sichtbaren Anzeigen. Schließt der Hinweis vorzeitig oder schlägt er fehl,
+wird das Testprogramm nicht gestartet. Visuelle Testprogramme nacheinander ausführen.
+
+Für einen manuellen Start:
+
+```powershell
+. .\Build\visual-test-notice.ps1
+Show-GridVisualTestNotice -TestName 'GridVclClientDatasetDemo'
+# Anschließend das gewünschte Testprogramm starten.
+```
+
+Reine Compiler-, Common-, Ressourcen- und andere Tests ohne Fenster benötigen
+keinen Hinweis. Der Hinweis verwendet Windows Forms in einem separaten
+Windows-PowerShell-Prozess mit STA; seine Konsole bleibt verborgen.
