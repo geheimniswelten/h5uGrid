@@ -41,6 +41,7 @@ contains
   h5u.Grid.Columns in '..\Source\Common\h5u.Grid.Columns.pas',
   h5u.Grid.Options in '..\Source\Common\h5u.Grid.Options.pas',
   h5u.Grid.AdjacentGroups in '..\Source\Common\h5u.Grid.AdjacentGroups.pas',
+  h5u.Grid.Editors in '..\Source\Common\h5u.Grid.Editors.pas',
   h5u.Grid.Values in '..\Source\Common\h5u.Grid.Values.pas',
   h5u.Grid.Moving in '..\Source\Common\h5u.Grid.Moving.pas',
   h5u.Grid.Resizing in '..\Source\Common\h5u.Grid.Resizing.pas',

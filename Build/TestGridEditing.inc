@@ -1,21 +1,33 @@
 ﻿uses
   System.TypInfo, System.Classes, System.DateUtils, System.SysUtils, System.Types, System.Rtti, System.UITypes,
   Data.DB, Datasnap.DBClient, MidasLib,
+  h5u.Grid.Editors,
   h5u.Grid.Selection, h5u.Grid.Types, h5u.Grid.Columns, h5u.Grid.Options,
   h5u.Grid.Data.Core, h5u.Grid.Data.Dataset,
 {$IFDEF TEST_FMX}
-  System.UIConsts, FMX.Objects, FMX.Types, FMX.StdCtrls, FMX.Forms, FMX.Controls, FMX.Edit, FMX.DateTimeCtrls, FMX.Graphics, Fmx.h5u.Grid, Fmx.h5u.Grid.Styles,
+  System.UIConsts, FMX.Objects, FMX.Types, FMX.StdCtrls, FMX.Forms, FMX.Controls, FMX.Edit, FMX.DateTimeCtrls, FMX.Graphics,
+  Fmx.h5u.Grid.Editors, Fmx.h5u.Grid, Fmx.h5u.Grid.Styles,
   FmxDatasetDemoMain in '..\Demos\FMX\ClientDataset\FmxDatasetDemoMain.pas',
   FmxListDemoMain in '..\Demos\FMX\ObjectList\FmxListDemoMain.pas',
   FmxVirtualDemoMain in '..\Demos\FMX\VirtualLive\FmxVirtualDemoMain.pas';
 {$ELSE}
-  Winapi.Windows, Winapi.Messages, Vcl.Forms, Vcl.Controls, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Graphics, Vcl.h5u.Grid, Vcl.h5u.Grid.Styles,
+  Winapi.Windows, Winapi.Messages, Vcl.Forms, Vcl.Controls, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Graphics, Vcl.h5u.Grid.Editors, Vcl.h5u.Grid,
+    Vcl.h5u.Grid.Styles,
   VclDatasetDemoMain in '..\Demos\VCL\ClientDataset\VclDatasetDemoMain.pas',
   VclObjectDemoMain in '..\Demos\VCL\ObjectList\VclObjectDemoMain.pas',
   VclVirtualDemoMain in '..\Demos\VCL\VirtualLive\VclVirtualDemoMain.pas';
 {$ENDIF}
 
 type
+{$IFDEF TEST_FMX}
+  TNativeCustomEditor = Th5uFmxCustomEditor;
+  TNativeTextEditor = Th5uFmxTextEditor;
+  TNativeDateEditor = Th5uFmxDateEditor;
+{$ELSE}
+  TNativeCustomEditor = Th5uVclCustomEditor;
+  TNativeTextEditor = Th5uVclTextEditor;
+  TNativeDateEditor = Th5uVclDateEditor;
+{$ENDIF}
 {$IFDEF TEST_FMX}
   TDateEditAccess = class(Th5uCellDateEdit)
   public
@@ -77,6 +89,9 @@ type
   TFixture = class
   private
     procedure Changed(Sender: TObject; const AChange: Th5uDataChange);
+  private
+    FLastEditor: TEdit;
+    function GetEditor: TEdit;
     procedure BeforePost(DataSet: TDataSet);
     procedure AfterPost(DataSet: TDataSet);
   public
@@ -86,7 +101,8 @@ type
     Source: TDataSource;
     Controller: Th5uDatasetController;
     Link: Th5uDataControllerLink;
-    Editor: TEdit;
+    property Editor: TEdit read GetEditor;
+  public
     Posts: Integer;
     Changes: Integer;
     RejectPost: Boolean;
@@ -250,9 +266,7 @@ begin
   end;
   Grid.DataController := Controller;
   for LIndex := 0 to Grid.ComponentCount - 1 do
-    if Grid.Components[LIndex] is TEdit then
-      Editor := TEdit(Grid.Components[LIndex]);
-  Check(Assigned(Editor), 'Cell editor missing');
+    Check(not (Grid.Components[LIndex] is TEdit), 'Text editor created before first edit');
   Link := Th5uDataControllerLink.Create;
   Link.Controller := Controller;
   Link.OnChanged := Changed;
@@ -336,6 +350,13 @@ begin
         Exit(Point(Round((LHit.Bounds.Left + LHit.Bounds.Right) / 2), Round((LHit.Bounds.Top + LHit.Bounds.Bottom) / 2)));
     end;
   raise Exception.Create('Cell not found: ' + AField);
+end;
+
+function TFixture.GetEditor: TEdit;
+begin
+  if Assigned(Grid.ActiveEditor) and (TNativeCustomEditor(Grid.ActiveEditor).Control is TEdit) then
+    FLastEditor := TEdit(TNativeCustomEditor(Grid.ActiveEditor).Control);
+  Result := FLastEditor;
 end;
 
 procedure TFixture.EditorKey(AKey: Word);
@@ -456,7 +477,7 @@ begin
     P.GridOverride := False;
     P.Log := '';
     T.Grid.Press(vkF2);
-    Check((P.Log = 'eG') and not T.Editor.Visible, 'Column edit veto/order ignored');
+    Check((P.Log = 'eG') and not Assigned(T.Grid.ActiveEditor), 'Column edit veto/order ignored');
     P.AllowEdit := True;
     T.Grid.AllowEditing := False;
     C.ReadOnly := True;
@@ -734,7 +755,7 @@ begin
     T.PaintGrid;
     Check((V.Value>0) and (H.Value>0),'Touch does not scroll both axes');
     Check((T.Posts=0) and (T.Controller.GetValue(0,'FLAG').AsBoolean=BeforeValue), 'Swipe edited a checkbox');
-    Check(not T.Editor.Visible,'Swipe opened an editor');
+    Check(not Assigned(T.Grid.ActiveEditor),'Swipe opened an editor');
     V.Value := 0; H.Value := 0;
     T.PaintGrid;
     P := T.CellPoint('FLAG');
@@ -830,7 +851,7 @@ begin
     LTest.Editor.Text := 'New memo';
     LTest.EditorKey(vkReturn);
     Check(LTest.Controller.GetValue(0, 'DESCRIPTION').AsString = 'New memo', 'Memo was not committed');
-    Check((LTest.Posts = 1) and not LTest.Editor.Visible, 'Commit did not close the editor exactly once');
+    Check((LTest.Posts = 1) and not Assigned(LTest.Grid.ActiveEditor), 'Commit did not close the editor exactly once');
     LTest.Grid.ClickAt(LTest.CellPoint('DESCRIPTION'), True);
     LTest.Editor.Text := 'Discard this';
     LTest.EditorKey(vkEscape);
@@ -1159,7 +1180,7 @@ begin
             SendMouse(WM_LBUTTONDOWN, P, MK_LBUTTON);
             SendMouse(WM_LBUTTONUP, Q);
             Check(T.Grid.Selection.IsCellSelected(0, 1) and T.Grid.Selection.IsCellSelected(1, 2), 'Native range release lost its final cell');
-            Check(not T.Editor.Visible, 'Native range drag started editing');
+            Check(not Assigned(T.Grid.ActiveEditor), 'Native range drag started editing');
           end;
         8:
           begin
@@ -1610,8 +1631,8 @@ begin
           if ExpectedFeedback then
           begin
             Check(Pixel(BeforeImage, SourcePixel) <> Pixel(DragImage, SourcePixel), 'Source feedback is on the wrong header row');
-            Check(Pixel(BeforeImage, ChildPixel) = Pixel(DragImage, ChildPixel),
-              'Source feedback paints the other header row, scenario ' + IntToStr(Scenario));
+            Check(Pixel(BeforeImage, ChildPixel) = Pixel(DragImage, ChildPixel), 'Source feedback paints the other header row, scenario '
+              + IntToStr(Scenario));
           end;
         finally
           DragImage.Free;
@@ -1652,8 +1673,7 @@ begin
       T.Free;
     end;
   end;
-  Writeln(
-    'PASS: grouped headers: mouse/touch/Pan, correct source row, child spacers, complete groups/leaves, '
+  Writeln('PASS: grouped headers: mouse/touch/Pan, correct source row, child spacers, complete groups/leaves, '
     + 'hidden members, fixed ID, permissions and cancel');
 end;
 
@@ -2655,15 +2675,15 @@ begin
     T.Grid.ImmediateEdit := True;
     Before := T.Posts;
     T.Grid.PointerDown(Cells[0,1]);
-    Check(not T.Editor.Visible,'Immediate editor opened before a drag could start');
+    Check(not Assigned(T.Grid.ActiveEditor),'Immediate editor opened before a drag could start');
     T.Grid.PointerMove(Cells[2,2]);
     T.Grid.PointerUp(Cells[2,2]);
-    Check(not T.Editor.Visible and (T.Posts=Before),'Range drag opened or committed an editor');
+    Check(not Assigned(T.Grid.ActiveEditor) and (T.Posts=Before),'Range drag opened or committed an editor');
     T.Grid.PointerDown(Cells[0,0]);
     Check(T.Posts=Before,'Checkbox changed on MouseDown');
     T.Grid.PointerMove(Cells[2,1]);
     T.Grid.PointerUp(Cells[2,1]);
-    Check((T.Posts=Before) and not T.Editor.Visible,'Drag from checkbox edited the cell');
+    Check((T.Posts=Before) and not Assigned(T.Grid.ActiveEditor),'Drag from checkbox edited the cell');
     T.Grid.ClickAt(Cells[0,0]);
     Check(T.Posts=Before+1,'Checkbox click stopped toggling');
     T.Grid.ClickAt(Cells[0,1]);
@@ -2758,7 +2778,7 @@ begin
   T := TFixture.Create(AMode);
   try
     T.Grid.ClickAt(T.CellPoint('DESCRIPTION'));
-    Check(not T.Editor.Visible, 'Single click unexpectedly opens editor');
+    Check(not Assigned(T.Grid.ActiveEditor), 'Single click unexpectedly opens editor');
     T.Grid.Press(vkDown);
     Check(T.Grid.Selection.FocusedCell.RowIndex = 1, 'Down did not move');
     T.Grid.Press(vkUp);
@@ -2810,7 +2830,7 @@ begin
     T.Grid.Press(vkEscape);
     T.Grid.TypeText('a');
     Check(T.Grid.Selection.FocusedCell.RowIndex = 0, 'Search did not wrap');
-    Check(not T.Editor.Visible, 'Search opened an editor');
+    Check(not Assigned(T.Grid.ActiveEditor), 'Search opened an editor');
 
     T.Grid.RowHeight.FixedHeight := 47;
     T.PaintGrid;
@@ -2833,11 +2853,11 @@ begin
     Check(T.Editor.Visible, 'ImmediateEdit keyboard focus did not open editor');
     T.EditorKey(vkEscape);
     T.Grid.Press(vkHome);
-    Check(not T.Editor.Visible, 'Boolean focus opened editor');
+    Check(not Assigned(T.Grid.ActiveEditor), 'Boolean focus opened editor');
     Check(T.Controller.GetValue(1,'FLAG').AsBoolean, 'Boolean focus changed value');
     T.Grid.Columns[1].ReadOnly := True;
     T.Grid.Press(vkRight);
-    Check(not T.Editor.Visible, 'ImmediateEdit ignored ReadOnly');
+    Check(not Assigned(T.Grid.ActiveEditor), 'ImmediateEdit ignored ReadOnly');
     T.Grid.Columns[1].ReadOnly := False;
     T.Grid.ImmediateEdit := False;
     T.Grid.RowHeight.FixedHeight := 24;
@@ -3006,6 +3026,7 @@ begin
         if J = 0 then G.Press(vkRight)
         else for I := 1 to 3 do G.Press(vkRight);
         G.Press(vkF2);
+        E := TEdit(TNativeCustomEditor(G.ActiveEditor).Control);
         Check(E.Visible, 'Live editor missing');
         E.Text := 'Live draft';
         // Deterministic notifications plus actual timer delivery.
@@ -3057,7 +3078,7 @@ var
         D := TDateTimePicker(T.Grid.Components[J]);
 {$ENDIF}
     Check(Assigned(D), 'Native date/time editor missing');
-    Check(not T.Editor.Visible, 'Text editor used for a date/time cell');
+    Check(not (T.Grid.ActiveEditor is TNativeTextEditor) or (T.Grid.ActiveEditor is TNativeDateEditor), 'Text editor used for a date/time cell');
     Check(Abs(D.Height-47) < 1, 'Date/time editor height does not fit the cell');
   end;
 
@@ -3501,11 +3522,12 @@ begin
     for I := 0 to G.ComponentCount - 1 do
       if G.Components[I] is TEdit then
         E := TEdit(G.Components[I]);
-    Check(Assigned(E), 'Demo text editor missing');
+
     G.SetFocus;
     G.Press(vkHome, [ssCtrl]);
     G.Press(vkRight);
     G.Press(vkF2);
+    E := TEdit(TNativeCustomEditor(G.ActiveEditor).Control);
     Check(E.Visible, 'Demo editor did not open');
     E.Text := 'Draft must survive';
     for I := 1 to 150 do
@@ -3526,9 +3548,11 @@ begin
     Check(G.Selection.FocusedCell.ColumnId = 'quantity', 'Quantity column not focused');
     Check(G.Columns[4].DataType = Th5uColumnDataType.Integer, 'Quantity type disagrees with dataset');
     G.Press(vkF2);
+    E := TEdit(TNativeCustomEditor(G.ActiveEditor).Control);
     G.SetFocus;
     Check(not E.Visible, 'Unchanged quantity editor did not close');
     G.Press(vkF2);
+    E := TEdit(TNativeCustomEditor(G.ActiveEditor).Control);
     E.Text := '42';
     Key := vkReturn;
 {$IFDEF TEST_FMX}
@@ -3543,6 +3567,258 @@ begin
     D.Free;
   end;
 end;
+type
+  TNamedEditorProbe = class
+  public
+    CellName, RowName: string;
+    Builds, Shows, Hides, Cancels, Commits, Draws: Integer;
+    procedure CellEditor(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64; var AName: string);
+    procedure RowEditor(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64; var AName: string);
+    procedure Build(Sender: TObject; var AControl: TControl);
+    procedure Show(Sender: TObject);
+    procedure Hide(Sender: TObject);
+    procedure Cancel(Sender: TObject);
+    procedure Commit(Sender: TObject);
+    procedure Draw(Sender: TObject; const AContext: Th5uEditorContext; var AHandled: Boolean);
+  end;
+
+procedure TNamedEditorProbe.CellEditor(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64; var AName: string);
+begin
+  AName := CellName;
+end;
+
+procedure TNamedEditorProbe.RowEditor(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64; var AName: string);
+begin
+  AName := RowName;
+end;
+
+procedure TNamedEditorProbe.Build(Sender: TObject; var AControl: TControl);
+begin
+  Inc(Builds);
+  AControl := TEdit.Create(Th5uGridEditorItem(Sender).Context.Grid);
+end;
+
+procedure TNamedEditorProbe.Show(Sender: TObject);
+begin
+  Inc(Shows);
+end;
+
+procedure TNamedEditorProbe.Hide(Sender: TObject);
+begin
+  Inc(Hides);
+end;
+
+procedure TNamedEditorProbe.Cancel(Sender: TObject);
+begin
+  Inc(Cancels);
+end;
+
+procedure TNamedEditorProbe.Commit(Sender: TObject);
+begin
+  Inc(Commits);
+end;
+
+procedure TNamedEditorProbe.Draw(Sender: TObject; const AContext: Th5uEditorContext; var AHandled: Boolean);
+begin
+  Inc(Draws);
+  Check(Assigned(AContext.Grid) and Assigned(AContext.Column) and Assigned(AContext.Canvas), 'Incomplete editor paint context');
+  AHandled := True;
+end;
+
+procedure TestNamedEditors;
+var
+  T: TFixture;
+  P: TNamedEditorProbe;
+  C, Other, Selector: Th5uGridColumn;
+  E, Same, Different: Th5uGridEditorItem;
+  Custom, Variant: TNativeCustomEditor;
+  G, H: TGridAccess;
+  Stream: TMemoryStream;
+  EC: Th5uEditorContext;
+  B, V: Integer;
+  Failed: Boolean;
+begin
+  P := TNamedEditorProbe.Create;
+  T := TFixture.Create(Th5uCacheMode.None);
+  try
+    C := T.Grid.Columns.FindById('DESCRIPTION');
+    Other := T.Grid.Columns.Add;
+    Other.Id := 'other'; Other.FieldName := 'DESCRIPTION'; Other.DataType := Th5uColumnDataType.Text;
+    Other.Visible := False;
+    E := T.Grid.GetCellEditor(C, 0);
+    Check(not Assigned(TNativeCustomEditor(E).Control), 'Paint/lookup eagerly built an editor');
+    Check(E = T.Grid.GetCellEditor(Other, 0), 'Static default editor not shared across columns');
+    Check(E = T.Grid.GetCellEditor(C, 1), 'Default editor not shared across rows');
+
+    C.OnGetCellEditor := P.CellEditor;
+    Other.OnGetCellEditor := P.CellEditor;
+    P.CellName := 'TextEditor';
+    Same := T.Grid.GetCellEditor(C, 0);
+    Different := T.Grid.GetCellEditor(Other, 0);
+    Check((Same <> E) and (Different <> Same), 'Event editor cache does not include ColumnID');
+    Check(Same = T.Grid.GetCellEditor(C, 1), 'Event editor not reused across rows of same column');
+    P.CellName := '';
+    P.RowName := 'IntegerEditor';
+    C.OnGetRowEditor := P.RowEditor;
+    Check(T.Grid.GetCellEditor(C, 0).EditorName = 'IntegerEditor', 'Row editor fallback failed');
+    P.CellName := 'TextEditor';
+    Check(T.Grid.GetCellEditor(C, 0) = Same, 'Cell editor did not override row editor');
+    P.CellName := '';
+    P.RowName := '';
+
+    Custom := T.Grid.Editors.Add;
+    Custom.EditorName := 'SharedCustom';
+    Custom.OnBuildEditor := P.Build;
+    Custom.OnShow := P.Show; Custom.OnHide := P.Hide;
+    Custom.OnCancel := P.Cancel; Custom.OnCommit := P.Commit;
+    Custom.OnDrawDisplay := P.Draw;
+    C.Editor := Custom.EditorName;
+    Other.Editor := C.Editor;
+    Check(T.Grid.GetCellEditor(C, 0) = Custom, 'Column editor did not select custom item');
+    Check(T.Grid.GetCellEditor(Other, 0) = Custom, 'Static custom editor not shared');
+    T.PaintGrid;
+    Check((P.Draws > 0) and (P.Builds = 0), 'DrawDisplay did not run without a native editor');
+    T.Grid.SetFocus;
+    T.Grid.Press(vkHome, [ssCtrl]);
+    T.Grid.Press(vkRight);
+    T.Grid.Press(vkF2);
+    Check((T.Grid.ActiveEditor = Custom) and (P.Builds = 1), 'Custom BuildEditor did not run lazily');
+    T.Editor.Text := 'custom commit';
+    T.EditorKey(vkReturn);
+    Check((P.Commits = 1) and (P.Hides = 1) and (T.Data.FieldByName('DESCRIPTION').AsString = 'custom commit'), 'Custom commit lifecycle failed');
+    T.Grid.Press(vkF2);
+    T.Editor.Text := 'discard me';
+    T.EditorKey(vkEscape);
+    Check((P.Builds = 1) and (P.Cancels = 1), 'Cached control was rebuilt or cancel was not forwarded');
+    T.Grid.Press(vkF2);
+    V := Custom.EditorVersion;
+    Custom.EditorVersion := V + 1;
+    Check(T.Grid.GetCellEditor(C, 0) = Custom, 'Version change replaced an active editor');
+    Check(P.Builds = 1, 'Version rebuilt a live draft');
+    T.EditorKey(vkEscape);
+    T.Grid.Press(vkF2);
+    Check(P.Builds = 2, 'New EditorVersion did not rebuild on next edit');
+    T.EditorKey(vkEscape);
+
+    P.CellName := 'SharedCustom';
+    Same := T.Grid.GetCellEditor(C, 0);
+    Different := T.Grid.GetCellEditor(Other, 0);
+    Check((Same <> Custom) and (Different <> Same), 'Custom event editor variants were not separated by ColumnID');
+    T.Grid.Press(vkF2);
+    B := P.Builds;
+    Check(T.Grid.ActiveEditor = Same, 'Scoped editor was not activated');
+    T.EditorKey(vkEscape);
+    T.Grid.Press(vkF2);
+    Check(P.Builds = B, 'Scoped custom control was not cached');
+    T.EditorKey(vkEscape);
+    Custom.EditorVersion := Custom.EditorVersion + 1;
+    T.Grid.Press(vkF2);
+    Check(P.Builds = B + 1, 'Template version did not invalidate scoped control');
+    T.EditorKey(vkEscape);
+
+    // Native default variants retain their implementation after DFM/FMX streaming.
+    G := TGridAccess.Create(nil);
+    Stream := TMemoryStream.Create;
+    try
+      G.Parent := T.Form;
+      G.Name := 'VariantGrid';
+      Variant := G.Editors.AddVariant('DeliveryDate', 'DateEditor');
+      Variant.EditorVersion := 7;
+      G.DefaultEditors.Date := Variant.EditorName;
+      G.Columns.Add.Id := 'delivery';
+      G.Columns[0].DataType := Th5uColumnDataType.Date;
+      Stream.WriteComponent(G);
+      Stream.Position := 0;
+      H := TGridAccess.Create(nil);
+      H.Parent := T.Form;
+      try
+        Stream.ReadComponent(H);
+        Check((H.Editors.Count = 1) and (H.Editors[0].EditorType = 'DateEditor') and (H.Editors[0].EditorVersion
+          = 7), 'Editor collection did not round-trip');
+        Check(H.GetCellEditor(H.Columns[0], 0) is TNativeDateEditor, 'Streamed variant lost its registered editor class');
+        Check(not Assigned(TNativeCustomEditor(H.GetCellEditor(H.Columns[0], 0)).Control), 'Streaming constructed native editor controls');
+      finally H.Free; end;
+    finally
+      Stream.Free;
+      G.Free;
+    end;
+
+    // A row-selected numeric editor converts independently of the common column type.
+    EC := Default(Th5uEditorContext);
+    EC.Grid := T.Grid; EC.Column := C;
+    EC.Value := TValue.From<string>('23'); EC.Text := '23';
+    EC.Bounds := RectF(0, 0, 120, 25);
+    C.Editor := 'IntegerEditor';
+    P.CellName := '';
+    E := T.Grid.GetCellEditor(C, 0);
+    E.BeginEdit(EC);
+    Check(E.GetValue.IsType<Int64> and (E.GetValue.AsInt64 = 23), 'IntegerEditor follows the column text type instead of its own value type');
+
+    // TLabel is a non-windowed VCL TControl; it must support text without unsafe event casts.
+    Variant := T.Grid.Editors.Add;
+    Variant.EditorName := 'LabelEditor';
+    Variant.ControlClass := TLabel;
+    EC := Default(Th5uEditorContext);
+    EC.Grid := T.Grid; EC.Column := C;
+    EC.Value := TValue.From<string>('label'); EC.Text := 'label';
+    EC.Bounds := RectF(0, 0, 120, 25);
+    Variant.BeginEdit(EC);
+    Check(Variant.GetText = 'label', 'Custom TControl text access failed');
+    Variant.SetText('second label');
+    Check(Variant.GetText = 'second label', 'Custom SetText failed');
+
+    P.CellName := '';
+    Variant := T.Grid.Editors.Add;
+    Variant.EditorName := 'GraphicEditor';
+    Variant.Mode := Th5uEditorMode.Graphic;
+    Variant.OnDrawEditor := P.Draw;
+    C.Editor := Variant.EditorName;
+    T.Grid.Press(vkF2);
+    Check((T.Grid.ActiveEditor = Variant) and not Assigned(Variant.Control), 'Graphic editor created a text control');
+    B := P.Draws;
+    T.PaintGrid;
+    Check(P.Draws > B, 'Active graphic editor did not receive DrawEditor');
+    T.Grid.SetFocus;
+    T.Grid.Press(vkEscape);
+    Check(not Assigned(T.Grid.ActiveEditor), 'Graphic editor cancel request ignored');
+
+    // A column containing the editor name is read as data, never recursively resolved.
+    P.CellName := ''; P.RowName := 'IntegerEditor';
+    Selector := T.Grid.Columns.Add;
+    Selector.Id := 'selector'; Selector.FieldName := 'DESCRIPTION'; Selector.Visible := False;
+    T.Data.Edit; T.Data.FieldByName('DESCRIPTION').AsString := 'TextEditor'; T.Data.Post;
+    C.CellEditorColumnId := Selector.Id;
+    Check(T.Grid.GetCellEditor(C, 0).EditorName = 'TextEditor', 'Cell editor column did not precede row event');
+    C.CellEditorColumnId := '';
+    C.RowEditorColumnId := Selector.Id;
+    Check(T.Grid.GetCellEditor(C, 0).EditorName = 'IntegerEditor', 'Row event did not precede row editor column');
+    P.RowName := '';
+    Check(T.Grid.GetCellEditor(C, 0).EditorName = 'TextEditor', 'Row editor column fallback failed');
+    C.RowEditorColumnId := '';
+    C.Editor := '';
+    T.Grid.DefaultEditors.Edit := 'SharedCustom';
+    Check(T.Grid.GetCellEditor(C, 0) = Custom, 'Grid default editor mapping ignored');
+    C.Editor := 'None';
+    Check(not Assigned(T.Grid.GetCellEditor(C, 0)), 'None editor did not disable editing');
+    C.Editor := 'missing editor';
+    Failed := False;
+    try T.Grid.GetCellEditor(C, 0); except on Eh5uGrid do Failed := True; end;
+    Check(Failed, 'Unknown editor silently fell back');
+    C.Editor := '';
+    T.Grid.ClearEditorCache;
+    Check(not Assigned(Custom.Control), 'ClearEditorCache kept a custom control');
+    T.Grid.DesignModeForTest(True);
+    T.Grid.Press(vkF2);
+    Check(not Assigned(T.Grid.ActiveEditor), 'Design mode activated editor');
+    T.Grid.DesignModeForTest(False);
+    Writeln('PASS: named editors, lazy controls, cache scopes/version, lifecycle, draw and resolution precedence');
+  finally
+    T.Free;
+    P.Free;
+  end;
+end;
+
+
 procedure TestEditorDetails(AMode: Th5uCacheMode);
 var
   T: TFixture;
@@ -3589,6 +3865,18 @@ begin
   LExceptionSink := TExceptionSink.Create;
   Application.OnException := LExceptionSink.HandleException;
   LFailures := 0;
+  if ParamStr(1) = '--named-editors' then
+  begin
+    try
+      TestNamedEditors;
+    except
+      on E: Exception do begin Writeln('FAIL: named editors: ', E.ClassName, ': ', E.Message); ExitCode := 1; end;
+    end;
+    if LExceptionSink.Count > 0 then ExitCode := 1;
+    Application.OnException := nil;
+    LExceptionSink.Free;
+    Halt(ExitCode);
+  end;
   for LMode := Low(Th5uCacheMode) to High(Th5uCacheMode) do
     for LCase := 0 to 5 do
       try
@@ -3609,6 +3897,7 @@ begin
         end;
       end;
   try
+    TestNamedEditors;
 {$IFDEF TEST_FMX}
     TestHorizontalScrollBar;
 {$ENDIF}

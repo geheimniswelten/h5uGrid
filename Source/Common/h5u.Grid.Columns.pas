@@ -26,6 +26,8 @@ type
   Th5uCellValidateEvent = procedure(Sender: TObject; AColumn: Th5uGridColumn; ARowIndex: Int64; var AValue: TValue; var AValid: Boolean; var AErrorText: string) of object;
   Th5uGetColumnModeEvent = procedure(AColumn: Th5uGridColumn; var AMode: string) of object;
 
+  Th5uGetCellEditorEvent = procedure(Sender: TObject; AColumn: Th5uGridColumn; ARowIndex: Int64; var AEditorName: string) of object;
+
   Th5uColumnChangedEvent = procedure(Sender: TObject; AColumn: Th5uGridColumn) of object;
 
   Th5uGridColumn = class(TCollectionItem)
@@ -42,6 +44,8 @@ type
     FReadOnly: Boolean;
     FDataType: Th5uColumnDataType;
     FEditorKind: Th5uColumnEditorKind;
+    FEditor, FCellEditorColumnId, FRowEditorColumnId: string;
+    FOnGetCellEditor, FOnGetRowEditor: Th5uGetCellEditorEvent;
     FWordWrap: Boolean;
     FAutoHeight: Boolean;
     FMaxAutoHeight: Integer;
@@ -102,6 +106,11 @@ type
     property FixedKind: Th5uFixedKind read FFixedKind write SetFixedKind default Th5uFixedKind.None;
     property ReadOnly: Boolean read FReadOnly write FReadOnly default False;
     property DataType: Th5uColumnDataType read FDataType write FDataType default Th5uColumnDataType.Auto;
+    property Editor: string read FEditor write FEditor;
+    property CellEditorColumnId: string read FCellEditorColumnId write FCellEditorColumnId;
+    property RowEditorColumnId: string read FRowEditorColumnId write FRowEditorColumnId;
+    property OnGetCellEditor: Th5uGetCellEditorEvent read FOnGetCellEditor write FOnGetCellEditor;
+    property OnGetRowEditor: Th5uGetCellEditorEvent read FOnGetRowEditor write FOnGetRowEditor;
     property EditorKind: Th5uColumnEditorKind read FEditorKind write FEditorKind default Th5uColumnEditorKind.Automatic;
     property WordWrap: Boolean read FWordWrap write FWordWrap default False;
     property AutoHeight: Boolean read FAutoHeight write FAutoHeight default False;
@@ -296,6 +305,11 @@ begin
     FReadOnly := LSource.FReadOnly;
     FDataType := LSource.FDataType;
     FEditorKind := LSource.FEditorKind;
+    FEditor := LSource.FEditor;
+    FCellEditorColumnId := LSource.FCellEditorColumnId;
+    FRowEditorColumnId := LSource.FRowEditorColumnId;
+    FOnGetCellEditor := LSource.FOnGetCellEditor;
+    FOnGetRowEditor := LSource.FOnGetRowEditor;
     FWordWrap := LSource.FWordWrap;
     FAutoHeight := LSource.FAutoHeight;
     FMaxAutoHeight := LSource.FMaxAutoHeight;
@@ -571,9 +585,8 @@ begin
         begin
           LAnchor := LList[ANewVisibleIndex + Length(AColumns)];
           LInsert := LAll.IndexOf(LAnchor);
-          while (LInsert > 0) and AHeaderLayout.MovesWithColumns(LAll[LInsert - 1], LList.ToArray,
-            ANewVisibleIndex + Length(AColumns), LList.Count - ANewVisibleIndex - Length(AColumns))
-          do
+          while (LInsert > 0) and AHeaderLayout.MovesWithColumns(LAll[LInsert - 1], LList.ToArray, ANewVisibleIndex + Length(AColumns), LList.Count
+            - ANewVisibleIndex - Length(AColumns)) do
             Dec(LInsert);
         end;
         LAll.InsertRange(LInsert, LMoving.ToArray);
@@ -694,10 +707,8 @@ begin
   for I := 0 to FCells.Count - 1 do
   begin
     LCell := FCells[I];
-    if (LCell.ColumnId <> '') and (LCell.LayoutRow >= ACell.LayoutRow)
-      and (LCell.LayoutColumn >= ACell.LayoutColumn) 
-      and (LCell.LayoutColumn < ACell.LayoutColumn + Max(1, ACell.ColumnSpan))
-    then
+    if (LCell.ColumnId <> '') and (LCell.LayoutRow >= ACell.LayoutRow) and (LCell.LayoutColumn >= ACell.LayoutColumn) and (LCell.LayoutColumn
+      < ACell.LayoutColumn + Max(1, ACell.ColumnSpan)) then
       Exit(True);
   end;
   Result := False;
@@ -726,9 +737,8 @@ begin
           Continue;
       end
       else
-        if (LCell.LayoutRow < ACell.LayoutRow) or (LCell.LayoutColumn < ACell.LayoutColumn)
-          or (LCell.LayoutColumn >= ACell.LayoutColumn + Max(1, ACell.ColumnSpan))
-        then
+        if (LCell.LayoutRow < ACell.LayoutRow) or (LCell.LayoutColumn < ACell.LayoutColumn) or (LCell.LayoutColumn >= ACell.LayoutColumn
+          + Max(1, ACell.ColumnSpan)) then
           Continue;
       if LCell.ColumnId = '' then
         Continue;
@@ -805,8 +815,7 @@ begin
     begin
       LLeaf := FCells[J];
       if SameText(LLeaf.ColumnId, AColumn.Id) and (LLeaf.LayoutRow >= LGroup.LayoutRow) and (LLeaf.LayoutColumn >= LGroup.LayoutColumn)
-        and (LLeaf.LayoutColumn < LGroup.LayoutColumn + Max(1, LGroup.ColumnSpan))
-      then
+        and (LLeaf.LayoutColumn < LGroup.LayoutColumn + Max(1, LGroup.ColumnSpan)) then
         Exit(True);
     end;
   end;

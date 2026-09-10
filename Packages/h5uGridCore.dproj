@@ -129,6 +129,7 @@
         <DCCReference Include="..\Source\Common\h5u.Grid.Columns.pas"/>
         <DCCReference Include="..\Source\Common\h5u.Grid.Options.pas"/>
         <DCCReference Include="..\Source\Common\h5u.Grid.AdjacentGroups.pas"/>
+        <DCCReference Include="..\Source\Common\h5u.Grid.Editors.pas"/>
         <DCCReference Include="..\Source\Common\h5u.Grid.Values.pas"/>
         <DCCReference Include="..\Source\Common\h5u.Grid.Moving.pas"/>
         <DCCReference Include="..\Source\Common\h5u.Grid.Resizing.pas"/>
