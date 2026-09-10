@@ -9,6 +9,7 @@ object FmxVirtualDemoForm: TFmxVirtualDemoForm
   FormFactor.Devices = [Desktop]
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  DesignerMasterStyle = 0
   object ToolBar: TToolBar
     Size.Width = 1040.000000000000000000
     Size.Height = 50.000000000000000000
@@ -63,7 +64,8 @@ object FmxVirtualDemoForm: TFmxVirtualDemoForm
   end
   object Grid: Th5uFmxGrid
     Align = Client
-    Position.Y = 50.000000000000000000
+    CanFocus = True
+    ClipChildren = True
     Size.Width = 1040.000000000000000000
     Size.Height = 560.000000000000000000
     Size.PlatformDefault = False
@@ -128,13 +130,19 @@ object FmxVirtualDemoForm: TFmxVirtualDemoForm
         DataType = Boolean
         EditorKind = Boolean
       end>
+    HeaderLayout.Cells = <>
+    Selection.AllowedKinds = [Rows, Columns, CellRanges]
     RowHeight.Mode = Automatic
     RowHeight.MinHeight = 26
     RowHeight.MaxHeight = 105
     RowHeight.EstimatedHeight = 30
+    ScrollHints.Triggers = [ThumbTracking]
     ScrollHints.VerticalColumnId = 'message'
     RowStyles.StripePeriod = 5
     RowStyles.StripeOffset = 5
+    RowStyles.StripeStyleName = 'Stripe'
+    RowStyles.OddStyleName = 'Odd'
+    RowStyles.EvenStyleName = 'Even'
     RowStyles.StyleKeyColumnId = 'severity'
     RowStyles.Mappings = <
       item
@@ -145,16 +153,18 @@ object FmxVirtualDemoForm: TFmxVirtualDemoForm
         Value = 3
         StyleName = 'Error'
       end>
+    HeaderRowHeight = 28.000000000000000000
+    RowIndicatorWidth = 38.000000000000000000
+    TextSize = 12.000000000000000000
   end
   object LiveTimer: TTimer
-    Enabled = True
     Interval = 900
     OnTimer = LiveTimerTimer
     Left = 104
     Top = 80
   end
   object VirtualController: Th5uVirtualController
-    Cache.Mode = Viewport
+    Cache.MaxMemoryBytes = 67108864
     OnGetRowCount = VirtualGetRowCount
     OnGetRowKey = VirtualGetRowKey
     OnGetValue = VirtualGetValue

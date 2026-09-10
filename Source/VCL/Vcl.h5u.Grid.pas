@@ -46,18 +46,9 @@ type
   Th5uVclVisualCell = class;
   Th5uVclVisualCellClass = class of Th5uVclVisualCell;
 
-  Th5uCustomDrawStage = (
-    BeforeDefault,
-    AfterDefault
-  );
+  Th5uCustomDrawStage = (BeforeDefault, AfterDefault);
 
-  Th5uHitKind = (
-    None,
-    Header,
-    RowIndicator,
-    DataCell,
-    AdjacentGroupGlyph
-  );
+  Th5uHitKind = (None, Header, RowIndicator, DataCell, AdjacentGroupGlyph);
 
   Th5uGetRowHeightContext = record
     Grid: Th5uVclGrid;
@@ -207,8 +198,8 @@ type
     FCustomization: Th5uCustomizationOptions;
     FSpacing: Th5uGridSpacingOptions;
     FAppearance: Th5uGridAppearanceOptions;
-    FTree: Th5uTreeOptions;
     FAdjacentGroupFolding: Th5uAdjacentGroupFoldingOptions;
+    FTree: Th5uTreeOptions;
     FView: Th5uGridView;
 
     FTheme: Th5uGridTheme;
@@ -310,8 +301,7 @@ type
     function ViewDataController: Th5uCustomDataController;
     function IndicatorExtent: Double;
     function MetricCellHeight(ARow: Int64; AColumn: Th5uGridColumn): Double;
-    procedure MetricAdjustHeight(ARow: Int64; const AKey: Th5uRowKey; AEstimated: Boolean;
-      var AHeight: Double; var ACacheResult: Boolean);
+    procedure MetricAdjustHeight(ARow: Int64; const AKey: Th5uRowKey; AEstimated: Boolean; var AHeight: Double; var ACacheResult: Boolean);
     function MetricRowExtent(ARow: Int64; AAllowMeasure: Boolean): Double;
     function MetricRowSpacing(ARow: Int64; const AKey: Th5uRowKey): Double;
     procedure ColumnsChanged(Sender: TObject; AColumn: Th5uGridColumn);
@@ -534,8 +524,8 @@ type
     property Customization: Th5uCustomizationOptions read FCustomization write SetCustomization;
     property Spacing: Th5uGridSpacingOptions read FSpacing write SetSpacing;
     property Appearance: Th5uGridAppearanceOptions read FAppearance write SetAppearance;
-    property Tree: Th5uTreeOptions read FTree write SetTree;
     property AdjacentGroupFolding: Th5uAdjacentGroupFoldingOptions read FAdjacentGroupFolding write SetAdjacentGroupFolding;
+    property Tree: Th5uTreeOptions read FTree write SetTree;
 
     property Theme: Th5uGridTheme read FTheme write SetTheme default Th5uGridTheme.ApplicationStyle;
     property HeaderRowHeight: Integer read FHeaderRowHeight write SetHeaderRowHeight default 26;
@@ -1386,12 +1376,14 @@ procedure Th5uVclGrid.CommitEditor;
 var
   LValue: TValue;
 begin
-  if FCommittingEditor or not Assigned(FEditor) or (not FEditor.Visible and not DateEditorVisible) or not Assigned(FEditColumn)
-    or not Assigned(FDataController) then
+  if FCommittingEditor or not Assigned(FEditor) or (not FEditor.Visible and not DateEditorVisible)
+    or not Assigned(FEditColumn) or not Assigned(FDataController)
+  then
     Exit;
 
-  if (DateEditorVisible and (DateEditorValue.IsEmpty = FDateEditorWasEmpty) and (FDateEditor.DateTime = FDateEditorOriginal)) or (
-    not DateEditorVisible and (FEditor.Text = FEditorOriginalText)) then
+  if (DateEditorVisible and (DateEditorValue.IsEmpty = FDateEditorWasEmpty) and (FDateEditor.DateTime = FDateEditorOriginal))
+    or (not DateEditorVisible and (FEditor.Text = FEditorOriginalText))
+  then
   begin
     CancelEditor;
     Exit;
@@ -1499,29 +1491,39 @@ begin
   FColumns := Th5uGridColumns.Create(Self);
   FColumns.OnChanged := ColumnsChanged;
   FColumns.OnGetMode := GetColumnMode;
+
   FHeaderLayout := Th5uHeaderLayout.Create(Self);
 
   FLastNotifiedCell := Th5uCellAddress.Empty;
+
   FSelection := Th5uGridSelection.Create;
   FSelection.OnChanged := SelectionChanged;
 
   FRowHeight := Th5uRowHeightOptions.Create;
   FRowHeight.OnChanged := OptionsChanged;
+
   FScrolling := Th5uScrollingOptions.Create;
   FScrolling.OnChanged := OptionsChanged;
   FScrollHints := Th5uScrollHintOptions.Create;
   FScrollHints.OnChanged := OptionsChanged;
+
   FRowStyles := Th5uRowStyleOptions.Create;
   FRowStyles.OnChanged := OptionsChanged;
+
   FCustomization := Th5uCustomizationOptions.Create;
+
   FSpacing := Th5uGridSpacingOptions.Create;
   FSpacing.OnChanged := OptionsChanged;
+
   FAppearance := Th5uGridAppearanceOptions.Create;
   FAppearance.OnChanged := OptionsChanged;
-  FTree := Th5uTreeOptions.Create;
-  FTree.OnChanged := OptionsChanged;
+
   FAdjacentGroupFolding := Th5uAdjacentGroupFoldingOptions.Create;
   FAdjacentGroupFolding.OnChanged := OptionsChanged;
+
+  FTree := Th5uTreeOptions.Create;
+  FTree.OnChanged := OptionsChanged;
+
   FView := Th5uGridView.Create(Self, FColumns, FTree, FAdjacentGroupFolding, ViewDataController);
 
   FDataLink := Th5uDataControllerLink.Create;
@@ -1538,16 +1540,20 @@ begin
   FEditRowIndex := -1;
 
   FVScrollBar := TScrollBar.Create(Self);
+  FVScrollBar.SetSubComponent(True);
   FVScrollBar.Parent := Self;
   FVScrollBar.Kind := sbVertical;
   FVScrollBar.OnScroll := ScrollBarScroll;
 
   FHScrollBar := TScrollBar.Create(Self);
+  FHScrollBar.SetSubComponent(True);
   FHScrollBar.Parent := Self;
   FHScrollBar.Kind := sbHorizontal;
   FHScrollBar.OnScroll := ScrollBarScroll;
 
   FThumbHint := TLabel.Create(Self);
+  FThumbHint.SetSubComponent(True);
+  FThumbHint.Top := -30;  // hidden in Designer
   FThumbHint.Parent := Self;
   FThumbHint.Visible := False;
   FThumbHint.Transparent := False;
@@ -1557,11 +1563,14 @@ begin
   FThumbHint.Layout := tlCenter;
 
   FThumbHintTimer := TTimer.Create(Self);
+  FThumbHintTimer.SetSubComponent(True);
   FThumbHintTimer.Enabled := False;
   FThumbHintTimer.Interval := 900;
   FThumbHintTimer.OnTimer := ThumbHintTimer;
 
   FEditor := TEdit.Create(Self);
+  FEditor.SetSubComponent(True);
+  FEditor.Top := -30;  // hidden in Designer
   FEditor.AutoSize := False;
   FEditor.Parent := Self;
   FEditor.Visible := False;
@@ -2216,10 +2225,14 @@ end;
 procedure Th5uVclGrid.EditorKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
   case Key of
-    VK_RETURN: begin CommitEditor;
+    VK_RETURN:
+      begin
+        CommitEditor;
         Key := 0;
       end;
-    VK_ESCAPE: begin CancelEditor;
+    VK_ESCAPE:
+      begin
+        CancelEditor;
         SetFocus;
         Key := 0;
       end;
@@ -2230,9 +2243,8 @@ function Th5uVclGrid.FindFirstVisibleRow(AOffset: Int64; out ATop: Integer): Int
 begin
   Result := -1;
   ATop := GetDataViewportRect.Top;
-  if not Assigned(FDataController) then
-    Exit;
-  Result := h5uFindFirstVisibleRow(GetViewRowCount, AOffset, GetDataViewportRect.Top, MetricRowExtent, ATop);
+  if Assigned(FDataController) then
+    Result := h5uFindFirstVisibleRow(GetViewRowCount, AOffset, GetDataViewportRect.Top, MetricRowExtent, ATop);
 end;
 
 function Th5uVclGrid.GetDataCellClass(const AContext: Th5uFactoryContext): Th5uVclVisualCellClass;
@@ -2303,8 +2315,7 @@ begin
   Result := MeasureCellHeight(ARow, AColumn);
 end;
 
-procedure Th5uVclGrid.MetricAdjustHeight(ARow: Int64; const AKey: Th5uRowKey; AEstimated: Boolean;
-  var AHeight: Double; var ACacheResult: Boolean);
+procedure Th5uVclGrid.MetricAdjustHeight(ARow: Int64; const AKey: Th5uRowKey; AEstimated: Boolean; var AHeight: Double; var ACacheResult: Boolean);
 var
   LContext: Th5uGetRowHeightContext;
   LHeight: Integer;
@@ -2332,8 +2343,7 @@ var
   LLevel, LClosed: Integer;
 begin
   LKey := GetViewRowKey(ARow);
-  Result := GetRowHeightFor(ARow, LKey, AAllowMeasure)
-    + GetEffectiveRowSeparatorFor(ARow, LKey, LKind, LColor, LStyle, LLevel, LClosed);
+  Result := GetRowHeightFor(ARow, LKey, AAllowMeasure) + GetEffectiveRowSeparatorFor(ARow, LKey, LKind, LColor, LStyle, LLevel, LClosed);
 end;
 
 function Th5uVclGrid.MetricRowSpacing(ARow: Int64; const AKey: Th5uRowKey): Double;
@@ -2959,9 +2969,7 @@ begin
   FMovePoint := Point(X, Y);
   FMovePreviewWidth := EnsureRange(LPlan.Columns[0].Width, MulDiv(80, CurrentPPI, 96), MulDiv(260, CurrentPPI, 96));
   if Assigned(FMovingHeaderCell) and (FMovingHeaderCell.ColumnSpan > 1) then
-  begin
     FMovePreviewWidth := EnsureRange(LHit.Bounds.Width, MulDiv(80, CurrentPPI, 96), MulDiv(260, CurrentPPI, 96));
-  end;
   FSelectionDragOrigin := Point(X, Y);
   MouseCapture := True;
   Result := True;
@@ -3705,8 +3713,7 @@ begin
   RebuildAfterLayoutChange;
 end;
 
-function Th5uVclGrid.ResolveCellAppearance(const AContext: Th5uFactoryContext; AColumn: Th5uGridColumn; const ARowAppearance: Th5uResolvedAppearance;
-  ASelected, AFocused: Boolean): Th5uResolvedAppearance;
+function Th5uVclGrid.ResolveCellAppearance(const AContext: Th5uFactoryContext; AColumn: Th5uGridColumn; const ARowAppearance: Th5uResolvedAppearance; ASelected, AFocused: Boolean): Th5uResolvedAppearance;
 var
   LPalette: Th5uVclPalette;
 begin

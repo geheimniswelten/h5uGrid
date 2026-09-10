@@ -113,9 +113,6 @@ object VclVirtualDemoForm: TVclVirtualDemoForm
         FixedKind = Left
         ReadOnly = True
         DataType = Integer
-        ClassId = 'h5u.grid.column.default'
-        CellClassId = 'h5u.grid.visual.cell.data'
-        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end
       item
         Id = 'timestamp'
@@ -126,9 +123,6 @@ object VclVirtualDemoForm: TVclVirtualDemoForm
         ReadOnly = True
         DataType = DateTime
         DisplayFormat = 'dd.mm.yyyy hh:nn:ss'
-        ClassId = 'h5u.grid.column.default'
-        CellClassId = 'h5u.grid.visual.cell.data'
-        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end
       item
         Id = 'source'
@@ -138,9 +132,6 @@ object VclVirtualDemoForm: TVclVirtualDemoForm
         VisibleIndex = 2
         ReadOnly = True
         DataType = Text
-        ClassId = 'h5u.grid.column.default'
-        CellClassId = 'h5u.grid.visual.cell.data'
-        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end
       item
         Id = 'message'
@@ -153,9 +144,6 @@ object VclVirtualDemoForm: TVclVirtualDemoForm
         AutoHeight = True
         MaxAutoHeight = 100
         MaxLines = 4
-        ClassId = 'h5u.grid.column.default'
-        CellClassId = 'h5u.grid.visual.cell.data'
-        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end
       item
         Id = 'severity'
@@ -165,9 +153,6 @@ object VclVirtualDemoForm: TVclVirtualDemoForm
         VisibleIndex = 4
         ReadOnly = True
         DataType = Integer
-        ClassId = 'h5u.grid.column.default'
-        CellClassId = 'h5u.grid.visual.cell.data'
-        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end
       item
         Id = 'ack'
@@ -177,9 +162,6 @@ object VclVirtualDemoForm: TVclVirtualDemoForm
         VisibleIndex = 5
         DataType = Boolean
         EditorKind = Boolean
-        ClassId = 'h5u.grid.column.default'
-        CellClassId = 'h5u.grid.visual.cell.data'
-        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end>
     HeaderLayout.Cells = <>
     Selection.AllowedKinds = [Rows, Columns, CellRanges]
@@ -213,13 +195,13 @@ object VclVirtualDemoForm: TVclVirtualDemoForm
     OnGetValue = VirtualControllerGetValue
     OnSetValue = VirtualControllerSetValue
     OnPrepareRange = VirtualControllerPrepareRange
-    Left = 24
-    Top = 88
+    Left = 80
+    Top = 144
   end
   object LiveTimer: TTimer
     Interval = 900
     OnTimer = LiveTimerTimer
-    Left = 96
-    Top = 88
+    Left = 184
+    Top = 144
   end
 end

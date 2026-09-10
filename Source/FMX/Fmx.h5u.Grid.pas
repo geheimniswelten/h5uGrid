@@ -67,18 +67,9 @@ type
   Th5uFmxVisualCell = class;
   Th5uFmxVisualCellClass = class of Th5uFmxVisualCell;
 
-  Th5uFmxCustomDrawStage = (
-    BeforeDefault,
-    AfterDefault
-  );
+  Th5uFmxCustomDrawStage = (BeforeDefault, AfterDefault);
 
-  Th5uFmxHitKind = (
-    None,
-    Header,
-    RowIndicator,
-    DataCell,
-    AdjacentGroupGlyph
-  );
+  Th5uFmxHitKind = (None, Header, RowIndicator, DataCell, AdjacentGroupGlyph);
 
   Th5uFmxGetRowHeightContext = record
     Grid: Th5uFmxGrid;
@@ -324,8 +315,7 @@ type
     function ViewDataController: Th5uCustomDataController;
     function IndicatorExtent: Double;
     function MetricCellHeight(ARow: Int64; AColumn: Th5uGridColumn): Double;
-    procedure MetricAdjustHeight(ARow: Int64; const AKey: Th5uRowKey; AEstimated: Boolean;
-      var AHeight: Double; var ACacheResult: Boolean);
+    procedure MetricAdjustHeight(ARow: Int64; const AKey: Th5uRowKey; AEstimated: Boolean; var AHeight: Double; var ACacheResult: Boolean);
     function MetricRowExtent(ARow: Int64; AAllowMeasure: Boolean): Double;
     function MetricRowSpacing(ARow: Int64; const AKey: Th5uRowKey): Double;
     procedure ColumnsChanged(Sender: TObject; AColumn: Th5uGridColumn);
@@ -613,8 +603,7 @@ end;
 
 { Th5uFmxVisualCell }
 
-procedure Th5uFmxVisualCell.BindCell(const AContext: Th5uFactoryContext; const ABounds: TRectF; const AValue: TValue; const ADisplayText: string;
-  const AAppearance: Th5uResolvedAppearance);
+procedure Th5uFmxVisualCell.BindCell(const AContext: Th5uFactoryContext; const ABounds: TRectF; const AValue: TValue; const ADisplayText: string; const AAppearance: Th5uResolvedAppearance);
 begin
   FContext := AContext;
   FBounds := ABounds;
@@ -2059,8 +2048,7 @@ begin
   Result := MeasureCellHeight(ARow, AColumn);
 end;
 
-procedure Th5uFmxGrid.MetricAdjustHeight(ARow: Int64; const AKey: Th5uRowKey; AEstimated: Boolean;
-  var AHeight: Double; var ACacheResult: Boolean);
+procedure Th5uFmxGrid.MetricAdjustHeight(ARow: Int64; const AKey: Th5uRowKey; AEstimated: Boolean; var AHeight: Double; var ACacheResult: Boolean);
 var
   LContext: Th5uFmxGetRowHeightContext;
   LHeight: Single;
@@ -3902,6 +3890,7 @@ begin
     KeyChar := #0;
   end;
 end;
+
 procedure Th5uCellDateEdit.ApplyStyleLookup;
 var
   LBounds: TRectF;
@@ -3912,6 +3901,7 @@ begin
   SetAdjustType(TAdjustType.None);
   BoundsRect := LBounds;
 end;
+
 function Th5uCellDateEdit.GetAdjustType: TAdjustType;
 begin
   Result := TAdjustType.None;
@@ -3934,6 +3924,7 @@ begin
   SetAdjustType(TAdjustType.None);
   BoundsRect := LBounds;
 end;
+
 function Th5uCellTimeEdit.GetAdjustType: TAdjustType;
 begin
   Result := TAdjustType.None;
@@ -3949,6 +3940,7 @@ begin
   SetAdjustType(TAdjustType.None);
   BoundsRect := LBounds;
 end;
+
 function Th5uCellTextEdit.GetAdjustType: TAdjustType;
 begin
   Result := TAdjustType.None;
@@ -4031,6 +4023,7 @@ begin
   FDateEditor.BringToFront;
   FDateEditor.SetFocus;
 end;
+
 procedure Th5uFmxGrid.StartEdit(const AHit: Th5uFmxHitTestInfo);
 var
   LKind: Th5uColumnEditorKind;

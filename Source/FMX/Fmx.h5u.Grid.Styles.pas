@@ -41,9 +41,9 @@ function h5uColorToFmx(const AColor: TColor): TAlphaColor;
 implementation
 
 uses
-{$IFDEF MSWINDOWS}
+  {$IFDEF MSWINDOWS}
   Winapi.Windows,
-{$ENDIF}
+  {$ENDIF}
   System.UIConsts;
 
 function h5uColorToFmx(const AColor: TColor): TAlphaColor;
@@ -55,10 +55,10 @@ begin
 
   LColor := AColor;
   // Resolve Windows system colors before converting BGR to opaque ARGB.
-{$IFDEF MSWINDOWS}
+  {$IFDEF MSWINDOWS}
   if LColor < 0 then
     LColor := GetSysColor(LColor and $FF);
-{$ENDIF}
+  {$ENDIF}
   Result := MakeColor(TColorRec(LColor).R, TColorRec(LColor).G, TColorRec(LColor).B);
 end;
 

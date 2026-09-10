@@ -202,6 +202,13 @@
         <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Data.Memory.pas"/>
         <DCCReference Include="..\..\..\Source\Common\h5u.Grid.AdjacentGroups.pas"/>
         <DCCReference Include="..\..\..\Source\Common\h5u.Grid.SampleData.pas"/>
+        <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Resizing.pas"/>
+        <DCCReference Include="..\..\..\Source\Common\h5u.Grid.RowMetrics.pas"/>
+        <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Values.pas"/>
+        <DCCReference Include="..\..\..\Source\Common\h5u.Grid.View.pas"/>
+        <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Layout.pas"/>
+        <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Moving.pas"/>
+        <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Navigation.pas"/>
         <DCCReference Include="..\..\..\Source\FMX\Fmx.h5u.Grid.Styles.pas"/>
         <DCCReference Include="..\..\..\Source\FMX\Fmx.h5u.Grid.Editors.pas"/>
         <DCCReference Include="..\..\..\Source\FMX\Fmx.h5u.Grid.pas"/>
@@ -278,6 +285,12 @@
                 </DeployFile>
                 <DeployFile LocalName="..\..\..\_bin\AndroidManifest.xml" Configuration="Debug" Class="ProjectAndroidManifest">
                     <Platform Name="Android64">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\_bin\GridFmxClientDatasetDemo.exe" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>GridFmxClientDatasetDemo.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
