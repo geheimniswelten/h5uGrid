@@ -184,7 +184,8 @@ procedure Th5uVclCustomEditor.SetEditorType(const AValue: string);
 var
   E: Th5uGridEditorItem;
 begin
-  if EditorType = AValue then Exit;
+  if EditorType = AValue then
+    Exit;
   if AValue <> '' then
   begin
     E := h5uCreateEditor(Th5uEditorPlatform.VCL, AValue, nil);
@@ -211,14 +212,16 @@ end;
 
 destructor Th5uVclCustomEditor.Destroy;
 begin
-  if Active then RequestCancel;
+  if Active then
+    RequestCancel;
   ReleaseControl;
   inherited;
 end;
 
 procedure Th5uVclCustomEditor.Assign(Source: TPersistent);
 begin
-  if Active then raise Eh5uGrid.Create('Ein aktiver Editor kann nicht ersetzt werden.');
+  if Active then
+    raise Eh5uGrid.Create('Ein aktiver Editor kann nicht ersetzt werden.');
   inherited;
   if Source is Th5uVclCustomEditor then
   begin
@@ -233,7 +236,8 @@ begin
   // Detach callbacks before destroying a focused native control.
   if Assigned(FControl) then
   begin
-    if FControl is TWinControl then TWinControlAccess(FControl).OnExit := nil;
+    if FControl is TWinControl then
+      TWinControlAccess(FControl).OnExit := nil;
     FreeAndNil(FControl);
   end;
 
@@ -242,21 +246,27 @@ end;
 
 procedure Th5uVclCustomEditor.ReleaseEditor;
 begin
-  if Active then RequestCancel;
+  if Active then
+    RequestCancel;
   ReleaseControl;
 end;
 
 function Th5uVclCustomEditor.GetControlClassName: string;
 begin
   Result := '';
-  if Assigned(FControlClass) then Result := FControlClass.ClassName;
+  if Assigned(FControlClass) then
+    Result := FControlClass.ClassName;
 end;
 
 procedure Th5uVclCustomEditor.SetControlClassName(const AValue: string);
 var
   C: TPersistentClass;
 begin
-  if AValue = '' then begin SetControlClass(nil); Exit; end;
+  if AValue = '' then
+  begin
+    SetControlClass(nil);
+    Exit;
+  end;
   C := GetClass(AValue);
   if not Assigned(C) or not C.InheritsFrom(TControl) then
     raise Eh5uGrid.CreateFmt('Control-Klasse "%s" ist nicht registriert.', [AValue]);
@@ -265,29 +275,39 @@ end;
 
 procedure Th5uVclCustomEditor.SetControlClass(AValue: Th5uVclEditorControlClass);
 begin
-  if FControlClass = AValue then Exit;
+  if FControlClass = AValue then
+    Exit;
   FControlClass := AValue;
   EditorVersion := EditorVersion + 1;
 end;
 
 function Th5uVclCustomEditor.DefaultControlClass: Th5uVclEditorControlClass;
 begin
-  if Mode = Th5uEditorMode.Text then Result := TEdit else Result := nil;
+  if Mode = Th5uEditorMode.Text then
+    Result := TEdit
+  else
+    Result := nil;
 end;
 
 procedure Th5uVclCustomEditor.BuildEditor;
 var
   C: Th5uVclEditorControlClass;
 begin
-  if not Assigned(Context.Grid) or (csDesigning in Context.Grid.ComponentState) then Exit;
-  if FControlVersion = EditorVersion then Exit;
-  if Active then Exit;
+  if not Assigned(Context.Grid) or (csDesigning in Context.Grid.ComponentState) then
+    Exit;
+  if FControlVersion = EditorVersion then
+    Exit;
+  if Active then
+    Exit;
   ReleaseControl;
   C := FControlClass;
-  if not Assigned(C) then C := DefaultControlClass;
+  if not Assigned(C) then
+    C := DefaultControlClass;
   try
-    if Assigned(FOnBuildEditor) then FOnBuildEditor(Self, FControl);
-    if not Assigned(FControl) and Assigned(C) then FControl := C.Create(Context.Grid);
+    if Assigned(FOnBuildEditor) then
+      FOnBuildEditor(Self, FControl);
+    if not Assigned(FControl) and Assigned(C) then
+      FControl := C.Create(Context.Grid);
     if Assigned(FControl) then
     begin
       FControl.Visible := False;
@@ -308,14 +328,17 @@ var
   M: TMethod;
   N: TNotifyEvent;
 begin
-  if Control is TEdit then TEdit(Control).AutoSize := False;
-  if Control is TCustomEdit then TEditAccess(Control).OnChange := ControlChanged;
+  if Control is TEdit then
+    TEdit(Control).AutoSize := False;
+  if Control is TCustomEdit then
+    TEditAccess(Control).OnChange := ControlChanged;
   // Use RTTI for published OnChange on arbitrary controls; never assume TEdit layout.
   P := GetPropInfo(Control.ClassInfo, 'OnChange');
   if Assigned(P) and (P.PropType^.Kind = tkMethod) then
   begin
     N := ControlChanged; M := TMethod(N);
-    if P.PropType^ = TypeInfo(TNotifyEvent) then SetMethodProp(Control, P, M);
+    if P.PropType^ = TypeInfo(TNotifyEvent) then
+      SetMethodProp(Control, P, M);
   end;
   if Control is TWinControl then
   begin
@@ -340,7 +363,8 @@ end;
 
 procedure Th5uVclCustomEditor.ControlExit(Sender: TObject);
 begin
-  if not DeferExit then ExitEditor;
+  if not DeferExit then
+    ExitEditor;
 end;
 
 procedure Th5uVclCustomEditor.ControlKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -367,13 +391,17 @@ end;
 
 function Th5uVclCustomEditor.ReadText: string;
 begin
-  if Assigned(Control) then Result := TControlAccess(Control).Text else Result := inherited;
+  if Assigned(Control) then
+    Result := TControlAccess(Control).Text
+  else
+    Result := inherited;
 end;
 
 procedure Th5uVclCustomEditor.WriteText(const AText: string);
 begin
   inherited;
-  if Assigned(Control) then TControlAccess(Control).Text := AText;
+  if Assigned(Control) then
+    TControlAccess(Control).Text := AText;
 end;
 
 procedure Th5uVclCustomEditor.Show;
@@ -388,24 +416,27 @@ begin
   end;
   inherited;
   Focus;
-  if Control is TEdit then TEdit(Control).SelectAll;
+  if Control is TEdit then
+    TEdit(Control).SelectAll;
 end;
 
 procedure Th5uVclCustomEditor.Hide;
 begin
   inherited;
-  if Assigned(Control) then Control.Visible := False;
-
+  if Assigned(Control) then
+    Control.Visible := False;
 end;
 
 procedure Th5uVclCustomEditor.Focus;
 begin
-  if (Control is TWinControl) and TWinControl(Control).CanFocus then TWinControl(Control).SetFocus;
+  if (Control is TWinControl) and TWinControl(Control).CanFocus then
+    TWinControl(Control).SetFocus;
 end;
 
 procedure Th5uVclCustomEditor.BringToFront;
 begin
-  if Assigned(Control) then Control.BringToFront;
+  if Assigned(Control) then
+    Control.BringToFront;
 end;
 
 function Th5uVclIntegerEditor.ReadValue: TValue;
@@ -452,11 +483,17 @@ begin
   inherited;
   E := TDateTimePicker(Control);
   E.ShowCheckbox := True;
-  if DateKind = Th5uColumnEditorKind.Time then E.Kind := dtkTime else E.Kind := dtkDate;
+  if DateKind = Th5uColumnEditorKind.Time then
+    E.Kind := dtkTime
+  else
+    E.Kind := dtkDate;
   case DateKind of
-    Th5uColumnEditorKind.Time: E.Format := 'HH:mm:ss';
-    Th5uColumnEditorKind.DateTime: E.Format := 'dd.MM.yyyy HH:mm:ss';
-    else E.Format := 'dd.MM.yyyy';
+    Th5uColumnEditorKind.Time:
+      E.Format := 'HH:mm:ss';
+    Th5uColumnEditorKind.DateTime:
+      E.Format := 'dd.MM.yyyy HH:mm:ss';
+    else
+      E.Format := 'dd.MM.yyyy';
   end;
 end;
 
@@ -466,7 +503,8 @@ var
   E: TDateTimePicker;
 begin
   E := TDateTimePicker(Control);
-  if not E.Checked then Exit(TValue.Empty);
+  if not E.Checked then
+    Exit(TValue.Empty);
   D := E.DateTime;
   case DateKind of
     Th5uColumnEditorKind.Date: D := DateOf(D);
@@ -480,7 +518,10 @@ var
   E: TDateTimePicker;
 begin
   E := TDateTimePicker(Control);
-  if AValue.IsEmpty then E.DateTime := Now else E.DateTime := AValue.AsType<TDateTime>;
+  if AValue.IsEmpty then
+    E.DateTime := Now
+  else
+    E.DateTime := AValue.AsType<TDateTime>;
   E.Checked := not AValue.IsEmpty;
 end;
 
@@ -562,13 +603,17 @@ var
 begin
   inherited;
   LValue := GetValue;
-  if LValue.IsType<TBytes> then LBytes := LValue.AsType<TBytes> else LBytes := nil;
+  if LValue.IsType<TBytes> then
+    LBytes := LValue.AsType<TBytes>
+  else
+    LBytes := nil;
   if Th5uVclImageEditForm.Execute(Context.Grid, LBytes) then
   begin
     SetValue(TValue.From<TBytes>(LBytes));
     RequestCommit;
   end
-  else RequestCancel;
+  else
+    RequestCancel;
 end;
 
 function Th5uVclTextEditor.DrawDisplay(const AContext: Th5uEditorContext): Boolean;
@@ -578,70 +623,66 @@ var
   LTextRect: TRect; LFlags: Cardinal;
 begin
   Result := inherited;
-  if Result then Exit;
+  if Result then
+    Exit;
   ACanvas := TCanvas(AContext.Canvas);
   LColumn := AContext.Column;
-      begin
-        LTextRect := AContext.Bounds.Round;
-        InflateRect(LTextRect, -5, -2);
+  LTextRect := AContext.Bounds.Round;
+  InflateRect(LTextRect, -5, -2);
 
-        LFlags := DT_NOPREFIX or DT_VCENTER or DT_END_ELLIPSIS;
-        if LColumn.WordWrap then
-          LFlags := (LFlags and not DT_VCENTER) or DT_WORDBREAK;
+  LFlags := DT_NOPREFIX or DT_VCENTER or DT_END_ELLIPSIS;
+  if LColumn.WordWrap then
+    LFlags := (LFlags and not DT_VCENTER) or DT_WORDBREAK;
 
-        case LColumn.DataType of
-          Th5uColumnDataType.Integer,
-          Th5uColumnDataType.Float,
-          Th5uColumnDataType.Currency:
-            LFlags := LFlags or DT_RIGHT;
-          else
-            LFlags := LFlags or DT_LEFT;
-        end;
+  case LColumn.DataType of
+    Th5uColumnDataType.Integer,
+    Th5uColumnDataType.Float,
+    Th5uColumnDataType.Currency:
+      LFlags := LFlags or DT_RIGHT;
+    else
+      LFlags := LFlags or DT_LEFT;
+  end;
 
-        AContext.PreparePaint(Th5uElementPaintPart.Text);
-        DrawText(ACanvas.Handle, PChar(AContext.Text), Length(AContext.Text), LTextRect, LFlags);
-      end;
+  AContext.PreparePaint(Th5uElementPaintPart.Text);
+  DrawText(ACanvas.Handle, PChar(AContext.Text), Length(AContext.Text), LTextRect, LFlags);
   Result := True;
 end;
 
 function Th5uVclCheckBoxEditor.DrawDisplay(const AContext: Th5uEditorContext): Boolean;
 var
   ACanvas: TCanvas;
-  LColumn: Th5uGridColumn;
   LCheckRect: TRect; LChecked: Boolean;
 begin
   Result := inherited;
-  if Result then Exit;
+  if Result then
+    Exit;
   ACanvas := TCanvas(AContext.Canvas);
-  LColumn := AContext.Column;
-      begin
-        LCheckRect := h5uEditorCheckBounds(AContext.Bounds).Round;
-        LChecked := False;
-        if not AContext.Value.IsEmpty then
-        begin
-          if AContext.Value.Kind = tkEnumeration then
-            LChecked := AContext.Value.AsBoolean
-          else
-            LChecked := SameText(AContext.Value.ToString, 'True') or (AContext.Value.ToString = '1');
-        end;
+  LCheckRect := h5uEditorCheckBounds(AContext.Bounds).Round;
+  LChecked := False;
+  if not AContext.Value.IsEmpty then
+  begin
+    if AContext.Value.Kind = tkEnumeration then
+      LChecked := AContext.Value.AsBoolean
+    else
+      LChecked := SameText(AContext.Value.ToString, 'True') or (AContext.Value.ToString = '1');
+  end;
 
-        ACanvas.Pen.Style := psSolid;
-        ACanvas.Pen.Color := TColor(AContext.Foreground);
-        ACanvas.Brush.Style := bsSolid;
-        ACanvas.Brush.Color := TColor(AContext.Background);
-        AContext.PreparePaint(Th5uElementPaintPart.Glyph);
-        ACanvas.Rectangle(LCheckRect);
-        if LChecked then
-        begin
-          ACanvas.Pen.Width := 2;
-          ACanvas.Pen.Color := TColor(AContext.Foreground);
-          AContext.PreparePaint(Th5uElementPaintPart.Glyph);
-          ACanvas.MoveTo(LCheckRect.Left + 3, LCheckRect.Top + 7);
-          ACanvas.LineTo(LCheckRect.Left + 6, LCheckRect.Bottom - 3);
-          ACanvas.LineTo(LCheckRect.Right - 2, LCheckRect.Top + 3);
-          ACanvas.Pen.Width := 1;
-        end;
-      end;
+  ACanvas.Pen.Style := psSolid;
+  ACanvas.Pen.Color := TColor(AContext.Foreground);
+  ACanvas.Brush.Style := bsSolid;
+  ACanvas.Brush.Color := TColor(AContext.Background);
+  AContext.PreparePaint(Th5uElementPaintPart.Glyph);
+  ACanvas.Rectangle(LCheckRect);
+  if LChecked then
+  begin
+    ACanvas.Pen.Width := 2;
+    ACanvas.Pen.Color := TColor(AContext.Foreground);
+    AContext.PreparePaint(Th5uElementPaintPart.Glyph);
+    ACanvas.MoveTo(LCheckRect.Left + 3, LCheckRect.Top + 7);
+    ACanvas.LineTo(LCheckRect.Left + 6, LCheckRect.Bottom - 3);
+    ACanvas.LineTo(LCheckRect.Right - 2, LCheckRect.Top + 3);
+    ACanvas.Pen.Width := 1;
+  end;
   Result := True;
 end;
 
@@ -652,26 +693,25 @@ var
   LImageRect: TRect; LScale: Double; LWidth, LHeight: Integer; FPicture: TPicture;
 begin
   Result := inherited;
-  if Result then Exit;
+  if Result then
+    Exit;
   ACanvas := TCanvas(AContext.Canvas);
   LColumn := AContext.Column;
-      begin
-        FPicture := TPicture(AContext.Image);
-        if Assigned(FPicture) and Assigned(FPicture.Graphic) and not FPicture.Graphic.Empty then
-        begin
-          LImageRect := AContext.Bounds.Round;
-          InflateRect(LImageRect, -4, -4);
-          if LColumn.ImagePreserveAspectRatio then
-          begin
-            LScale := Min(LImageRect.Width / FPicture.Graphic.Width, LImageRect.Height / FPicture.Graphic.Height);
-            LWidth := Max(1, Round(FPicture.Graphic.Width * LScale));
-            LHeight := Max(1, Round(FPicture.Graphic.Height * LScale));
-            LImageRect := Rect(LImageRect.Left + (LImageRect.Width - LWidth) div 2, LImageRect.Top + (LImageRect.Height - LHeight)
-              div 2, LImageRect.Left + (LImageRect.Width - LWidth) div 2 + LWidth, LImageRect.Top + (LImageRect.Height - LHeight) div 2 + LHeight);
-          end;
-          ACanvas.StretchDraw(LImageRect, FPicture.Graphic);
-        end;
-      end;
+  FPicture := TPicture(AContext.Image);
+  if Assigned(FPicture) and Assigned(FPicture.Graphic) and not FPicture.Graphic.Empty then
+  begin
+    LImageRect := AContext.Bounds.Round;
+    InflateRect(LImageRect, -4, -4);
+    if LColumn.ImagePreserveAspectRatio then
+    begin
+      LScale := Min(LImageRect.Width / FPicture.Graphic.Width, LImageRect.Height / FPicture.Graphic.Height);
+      LWidth := Max(1, Round(FPicture.Graphic.Width * LScale));
+      LHeight := Max(1, Round(FPicture.Graphic.Height * LScale));
+      LImageRect := Rect(LImageRect.Left + (LImageRect.Width - LWidth) div 2, LImageRect.Top + (LImageRect.Height - LHeight)
+        div 2, LImageRect.Left + (LImageRect.Width - LWidth) div 2 + LWidth, LImageRect.Top + (LImageRect.Height - LHeight) div 2 + LHeight);
+    end;
+    ACanvas.StretchDraw(LImageRect, FPicture.Graphic);
+  end;
   Result := True;
 end;
 
