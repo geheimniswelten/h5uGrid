@@ -168,6 +168,7 @@
         <DCCReference Include="..\..\..\Source\Common\h5u.Grid.AdjacentGroups.pas"/>
         <DCCReference Include="..\..\..\Source\Common\h5u.Grid.SampleData.pas"/>
         <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Values.pas"/>
+        <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Editors.pas"/>
         <DCCReference Include="..\..\..\Source\Common\h5u.Grid.View.pas"/>
         <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Layout.pas"/>
         <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Moving.pas"/>

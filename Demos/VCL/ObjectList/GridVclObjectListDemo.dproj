@@ -173,6 +173,7 @@
         <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Resizing.pas"/>
         <DCCReference Include="..\..\..\Source\Common\h5u.Grid.RowMetrics.pas"/>
         <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Values.pas"/>
+        <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Editors.pas"/>
         <DCCReference Include="..\..\..\Source\Common\h5u.Grid.View.pas"/>
         <DCCReference Include="..\..\..\Source\Vcl\Vcl.h5u.Grid.Styles.pas"/>
         <DCCReference Include="..\..\..\Source\Vcl\Vcl.h5u.Grid.Editors.pas"/>

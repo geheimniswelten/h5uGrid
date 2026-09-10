@@ -15,6 +15,7 @@ uses
   h5u.Grid.AdjacentGroups in '..\..\..\Source\Common\h5u.Grid.AdjacentGroups.pas',
   h5u.Grid.SampleData in '..\..\..\Source\Common\h5u.Grid.SampleData.pas',
   h5u.Grid.Values in '..\..\..\Source\Common\h5u.Grid.Values.pas',
+  h5u.Grid.Editors in '..\..\..\Source\Common\h5u.Grid.Editors.pas',
   h5u.Grid.View in '..\..\..\Source\Common\h5u.Grid.View.pas',
   h5u.Grid.Layout in '..\..\..\Source\Common\h5u.Grid.Layout.pas',
   h5u.Grid.Moving in '..\..\..\Source\Common\h5u.Grid.Moving.pas',

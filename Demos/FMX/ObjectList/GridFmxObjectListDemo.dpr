@@ -21,6 +21,7 @@ uses
   h5u.Grid.Resizing in '..\..\..\Source\Common\h5u.Grid.Resizing.pas',
   h5u.Grid.RowMetrics in '..\..\..\Source\Common\h5u.Grid.RowMetrics.pas',
   h5u.Grid.Values in '..\..\..\Source\Common\h5u.Grid.Values.pas',
+  h5u.Grid.Editors in '..\..\..\Source\Common\h5u.Grid.Editors.pas',
   h5u.Grid.View in '..\..\..\Source\Common\h5u.Grid.View.pas',
   Fmx.h5u.Grid.Styles in '..\..\..\Source\FMX\Fmx.h5u.Grid.Styles.pas',
   Fmx.h5u.Grid.Editors in '..\..\..\Source\FMX\Fmx.h5u.Grid.Editors.pas',

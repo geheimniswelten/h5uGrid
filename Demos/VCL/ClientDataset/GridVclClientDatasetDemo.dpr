@@ -20,6 +20,7 @@ uses
   h5u.Grid.Resizing in '..\..\..\Source\Common\h5u.Grid.Resizing.pas',
   h5u.Grid.RowMetrics in '..\..\..\Source\Common\h5u.Grid.RowMetrics.pas',
   h5u.Grid.Values in '..\..\..\Source\Common\h5u.Grid.Values.pas',
+  h5u.Grid.Editors in '..\..\..\Source\Common\h5u.Grid.Editors.pas',
   h5u.Grid.View in '..\..\..\Source\Common\h5u.Grid.View.pas',
   Vcl.h5u.Grid.Styles in '..\..\..\Source\Vcl\Vcl.h5u.Grid.Styles.pas',
   Vcl.h5u.Grid.Editors in '..\..\..\Source\Vcl\Vcl.h5u.Grid.Editors.pas',

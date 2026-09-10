@@ -120,8 +120,9 @@ function Invoke-DemoProject {
     [CmdletBinding()]
     param([Parameter(Mandatory)][string]$Project)
 
-    # Use the selected compiler and repository paths, independent of private IDE settings.
-    $demoSearchPath = $searchPath + ';' + (Join-Path $resolvedBin "..\lib\$Platform\release")
+    # Repository units must resolve through the DPR's explicit file references.
+    # Adding Source directories or package outputs here hides missing project entries.
+    $demoSearchPath = Join-Path $resolvedBin "..\lib\$Platform\release"
 
     # DCC alone does not generate the icon/version/manifest resources from the
     # DPROJ. In particular, an Android build can leave an empty Windows RES.

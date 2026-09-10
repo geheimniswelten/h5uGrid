@@ -18,6 +18,7 @@ uses
   h5u.Grid.Resizing in '..\..\..\Source\Common\h5u.Grid.Resizing.pas',
   h5u.Grid.RowMetrics in '..\..\..\Source\Common\h5u.Grid.RowMetrics.pas',
   h5u.Grid.Values in '..\..\..\Source\Common\h5u.Grid.Values.pas',
+  h5u.Grid.Editors in '..\..\..\Source\Common\h5u.Grid.Editors.pas',
   h5u.Grid.View in '..\..\..\Source\Common\h5u.Grid.View.pas',
   h5u.Grid.Layout in '..\..\..\Source\Common\h5u.Grid.Layout.pas',
   h5u.Grid.Moving in '..\..\..\Source\Common\h5u.Grid.Moving.pas',
