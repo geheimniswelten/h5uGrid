@@ -17,14 +17,14 @@ type
 
   Th5uResizeHeaderEdgeTest = function(AX, AY: Double): Boolean of object;
 
-function h5uColumnResizeAt(AOptions: Th5uCustomizationOptions; const ACandidates: TArray<Th5uResizeCandidate>;
-  ALastVisibleIndex: Integer; X, Y: Double; ATouch: Boolean; AHeaderEdge: Th5uResizeHeaderEdgeTest): Th5uGridColumn;
+function h5uColumnResizeAt(AOptions: Th5uCustomizationOptions; const ACandidates: TArray<Th5uResizeCandidate>; ALastVisibleIndex: Integer; X, Y: Double; ATouch: Boolean;
+  AHeaderEdge: Th5uResizeHeaderEdgeTest): Th5uGridColumn;
 function h5uTryResizeColumn(AColumns: Th5uGridColumns; AColumn: Th5uGridColumn; AOriginalWidth, ADelta: Integer): Boolean;
 
 implementation
 
-function h5uColumnResizeAt(AOptions: Th5uCustomizationOptions; const ACandidates: TArray<Th5uResizeCandidate>;
-  ALastVisibleIndex: Integer; X, Y: Double; ATouch: Boolean; AHeaderEdge: Th5uResizeHeaderEdgeTest): Th5uGridColumn;
+function h5uColumnResizeAt(AOptions: Th5uCustomizationOptions; const ACandidates: TArray<Th5uResizeCandidate>; ALastVisibleIndex: Integer; X, Y: Double; ATouch: Boolean;
+  AHeaderEdge: Th5uResizeHeaderEdgeTest): Th5uGridColumn;
 var
   LInfo: Th5uResizeCandidate;
   LLeft, LRight, LLastLeft, LEffectiveLeft, LDelta, LDistance, LBest: Double;
@@ -80,7 +80,14 @@ begin
     begin
       if AColumn.Visible and AColumn.CanResize then
       begin
-        AColumn.Width := AOriginalWidth + ADelta;
+        AColumns.BeginUpdate;
+        try
+          AColumn.AutoWidth := False;
+          AColumn.WidthInPercent := 0;
+          AColumn.Width := AOriginalWidth + ADelta;
+        finally
+          AColumns.EndUpdate;
+        end;
         Result := True;
       end;
       Exit;

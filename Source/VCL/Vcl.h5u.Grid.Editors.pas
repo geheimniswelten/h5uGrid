@@ -58,6 +58,8 @@ type
   end;
 
   Th5uVclTextEditor = class(Th5uVclCustomEditor)
+  protected
+    function MeasureContentWidth(const AContext: Th5uEditorContext): Double; override;
   public
     function DrawDisplay(const AContext: Th5uEditorContext): Boolean; override;
   end;
@@ -101,6 +103,8 @@ type
   end;
 
   Th5uVclCheckBoxEditor = class(Th5uVclCustomEditor)
+  protected
+    function MeasureContentWidth(const AContext: Th5uEditorContext): Double; override;
   public
     constructor Create(Collection: TCollection); override;
     procedure Activate; override;
@@ -109,6 +113,8 @@ type
   end;
 
   Th5uVclImageCellEditor = class(Th5uVclCustomEditor)
+  protected
+    function MeasureContentWidth(const AContext: Th5uEditorContext): Double; override;
   protected
     function DefaultControlClass: Th5uVclEditorControlClass; override;
     procedure ConfigureControl; override;
@@ -616,6 +622,52 @@ begin
     RequestCancel;
 end;
 
+function Th5uVclTextEditor.MeasureContentWidth(const AContext: Th5uEditorContext): Double;
+var
+  R: TRect;
+  C: TCanvas;
+begin
+  if not (AContext.Canvas is TCanvas) then
+    Exit(-1);
+  C := TCanvas(AContext.Canvas);
+  R := Rect(0, 0, 0, 0);
+  DrawText(C.Handle, PChar(AContext.Text), Length(AContext.Text), R, DT_CALCRECT or DT_NOPREFIX or DT_EXPANDTABS);
+  Result := R.Width + 10;
+end;
+
+function Th5uVclCheckBoxEditor.MeasureContentWidth(const AContext: Th5uEditorContext): Double;
+begin
+  Result := 25;
+end;
+
+function Th5uVclImageCellEditor.MeasureContentWidth(const AContext: Th5uEditorContext): Double;
+var
+  P: TPicture;
+  S: TBytesStream;
+begin
+  Result := 8;
+  if AContext.Image is TPicture then
+    Exit(TPicture(AContext.Image).Width + 8);
+  if not AContext.Value.IsType<TBytes> then
+    Exit;
+  if Length(AContext.Value.AsType<TBytes>) = 0 then
+    Exit;
+  P := TPicture.Create;
+  S := TBytesStream.Create(AContext.Value.AsType<TBytes>);
+  try
+    try
+      P.LoadFromStream(S);
+      Result := P.Width + 8;
+    except
+      // Invalid images are also rendered as empty cells.
+      Result := 8;
+    end;
+  finally
+    S.Free;
+    P.Free;
+  end;
+end;
+
 function Th5uVclTextEditor.DrawDisplay(const AContext: Th5uEditorContext): Boolean;
 var
   ACanvas: TCanvas;
@@ -707,8 +759,8 @@ begin
       LScale := Min(LImageRect.Width / FPicture.Graphic.Width, LImageRect.Height / FPicture.Graphic.Height);
       LWidth := Max(1, Round(FPicture.Graphic.Width * LScale));
       LHeight := Max(1, Round(FPicture.Graphic.Height * LScale));
-      LImageRect := Rect(LImageRect.Left + (LImageRect.Width - LWidth) div 2, LImageRect.Top + (LImageRect.Height - LHeight)
-        div 2, LImageRect.Left + (LImageRect.Width - LWidth) div 2 + LWidth, LImageRect.Top + (LImageRect.Height - LHeight) div 2 + LHeight);
+      LImageRect := Rect(LImageRect.Left + (LImageRect.Width - LWidth) div 2, LImageRect.Top + (LImageRect.Height - LHeight) div 2, LImageRect.Left
+        + (LImageRect.Width - LWidth) div 2 + LWidth, LImageRect.Top + (LImageRect.Height - LHeight) div 2 + LHeight);
     end;
     ACanvas.StretchDraw(LImageRect, FPicture.Graphic);
   end;

@@ -12,6 +12,7 @@ Das Paket dient dazu, Architektur, API, Design-Time-Verhalten und die wichtigste
 - per Gridinstanz isolierter Factory-/Registry-Scope,
 - `GetClass`-, `OnGetClass`-, `OnCreateInstance`- und `OnConfigureInstance`-Erweiterungspunkte,
 - mehrzeilige Header mit `RowSpan` und `ColumnSpan`,
+- [AutoWidth, Prozentbreiten, Gruppenbudgets und Grenzen der Gesamtbreite](Docs/COLUMN-WIDTHS.md),
 - variable Zeilenhöhen einschließlich Text-AutoHeight und begrenzter Maximalhöhe,
 - pixelweises, zeilenweises und einrastendes Scrollmodell,
 - vertikale und horizontale Thumb-Hints,

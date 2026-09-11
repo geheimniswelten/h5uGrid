@@ -1,6 +1,16 @@
 # Changelog
 
-## Unveröffentlicht – 2026-09-09
+## 0.2.0 – 2026-09-10
+
+- VCL/FMX: `AutoWidth` und `WidthInPercent` an Spalten; `LayoutWidth` hält das berechnete Ergebnis getrennt von `Width`.
+- Gemeinsame Verteilung nach Abzug fester/gemessener Breiten und Abstände, mit Min-/Max-Umverteilung, Rundung und verschachtelten Gruppenbudgets.
+- `Grid.MinWidth`/`MaxWidth` begrenzen den gesamten Spalteninhalt; Gruppenheader besitzen eigene Breiten und Grenzen.
+- Editoren: `MeasureWidth`, `MeasureContentWidth` und `OnMeasureWidth` für Text, Checkbox, Bild und eigene Darstellungen. Grids bieten `MeasureColumnWidth`, `AutoSizeColumn`, `InvalidateColumnWidths` und `AutoWidthRowLimit`.
+- Scrollbars berücksichtigen ihre gegenseitigen Auswirkungen auf die verfügbare Prozentbreite; manuelles Resize wechselt in den Pixelmodus.
+- Common- und native VCL/FMX-Tests für Verteilung, Gruppen, AutoWidth, Cache-Invalidierung, Editorzustand und Streaming ergänzt.
+- FMX: Bei Tastatur-Editierung wird die fokussierte Zelle vor Prüfung des Editortyps ermittelt; der bisherige Zugriff auf eine uninitialisierte Trefferstruktur entfällt.
+
+## 0.1.9 – 2026-09-09
 
 - VCL/FMX: Gruppenheader werden auf der angeklickten Ebene erkannt und mit sämtlichen Unterheadern/Datenspalten verschoben. Quellmarkierung, Gruppenbeschriftung und Einfügelinie verwenden dieselbe Headerzelle; verdeckte Kind-Spaltengrenzen lösen oben kein Resize aus.
 - FMX: mehrzeiliges HeaderLayout einschließlich Gruppen, Zeilenspannen, Styles und fixierten Bereichen wird gezeichnet. Beide Dataset-Demos zeigen dasselbe schaltbare Layout; die feststehende ID steht separat über beide Zeilen.
@@ -27,7 +37,7 @@
 - Eigener linker Trefferabstand am rechten Rand der letzten eingeblendeten Spalte: `LastColumnResizeHitZoneLeft` und `TouchLastColumnResizeHitZoneLeft`, jeweils `-1` für den normalen linken Wert.
 - Regressionstests für Rechtsklick, Streaming/Assign, Resize, Touch-Header, asymmetrische Trefferzonen, letzte/ausgeblendete/fixierte Spalten und Demo-Einstellungen ergänzt.
 
-## Unveröffentlicht – 2026-09-07
+## 0.1.5 – 2026-09-07
 
 - SampleClientDataset: verfrühten LogChanges-Zugriff auf geschlossene Datenmenge entfernt; Neuerzeugung während des Komponenten-Streamings bis Loaded verschoben. Regressionstest für Konstruktion und Design-/Laufzeit-Streaming ergänzt.
 

@@ -30,6 +30,111 @@ begin
     raise Exception.Create(AMessage);
 end;
 
+procedure TestColumnWidths;
+var
+  C, CopyColumns: Th5uGridColumns;
+  H, CopyHeader: Th5uHeaderLayout;
+  A, B, D, Outside: Th5uGridColumn;
+  G, Nested: Th5uHeaderLayoutCell;
+  I, Total: Integer;
+begin
+  C := Th5uGridColumns.Create(nil);
+  H := Th5uHeaderLayout.Create(nil);
+  CopyColumns := Th5uGridColumns.Create(nil);
+  CopyHeader := Th5uHeaderLayout.Create(nil);
+  try
+    A := C.Add; A.Id := 'fixed'; A.Width := 100;
+    B := C.Add; B.Id := 'quarter'; B.WidthInPercent := 25;
+    D := C.Add; D.Id := 'rest'; D.WidthInPercent := 75;
+    h5uResolveColumnWidths(C, H, 1, 503);
+    Check((A.LayoutWidth = 100) and (B.LayoutWidth = 100) and (D.LayoutWidth = 300), 'fixed width and spacing before percentages');
+    Check((B.Width = 100) and (D.Width = 100), 'layout must preserve configured pixels');
+    B.MinWidth := 150;
+    h5uResolveColumnWidths(C, H, 1, 503);
+    Check((B.LayoutWidth = 150) and (D.LayoutWidth = 250), 'minimum redistributes remaining width');
+    B.MinWidth := 24;
+    D.MaxWidth := 200;
+    h5uResolveColumnWidths(C, H, 1, 503);
+    Check((B.LayoutWidth = 200) and (D.LayoutWidth = 200), 'maximum redistributes remaining width');
+    D.MaxWidth := 1000;
+    h5uResolveColumnWidths(C, H, 1, 503, 703, 0);
+    Check((B.LayoutWidth = 150) and (D.LayoutWidth = 450), 'grid minimum applies to total column content');
+    h5uResolveColumnWidths(C, H, 1, 503, 0, 403);
+    Check((B.LayoutWidth = 75) and (D.LayoutWidth = 225), 'grid maximum applies to total column content');
+    h5uResolveColumnWidths(C, H, 1, 80);
+    Check((A.LayoutWidth = 100) and (B.LayoutWidth = 24) and (D.LayoutWidth = 24), 'overconstrained content preserves pixels and minima');
+    B.AutoWidth := True;
+    B.SetMeasuredWidth(180);
+    h5uResolveColumnWidths(C, H, 1, 503);
+    Check((B.LayoutWidth = 180) and (D.LayoutWidth = 220), 'AutoWidth precedes percent and reserves measured content');
+    B.Visible := False;
+    h5uResolveColumnWidths(C, H, 1, 503);
+    Check(D.LayoutWidth = 401, 'hidden columns consume neither width nor spacing');
+    B.Visible := True;
+    B.AutoWidth := False;
+    A.FixedKind := Th5uFixedKind.Left;
+    D.FixedKind := Th5uFixedKind.Right;
+    h5uResolveColumnWidths(C, H, 1, 504);
+    Check(B.LayoutWidth + D.LayoutWidth = 401, 'rounding conserves pixels including pinned columns');
+    A.FixedKind := Th5uFixedKind.None;
+    D.FixedKind := Th5uFixedKind.None;
+    h5uTryResizeColumn(C, B, B.LayoutWidth, 10);
+    Check((B.WidthInPercent = 0) and not B.AutoWidth, 'manual resizing selects pixel mode');
+    B.WidthInPercent := 30;
+    D.WidthInPercent := 70;
+    H.Enabled := True;
+    G := H.Cells.Add;
+    G.ColumnSpan := 3;
+    G.Width := 400;
+    Outside := C.Add; Outside.WidthInPercent := 100;
+    h5uResolveColumnWidths(C, H, 0, 1000);
+    Check((B.LayoutWidth = 90) and (D.LayoutWidth = 210) and (Outside.LayoutWidth = 600), 'parent group budget and independent view remainder');
+    Nested := H.Cells.Add;
+    Nested.LayoutRow := 1; Nested.LayoutColumn := 1; Nested.ColumnSpan := 2;
+    Nested.WidthInPercent := 100;
+    h5uResolveColumnWidths(C, H, 0, 1000);
+    Check((B.LayoutWidth = 90) and (D.LayoutWidth = 210), 'nested group uses allocated parent remainder');
+    G.MinWidth := 500;
+    h5uResolveColumnWidths(C, H, 0, 1000);
+    Check((B.LayoutWidth = 120) and (D.LayoutWidth = 280) and (Outside.LayoutWidth = 500), 'group minimum');
+    G.MinWidth := 0;
+    G.Width := 0;
+    G.WidthInPercent := 50;
+    Outside.WidthInPercent := 50;
+    h5uResolveColumnWidths(C, H, 0, 1000);
+    Check(A.LayoutWidth + B.LayoutWidth + D.LayoutWidth = 500, 'percent group reserves its share in the view');
+    CopyColumns.Assign(C);
+    CopyHeader.Assign(H);
+    Check((CopyColumns[1].WidthInPercent = 30) and (CopyHeader.Cells[0].WidthInPercent = 50), 'Assign retains column and group sizing');
+    h5uResolveColumnWidths(CopyColumns, CopyHeader, 0, 1000);
+    Check(CopyColumns[2].LayoutWidth = D.LayoutWidth, 'copied layout resolves identically');
+    H.Enabled := False;
+    for I := 1 to 4 do
+    begin
+      h5uResolveColumnWidths(C, H, 1, 651.75);
+      Total := 0;
+      for A in C.VisibleColumns do Inc(Total, A.LayoutWidth + 1);
+      Check(Total = 651, 'fractional viewport and repeated layout retain exact integer total');
+    end;
+    B.WidthInPercent := 1E-300;
+    h5uResolveColumnWidths(C, H, 1, 651);
+    Check(B.LayoutWidth = B.MinWidth, 'tiny percentage cannot overflow the allocator');
+    C[0].Visible := False;
+    D.Visible := False;
+    Outside.Visible := False;
+    B.MinWidth := 0;
+    B.WidthInPercent := 100;
+    h5uResolveColumnWidths(C, H, 0, 0);
+    Check(B.LayoutWidth = 0, 'zero column minimum remains supported');
+    Writeln('PASS: auto, percent, fixed, hidden and pinned widths, grid limits, nested groups, rounding, Assign and manual resize');
+  finally
+    CopyHeader.Free;
+    CopyColumns.Free;
+    H.Free;
+    C.Free;
+  end;
+end;
+
 procedure TestResizeBoundaries;
 var
   LColumns: Th5uGridColumns;
@@ -133,7 +238,8 @@ begin
     LNav := Default(Th5uGridNavigation);
     LOther := Default(Th5uGridNavigation);
     Check(LNav.Navigate(LColumns, LSelection, 10, LData.RowKey, LData.Extent, 45, vkF2, [], LAction), 'F2 not handled');
-    Check((LAction.Kind = Th5uNavigationActionKind.Focus) and LAction.EditAfterFocus and not LAction.AutomaticEdit, 'F2 initial focus and manual edit');
+    Check((LAction.Kind = Th5uNavigationActionKind.Focus) and LAction.EditAfterFocus
+      and not LAction.AutomaticEdit, 'F2 initial focus and manual edit');
     Check(h5uPlanCellFocus(LColumns, LSelection, 10, LData.RowKey, 0, 0, False, LCell, LRange), 'focus plan');
     LSelection.SetFocus(LCell, True);
     LNav.Navigate(LColumns, LSelection, 10, LData.RowKey, LData.Extent, 45, vkNext, [ssShift, ssCtrl], LAction);
@@ -144,13 +250,14 @@ begin
     Check(not LOther.HeaderSelectionActive, 'navigation state shared between grids');
     LNav.Cancel(LSelection);
     Check(not LNav.HeaderSelectionActive, 'cancel did not reset header selection');
-    Check(LNav.SearchCharacter(LColumns, LSelection, 3, LData.Prepare, LData.Text, 'a', 100, LRow, LColumn) and (LRow = 2), 'new search must start after focused row');
+    Check(LNav.SearchCharacter(LColumns, LSelection, 3, LData.Prepare, LData.Text, 'a', 100, LRow, LColumn) and (LRow
+      = 2), 'new search must start after focused row');
     h5uPlanCellFocus(LColumns, LSelection, 3, LData.RowKey, LRow, LColumn, False, LCell, LRange);
     LSelection.SetFocus(LCell, True);
-    Check(LNav.SearchCharacter(LColumns, LSelection, 3, LData.Prepare, LData.Text, 'l', 100 + 200 / MSecsPerDay, LRow, LColumn)
-      and (LRow = 2) and (LNav.SearchText = 'al'), 'continued search must include focused row');
-    Check(LNav.SearchCharacter(LColumns, LSelection, 3, LData.Prepare, LData.Text, 'b', 100 + 1500 / MSecsPerDay, LRow, LColumn)
-      and (LRow = 1) and (LNav.SearchText = 'b'), 'search timeout and wrap');
+    Check(LNav.SearchCharacter(LColumns, LSelection, 3, LData.Prepare, LData.Text, 'l', 100 + 200 / MSecsPerDay, LRow, LColumn) and (LRow = 2)
+      and (LNav.SearchText = 'al'), 'continued search must include focused row');
+    Check(LNav.SearchCharacter(LColumns, LSelection, 3, LData.Prepare, LData.Text, 'b', 100 + 1500 / MSecsPerDay, LRow, LColumn) and (LRow = 1)
+      and (LNav.SearchText = 'b'), 'search timeout and wrap');
     Writeln('PASS: common navigation, page distance, header extension, independent state and search timeout');
   finally
     LSelection.Free;
@@ -218,8 +325,8 @@ begin
     Check(LView.GetViewValue(1, 'group').AsString = 'B', 'view value mapping');
     Check(LView.CanEditViewValue(1, 'level'), 'view edit permission');
     LView.SetViewValue(1, 'level', TValue.From<Integer>(0));
-    Check(LView.GetTreeBranchEndInfo(2, LView.GetViewRowKey(2), LLevel, LClosed)
-      and (LLevel = 1) and (LClosed = 1), 'tree branch closes at next visible row');
+    Check(LView.GetTreeBranchEndInfo(2, LView.GetViewRowKey(2), LLevel, LClosed) and (LLevel = 1) and (LClosed
+      = 1), 'tree branch closes at next visible row');
     Check(not LView.IsViewRowAvailable(4), 'folded look-ahead passed end');
     LChanges := LView.ChangeAllAdjacentGroups(True);
     Check((Length(LChanges) = 1) and (LView.GetViewRowCount = 3), 'collapse only remaining foldable run');
@@ -385,8 +492,9 @@ begin
   Check(SameValue(h5uParseEditorValue(Th5uColumnDataType.Float, FloatToStr(1.5)).AsExtended, 1.5), 'locale float parsing');
   Check(h5uParseEditorValue(Th5uColumnDataType.Currency, CurrToStr(12.25)).AsType<Currency> = 12.25, 'currency parsing');
   Check(h5uParseEditorValue(Th5uColumnDataType.Text, ' abc ').AsString = ' abc ', 'text whitespace preservation');
-  for LType in [Th5uColumnDataType.Integer, Th5uColumnDataType.Float, Th5uColumnDataType.Currency,
-    Th5uColumnDataType.Date, Th5uColumnDataType.DateTime, Th5uColumnDataType.Time] do
+  for LType
+    in [Th5uColumnDataType.Integer, Th5uColumnDataType.Float, Th5uColumnDataType.Currency, Th5uColumnDataType.Date, Th5uColumnDataType.DateTime,
+    Th5uColumnDataType.Time] do
   begin
     LFailed := False;
     try
@@ -410,6 +518,7 @@ begin
     TestIndependentViews;
     TestRowMetrics;
     TestColumnLayout;
+    TestColumnWidths;
     TestValueConversion;
   except
     on E: Exception do

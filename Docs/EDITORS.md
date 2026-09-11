@@ -128,3 +128,12 @@ Die globalen Registrierungen sind nach Framework getrennt. Registrierung und Abm
 Im Designmodus wird keine Bearbeitung begonnen und kein Editor-Control gebaut. Der VCL-ThumbHint wird ebenfalls erst beim tatsächlichen Anzeigen erzeugt. Interne VCL-Controls werden beim Schreiben des Grids nicht als untergeordnete Design-Controls gespeichert; FMX verwendet weiterhin `Stored = False`.
 
 Die gemeinsamen VCL-/FMX-Regressionstests in `Build/TestGridEditing.inc` prüfen neben den bisherigen Bedienabläufen die Namensauflösung, Cache-Schlüssel, Versionen, Collection-Streaming, Custom-Control-Zugriff, grafische Bearbeitung und Lebenszyklus-Ereignisse. Die Testprogramme unterstützen `--named-editors` für die gezielte Ausführung dieser neuen Prüfungen.
+
+## Breitenmessung
+
+`MeasureWidth` berechnet die benötigte Zellbreite ohne Aktivierung oder Änderung
+des Editors. Native Text-, Checkbox- und Bildeditoren implementieren
+`MeasureContentWidth`; eigene Editoren können diese virtuelle Methode oder
+`OnMeasureWidth` verwenden. `Th5uEditorContext` enthält dabei Anzeigetext, Wert,
+Zeile, Spalte und Canvas. Details und Grid-Beispiele:
+[Spaltenbreiten](COLUMN-WIDTHS.md).

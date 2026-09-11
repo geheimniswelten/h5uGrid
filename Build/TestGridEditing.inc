@@ -3819,6 +3819,123 @@ begin
 end;
 
 
+type
+  TWidthProbe = class
+    Calls: Integer;
+    procedure Measure(Sender: TObject; const AContext: Th5uEditorContext; var AWidth: Double);
+  end;
+
+procedure TWidthProbe.Measure(Sender: TObject; const AContext: Th5uEditorContext; var AWidth: Double);
+begin
+  Inc(Calls);
+  Check(Assigned(AContext.Canvas) and Assigned(AContext.Grid), 'measurement context lacks canvas or grid');
+  Check(AContext.Text <> '', 'measurement context lacks formatted display text');
+  AWidth := 170 + AContext.RowIndex * 10;
+end;
+
+procedure TestColumnSizing;
+var
+  T: TFixture;
+  C: Th5uGridColumn;
+  P: TWidthProbe;
+  E, Active: Th5uGridEditorItem;
+  Original, Measured, Total, I: Integer;
+  G, H: TGridAccess;
+  Stream: TMemoryStream;
+begin
+  T := TFixture.Create(Th5uCacheMode.None);
+  P := TWidthProbe.Create;
+  try
+    C := T.Grid.Columns[1];
+    Original := C.Width;
+    Measured := T.Grid.MeasureColumnWidth(C);
+    Check((Measured > C.MinWidth) and (Measured < Original), 'native text measurement');
+    Check(T.Grid.MeasureColumnWidth(T.Grid.Columns[0]) = 25, 'checkbox measurement uses glyph size');
+    T.Grid.ClickAt(T.CellPoint('DESCRIPTION'), True);
+    Active := T.Grid.ActiveEditor;
+    T.Editor.Text := 'Uncommitted measurement draft';
+    T.Grid.MeasureColumnWidth(C);
+    Check((T.Grid.ActiveEditor = Active) and (T.Editor.Text = 'Uncommitted measurement draft'), 'measurement changed active editor');
+    T.EditorKey(vkEscape);
+    E := T.Grid.Editors.AddVariant('MeasuredText', 'TextEditor');
+    E.OnMeasureWidth := P.Measure;
+    C.Editor := E.EditorName;
+    C.AutoWidth := True;
+    T.Grid.AutoWidthRowLimit := 1;
+    T.PaintGrid;
+    Check((C.LayoutWidth = 170) and (C.Width = Original), 'automatic measurement limit or stored pixel width');
+    T.Grid.AutoWidthRowLimit := 0;
+    T.PaintGrid;
+    Check(C.LayoutWidth = 190, 'automatic measurement of all rows');
+    T.PaintGrid;
+    P.Calls := 0;
+    T.PaintGrid;
+    Check(P.Calls = 0, 'unchanged paint remeasured all content');
+    T.Controller.SetValue(0, 'DESCRIPTION', TValue.From<string>('A changed display value'));
+    T.PaintGrid;
+    Check(P.Calls > 0, 'data changes did not invalidate measured width');
+    C.MaxWidth := 180;
+    T.PaintGrid;
+    Check(C.LayoutWidth = 180, 'auto width ignored column maximum');
+    T.Grid.AutoSizeColumn(C, 0, 1);
+    Check((C.Width = 170) and not C.AutoWidth and (C.WidthInPercent = 0), 'one-shot auto sizing');
+    T.Grid.Columns[0].Width := 80;
+    C.Width := 170;
+    T.Grid.Columns[2].WidthInPercent := 100;
+    T.Grid.MaxWidth := 450;
+    T.PaintGrid;
+    Total := 0;
+    for I := 0 to 2 do Inc(Total, T.Grid.Columns[I].LayoutWidth + T.Grid.Spacing.DefaultColumnRightSpacing);
+    Check(Total = 450, 'native grid maximum content width');
+    T.Grid.MaxWidth := 0;
+    T.Grid.MinWidth := 650;
+    T.PaintGrid;
+    Total := 0;
+    for I := 0 to 2 do Inc(Total, T.Grid.Columns[I].LayoutWidth + T.Grid.Spacing.DefaultColumnRightSpacing);
+    Check(Total = 650, 'native grid minimum content width');
+    Check(Round(T.Grid.Width) = 600, 'content limits changed control width');
+    T.Grid.MinWidth := 0;
+    T.Grid.Height := 80;
+    T.PaintGrid;
+    Check(T.Grid.HeaderBounds(2).Right < Round(T.Grid.Width) - 5, 'percentage layout did not reserve vertical scrollbar');
+    T.Grid.Height := 220;
+    T.PaintGrid;
+    Check(T.Grid.HeaderBounds(2).Right >= Round(T.Grid.Width) - 4, 'percentage layout retained obsolete scrollbar space');
+    G := TGridAccess.Create(nil);
+    Stream := TMemoryStream.Create;
+    try
+      G.Parent := T.Form;
+      G.Name := 'SizingGrid';
+      G.MinWidth := 320; G.MaxWidth := 650; G.AutoWidthRowLimit := 2;
+      G.Columns.Add.AutoWidth := True;
+      G.Columns.Add.WidthInPercent := 65;
+      with G.HeaderLayout.Cells.Add do
+      begin
+        Width := 300; MinWidth := 200; MaxWidth := 400; WidthInPercent := 80; ColumnSpan := 2;
+      end;
+      G.HeaderLayout.Enabled := True;
+      Stream.WriteComponent(G);
+      Stream.Position := 0;
+      H := TGridAccess.Create(nil);
+      try
+        H.Parent := T.Form;
+        Stream.ReadComponent(H);
+        Check((H.MinWidth = 320) and (H.MaxWidth = 650) and (H.AutoWidthRowLimit = 2), 'grid width properties did not stream');
+        Check(H.Columns[0].AutoWidth and (H.Columns[1].WidthInPercent = 65), 'column width modes did not stream');
+        Check((H.HeaderLayout.Cells[0].Width = 300) and (H.HeaderLayout.Cells[0].WidthInPercent = 80), 'group budget did not stream');
+        Check((H.HeaderLayout.Cells[0].MinWidth = 200) and (H.HeaderLayout.Cells[0].MaxWidth = 400), 'group limits did not stream');
+      finally H.Free; end;
+    finally
+      Stream.Free;
+      G.Free;
+    end;
+    Writeln('PASS: native AutoWidth, editor measurement, limits, invalidation, active draft, scrollbars and sizing streaming');
+  finally
+    T.Free;
+    P.Free;
+  end;
+end;
+
 procedure TestEditorDetails(AMode: Th5uCacheMode);
 var
   T: TFixture;
@@ -3865,6 +3982,18 @@ begin
   LExceptionSink := TExceptionSink.Create;
   Application.OnException := LExceptionSink.HandleException;
   LFailures := 0;
+  if ParamStr(1) = '--column-widths' then
+  begin
+    try
+      TestColumnSizing;
+    except
+      on E: Exception do begin Writeln('FAIL: column sizing: ', E.ClassName, ': ', E.Message); ExitCode := 1; end;
+    end;
+    if LExceptionSink.Count > 0 then ExitCode := 1;
+    Application.OnException := nil;
+    LExceptionSink.Free;
+    Halt(ExitCode);
+  end;
   if ParamStr(1) = '--named-editors' then
   begin
     try
@@ -3904,6 +4033,7 @@ begin
 {$IFDEF TEST_FMX}
     TestMobileInputAndEditors;
 {$ENDIF}
+    TestColumnSizing;
     TestColumnMovingStreaming;
     TestRightClickSelection;
     TestGroupedHeaderMoving;

@@ -80,6 +80,8 @@ type
   end;
 
   Th5uFmxTextEditor = class(Th5uFmxCustomEditor)
+  protected
+    function MeasureContentWidth(const AContext: Th5uEditorContext): Double; override;
   public
     function DrawDisplay(const AContext: Th5uEditorContext): Boolean; override;
   end;
@@ -123,6 +125,8 @@ type
   end;
 
   Th5uFmxCheckBoxEditor = class(Th5uFmxCustomEditor)
+  protected
+    function MeasureContentWidth(const AContext: Th5uEditorContext): Double; override;
   public
     constructor Create(Collection: TCollection); override;
     procedure Activate; override;
@@ -131,6 +135,8 @@ type
   end;
 
   Th5uFmxImageCellEditor = class(Th5uFmxCustomEditor)
+  protected
+    function MeasureContentWidth(const AContext: Th5uEditorContext): Double; override;
   private
     procedure ImageCommit(Sender: TObject);
     procedure ImageCancel(Sender: TObject);
@@ -184,7 +190,6 @@ implementation
 
 type
   TControlAccess = class(TControl);
-
   TEditAccess = class(TEdit);
 
 constructor Th5uFmxGridEditors.Create(AOwner: TPersistent);
@@ -667,6 +672,50 @@ begin
   RequestCancel;
 end;
 
+function Th5uFmxTextEditor.MeasureContentWidth(const AContext: Th5uEditorContext): Double;
+var
+  LLine: string;
+begin
+  if not (AContext.Canvas is TCanvas) then
+    Exit(-1);
+  Result := 0;
+  for LLine in AContext.Text.Replace(#13, '').Split([#10]) do
+    Result := Max(Result, TCanvas(AContext.Canvas).TextWidth(LLine));
+  Result := Ceil(Result) + 10;
+end;
+
+function Th5uFmxCheckBoxEditor.MeasureContentWidth(const AContext: Th5uEditorContext): Double;
+begin
+  Result := 25;
+end;
+
+function Th5uFmxImageCellEditor.MeasureContentWidth(const AContext: Th5uEditorContext): Double;
+var
+  B: TBitmap;
+  S: TBytesStream;
+begin
+  Result := 8;
+  if AContext.Image is TBitmap then
+    Exit(TBitmap(AContext.Image).Width + 8);
+  if not AContext.Value.IsType<TBytes> then
+    Exit;
+  if Length(AContext.Value.AsType<TBytes>) = 0 then
+    Exit;
+  B := TBitmap.Create;
+  S := TBytesStream.Create(AContext.Value.AsType<TBytes>);
+  try
+    try
+      B.LoadFromStream(S);
+      Result := B.Width + 8;
+    except
+      Result := 8;
+    end;
+  finally
+    S.Free;
+    B.Free;
+  end;
+end;
+
 function Th5uFmxTextEditor.DrawDisplay(const AContext: Th5uEditorContext): Boolean;
 var
   ACanvas: TCanvas;
@@ -753,8 +802,8 @@ begin
       LScale := Min(LDest.Width / FBitmap.Width, LDest.Height / FBitmap.Height);
       LWidth := FBitmap.Width * LScale;
       LHeight := FBitmap.Height * LScale;
-      LDest := RectF(LDest.Left + (LDest.Width - LWidth) / 2, LDest.Top + (LDest.Height - LHeight) / 2,
-        LDest.Left + (LDest.Width - LWidth) / 2 + LWidth, LDest.Top + (LDest.Height - LHeight) / 2 + LHeight);
+      LDest := RectF(LDest.Left + (LDest.Width - LWidth) / 2, LDest.Top + (LDest.Height - LHeight) / 2, LDest.Left + (LDest.Width - LWidth) / 2
+        + LWidth, LDest.Top + (LDest.Height - LHeight) / 2 + LHeight);
     end;
     ACanvas.DrawBitmap(FBitmap, RectF(0, 0, FBitmap.Width, FBitmap.Height), LDest, 1, True);
   end;
@@ -794,6 +843,7 @@ begin
   SetAdjustType(TAdjustType.None);
   BoundsRect := LBounds;
 end;
+
 function Th5uCellTimeEdit.GetAdjustType: TAdjustType;
 begin
   Result := TAdjustType.None;
@@ -809,6 +859,7 @@ begin
   SetAdjustType(TAdjustType.None);
   BoundsRect := LBounds;
 end;
+
 function Th5uCellTextEdit.GetAdjustType: TAdjustType;
 begin
   Result := TAdjustType.None;
