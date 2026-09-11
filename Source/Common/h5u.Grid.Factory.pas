@@ -18,13 +18,9 @@ type
   Th5uAnyObjectClass = class of TObject;
 
   Th5uClassRulePredicate = reference to function(const AContext: Th5uFactoryContext): Boolean;
-
   Th5uGetClassEvent = procedure(Sender: TObject; const AContext: Th5uFactoryContext; var AClass: TClass; var ACacheScope: Th5uFactoryCacheScope) of object;
-
   Th5uCreateInstanceEvent = procedure(Sender: TObject; const AContext: Th5uFactoryContext; AInstanceClass: TClass; var AInstance: TObject; var AHandled: Boolean) of object;
-
   Th5uConfigureInstanceEvent = procedure(Sender: TObject; const AContext: Th5uFactoryContext; AInstance: TObject) of object;
-
   Th5uInstanceEvent = procedure(Sender: TObject; const AContext: Th5uFactoryContext; AInstance: TObject) of object;
 
   Th5uFactoryObject = class(TObject)

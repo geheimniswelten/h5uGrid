@@ -4,6 +4,12 @@ interface
 
 {$SCOPEDENUMS ON}
 
+{$IF Defined(ANDROID) or Defined(IOS)}
+  {$DEFINE MOBILE}
+{$ELSE}
+  {$UNDEF MOBILE}
+{$ENDIF}
+
 uses
   System.Math,
   System.Classes,
@@ -15,8 +21,8 @@ uses
 type
   Th5uOptionsChangedEvent = procedure(Sender: TObject) of object;
 
-  // Spacing is layout geometry. A value of 1 produces the default one-pixel
-  // separator; 0 disables the corresponding separator completely.
+  // Spacing is layout geometry. A value of 1 produces the default one-pixel separator.
+  // 0 disables the corresponding separator completely.
   Th5uGridSpacingOptions = class(TPersistent)
   private
     FLeft: Integer;
@@ -123,7 +129,7 @@ type
   end;
 
   // Optional separator after one contiguous run of equal IDs. It replaces
-  // the normal RowSpacing at that boundary; it is never added to it.
+  // the normal RowSpacing at that boundary. it is never added to it.
   Th5uAdjacentGroupEndBandOptions = class(TPersistent)
   private
     FVisibility: Th5uAdjacentGroupEndBandVisibility;
@@ -238,6 +244,8 @@ type
   end;
 
   Th5uScrollHintOptions = class(TPersistent)
+  private const
+    cDefaultTriggers = [Th5uScrollHintTrigger.ThumbTracking {.$IFnDEF MOBILE}, Th5uScrollHintTrigger.MouseWheel{.$ENDIF}];
   private
     FEnabled: Boolean;
     FTriggers: Th5uScrollHintTriggers;
@@ -251,7 +259,7 @@ type
     property OnChanged: Th5uOptionsChangedEvent read FOnChanged write FOnChanged;
   published
     property Enabled: Boolean read FEnabled write FEnabled default True;
-    property Triggers: Th5uScrollHintTriggers read FTriggers write FTriggers;
+    property Triggers: Th5uScrollHintTriggers read FTriggers write FTriggers default cDefaultTriggers;
     property VerticalColumnId: string read FVerticalColumnId write FVerticalColumnId;
     property ShowRowPosition: Boolean read FShowRowPosition write FShowRowPosition default True;
     property UseHeaderPath: Boolean read FUseHeaderPath write FUseHeaderPath default True;
@@ -321,8 +329,11 @@ type
   published
     property StripePeriod: Integer read FStripePeriod write FStripePeriod default 2;
     property StripeOffset: Integer read FStripeOffset write FStripeOffset default 1;
+    [Default('Stripe')]
     property StripeStyleName: string read FStripeStyleName write FStripeStyleName;
+    [Default('Odd')]
     property OddStyleName: string read FOddStyleName write FOddStyleName;
+    [Default('Even')]
     property EvenStyleName: string read FEvenStyleName write FEvenStyleName;
     property StyleKeyColumnId: string read FStyleKeyColumnId write FStyleKeyColumnId;
     property Mappings: Th5uRowStyleMappings read FMappings write SetMappings;
@@ -989,7 +1000,7 @@ constructor Th5uScrollHintOptions.Create;
 begin
   inherited;
   FEnabled := True;
-  FTriggers := [Th5uScrollHintTrigger.ThumbTracking];
+  FTriggers := cDefaultTriggers;
   FShowRowPosition := True;
   FUseHeaderPath := True;
 end;

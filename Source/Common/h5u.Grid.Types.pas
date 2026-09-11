@@ -73,83 +73,19 @@ type
   // Notification of a requested drop: the handler must update the data/order.
   Th5uRowsMovedEvent = procedure(Sender: TObject; const AContext: Th5uRowsMovedContext) of object;
 
-  Th5uElementKind = (
-    Grid,
-    View,
-    VisibleRow,
-    VisibleColumn,
-    DataCell,
-    ColumnHeaderCell,
-    ColumnHeaderGroupCell,
-    RowHeaderCell,
-    DataGroupHeaderCell,
-    FixedCell,
-    CornerCell,
-    FilterCell,
-    FooterCell,
-    Editor,
-    ThumbHint,
-    RowSpacing,
-    ColumnSpacing,
-    ContentPadding,
-    TreeBranchEndBand,
-    AdjacentGroupFoldGlyph,
-    AdjacentGroupEndBand,
-    DetailView,
-    DataSession,
-    DataCache,
-    DataPage
-  );
+  Th5uElementKind = (Grid, View, VisibleRow, VisibleColumn, DataCell, ColumnHeaderCell, ColumnHeaderGroupCell, RowHeaderCell, DataGroupHeaderCell,
+    FixedCell, CornerCell, FilterCell, FooterCell, Editor, ThumbHint, RowSpacing, ColumnSpacing, ContentPadding, TreeBranchEndBand,
+    AdjacentGroupFoldGlyph, AdjacentGroupEndBand, DetailView, DataSession, DataCache, DataPage);
 
   Th5uElementPaintPart = (Background, Text, Glyph, Border, ColumnMode);
 
-  Th5uElementFlag = (
-    FixedRow,
-    FixedColumn,
-    Frozen,
-    Header,
-    Footer,
-    Corner,
-    Selected,
-    Focused,
-    Hot,
-    Editing,
-    Disabled,
-    ReadOnly,
-    OddRow,
-    EvenRow,
-    PatternRow,
-    TreeBranchEnd,
-    AdjacentGroupFirst,
-    AdjacentGroupLast,
-    AdjacentGroupCollapsed,
-    AdjacentGroupExpanded,
-    AdjacentGroupEnd
-  );
+  Th5uElementFlag = (FixedRow, FixedColumn, Frozen, Header, Footer, Corner, Selected, Focused, Hot, Editing, Disabled, ReadOnly, OddRow, EvenRow,
+    PatternRow, TreeBranchEnd, AdjacentGroupFirst, AdjacentGroupLast, AdjacentGroupCollapsed, AdjacentGroupExpanded, AdjacentGroupEnd);
   Th5uElementFlags = set of Th5uElementFlag;
 
-  Th5uCreationReason = (
-    Runtime,
-    Designer,
-    Streaming,
-    AutoGenerate,
-    Clone,
-    LayoutRestore,
-    DetailView,
-    ControllerInternal,
-    ViewportMaterialization
-  );
+  Th5uCreationReason = (Runtime, Designer, Streaming, AutoGenerate, Clone, LayoutRestore, DetailView, ControllerInternal, ViewportMaterialization);
 
-  Th5uFactoryCacheScope = (
-    None,
-    ClassId,
-    Grid,
-    View,
-    ElementKind,
-    Column,
-    HeaderCell,
-    RowStyleKey
-  );
+  Th5uFactoryCacheScope = (None, ClassId, Grid, View, ElementKind, Column, HeaderCell, RowStyleKey);
 
   Th5uFactoryContext = record
     Grid: TObject;
@@ -216,17 +152,8 @@ type
 
   Th5uGetTreeBranchEndEvent = procedure(Sender: TObject; const AContext: Th5uTreeBranchEndContext; var AIsBranchEnd: Boolean; var AClosedLevels: Integer) of object;
 
-  Th5uAdjacentGroupInitialState = (
-    Expanded,
-    Collapsed
-  );
-
-  Th5uAdjacentGroupEndBandVisibility = (
-    Never,
-    CollapsedOnly,
-    ExpandedOnly,
-    Always
-  );
+  Th5uAdjacentGroupInitialState = (Expanded, Collapsed);
+  Th5uAdjacentGroupEndBandVisibility = (Never, CollapsedOnly, ExpandedOnly, Always);
 
   Th5uAdjacentGroupIdContext = record
     Grid: TObject;
@@ -254,122 +181,39 @@ type
   Th5uRowMovingGesture = (AltDrag, Drag);
   Th5uColumnMovePermission = (Default, Allow, Deny);
 
-  Th5uGridTheme = (
-    ApplicationStyle,
-    Classic2000,
-    Modern,
-    Dark
-  );
+  Th5uGridTheme = (ApplicationStyle, Classic2000, Modern, Dark);
 
-  Th5uColumnDataType = (
-    Auto,
-    Text,
-    Integer,
-    Float,
-    Currency,
-    Date,
-    DateTime,
-    Boolean,
-    Image,
-    Time
-  );
+  Th5uColumnDataType = (Auto, Text, Integer, Float, Currency, Date, DateTime, Boolean, Image, Time);
 
-  Th5uColumnEditorKind = (
-    Automatic,
-    None,
-    Text,
-    Boolean,
-    Image,
-    Time,
-    Date,
-    DateTime
-  );
+  Th5uColumnEditorKind = (Automatic, None, Text, Boolean, Image, Time, Date, DateTime);
 
-  Th5uFixedKind = (
-    None,
-    Left,
-    Right
-  );
+  Th5uFixedKind = (None, Left, Right);
 
-  Th5uRowHeightMode = (
-    Fixed,
-    Automatic
-  );
+  Th5uRowHeightMode = (Fixed, Automatic);
 
-  Th5uAutoHeightMeasureScope = (
-    VisibleViewportColumns,
-    AllVisibleColumns,
-    ExplicitContributorColumns
-  );
+  Th5uAutoHeightMeasureScope = (VisibleViewportColumns, AllVisibleColumns, ExplicitContributorColumns);
 
-  Th5uVerticalScrollMode = (
-    Pixel,
-    WholeRows,
-    PixelSnap
-  );
+  Th5uVerticalScrollMode = (Pixel, WholeRows, PixelSnap);
 
-  Th5uHorizontalScrollMode = (
-    Pixel,
-    WholeColumns,
-    PixelSnap
-  );
+  Th5uHorizontalScrollMode = (Pixel, WholeColumns, PixelSnap);
 
-  Th5uScrollAxis = (
-    Horizontal,
-    Vertical
-  );
+  Th5uScrollAxis = (Horizontal, Vertical);
 
-  Th5uScrollHintTrigger = (
-    ThumbTracking,
-    MouseWheel,
-    Keyboard,
-    Touch,
-    Kinetic
-  );
+  Th5uScrollHintTrigger = (ThumbTracking, MouseWheel, Keyboard, Touch, Kinetic);
   Th5uScrollHintTriggers = set of Th5uScrollHintTrigger;
 
-  Th5uCacheMode = (
-    None,
-    Viewport,
-    Paged,
-    All,
-    Adaptive
-  );
+  Th5uCacheMode = (None, Viewport, Paged, All, Adaptive);
 
-  Th5uPaginationMode = (
-    Continuous,
-    NumberedPages,
-    Cursor
-  );
+  Th5uPaginationMode = (Continuous, NumberedPages, Cursor);
 
-  Th5uSelectionKind = (
-    Rows,
-    Columns,
-    CellRanges
-  );
+  Th5uSelectionKind = (Rows, Columns, CellRanges);
   Th5uSelectionKinds = set of Th5uSelectionKind;
 
-  Th5uSelectionCombinationMode = (
-    Exclusive,
-    Mixed
-  );
+  Th5uSelectionCombinationMode = (Exclusive, Mixed);
 
-  Th5uSelectionScope = (
-    CurrentPage,
-    VisibleRows,
-    CurrentQuery,
-    EntireSource
-  );
+  Th5uSelectionScope = (CurrentPage, VisibleRows, CurrentQuery, EntireSource);
 
-  Th5uDataChangeKind = (
-    Reset,
-    LayoutChanged,
-    RowsInserted,
-    RowsDeleted,
-    RowsChanged,
-    CellChanged,
-    PageChanged
-  );
+  Th5uDataChangeKind = (Reset, LayoutChanged, RowsInserted, RowsDeleted, RowsChanged, CellChanged, PageChanged);
 
   Th5uDataChange = record
     Kind: Th5uDataChangeKind;
@@ -412,7 +256,6 @@ type
     StyleName: string;
     procedure Clear;
   end;
-
 
 implementation
 
@@ -497,8 +340,8 @@ var
 begin
   LRange := Self;
   LRange.Normalize;
-  Result := (ARowIndex >= LRange.StartRowIndex) and (ARowIndex <= LRange.EndRowIndex) and (AColumnIndex >= LRange.StartColumnIndex) and (AColumnIndex
-    <= LRange.EndColumnIndex);
+  Result := (ARowIndex >= LRange.StartRowIndex) and (ARowIndex <= LRange.EndRowIndex)
+    and (AColumnIndex >= LRange.StartColumnIndex) and (AColumnIndex <= LRange.EndColumnIndex);
 end;
 
 class function Th5uCellRange.Create(AStartRow, AEndRow: Int64; AStartColumn, AEndColumn: Integer): Th5uCellRange;

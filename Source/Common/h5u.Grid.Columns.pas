@@ -788,12 +788,19 @@ begin
     Exit;
   end;
   S := Th5uHeaderLayoutCell(Source);
-  FId := S.FId; FCaption := S.FCaption; FColumnId := S.FColumnId;
-  FLayoutRow := S.FLayoutRow; FLayoutColumn := S.FLayoutColumn;
-  FRowSpan := S.FRowSpan; FColumnSpan := S.FColumnSpan;
-  FWidth := S.FWidth; FMinWidth := S.FMinWidth; FMaxWidth := S.FMaxWidth;
+  FId := S.FId;
+  FCaption := S.FCaption;
+  FColumnId := S.FColumnId;
+  FLayoutRow := S.FLayoutRow;
+  FLayoutColumn := S.FLayoutColumn;
+  FRowSpan := S.FRowSpan;
+  FColumnSpan := S.FColumnSpan;
+  FWidth := S.FWidth;
+  FMinWidth := S.FMinWidth;
+  FMaxWidth := S.FMaxWidth;
   FWidthInPercent := S.FWidthInPercent;
-  FStyleName := S.FStyleName; FClassId := S.FClassId;
+  FStyleName := S.FStyleName;
+  FClassId := S.FClassId;
   Changed(False);
 end;
 
@@ -944,7 +951,7 @@ begin
   if not Assigned(ACell) then
     Exit(False);
   // ColumnId binds a leaf to its data column. A group inherits the bindings of
-  // its descendants; LayoutColumn remains their logical position in the definition.
+  // its descendants. LayoutColumn remains their logical position in the definition.
   // Consequently reordering and hiding a column cannot detach its caption/group.
   if UsesColumnBindings(ACell) then
   begin

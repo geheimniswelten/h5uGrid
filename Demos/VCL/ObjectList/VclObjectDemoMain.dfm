@@ -77,6 +77,7 @@ object VclObjectDemoForm: TVclObjectDemoForm
     TabOrder = 1
     TabStop = True
     DataController = ObjectController
+    Editors = <>
     Columns = <
       item
         Id = 'id'
@@ -87,9 +88,6 @@ object VclObjectDemoForm: TVclObjectDemoForm
         FixedKind = Left
         ReadOnly = True
         DataType = Integer
-        ClassId = 'h5u.grid.column.default'
-        CellClassId = 'h5u.grid.visual.cell.data'
-        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end
       item
         Id = 'name'
@@ -98,9 +96,6 @@ object VclObjectDemoForm: TVclObjectDemoForm
         Width = 150
         VisibleIndex = 1
         DataType = Text
-        ClassId = 'h5u.grid.column.default'
-        CellClassId = 'h5u.grid.visual.cell.data'
-        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end
       item
         Id = 'department'
@@ -109,9 +104,6 @@ object VclObjectDemoForm: TVclObjectDemoForm
         Width = 120
         VisibleIndex = 2
         DataType = Text
-        ClassId = 'h5u.grid.column.default'
-        CellClassId = 'h5u.grid.visual.cell.data'
-        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end
       item
         Id = 'notes'
@@ -124,9 +116,6 @@ object VclObjectDemoForm: TVclObjectDemoForm
         AutoHeight = True
         MaxAutoHeight = 95
         MaxLines = 4
-        ClassId = 'h5u.grid.column.default'
-        CellClassId = 'h5u.grid.visual.cell.data'
-        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end
       item
         Id = 'amount'
@@ -137,9 +126,6 @@ object VclObjectDemoForm: TVclObjectDemoForm
         DataType = Currency
         DisplayFormat = '#,##0.00'
         Highlighted = True
-        ClassId = 'h5u.grid.column.default'
-        CellClassId = 'h5u.grid.visual.cell.data'
-        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end
       item
         Id = 'active'
@@ -149,9 +135,6 @@ object VclObjectDemoForm: TVclObjectDemoForm
         VisibleIndex = 5
         DataType = Boolean
         EditorKind = Boolean
-        ClassId = 'h5u.grid.column.default'
-        CellClassId = 'h5u.grid.visual.cell.data'
-        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end
       item
         Id = 'priority'
@@ -160,9 +143,6 @@ object VclObjectDemoForm: TVclObjectDemoForm
         Width = 80
         VisibleIndex = 6
         DataType = Integer
-        ClassId = 'h5u.grid.column.default'
-        CellClassId = 'h5u.grid.visual.cell.data'
-        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end
       item
         Id = 'updated'
@@ -172,23 +152,13 @@ object VclObjectDemoForm: TVclObjectDemoForm
         VisibleIndex = 7
         DataType = DateTime
         DisplayFormat = 'dd.mm.yyyy hh:nn:ss'
-        ClassId = 'h5u.grid.column.default'
-        CellClassId = 'h5u.grid.visual.cell.data'
-        HeaderCellClassId = 'h5u.grid.visual.cell.header'
       end>
     HeaderLayout.Cells = <>
     Selection.AllowedKinds = [Rows, Columns, CellRanges]
     RowHeight.Mode = Automatic
-    RowHeight.MinHeight = 24
-    RowHeight.MaxHeight = 110
-    RowHeight.EstimatedHeight = 28
-    ScrollHints.Triggers = [ThumbTracking]
     ScrollHints.VerticalColumnId = 'name'
     RowStyles.StripePeriod = 3
     RowStyles.StripeOffset = 3
-    RowStyles.StripeStyleName = 'Stripe'
-    RowStyles.OddStyleName = 'Odd'
-    RowStyles.EvenStyleName = 'Even'
     RowStyles.StyleKeyColumnId = 'priority'
     RowStyles.Mappings = <
       item

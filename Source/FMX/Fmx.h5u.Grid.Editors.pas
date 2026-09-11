@@ -365,11 +365,12 @@ begin
     TEdit(Control).StyledSettings := TEdit(Control).StyledSettings - [TStyledSetting.FontColor];
   if Control is TCustomEdit then
     TEditAccess(Control).OnChange := ControlChanged;
-  // Use RTTI for published OnChange on arbitrary controls; never assume TEdit layout.
+  // Use RTTI for published OnChange on arbitrary controls. Never assume TEdit layout.
   P := GetPropInfo(Control.ClassInfo, 'OnChange');
   if Assigned(P) and (P.PropType^.Kind = tkMethod) then
   begin
-    N := ControlChanged; M := TMethod(N);
+    N := ControlChanged;
+    M := TMethod(N);
     if P.PropType^ = TypeInfo(TNotifyEvent) then
       SetMethodProp(Control, P, M);
   end;
@@ -720,7 +721,8 @@ function Th5uFmxTextEditor.DrawDisplay(const AContext: Th5uEditorContext): Boole
 var
   ACanvas: TCanvas;
   LColumn: Th5uGridColumn;
-  LTextRect: TRectF; LAlign: TTextAlign;
+  LTextRect: TRectF;
+  LAlign: TTextAlign;
 begin
   Result := inherited;
   if Result then
@@ -744,7 +746,8 @@ end;
 function Th5uFmxCheckBoxEditor.DrawDisplay(const AContext: Th5uEditorContext): Boolean;
 var
   ACanvas: TCanvas;
-  LCheckRect: TRectF; LChecked: Boolean;
+  LCheckRect: TRectF;
+  LChecked: Boolean;
 begin
   Result := inherited;
   if Result then
@@ -785,7 +788,9 @@ function Th5uFmxImageCellEditor.DrawDisplay(const AContext: Th5uEditorContext): 
 var
   ACanvas: TCanvas;
   LColumn: Th5uGridColumn;
-  LDest: TRectF; LScale, LWidth, LHeight: Single; FBitmap: TBitmap;
+  LDest: TRectF;
+  LScale, LWidth, LHeight: Single;
+  FBitmap: TBitmap;
 begin
   Result := inherited;
   if Result then

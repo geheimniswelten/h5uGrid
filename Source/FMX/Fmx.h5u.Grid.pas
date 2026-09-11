@@ -4,6 +4,12 @@ interface
 
 {$SCOPEDENUMS ON}
 
+{$IF Defined(ANDROID) or Defined(IOS)}
+  {$DEFINE MOBILE}
+{$ELSE}
+  {$UNDEF MOBILE}
+{$ENDIF}
+
 uses
   System.StrUtils,
   System.TypInfo,
@@ -27,7 +33,6 @@ uses
   h5u.Grid.AdjacentGroups,
   h5u.Grid.Values,
   h5u.Grid.Editors,
-  Fmx.h5u.Grid.Editors,
   h5u.Grid.Moving,
   h5u.Grid.Resizing,
   h5u.Grid.Navigation,
@@ -40,10 +45,11 @@ uses
   h5u.Grid.Options,
   h5u.Grid.Selection,
   h5u.Grid.Types,
-  Fmx.h5u.Grid.Styles;
+  Fmx.h5u.Grid.Styles,
+  Fmx.h5u.Grid.Editors;
 
 type
-  // Keep source compatibility; implementations live in the editor unit.
+  // Keep source compatibility. implementations live in the editor unit.
   Th5uCellDateEdit = Fmx.h5u.Grid.Editors.Th5uCellDateEdit;
   Th5uCellTimeEdit = Fmx.h5u.Grid.Editors.Th5uCellTimeEdit;
   Th5uCellTextEdit = Fmx.h5u.Grid.Editors.Th5uCellTextEdit;
@@ -66,7 +72,6 @@ type
   end;
 
   Th5uFmxGetRowHeightEvent = procedure(Sender: TObject; const AContext: Th5uFmxGetRowHeightContext; var AHeight: Single; var ACacheResult: Boolean) of object;
-
   Th5uFmxGetRowSpacingEvent = procedure(Sender: TObject; const AContext: Th5uFmxGetRowHeightContext; var ASpacing: Single) of object;
 
   Th5uFmxThumbHintContext = record
@@ -90,9 +95,7 @@ type
   end;
 
   Th5uFmxAfterDrawEvent = procedure(Sender: TObject; ACanvas: TCanvas) of object;
-
   Th5uFmxPrepareElementEvent = procedure(Sender: TObject; Control: TObject; ACanvas: TCanvas; const AContext: Th5uFmxDrawContext; APart: Th5uElementPaintPart) of object;
-
   Th5uFmxCustomDrawEvent = procedure(Sender: TObject; ACanvas: TCanvas; const AContext: Th5uFmxDrawContext; AStage: Th5uFmxCustomDrawStage; var ADrawDefault: Boolean) of object;
 
   Th5uFmxVisibleColumnInfo = record
@@ -396,8 +399,8 @@ type
     procedure PopulateAdjacentGroupContext(var AContext: Th5uFactoryContext; AViewRowIndex: Int64);
     procedure DoAdjacentGroupStateChanged(const AInfo: Th5uAdjacentGroupRowInfo);
     function GetRowSpacingFor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey): Single;
-    function GetEffectiveRowSeparatorFor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey; out AElementKind: Th5uElementKind; out AColor: TAlphaColor; out AStyleName: string;
-      out ATreeLevel: Integer; out AClosedTreeLevels: Integer): Single;
+    function GetEffectiveRowSeparatorFor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey; out AElementKind: Th5uElementKind;
+      out AColor: TAlphaColor; out AStyleName: string; out ATreeLevel: Integer; out AClosedTreeLevels: Integer): Single;
     function GetGridLines: Boolean;
     function ResolveColor(const AColor: TColor; AFallback: TAlphaColor): TAlphaColor;
     function ResolveDefaultCellColor: TAlphaColor;
@@ -419,8 +422,8 @@ type
     procedure DrawHeaders;
     procedure DrawColumnMoveFeedback;
     procedure DrawRows;
-    procedure DrawSpacingRect(const ABounds: TRectF; AElementKind: Th5uElementKind; AColumn: Th5uGridColumn; AViewRowIndex: Int64; const ARowKey: Th5uRowKey; AColor: TAlphaColor;
-      const AStyleName: string = ''; ATreeLevel: Integer = -1; AClosedTreeLevels: Integer = 0);
+    procedure DrawSpacingRect(const ABounds: TRectF; AElementKind: Th5uElementKind; AColumn: Th5uGridColumn; AViewRowIndex: Int64;
+      const ARowKey: Th5uRowKey; AColor: TAlphaColor; const AStyleName: string = ''; ATreeLevel: Integer = -1; AClosedTreeLevels: Integer = 0);
     function GetAdjacentGroupGlyphRect(const ARowInfo: Th5uFmxVisibleRowInfo): TRectF;
     procedure DrawAdjacentGroupGlyph(const ARowInfo: Th5uFmxVisibleRowInfo; ASelected: Boolean);
     function GetRowHeightFor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey; AAllowMeasure: Boolean = True): Single;
@@ -607,8 +610,7 @@ end;
 
 { Th5uFmxVisualCell }
 
-procedure Th5uFmxVisualCell.BindCell(const AContext: Th5uFactoryContext; const ABounds: TRectF; const AValue: TValue; const ADisplayText: string;
-  const AAppearance: Th5uResolvedAppearance);
+procedure Th5uFmxVisualCell.BindCell(const AContext: Th5uFactoryContext; const ABounds: TRectF; const AValue: TValue; const ADisplayText: string; const AAppearance: Th5uResolvedAppearance);
 begin
   FContext := AContext;
   FBounds := ABounds;
@@ -856,7 +858,8 @@ begin
   if Appearance.HasBackground then
     LEditorContext.Background := h5uColorToFmx(Appearance.Background);
   if LEditor is Th5uFmxImageCellEditor then
-    EnsureBitmap; LEditorContext.Image := FBitmap;
+    EnsureBitmap;
+  LEditorContext.Image := FBitmap;
   LEditorContext.PreparePaint :=
     procedure(APart: Th5uElementPaintPart)
     begin
@@ -1083,8 +1086,8 @@ var
   LCount: Int64;
 begin
   LFont := FloatToStr(FTextSize);
-  if LFont <> FAutoWidthFont 
-   FAutoWidthsDirty := True;
+  if LFont <> FAutoWidthFont then
+    FAutoWidthsDirty := True;
   if not FAutoWidthsDirty then
     Exit;
   // Clear before reading: asynchronous or reentrant data notifications must survive.
@@ -1524,12 +1527,12 @@ end;
 procedure Th5uFmxGrid.DataChanged(Sender: TObject; const AChange: Th5uDataChange);
 begin
   FAutoWidthsDirty := True;
-  // Unknown row changes may reorder positional keys; abandon the pending drop.
+  // Unknown row changes may reorder positional keys. Abandon the pending drop.
   if (Length(FMovingRowKeys) > 0) and (AChange.Kind <> Th5uDataChangeKind.CellChanged) then
     EndSelectionDrag;
   InvalidateAdjacentGroupMap(not FAdjacentGroupFolding.PreserveStateOnDataChange);
   // Live updates must not discard an in-progress draft. Cancel only when the
-  // target is no longer the same row; never commit into a replacement row.
+  // target is no longer the same row. Never commit into a replacement row.
   if not FCommittingEditor and Assigned(FEditColumn) then
     if not CanUpdateLayout or FEditRowKey.IsEmpty or (FEditRowIndex < 0) or (FEditRowIndex >= GetViewRowCount)
       or (GetViewRowKey(FEditRowIndex) <> FEditRowKey)
@@ -1998,8 +2001,8 @@ begin
   end;
 end;
 
-procedure Th5uFmxGrid.DrawSpacingRect(const ABounds: TRectF; AElementKind: Th5uElementKind; AColumn: Th5uGridColumn; AViewRowIndex: Int64; const ARowKey: Th5uRowKey;
-  AColor: TAlphaColor; const AStyleName: string; ATreeLevel: Integer; AClosedTreeLevels: Integer);
+procedure Th5uFmxGrid.DrawSpacingRect(const ABounds: TRectF; AElementKind: Th5uElementKind; AColumn: Th5uGridColumn; AViewRowIndex: Int64;
+  const ARowKey: Th5uRowKey; AColor: TAlphaColor; const AStyleName: string; ATreeLevel: Integer; AClosedTreeLevels: Integer);
 var
   LClassId: Th5uClassId;
   LFactoryContext: Th5uFactoryContext;
@@ -2287,8 +2290,8 @@ begin
   Result := EnsureRange(Result, 0.0, 1000.0);
 end;
 
-function Th5uFmxGrid.GetEffectiveRowSeparatorFor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey; out AElementKind: Th5uElementKind; out AColor: TAlphaColor;
-  out AStyleName: string; out ATreeLevel: Integer; out AClosedTreeLevels: Integer): Single;
+function Th5uFmxGrid.GetEffectiveRowSeparatorFor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey; out AElementKind: Th5uElementKind;
+  out AColor: TAlphaColor; out AStyleName: string; out ATreeLevel: Integer; out AClosedTreeLevels: Integer): Single;
 var
   LSeparator: Th5uRowSeparatorInfo;
 begin
@@ -2312,8 +2315,8 @@ function Th5uFmxGrid.GetGridLines: Boolean;
 begin
   // Explicit per-column RightSpacing values are intentionally independent
   // from this compatibility property.
-  Result := (FSpacing.Left > 0) or (FSpacing.Top > 0) or (FSpacing.Right > 0) or (FSpacing.Bottom > 0) or (FSpacing.RowSpacing > 0)
-    or (FSpacing.DefaultColumnRightSpacing > 0);
+  Result := (FSpacing.Left > 0) or (FSpacing.Top > 0) or (FSpacing.Right > 0) or (FSpacing.Bottom > 0)
+    or (FSpacing.RowSpacing > 0) or (FSpacing.DefaultColumnRightSpacing > 0);
 end;
 
 function Th5uFmxGrid.ResolveColor(const AColor: TColor; AFallback: TAlphaColor): TAlphaColor;
@@ -2542,7 +2545,7 @@ procedure Th5uFmxGrid.Loaded;
 begin
   inherited;
   LayoutScrollBars;
-  // Paint refreshes data-dependent layout; FormCreate may not have run yet.
+  // Paint refreshes data-dependent layout. FormCreate may not have run yet.
   Repaint;
 end;
 
@@ -3197,7 +3200,7 @@ begin
   if Assigned(FActiveEditor) and (FActiveEditor.Mode = Th5uEditorMode.Graphic) then
     FActiveEditor.MouseDown(Button, Shift, PointF(X, Y));
   EndSelectionDrag;
-  LTouch := not FDispatchingTouch and (Button = TMouseButton.mbLeft) and ((ssTouch in Shift) {$IF Defined(ANDROID) or Defined(IOS)}or True{$ENDIF});
+  LTouch := not FDispatchingTouch and (Button = TMouseButton.mbLeft) and ((ssTouch in Shift) {$IFDEF MOBILE}or True{$ENDIF});
   if not FDispatchingTouch then
   begin
     FHeaderInteraction := False;
@@ -3382,6 +3385,7 @@ begin
     end;
   FClickDownHit := Th5uFmxHitTestInfo.Empty;
 end;
+
 procedure Th5uFmxGrid.MouseMove(Shift: TShiftState; X, Y: Single);
 begin
   if Assigned(FActiveEditor) and (FActiveEditor.Mode = Th5uEditorMode.Graphic) then
@@ -4262,7 +4266,8 @@ begin
 end;
 
 function Th5uFmxGrid.CellEditorClick(AColumn: Th5uGridColumn; ARow: Int64): Boolean;
-var E: Th5uGridEditorItem;
+var
+  E: Th5uGridEditorItem;
 begin
   E := GetCellEditor(AColumn, ARow);
   Result := Assigned(E) and E.ActivateOnClick;

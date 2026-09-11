@@ -103,6 +103,7 @@ object VclVirtualDemoForm: TVclVirtualDemoForm
     TabOrder = 1
     TabStop = True
     DataController = VirtualController
+    Editors = <>
     Columns = <
       item
         Id = 'id'
@@ -166,16 +167,9 @@ object VclVirtualDemoForm: TVclVirtualDemoForm
     HeaderLayout.Cells = <>
     Selection.AllowedKinds = [Rows, Columns, CellRanges]
     RowHeight.Mode = Automatic
-    RowHeight.MinHeight = 24
-    RowHeight.MaxHeight = 110
-    RowHeight.EstimatedHeight = 28
-    ScrollHints.Triggers = [ThumbTracking]
     ScrollHints.VerticalColumnId = 'message'
     RowStyles.StripePeriod = 5
     RowStyles.StripeOffset = 5
-    RowStyles.StripeStyleName = 'Stripe'
-    RowStyles.OddStyleName = 'Odd'
-    RowStyles.EvenStyleName = 'Even'
     RowStyles.StyleKeyColumnId = 'severity'
     RowStyles.Mappings = <
       item

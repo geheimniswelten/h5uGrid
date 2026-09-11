@@ -429,32 +429,40 @@ begin
     Exit(TValue.Empty);
 
   case AField.DataType of
-    ftSmallint, ftInteger, ftWord, ftAutoInc, ftShortint, ftByte: Result := TValue.From<Integer>(AField.AsInteger);
+    ftSmallint, ftInteger, ftWord, ftAutoInc, ftShortint, ftByte:
+      Result := TValue.From<Integer>(AField.AsInteger);
 
-    ftLargeint: Result := TValue.From<Int64>(AField.AsLargeInt);
+    ftLargeint:
+      Result := TValue.From<Int64>(AField.AsLargeInt);
 
-    ftBoolean: Result := TValue.From<Boolean>(AField.AsBoolean);
+    ftBoolean:
+      Result := TValue.From<Boolean>(AField.AsBoolean);
 
-    ftFloat, ftSingle, ftExtended: Result := TValue.From<Double>(AField.AsFloat);
+    ftFloat, ftSingle, ftExtended:
+      Result := TValue.From<Double>(AField.AsFloat);
 
-    ftCurrency, ftBCD, ftFMTBcd: Result := TValue.From<Currency>(AField.AsCurrency);
+    ftCurrency, ftBCD, ftFMTBcd:
+      Result := TValue.From<Currency>(AField.AsCurrency);
 
-    ftDate, ftTime, ftDateTime, ftTimeStamp: Result := TValue.From<TDateTime>(AField.AsDateTime);
+    ftDate, ftTime, ftDateTime, ftTimeStamp:
+      Result := TValue.From<TDateTime>(AField.AsDateTime);
 
-    ftBlob, ftGraphic, ftOraBlob: begin LStream := TMemoryStream.Create;
-        try
-          TBlobField(AField).SaveToStream(LStream);
-          SetLength(LBytes, LStream.Size);
-          if LStream.Size > 0 then
-          begin
-            LStream.Position := 0;
-            LStream.ReadBuffer(LBytes[0], LStream.Size);
-          end;
-          Result := TValue.From<TBytes>(LBytes);
-        finally
-          LStream.Free;
+    ftBlob, ftGraphic, ftOraBlob:
+    begin
+      LStream := TMemoryStream.Create;
+      try
+        TBlobField(AField).SaveToStream(LStream);
+        SetLength(LBytes, LStream.Size);
+        if LStream.Size > 0 then
+        begin
+          LStream.Position := 0;
+          LStream.ReadBuffer(LBytes[0], LStream.Size);
         end;
+        Result := TValue.From<TBytes>(LBytes);
+      finally
+        LStream.Free;
       end;
+    end;
 
     else
       Result := TValue.From<string>(AField.AsString);

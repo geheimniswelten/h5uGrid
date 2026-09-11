@@ -99,7 +99,8 @@ begin
     if Result < 0 then
       Result := 0;
   end
-  else Result := FSelectedRows.Count;
+  else
+    Result := FSelectedRows.Count;
 end;
 
 procedure Th5uGridSelection.ResetExtension;
@@ -143,7 +144,8 @@ begin
     // shrink the new range without deleting a previously selected range.
     CopySelection(FExtensionBase);
   end
-  else ResetExtension;
+  else
+    ResetExtension;
 
   if not AAdd or ((FCombinationMode = Th5uSelectionCombinationMode.Exclusive) and (AKind <> Th5uSelectionKind.Rows)) then
   begin

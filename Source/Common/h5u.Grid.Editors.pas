@@ -20,7 +20,7 @@ type
     Bounds: TRectF;
     Value: TValue;
     Text: string;
-    // Native canvas and cached image; Common does not depend on either UI library.
+    // Native canvas and cached image: Common does not depend on either UI library.
     Canvas: TObject;
     Image: TObject;
     Foreground: TAlphaColor;
@@ -166,14 +166,23 @@ type
     function DataTypeEditor(AType: Th5uColumnDataType): string;
     function EditorFor(AColumn: Th5uGridColumn): string;
   published
+    [Default('TextEditor')]
     property Edit: string read FEdit write FEdit;
+    [Default('IntegerEditor')]
     property Integer: string read FInteger write FInteger;
+    [Default('FloatEditor')]
     property Float: string read FFloat write FFloat;
+    [Default('CurrencyEditor')]
     property Currency: string read FCurrency write FCurrency;
+    [Default('DateEditor')]
     property Date: string read FDate write FDate;
+    [Default('TimeEditor')]
     property Time: string read FTime write FTime;
+    [Default('DateTimeEditor')]
     property DateTime: string read FDateTime write FDateTime;
+    [Default('CheckBoxEditor')]
     property CheckBox: string read FCheckBox write FCheckBox;
+    [Default('ImageEditor')]
     property Image: string read FImage write FImage;
   end;
 
@@ -182,8 +191,8 @@ procedure h5uRegisterEditor(APlatform: Th5uEditorPlatform; const AEditorName: st
 function h5uEditorClass(APlatform: Th5uEditorPlatform; const AEditorName: string): Th5uGridEditorItemClass;
 procedure h5uUnregisterEditor(APlatform: Th5uEditorPlatform; const AEditorName: string);
 function h5uCreateEditor(APlatform: Th5uEditorPlatform; const AEditorName: string; ACollection: TCollection): Th5uGridEditorItem;
-function h5uResolveEditorName(AGrid: TObject; AColumns: Th5uGridColumns; AColumn: Th5uGridColumn; ARow: Int64; ADefaults: Th5uDefaultEditors; AGetValue: Th5uGetCellValueMethod;
-  out AColumnScoped: Boolean): string;
+function h5uResolveEditorName(AGrid: TObject; AColumns: Th5uGridColumns; AColumn: Th5uGridColumn; ARow: Int64;
+  ADefaults: Th5uDefaultEditors; AGetValue: Th5uGetCellValueMethod; out AColumnScoped: Boolean): string;
 function h5uEditorCheckBounds(const ABounds: TRectF): TRectF;
 
 implementation
@@ -222,8 +231,7 @@ begin
   Result.EditorName := AEditorName;
 end;
 
-function h5uResolveEditorName(AGrid: TObject; AColumns: Th5uGridColumns; AColumn: Th5uGridColumn; ARow: Int64; ADefaults: Th5uDefaultEditors; AGetValue: Th5uGetCellValueMethod;
-  out AColumnScoped: Boolean): string;
+function h5uResolveEditorName(AGrid: TObject; AColumns: Th5uGridColumns; AColumn: Th5uGridColumn; ARow: Int64; ADefaults: Th5uDefaultEditors; AGetValue: Th5uGetCellValueMethod; out AColumnScoped: Boolean): string;
   function FromColumn(const AId: string): string;
   var
     LColumn: Th5uGridColumn;
@@ -322,14 +330,24 @@ begin
   Mode := S.Mode;
   ActivateOnClick := S.ActivateOnClick;
   EditorVersion := S.EditorVersion;
-  FOnShow := S.FOnShow; FOnHide := S.FOnHide; FOnCancel := S.FOnCancel; FOnCommit := S.FOnCommit;
-  FOnChange := S.FOnChange; FOnEnter := S.FOnEnter; FOnExit := S.FOnExit;
-  FOnGetText := S.FOnGetText; FOnSetText := S.FOnSetText;
-  FOnGetValue := S.FOnGetValue; FOnSetValue := S.FOnSetValue;
+  FOnShow := S.FOnShow;
+  FOnHide := S.FOnHide;
+  FOnCancel := S.FOnCancel;
+  FOnCommit := S.FOnCommit;
+  FOnChange := S.FOnChange;
+  FOnEnter := S.FOnEnter;
+  FOnExit := S.FOnExit;
+  FOnGetText := S.FOnGetText;
+  FOnSetText := S.FOnSetText;
+  FOnGetValue := S.FOnGetValue;
+  FOnSetValue := S.FOnSetValue;
   FOnMeasureWidth := S.FOnMeasureWidth;
-  FOnDrawDisplay := S.FOnDrawDisplay; FOnDrawEditor := S.FOnDrawEditor;
+  FOnDrawDisplay := S.FOnDrawDisplay;
+  FOnDrawEditor := S.FOnDrawEditor;
   FOnKeyDown := S.FOnKeyDown;
-  FOnMouseDown := S.FOnMouseDown; FOnMouseMove := S.FOnMouseMove; FOnMouseUp := S.FOnMouseUp;
+  FOnMouseDown := S.FOnMouseDown;
+  FOnMouseMove := S.FOnMouseMove;
+  FOnMouseUp := S.FOnMouseUp;
 end;
 
 procedure Th5uGridEditorItem.BuildEditor;
@@ -582,9 +600,15 @@ end;
 constructor Th5uDefaultEditors.Create;
 begin
   inherited;
-  FEdit := 'TextEditor'; FInteger := 'IntegerEditor'; FFloat := 'FloatEditor'; FCurrency := 'CurrencyEditor';
-  FDate := 'DateEditor'; FTime := 'TimeEditor'; FDateTime := 'DateTimeEditor';
-  FCheckBox := 'CheckBoxEditor'; FImage := 'ImageEditor';
+  FEdit := 'TextEditor';
+  FInteger := 'IntegerEditor';
+  FFloat := 'FloatEditor';
+  FCurrency := 'CurrencyEditor';
+  FDate := 'DateEditor';
+  FTime := 'TimeEditor';
+  FDateTime := 'DateTimeEditor';
+  FCheckBox := 'CheckBoxEditor';
+  FImage := 'ImageEditor';
 end;
 
 procedure Th5uDefaultEditors.Assign(Source: TPersistent);
@@ -597,8 +621,15 @@ begin
     Exit;
   end;
   S := Th5uDefaultEditors(Source);
-  FEdit := S.FEdit; FInteger := S.FInteger; FFloat := S.FFloat; FCurrency := S.FCurrency;
-  FDate := S.FDate; FTime := S.FTime; FDateTime := S.FDateTime; FCheckBox := S.FCheckBox; FImage := S.FImage;
+  FEdit := S.FEdit;
+  FInteger := S.FInteger;
+  FFloat := S.FFloat;
+  FCurrency := S.FCurrency;
+  FDate := S.FDate;
+  FTime := S.FTime;
+  FDateTime := S.FDateTime;
+  FCheckBox := S.FCheckBox;
+  FImage := S.FImage;
 end;
 
 function Th5uDefaultEditors.EditorFor(AColumn: Th5uGridColumn): string;

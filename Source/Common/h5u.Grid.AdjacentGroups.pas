@@ -44,7 +44,7 @@ type
     class function Empty: Th5uAdjacentGroupRowInfo; static;
   end;
 
-  // Per-grid view map. It never changes the data controller or its order; it
+  // Per-grid view map. It never changes the data controller or its order. It
   // only maps visible row indexes to the controller's current view indexes.
   Th5uAdjacentGroupMap = class
   private

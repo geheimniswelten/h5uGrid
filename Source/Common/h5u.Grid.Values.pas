@@ -1,4 +1,4 @@
-unit h5u.Grid.Values;
+﻿unit h5u.Grid.Values;
 
 interface
 
@@ -88,12 +88,14 @@ var
   LKey: string;
   procedure Add(const AToken: string);
   begin
-    if Result <> '' then Result := Result + ' ';
+    if Result <> '' then
+      Result := Result + ' ';
     Result := Result + AToken;
   end;
 begin
   Result := '';
-  if not Assigned(AColumn) then Exit;
+  if not Assigned(AColumn) then
+    Exit;
   LKey := '';
   if Assigned(AController) then
     if IsPublishedProp(AController, 'KeyFieldName') then
@@ -125,8 +127,7 @@ begin
   if Pos(' ScrollHint ', LMode) > 0 then Result := Result + #$2195;
 end;
 
-function h5uCellPermission(AGrid: TObject; AColumn: Th5uGridColumn; ARow: Int64; AAllow: Boolean;
-  AColumnEvent, AGridEvent: Th5uCellPermissionEvent): Boolean;
+function h5uCellPermission(AGrid: TObject; AColumn: Th5uGridColumn; ARow: Int64; AAllow: Boolean; AColumnEvent, AGridEvent: Th5uCellPermissionEvent): Boolean;
 begin
   Result := AAllow;
   if Assigned(AColumnEvent) then
@@ -135,8 +136,7 @@ begin
     AGridEvent(AGrid, AColumn, ARow, Result);
 end;
 
-procedure h5uOverrideCellValue(AGrid: TObject; AColumn: Th5uGridColumn; ARow: Int64; ADisplay: Boolean;
-  AGridEvent: Th5uCellGetValueEvent; var AValue: TValue);
+procedure h5uOverrideCellValue(AGrid: TObject; AColumn: Th5uGridColumn; ARow: Int64; ADisplay: Boolean; AGridEvent: Th5uCellGetValueEvent; var AValue: TValue);
 begin
   if Assigned(AColumn.OnGetValue) then
     AColumn.OnGetValue(AColumn, AColumn, ARow, AValue, ADisplay)
@@ -144,8 +144,7 @@ begin
     AGridEvent(AGrid, AColumn, ARow, AValue, ADisplay);
 end;
 
-function h5uCellText(AColumn: Th5uGridColumn; ARow: Int64; ADisplay, AHasValueEvent: Boolean;
-  AGetCellValue: Th5uGetCellValueMethod; AGetViewValue: Th5uGetViewValueMethod; AGetViewText: Th5uGetViewTextMethod): string;
+function h5uCellText(AColumn: Th5uGridColumn; ARow: Int64; ADisplay, AHasValueEvent: Boolean; AGetCellValue: Th5uGetCellValueMethod; AGetViewValue: Th5uGetViewValueMethod; AGetViewText: Th5uGetViewTextMethod): string;
 begin
   if AHasValueEvent then
   begin
@@ -160,8 +159,7 @@ begin
     Result := h5uValueToDisplayText(AGetViewValue(ARow, AColumn.FieldName));
 end;
 
-function h5uPrepareCellValue(AGrid: TObject; AColumn: Th5uGridColumn; ARow: Int64; const AValue: TValue;
-  AValidate: Th5uCellValidateEvent; ASetValue: Th5uCellSetValueEvent): TValue;
+function h5uPrepareCellValue(AGrid: TObject; AColumn: Th5uGridColumn; ARow: Int64; const AValue: TValue; AValidate: Th5uCellValidateEvent; ASetValue: Th5uCellSetValueEvent): TValue;
 var
   LValue: TValue;
   LValid: Boolean;
@@ -187,14 +185,15 @@ begin
   Result := LValue;
 end;
 
-procedure h5uNotifyCellClick(AGrid: TObject; AColumn: Th5uGridColumn; ARow: Int64; AHeader, AIndicator: Boolean;
-  ACellClick, AHeaderClick, AIndicatorClick: Th5uCellEvent);
+procedure h5uNotifyCellClick(AGrid: TObject; AColumn: Th5uGridColumn; ARow: Int64; AHeader, AIndicator: Boolean; ACellClick, AHeaderClick, AIndicatorClick: Th5uCellEvent);
 begin
   if AIndicator then
   begin
-    if Assigned(AIndicatorClick) then AIndicatorClick(AGrid, nil, ARow);
+    if Assigned(AIndicatorClick) then
+      AIndicatorClick(AGrid, nil, ARow);
   end
-  else if Assigned(AColumn) then
+  else
+  if Assigned(AColumn) then
     if AHeader then
     begin
       if Assigned(AColumn.OnColumnHeaderClick) then

@@ -61,6 +61,7 @@ object FmxListDemoForm: TFmxListDemoForm
     Size.PlatformDefault = False
     TabOrder = 1
     DataController = ObjectController
+    Editors = <>
     Columns = <
       item
         Id = 'id'
@@ -138,16 +139,9 @@ object FmxListDemoForm: TFmxListDemoForm
     HeaderLayout.Cells = <>
     Selection.AllowedKinds = [Rows, Columns, CellRanges]
     RowHeight.Mode = Automatic
-    RowHeight.MinHeight = 26
-    RowHeight.MaxHeight = 105
-    RowHeight.EstimatedHeight = 30
-    ScrollHints.Triggers = [ThumbTracking]
     ScrollHints.VerticalColumnId = 'name'
     RowStyles.StripePeriod = 3
     RowStyles.StripeOffset = 3
-    RowStyles.StripeStyleName = 'Stripe'
-    RowStyles.OddStyleName = 'Odd'
-    RowStyles.EvenStyleName = 'Even'
     RowStyles.StyleKeyColumnId = 'priority'
     RowStyles.Mappings = <
       item

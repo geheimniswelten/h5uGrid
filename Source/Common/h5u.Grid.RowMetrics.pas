@@ -156,7 +156,8 @@ begin
   Result := Default(Th5uTotalRowHeight);
   if (AOptions.Mode = Th5uRowHeightMode.Fixed) and not AVariableSpacing then
     Result.Whole := ARowCount * (AOptions.FixedHeight + ASpacing)
-  else if ARowCount <= h5uExactRowHeightLimit then
+  else
+  if ARowCount <= h5uExactRowHeightLimit then
   begin
     APrepare(0, ARowCount);
     LTotal := 0;

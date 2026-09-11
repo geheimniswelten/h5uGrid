@@ -353,7 +353,8 @@ begin
         AEnter(AGrid, LColumn, ANew.RowIndex);
     end;
   end;
-  if Assigned(AChanged) then AChanged(AGrid);
+  if Assigned(AChanged) then
+    AChanged(AGrid);
 end;
 
 end.

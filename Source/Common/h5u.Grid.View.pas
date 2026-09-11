@@ -72,8 +72,7 @@ type
 
 implementation
 
-constructor Th5uGridView.Create(AGrid: TObject; AColumns: Th5uGridColumns; ATree: Th5uTreeOptions;
-  AAdjacentGroups: Th5uAdjacentGroupFoldingOptions; AGetController: Th5uViewGetController);
+constructor Th5uGridView.Create(AGrid: TObject; AColumns: Th5uGridColumns; ATree: Th5uTreeOptions; AAdjacentGroups: Th5uAdjacentGroupFoldingOptions; AGetController: Th5uViewGetController);
 begin
   inherited Create;
   FGrid := AGrid;
@@ -484,8 +483,7 @@ begin
   Result := TryGetAdjacentGroupRowInfo(AViewRowIndex, LInfo) and LInfo.IsFoldable and LInfo.Collapsed;
 end;
 
-function Th5uGridView.ChangeAdjacentGroup(AViewRowIndex: Int64; AToggle, ACollapsed: Boolean;
-  out AInfo: Th5uAdjacentGroupRowInfo): Boolean;
+function Th5uGridView.ChangeAdjacentGroup(AViewRowIndex: Int64; AToggle, ACollapsed: Boolean; out AInfo: Th5uAdjacentGroupRowInfo): Boolean;
 begin
   Result := False;
   EnsureAdjacentGroupMap;

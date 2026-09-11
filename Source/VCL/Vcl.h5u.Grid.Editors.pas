@@ -338,11 +338,12 @@ begin
     TEdit(Control).AutoSize := False;
   if Control is TCustomEdit then
     TEditAccess(Control).OnChange := ControlChanged;
-  // Use RTTI for published OnChange on arbitrary controls; never assume TEdit layout.
+  // Use RTTI for published OnChange on arbitrary controls. Never assume TEdit layout.
   P := GetPropInfo(Control.ClassInfo, 'OnChange');
   if Assigned(P) and (P.PropType^.Kind = tkMethod) then
   begin
-    N := ControlChanged; M := TMethod(N);
+    N := ControlChanged;
+    M := TMethod(N);
     if P.PropType^ = TypeInfo(TNotifyEvent) then
       SetMethodProp(Control, P, M);
   end;
@@ -374,7 +375,8 @@ begin
 end;
 
 procedure Th5uVclCustomEditor.ControlKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
-var C: Char;
+var
+  C: Char;
 begin
   C := #0;
   KeyDown(Key, C, Shift);
@@ -742,7 +744,10 @@ function Th5uVclImageCellEditor.DrawDisplay(const AContext: Th5uEditorContext): 
 var
   ACanvas: TCanvas;
   LColumn: Th5uGridColumn;
-  LImageRect: TRect; LScale: Double; LWidth, LHeight: Integer; FPicture: TPicture;
+  LImageRect: TRect;
+  LScale: Double;
+  LWidth, LHeight: Integer;
+  FPicture: TPicture;
 begin
   Result := inherited;
   if Result then

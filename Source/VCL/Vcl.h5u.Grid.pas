@@ -1043,40 +1043,54 @@ begin
       LColumn.Width := EnsureRange(LField.DisplayWidth * 8, 60, 280);
 
       case LField.DataType of
-        ftSmallint, ftInteger, ftWord, ftAutoInc, ftShortint, ftByte, ftLargeint: LColumn.DataType := Th5uColumnDataType.Integer;
+        ftSmallint, ftInteger, ftWord, ftAutoInc, ftShortint, ftByte, ftLargeint:
+          LColumn.DataType := Th5uColumnDataType.Integer;
 
-        ftFloat, ftSingle, ftExtended: LColumn.DataType := Th5uColumnDataType.Float;
+        ftFloat, ftSingle, ftExtended:
+          LColumn.DataType := Th5uColumnDataType.Float;
 
-        ftCurrency, ftBCD, ftFMTBcd: begin LColumn.DataType := Th5uColumnDataType.Currency;
+        ftCurrency, ftBCD, ftFMTBcd:
+        begin
+          LColumn.DataType := Th5uColumnDataType.Currency;
           LColumn.DisplayFormat := '#,##0.00';
         end;
 
-        ftDate: begin LColumn.DataType := Th5uColumnDataType.Date;
+        ftDate:
+        begin
+          LColumn.DataType := Th5uColumnDataType.Date;
           LColumn.DisplayFormat := 'dd.mm.yyyy';
         end;
 
-        ftTime: begin LColumn.DataType := Th5uColumnDataType.Time;
-           LColumn.DisplayFormat := 'hh:nn:ss';
+        ftTime:
+        begin
+          LColumn.DataType := Th5uColumnDataType.Time;
+          LColumn.DisplayFormat := 'hh:nn:ss';
         end;
 
-        ftDateTime, ftTimeStamp: begin LColumn.DataType := Th5uColumnDataType.DateTime;
+        ftDateTime, ftTimeStamp:
+        begin
+          LColumn.DataType := Th5uColumnDataType.DateTime;
           LColumn.DisplayFormat := 'dd.mm.yyyy hh:nn';
         end;
 
         ftBoolean: LColumn.DataType := Th5uColumnDataType.Boolean;
 
-        ftBlob, ftGraphic, ftOraBlob: begin LColumn.DataType := Th5uColumnDataType.Image;
+        ftBlob, ftGraphic, ftOraBlob:
+        begin
+          LColumn.DataType := Th5uColumnDataType.Image;
           LColumn.EditorKind := Th5uColumnEditorKind.Image;
           LColumn.Width := 100;
           LColumn.AutoHeight := True;
           LColumn.MaxAutoHeight := 100;
         end;
 
-        ftMemo, ftWideMemo: begin LColumn.DataType := Th5uColumnDataType.Text;
-            LColumn.WordWrap := True;
-            LColumn.AutoHeight := True;
-            LColumn.Width := 240;
-          end;
+        ftMemo, ftWideMemo:
+        begin
+          LColumn.DataType := Th5uColumnDataType.Text;
+          LColumn.WordWrap := True;
+          LColumn.AutoHeight := True;
+          LColumn.Width := 240;
+        end;
 
         else
           LColumn.DataType := Th5uColumnDataType.Text;
@@ -2324,13 +2338,17 @@ end;
 procedure Th5uVclGrid.EditorKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
   case Key of
-    VK_RETURN: begin CommitEditor;
-        Key := 0;
-      end;
-    VK_ESCAPE: begin CancelEditor;
-        SetFocus;
-        Key := 0;
-      end;
+    VK_RETURN:
+    begin
+      CommitEditor;
+      Key := 0;
+    end;
+    VK_ESCAPE:
+    begin
+      CancelEditor;
+      SetFocus;
+      Key := 0;
+    end;
   end;
 end;
 
@@ -4313,7 +4331,7 @@ begin
   if not h5uPlanCellFocus(FColumns, FSelection, GetViewRowCount, GetViewRowKey, ARow, AColumn, AExtend, LCell, LRange) then
     Exit;
   if not TryFocusCell(LCell, not AExtend) then
-    xit;
+    Exit;
   FSelection.AddCellRange(LRange, AAdd, AExtend);
   Result := FocusedCellHit(LHit);
   if Result and AEdit and FImmediateEdit and not AExtend then
@@ -4654,7 +4672,8 @@ begin
 end;
 
 function Th5uVclGrid.CellEditorClick(AColumn: Th5uGridColumn; ARow: Int64): Boolean;
-var E: Th5uGridEditorItem;
+var
+  E: Th5uGridEditorItem;
 begin
   E := GetCellEditor(AColumn, ARow);
   Result := Assigned(E) and E.ActivateOnClick;

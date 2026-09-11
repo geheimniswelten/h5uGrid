@@ -138,30 +138,43 @@ begin
   end;
 
   case AValue.Kind of
-    tkString, tkLString, tkWString, tkUString, tkChar, tkWChar: Result := AValue.ToString;
+    tkString, tkLString, tkWString, tkUString, tkChar, tkWChar:
+      Result := AValue.ToString;
 
-    tkInteger, tkInt64, tkEnumeration: if (ADisplayFormat <> '') and (AValue.Kind
-      <> tkEnumeration) then Result := FormatFloat(ADisplayFormat, AValue.AsInt64) else Result := AValue.ToString;
+    tkInteger, tkInt64, tkEnumeration: if (ADisplayFormat <> '') and (AValue.Kind <> tkEnumeration) then
+      Result := FormatFloat(ADisplayFormat, AValue.AsInt64) else Result := AValue.ToString;
 
-    tkFloat: begin if AValue.TypeInfo = TypeInfo(TDateTime) then begin LDateTime := AValue.AsType<TDateTime>;
-          if ADisplayFormat <> '' then
-            Result := FormatDateTime(ADisplayFormat, LDateTime)
-          else
-            Result := DateTimeToStr(LDateTime);
-        end
+    tkFloat:
+    begin
+      if AValue.TypeInfo = TypeInfo(TDateTime) then
+      begin
+        LDateTime := AValue.AsType<TDateTime>;
+        if ADisplayFormat <> '' then
+          Result := FormatDateTime(ADisplayFormat, LDateTime)
         else
-        begin
-          LFloat := AValue.AsExtended;
-          if ADisplayFormat <> '' then
-            Result := FormatFloat(ADisplayFormat, LFloat)
-          else
-            Result := FloatToStr(LFloat);
-        end;
+          Result := DateTimeToStr(LDateTime);
+      end
+      else
+      begin
+        LFloat := AValue.AsExtended;
+        if ADisplayFormat <> '' then
+          Result := FormatFloat(ADisplayFormat, LFloat)
+        else
+          Result := FloatToStr(LFloat);
       end;
+    end;
 
-    tkVariant: if VarIsNull(AValue.AsVariant) or VarIsEmpty(AValue.AsVariant) then Result := '' else Result := VarToStr(AValue.AsVariant);
+    tkVariant:
+      if VarIsNull(AValue.AsVariant) or VarIsEmpty(AValue.AsVariant) then
+        Result := ''
+      else
+        Result := VarToStr(AValue.AsVariant);
 
-    tkClass: if AValue.AsObject <> nil then Result := AValue.AsObject.ToString else Result := '';
+    tkClass:
+      if AValue.AsObject <> nil then
+        Result := AValue.AsObject.ToString
+      else
+        Result := '';
 
     else
       Result := AValue.ToString;
@@ -179,13 +192,20 @@ begin
     Exit;
 
   case AValue.Kind of
-    tkInteger, tkInt64: begin AInteger := AValue.AsInteger;
-        Exit(True);
-      end;
+    tkInteger, tkInt64:
+    begin
+      AInteger := AValue.AsInteger;
+      Exit(True);
+    end;
 
-    tkEnumeration: begin if AValue.TypeInfo = TypeInfo(Boolean) then AInteger := Ord(AValue.AsBoolean) else AInteger := AValue.AsOrdinal;
-        Exit(True);
-      end;
+    tkEnumeration:
+    begin
+      if AValue.TypeInfo = TypeInfo(Boolean) then
+        AInteger := Ord(AValue.AsBoolean)
+      else
+        AInteger := AValue.AsOrdinal;
+      Exit(True);
+    end;
   end;
 
   LText := AValue.ToString;

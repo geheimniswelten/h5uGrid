@@ -293,7 +293,7 @@ end;
 
 procedure Th5uSampleClientDataset.RecreateSampleData;
 begin
-  // During streaming Close only records Active=False; it does not close the cursor.
+  // During streaming Close only records Active=False. It does not close the cursor.
   // Apply property changes after Loaded has cleared the streaming state.
   if ComponentState * [csLoading, csReading] <> [] then
   begin

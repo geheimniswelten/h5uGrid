@@ -79,13 +79,15 @@ var
         Preferred := Column.ConstrainWidth(Column.Width);
         if Column.AutoWidth then
           Preferred := Column.ConstrainWidth(Column.MeasuredWidth);
-        // AutoWidth takes precedence; measured columns are fixed for distribution.
+        // AutoWidth takes precedence. Measured columns are fixed for distribution.
         if not Column.AutoWidth then
           Weight := Column.WidthInPercent;
       end;
       Exit;
     end;
-    LMin := 0; LMax := 0; LNatural := 0;
+    LMin := 0;
+    LMax := 0;
+    LNatural := 0;
     for K in LNodes[AIndex].Children do
     begin
       MeasureNode(K);
@@ -155,7 +157,9 @@ var
     if Assigned(LNodes[AIndex].Column) then
       Exit;
     LRemaining := AWidth + LNodes[AIndex].Spacing;
-    LMin := 0; LMax := 0; LWeight := 0;
+    LMin := 0;
+    LMax := 0;
+    LWeight := 0;
     for K in LNodes[AIndex].Children do
     begin
       LRemaining := LRemaining - LNodes[K].Spacing;
@@ -204,13 +208,17 @@ var
           LNodes[K].Fraction := LScale - LNodes[K].Width;
           LSum := LSum + LNodes[K].Width;
         end;
-      // Largest remainders, stable in visible order; never lose viewport pixels.
+      // Largest remainders, stable in visible order. Never lose viewport pixels.
       for LPass := 1 to Round(LRemaining - LSum) do
       begin
-        LBest := -1; LFraction := -2;
+        LBest := -1;
+        LFraction := -2;
         for K in LNodes[AIndex].Children do
           if (LNodes[K].Weight > 0) and (LNodes[K].Width < LNodes[K].Maximum) and (LNodes[K].Fraction > LFraction) then
-          begin LBest := K; LFraction := LNodes[K].Fraction; end;
+          begin
+            LBest := K;
+            LFraction := LNodes[K].Fraction;
+          end;
         if LBest < 0 then
           Break;
         LNodes[LBest].Width := LNodes[LBest].Width + 1;
@@ -238,7 +246,8 @@ begin
         if (AHeader.Cells[I].ColumnId = '') and AHeader.ColumnRange(AHeader.Cells[I], LColumns, LFirst, LLast) then
         begin
           LNodes[N].Header := AHeader.Cells[I];
-          LNodes[N].First := LFirst; LNodes[N].Last := LLast;
+          LNodes[N].First := LFirst;
+          LNodes[N].Last := LLast;
           LNodes[N].Row := AHeader.Cells[I].LayoutRow;
           LNodes[N].Spacing := h5uColumnRightSpacing(LColumns[LLast], ADefaultSpacing);
           Inc(N);
@@ -247,7 +256,8 @@ begin
     for I := 0 to High(LColumns) do
     begin
       LNodes[N].Column := LColumns[I];
-      LNodes[N].First := I; LNodes[N].Last := I;
+      LNodes[N].First := I;
+      LNodes[N].Last := I;
       LNodes[N].Row := MaxInt;
       LNodes[N].Spacing := h5uColumnRightSpacing(LColumns[I], ADefaultSpacing);
       Inc(N);
@@ -386,15 +396,15 @@ begin
     Result := Max(0.0, AStart + ASize - AViewportSize);
 end;
 
-function h5uRowSeparator(AView: Th5uGridView; ATree: Th5uTreeOptions; AGroups: Th5uAdjacentGroupFoldingOptions; ARow: Int64; const AKey: Th5uRowKey;
-  AGetSpacing: Th5uRowSpacingMethod): Th5uRowSeparatorInfo;
+function h5uRowSeparator(AView: Th5uGridView; ATree: Th5uTreeOptions; AGroups: Th5uAdjacentGroupFoldingOptions; ARow: Int64;
+  const AKey: Th5uRowKey; AGetSpacing: Th5uRowSpacingMethod): Th5uRowSeparatorInfo;
 var
   LGroup: Th5uAdjacentGroupRowInfo;
 begin
   Result := Default(Th5uRowSeparatorInfo);
   Result.Kind := Th5uElementKind.RowSpacing;
   Result.TreeLevel := -1;
-  // Both bands replace ordinary spacing; the adjacent-group band takes precedence.
+  // Both bands replace ordinary spacing. The adjacent-group band takes precedence.
   if AGroups.Enabled and AView.GetAdjacentGroupEndBandInfo(ARow, LGroup) then
   begin
     Result.Kind := Th5uElementKind.AdjacentGroupEndBand;

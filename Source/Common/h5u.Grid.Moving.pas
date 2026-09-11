@@ -75,7 +75,8 @@ begin
   APlan := Default(Th5uColumnMovePlan);
   Result := False;
   LColumns := AColumns.VisibleColumns;
-  if (AColumnIndex < 0) or (AColumnIndex >= Length(LColumns)) then Exit;
+  if (AColumnIndex < 0) or (AColumnIndex >= Length(LColumns)) then
+    Exit;
   LFirst := AColumnIndex;
   LLast := LFirst;
   if Assigned(AHeaderCell) and (AHeaderCell.ColumnSpan > 1) then
@@ -83,7 +84,8 @@ begin
     if not AHeaderLayout.ColumnRange(AHeaderCell, LColumns, LFirst, LLast) then
       Exit;
   end
-  else if ASelection.IsColumnSelected(LColumns[LFirst].Id) then
+  else
+  if ASelection.IsColumnSelected(LColumns[LFirst].Id) then
   begin
     while (LFirst > 0) and ASelection.IsColumnSelected(LColumns[LFirst - 1].Id) do
       Dec(LFirst);
@@ -159,7 +161,8 @@ begin
       if ATargetHeader.LayoutRow <> AMovingHeader.LayoutRow then
         Exit;
     end
-    else if (ATargetHeader.ColumnSpan > 1) or (ATargetHeader.LayoutRow >= AMovingHeader.LayoutRow + Max(1, AMovingHeader.RowSpan))
+    else
+    if (ATargetHeader.ColumnSpan > 1) or (ATargetHeader.LayoutRow >= AMovingHeader.LayoutRow + Max(1, AMovingHeader.RowSpan))
       or (AMovingHeader.LayoutRow >= ATargetHeader.LayoutRow + Max(1, ATargetHeader.RowSpan))
     then
       Exit;
@@ -179,8 +182,7 @@ begin
   Result := True;
 end;
 
-function h5uPlanRowMove(ASelection: Th5uGridSelection; ARowIndex, ARowCount: Int64; AGetRowKey: Th5uMoveGetRowKey;
-  out APlan: Th5uRowMovePlan): Boolean;
+function h5uPlanRowMove(ASelection: Th5uGridSelection; ARowIndex, ARowCount: Int64; AGetRowKey: Th5uMoveGetRowKey; out APlan: Th5uRowMovePlan): Boolean;
 var
   LFirst, LLast, LCount, LSelectedCount: Int64;
   I: Integer;
@@ -197,12 +199,13 @@ begin
     LSelectedCount := ASelection.SelectedRowCount(LCount);
     if (LSelectedCount >= LCount) or (LSelectedCount <= 0) then
       Exit;
-    // Visit only the selected neighbours; virtual grids must not scan every row.
+    // Visit only the selected neighbours. Virtual grids must not scan every row.
     while (LFirst > 0) and ASelection.IsRowSelected(AGetRowKey(LFirst - 1)) do
       Dec(LFirst);
     while (LLast < LCount - 1) and ASelection.IsRowSelected(AGetRowKey(LLast + 1)) do
       Inc(LLast);
-    if LLast - LFirst + 1 <> LSelectedCount then Exit;
+    if LLast - LFirst + 1 <> LSelectedCount then
+      Exit;
   end;
   if LLast - LFirst >= MaxInt then
     Exit;
