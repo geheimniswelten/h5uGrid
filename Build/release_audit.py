@@ -89,7 +89,7 @@ def check_layout() -> None:
         "Source/Common/h5u.Grid.Data.Objects.pas",
         "Source/Common/h5u.Grid.Data.Virtual.pas",
         "Source/Common/h5u.Grid.Data.Memory.pas",
-        "Source/Common/h5u.Grid.SampleData.pas",
+        "Source/Design/h5u.Grid.SampleData.pas",
         "Source/VCL/Vcl.h5u.Grid.pas",
         "Source/FMX/Fmx.h5u.Grid.pas",
         "Docs/CONCEPT.md",
@@ -381,7 +381,7 @@ def check_factory_and_features() -> None:
         (r"CollapsedOnly.*?ExpandedOnly.*?Always", "FMX vier Abschlussleistenmodi"),
         (r"CollapseAllAdjacentGroups.*?ExpandAllAdjacentGroups|ExpandAllAdjacentGroups.*?CollapseAllAdjacentGroups", "FMX Alle-falten/-öffnen"),
     ])
-    require_patterns(name, "Source/Common/h5u.Grid.SampleData.pas", [
+    require_patterns(name, "Source/Design/h5u.Grid.SampleData.pas", [
         (r"Name\s*:=\s*'TREE_LEVEL'", "TREE_LEVEL-Feld in den Designer-Musterdaten"),
         (r"FieldByName\('TREE_LEVEL'\)\.AsInteger", "TREE_LEVEL-Werte in den Musterdaten"),
         (r"Name\s*:=\s*'FOLD_GROUP'", "FOLD_GROUP-Feld in den Designer-Musterdaten"),

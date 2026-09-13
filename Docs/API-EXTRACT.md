@@ -1671,7 +1671,7 @@ type
 
 ## `h5u.Grid.SampleData`
 
-Quelle: `Source/Common/h5u.Grid.SampleData.pas`
+Quelle: `Source/Design/h5u.Grid.SampleData.pas`
 
 ```pascal
 uses

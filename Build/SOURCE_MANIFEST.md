@@ -71,12 +71,12 @@
 | `Source/Common/h5u.Grid.Data.Virtual.pas` | 7567 | `81cdce8cbb7bdf2c4260df0531673ab8e33c7d8891c27e9c72c0abc75f67c69b` |
 | `Source/Common/h5u.Grid.Factory.pas` | 14172 | `69aca97ff8fbb98d2ac32e5c14cd0176e2f2084309b3e5c70a1f66adbb7a0b19` |
 | `Source/Common/h5u.Grid.Options.pas` | 34344 | `6e7d77540d262e10f4b4bdbf76df634c59b3887467ce05a8f2f316fa642dec0e` |
-| `Source/Common/h5u.Grid.SampleData.pas` | 8126 | `4cad6d7a98d3745273d6052460f4f1e4278970971efd9a148a798c1ee5d3f851` |
 | `Source/Common/h5u.Grid.Selection.pas` | 8896 | `a4f68bd26cf299a48e27a8a6a90863212012ce230076bc4db052d6e131dc2b92` |
 | `Source/Common/h5u.Grid.Types.pas` | 12998 | `6ff3fa1a3b0657181af3ff61ca667329491aafb50d4b57482b1d32b144c09004` |
+| `Source/Design/h5u.Grid.SampleData.pas` | 8126 | `4cad6d7a98d3745273d6052460f4f1e4278970971efd9a148a798c1ee5d3f851` |
+| `Source/Design/h5u.Grid.Design.pas` | 492 | `bb581a32d8a36c69d0fc08d48d5d3f4e8e7d38a9a5cdfa38f8bfc3ad40578a92` |
 | `Source/Design/Fmx.h5u.Grid.Design.pas` | 218 | `2091a16461635f3f0b407eb6e01ba6d156090cc217cef318cc649b3f507edeed` |
 | `Source/Design/Vcl.h5u.Grid.Design.pas` | 218 | `db95129911a77e168a697bb5af34187216aeec7927302376d995bce9a3e14da2` |
-| `Source/Design/h5u.Grid.Design.pas` | 492 | `bb581a32d8a36c69d0fc08d48d5d3f4e8e7d38a9a5cdfa38f8bfc3ad40578a92` |
 | `Source/FMX/Fmx.h5u.Grid.Editors.pas` | 3898 | `01d729bd7a5dada97a4fa0339a22d033f8381ca2f56bf8978d03cc7d75a344c1` |
 | `Source/FMX/Fmx.h5u.Grid.Styles.pas` | 4766 | `8c6464d30ffb9fc5ea1544b7a467895fef5b85729e4c649282c8d2622517c5cd` |
 | `Source/FMX/Fmx.h5u.Grid.pas` | 105444 | `f5437a2b1f792d2a5ef28c3901604db408c839f659b44b33ccf920735d83b137` |

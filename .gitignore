@@ -20,6 +20,7 @@ _bin/
 # Generated build output
 Build/Delphi/
 Build/FPC/
+Build/LCL/
 
 # Python
 __pycache__/
@@ -33,3 +34,4 @@ backup/
 *.or
 *.compiled
 *.lps
+Demos/LCL/**/*.res

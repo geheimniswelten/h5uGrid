@@ -4,6 +4,23 @@
     <Targets>
       <Target FileName="Packages\h5uGridCoreLazarus.lpk"/>
       <Target FileName="Packages\h5uGridCoreLazarusDesign.lpk"/>
+      <Target FileName="Packages\h5uGridLcl.lpk"/>
+      <Target FileName="Packages\h5uGridLclDesign.lpk"/>
+      <Target FileName="Demos\LCL\ClientDataset\GridLclClientDatasetDemo.lpi">
+        <BuildModes>
+          <Mode Name="Default"/>
+        </BuildModes>
+      </Target>
+      <Target FileName="Demos\LCL\ObjectList\GridLclObjectListDemo.lpi">
+        <BuildModes>
+          <Mode Name="Default"/>
+        </BuildModes>
+      </Target>
+      <Target FileName="Demos\LCL\VirtualLive\GridLclVirtualLiveDemo.lpi">
+        <BuildModes>
+          <Mode Name="Default"/>
+        </BuildModes>
+      </Target>
     </Targets>
   </ProjectGroup>
 </CONFIG>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectOptions>
+    <Version Value="12"/>
+    <General>
+      <Flags>
+        <MainUnitHasTitleStatement Value="True"/>
+      </Flags>
+      <SessionStorage Value="InProjectDir"/>
+      <Title Value="GridLclClientDatasetDemo"/>
+      <Scaled Value="True"/>
+      <ResourceType Value="res"/>
+      <UseXPManifest Value="True"/>
+      <XPManifest>
+        <DpiAware Value="True"/>
+      </XPManifest>
+      <Icon Value="0"/>
+    </General>
+    <BuildModes>
+      <Item Name="Default" Default="True"/>
+    </BuildModes>
+    <RequiredPackages>
+      <Item><PackageName Value="h5uGridLcl"/></Item>
+      <Item><PackageName Value="h5uGridCoreLazarus"/></Item>
+      <Item><PackageName Value="LCL"/></Item>
+    </RequiredPackages>
+    <Units>
+      <Unit>
+        <Filename Value="GridLclClientDatasetDemo.lpr"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="LclDatasetDemoMain.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="LclDatasetDemoForm"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="LclDatasetDemoMain"/>
+      </Unit>
+    </Units>
+  </ProjectOptions>
+  <CompilerOptions>
+    <Version Value="11"/>
+    <Target>
+      <Filename Value="../../_bin/GridLclClientDatasetDemo"/>
+    </Target>
+    <SearchPaths>
+      <IncludeFiles Value="$(ProjOutDir)"/>
+      <UnitOutputDirectory Value="../../_dcu/$(TargetOS)_$(TargetCPU)_$(LCLWidgetType)_GridLclClientDatasetDemo"/>
+    </SearchPaths>
+    <Parsing><SyntaxOptions><SyntaxMode Value="ObjFPC"/></SyntaxOptions></Parsing>
+    <Linking>
+      <Debugging><DebugInfoType Value="dsDwarf3"/></Debugging>
+      <Options><Win32><GraphicApplication Value="True"/></Win32></Options>
+    </Linking>
+  </CompilerOptions>
+</CONFIG>

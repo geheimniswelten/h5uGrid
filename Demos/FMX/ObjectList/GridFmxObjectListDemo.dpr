@@ -22,7 +22,7 @@ uses
   h5u.Grid.Data.Memory in '..\..\..\Source\Common\h5u.Grid.Data.Memory.pas',
   h5u.Grid.Data.Objects in '..\..\..\Source\Common\h5u.Grid.Data.Objects.pas',
   h5u.Grid.Data.Virtual in '..\..\..\Source\Common\h5u.Grid.Data.Virtual.pas',
-  h5u.Grid.SampleData in '..\..\..\Source\Common\h5u.Grid.SampleData.pas',
+  h5u.Grid.SampleData in '..\..\..\Source\Design\h5u.Grid.SampleData.pas',
   Fmx.h5u.Grid.Styles in '..\..\..\Source\FMX\Fmx.h5u.Grid.Styles.pas',
   Fmx.h5u.Grid.Editors in '..\..\..\Source\FMX\Fmx.h5u.Grid.Editors.pas',
   Fmx.h5u.Grid in '..\..\..\Source\FMX\Fmx.h5u.Grid.pas',

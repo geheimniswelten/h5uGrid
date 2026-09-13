@@ -178,7 +178,7 @@ begin
     LProperty := ResolveProperty(LObject, LParts[I]);
     if not Assigned(LProperty) or not LProperty.IsReadable then
       Exit;
-    LValue := {$IFDEF FPC_old}h5uGetPropertyValue(LObject, LProperty){$ELSE}LProperty.GetValue(LObject){$ENDIF};
+    LValue := {$IFDEF FPC}h5uGetPropertyValue(LObject, LProperty){$ELSE}LProperty.GetValue(LObject){$ENDIF};
     if not LValue.IsObject then
       Exit;
     LObject := LValue.AsObject;
@@ -203,7 +203,7 @@ begin
   begin
     LValue := ReadPropertyPath(FItems[ASourceRowIndex], FKeyPropertyName);
     if not LValue.IsEmpty then
-      Exit(Th5uRowKey.FromString({$IFDEF FPC_old}h5uValueAsText(LValue){$ELSE}LValue.ToString{$ENDIF}));
+      Exit(Th5uRowKey.FromString({$IFDEF FPC}h5uValueAsText(LValue){$ELSE}LValue.ToString{$ENDIF}));
   end;
 
   Result := inherited;
@@ -289,7 +289,7 @@ begin
     if not Assigned(LProperty) or not LProperty.IsReadable then
       Exit(TValue.Empty);
 
-    {$IFDEF FPC_old}
+    {$IFDEF FPC}
       Result := h5uGetPropertyValue(AObject, LProperty);
     {$ELSE}
       Result := LProperty.GetValue(AObject);

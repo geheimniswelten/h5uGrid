@@ -16,6 +16,7 @@ uses
   {$IFDEF FPC}
     Classes,
     //Graphics,
+    LResources,
     LazarusPackageIntf,
   {$ELSE}
     System.Classes,
@@ -39,18 +40,30 @@ var
 //  Icon: TPortableNetworkGraphic;
 {$ENDIF}
 begin
-  RegisterComponents('h5u', [Th5uClassFactory, Th5uDatasetController, Th5uMemoryController, Th5uObjectListController, Th5uVirtualController,
+  {$IFnDEF FPC}
+    {$I h5u.Grid.Design_icon.lrs}
+  {$ENDIF}
+  RegisterComponents('h5u Grid', [Th5uClassFactory, Th5uDatasetController, Th5uMemoryController, Th5uObjectListController, Th5uVirtualController,
     Th5uSampleClientDataset]);
 
   {$IFnDEF FPC}
-  Icon := TPngImage.Create;
-  try
-    Icon.LoadFromResourceName(HInstance, 'h5uGridComponent_32x32');
-    SplashScreenServices.AddPluginBitmap('h5uGrid', [Icon], False, '', '');
-  finally
-    Icon.Free
-  end;
+    Icon := TPngImage.Create;
+    try
+      Icon.LoadFromResourceName(HInstance, 'h5uGridComponent_32x32');
+      SplashScreenServices.AddPluginBitmap('h5uGrid', [Icon], False, '', '');
+    finally
+      Icon.Free
+    end;
+  {$ELSE}
+    //Icon := TPortableNetworkGraphic.Create;
+    //try
+    //  Icon.LoadFromLazarusResource('h5uGridComponent_32x32');
+    //  ...
+    //finally
+    //  Icon.Free
+    //end;
   {$ENDIF}
 end;
 
 end.
+

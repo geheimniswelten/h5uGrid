@@ -70,6 +70,57 @@ Design-Time-Packages werden bei `Win64` bewusst übersprungen. Sie werden für d
 
 Die Komponente `Th5uSampleClientDataset` erzeugt ihr Schema und ihre Musterdatensätze selbst. Die ClientDataset-Demos benötigen daher weder eine Datenbank noch eine externe `.cds`-Datei.
 
+## Lazarus / Free Pascal
+
+Die Lazarus-Variante verwendet den vorhandenen Common-Kern und den LCL-Adapter
+in `Source/LCL`. Benötigt werden Free Pascal 3.2.2 und Lazarus mit LCL,
+FCL und `DateTimeCtrls`; für die Installation im Designer zusätzlich `IDEIntf`.
+
+Pakete in dieser Reihenfolge kompilieren:
+
+```sh
+lazbuild Packages/h5uGridCoreLazarus.lpk
+lazbuild Packages/h5uGridCoreLazarusDesign.lpk
+lazbuild Packages/h5uGridLcl.lpk
+lazbuild Packages/h5uGridLclDesign.lpk
+```
+
+Zum Installieren in Lazarus `Packages/h5uGridLclDesign.lpk` öffnen und
+**Verwenden → Installieren** wählen. Das Core-Design-Paket wird als
+Abhängigkeit mit installiert. Laufzeitprojekte benötigen ausschließlich
+`h5uGridLcl` mit seinen Runtime-Abhängigkeiten. Die `.lpi`-Projekte unter
+`Demos/LCL` enthalten diese Abhängigkeit bereits.
+
+Die Paket-Ausgaben sind unter `_dcu/<OS>_<CPU>_Lazarus` nach Paket und bei
+LCL-Paketen zusätzlich nach Widgetset getrennt. Weitere Hinweise zu ObjFPC,
+UTF-8 und den Common-Tests stehen in [FREEPASCAL.md](FREEPASCAL.md).
+
+Der PowerShell-Launcher baut die Pakete und alle drei Demos mit einer eigenen
+Lazarus-Konfiguration unter `Build/LCL/config`:
+
+```powershell
+.\Build\build-lazarus.ps1 -LazBuild 'C:\lazarus\lazbuild.exe'
+```
+
+Bei Bedarf `-Compiler` für den Pfad zu `fpc.exe`, `-PrimaryConfigPath` für
+die Build-Konfiguration oder `-WidgetSet` für das Ziel-Widgetset angeben.
+`-SkipDesignPackages` beziehungsweise `-SkipDemos` begrenzt den Build;
+`-IncludeTests` baut außerdem die LCL-Testprogramme.
+
+Unter Windows baut `test-lcl.ps1` zusätzlich die Tests und führt zuerst den
+Test der Formularressourcen ohne sichtbare Fenster aus. Vor dem visuellen
+Bedienungstest zeigt der Launcher den Desktop-Countdown:
+
+```powershell
+.\Build\test-lcl.ps1 -LazBuild 'C:\lazarus\lazbuild.exe'
+# Nur Formularressourcen und Daten prüfen:
+.\Build\test-lcl.ps1 -LazBuild 'C:\lazarus\lazbuild.exe' -SkipVisual
+```
+
+Die Programme liegen unter `Build/LCL/bin/<CPU>-<OS>/<Widgetset>`.
+Für bereits gebaute Tests `-SkipBuild` verwenden. `-NoticeSeconds 5` verkürzt
+den Countdown; `-Screenshot <Pfad.png>` speichert die visuelle Testansicht.
+
 ## Quellformatierung
 
 Für Delphi-Quellen gelten maximal 150 Zeichen pro Zeile. Property-Deklarationen, prozedurale Eventtypen sowie Methoden- und Funktionssignaturen bleiben bis 180 Zeichen einzeilig. Operatoren stehen bei umgebrochenen Ausdrücken am Anfang der Folgezeile.

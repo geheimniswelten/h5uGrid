@@ -428,7 +428,7 @@ def main() -> int:
         "Source/Common/h5u.Grid.Data.Memory.pas",
         "Source/Common/h5u.Grid.Data.Objects.pas",
         "Source/Common/h5u.Grid.Data.Virtual.pas",
-        "Source/Common/h5u.Grid.SampleData.pas",
+        "Source/Design/h5u.Grid.SampleData.pas",
         "Source/Vcl/Vcl.h5u.Grid.pas",
         "Source/FMX/Fmx.h5u.Grid.pas",
     ]

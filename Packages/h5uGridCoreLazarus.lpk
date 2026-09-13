@@ -7,10 +7,10 @@
       <Version Value="11"/>
       <SearchPaths>
         <OtherUnitFiles Value="../Source/Common"/>
-        <UnitOutputDirectory Value="../_dcu/$(TargetOS)_$(TargetCPU)_Lazarus"/>
+        <UnitOutputDirectory Value="../_dcu/$(TargetOS)_$(TargetCPU)_h5uGridCoreLazarus"/>
       </SearchPaths>
     </CompilerOptions>
-    <Description Value="h5u Grid common runtime for Free Pascal / Lazarus (ObjFPC)"/>
+    <Description Value="h5u Grid common runtime for Free Pascal / Lazarus"/>
     <Files>
       <Item>
         <Filename Value="../Source/Common/h5u.Grid.AdjacentGroups.pas"/>

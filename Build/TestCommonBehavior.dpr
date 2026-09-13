@@ -208,6 +208,7 @@ end;
 
 type
   TNavigationData = class
+    UnicodeText: Boolean;
     function RowKey(ARow: Int64): Th5uRowKey;
     function Extent(ARow: Int64): Double;
     procedure Prepare(AFirst, ACount: Int64);
@@ -231,6 +232,16 @@ end;
 
 function TNavigationData.Text(AColumn: Th5uGridColumn; ARow: Int64; ADisplay: Boolean): string;
 begin
+  if UnicodeText then
+  begin
+    case ARow of
+      0: Result := 'Äpfel';
+      1: Result := '東京';
+      2: Result := 'ıstanbul';
+      else Result := '';
+    end;
+    Exit;
+  end;
   case ARow of
     0: Result := 'Alpha';
     1: Result := 'Beta';
@@ -282,6 +293,27 @@ begin
       100 + 200 / MSecsPerDay, LRow, LColumn) and (LRow = 2) and (LNav.SearchText = 'al'), 'continued search must include focused row');
     Check(LNav.SearchCharacter(LColumns, LSelection, 3, {$IFDEF FPC}@{$ENDIF}LData.Prepare, {$IFDEF FPC}@{$ENDIF}LData.Text, 'b',
       100 + 1500 / MSecsPerDay, LRow, LColumn) and (LRow = 1) and (LNav.SearchText = 'b'), 'search timeout and wrap');
+    LData.UnicodeText := True;
+    LNav.Cancel(LSelection);
+    {$IFDEF FPC}
+    Check(LNav.SearchCharacter(LColumns, LSelection, 3, {$IFDEF FPC}@{$ENDIF}LData.Prepare, {$IFDEF FPC}@{$ENDIF}LData.Text, 'ä',
+      101, LRow, LColumn) and (LRow = 0), 'Unicode case-insensitive search');
+    LNav.Cancel(LSelection);
+    {$ENDIF}
+    Check(LNav.SearchCharacter(LColumns, LSelection, 3, {$IFDEF FPC}@{$ENDIF}LData.Prepare, {$IFDEF FPC}@{$ENDIF}LData.Text, '東',
+      101, LRow, LColumn) and (LRow = 1), 'whole UTF-8 search character');
+    h5uPlanCellFocus(LColumns, LSelection, 3, {$IFDEF FPC}@{$ENDIF}LData.RowKey, LRow, LColumn, False, LCell, LRange);
+    LSelection.SetFocus(LCell, True);
+    Check(LNav.SearchCharacter(LColumns, LSelection, 3, {$IFDEF FPC}@{$ENDIF}LData.Prepare, {$IFDEF FPC}@{$ENDIF}LData.Text, '京',
+      101 + 200 / MSecsPerDay, LRow, LColumn) and (LRow = 1) and (LNav.SearchText = '東京'), 'continued UTF-8 search');
+    {$IFDEF FPC}
+    LNav.Cancel(LSelection);
+    Check(LNav.SearchCharacter(LColumns, LSelection, 3, @LData.Prepare, @LData.Text, 'I', 102, LRow, LColumn) and (LRow
+      = 2), 'Unicode prefix comparison must not use UTF-8 byte lengths');
+    {$ENDIF}
+    LNav.Cancel(LSelection);
+    Check(not LNav.SearchCharacter(LColumns, LSelection, 3, {$IFDEF FPC}@{$ENDIF}LData.Prepare, {$IFDEF FPC}@{$ENDIF}LData.Text, '',
+      102, LRow, LColumn) and (LNav.SearchText = ''), 'empty search input');
     Writeln('PASS: common navigation, page distance, header extension, independent state and search timeout');
   finally
     LSelection.Free;
@@ -518,6 +550,35 @@ begin
   end;
 end;
 
+procedure TestControllerLinkLifetime;
+var
+  LController, LReplacement: Th5uMemoryController;
+  LFirst, LSecond: Th5uDataControllerLink;
+begin
+  LController := Th5uMemoryController.Create(nil);
+  LReplacement := Th5uMemoryController.Create(nil);
+  LFirst := Th5uDataControllerLink.Create;
+  LSecond := Th5uDataControllerLink.Create;
+  try
+    LFirst.Controller := LController;
+    LSecond.Controller := LController;
+    FreeAndNil(LController);
+    Check((LFirst.Controller = nil) and (LSecond.Controller = nil), 'destroyed controller must detach every surviving link');
+    LFirst.Controller := LReplacement;
+    LSecond.Controller := LReplacement;
+    FreeAndNil(LFirst);
+    LReplacement.Invalidate;
+    FreeAndNil(LReplacement);
+    Check(LSecond.Controller = nil, 'links remain reusable and may be freed before or after their controller');
+    Writeln('PASS: common controller destruction, multiple surviving links and link reuse');
+  finally
+    LFirst.Free;
+    LSecond.Free;
+    LController.Free;
+    LReplacement.Free;
+  end;
+end;
+
 procedure TestValueConversion;
 var
   LType: Th5uColumnDataType;
@@ -556,6 +617,7 @@ begin
     TestRowMetrics;
     TestColumnLayout;
     TestColumnWidths;
+    TestControllerLinkLifetime;
     TestValueConversion;
   except
     on E: Exception do

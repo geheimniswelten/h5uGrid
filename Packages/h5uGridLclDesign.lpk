@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="5">
+    <Name Value="h5uGridLclDesign"/>
+    <Type Value="DesignTime"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <SearchPaths>
+        <OtherUnitFiles Value="../Source/Design"/>
+        <UnitOutputDirectory Value="../_dcu/$(TargetOS)_$(TargetCPU)_h5uGridLclDesign"/>
+      </SearchPaths>
+    </CompilerOptions>
+    <Description Value="h5u Grid LCL component registration for the Lazarus designer"/>
+    <Files>
+      <Item>
+        <Filename Value="../Source/Design/Lcl.h5u.Grid.Design.pas"/>
+        <HasRegisterProc Value="True"/>
+        <UnitName Value="Lcl.h5u.Grid.Design"/>
+      </Item>
+      <Item>
+        <Filename Value="h5uGridLclDesign.pas"/>
+        <Type Value="Main Unit"/>
+        <UnitName Value="h5uGridLclDesign"/>
+      </Item>
+    </Files>
+    <RequiredPkgs>
+      <Item>
+        <PackageName Value="h5uGridCoreLazarusDesign"/>
+      </Item>
+      <Item>
+        <PackageName Value="h5uGridLcl"/>
+      </Item>
+      <Item>
+        <PackageName Value="IDEIntf"/>
+      </Item>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>

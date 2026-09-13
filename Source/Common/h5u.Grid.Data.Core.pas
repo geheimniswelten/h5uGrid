@@ -322,8 +322,9 @@ end;
 
 destructor Th5uCustomDataController.Destroy;
 begin
-  while FLinks.Count > 0 do
-    FLinks[0].FController := nil;
+  if Assigned(FLinks) then
+    while FLinks.Count > 0 do
+      FLinks[0].Controller := nil;
   FPagination.Free;
   FCache.Free;
   FFactoryScope.Free;

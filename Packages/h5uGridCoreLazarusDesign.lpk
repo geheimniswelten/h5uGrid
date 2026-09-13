@@ -2,14 +2,15 @@
 <CONFIG>
   <Package Version="5">
     <Name Value="h5uGridCoreLazarusDesign"/>
-    <Type Value="RunAndDesignTime"/>
+    <Type Value="DesignTime"/>
     <CompilerOptions>
       <Version Value="11"/>
       <SearchPaths>
-        <OtherUnitFiles Value="../Source/Common;../Source/Design"/>
-        <UnitOutputDirectory Value="../_dcu/$(TargetOS)_$(TargetCPU)_Lazarus"/>
+        <OtherUnitFiles Value="../Source/Design"/>
+        <UnitOutputDirectory Value="../_dcu/$(TargetOS)_$(TargetCPU)_$(LCLWidgetType)_h5uGridCoreLazarusDesign"/>
       </SearchPaths>
     </CompilerOptions>
+    <Description Value="h5u Grid common component registration for Lazarus"/>
     <Files>
       <Item>
         <Filename Value="../Source/Design/h5u.Grid.Design.pas"/>
@@ -17,8 +18,13 @@
         <UnitName Value="h5u.Grid.Design"/>
       </Item>
       <Item>
-        <Filename Value="../Source/Common/h5u.Grid.SampleData.pas"/>
+        <Filename Value="../Source/Design/h5u.Grid.SampleData.pas"/>
         <UnitName Value="h5u.Grid.SampleData"/>
+      </Item>
+      <Item>
+        <Filename Value="h5uGridCoreLazarusDesign.pas"/>
+        <Type Value="Main Unit"/>
+        <UnitName Value="h5uGridCoreLazarusDesign"/>
       </Item>
     </Files>
     <RequiredPkgs>
@@ -30,6 +36,9 @@
       </Item>
       <Item>
         <PackageName Value="FCL"/>
+      </Item>
+      <Item>
+        <PackageName Value="IDEIntf"/>
       </Item>
     </RequiredPkgs>
     <UsageOptions>

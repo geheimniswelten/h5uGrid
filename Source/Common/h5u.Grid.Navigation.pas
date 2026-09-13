@@ -13,6 +13,7 @@ interface
 uses
   {$IFDEF FPC}
     h5u.Grid.Compat,
+    Character,
     Classes,
     DateUtils,
     Generics.Collections,
@@ -57,7 +58,7 @@ type
     function Navigate(AColumns: Th5uGridColumns; ASelection: Th5uGridSelection; ARowCount: Int64; AGetRowKey: Th5uNavigationGetRowKey; ARowExtent: Th5uNavigationRowExtent;
       APageHeight: Double; AKey: Word; AShift: TShiftState; out AAction: Th5uNavigationAction): Boolean;
     function SearchCharacter(AColumns: Th5uGridColumns; ASelection: Th5uGridSelection; ARowCount: Int64; APrepareRange: Th5uNavigationPrepareRange; AGetText: Th5uNavigationGetText;
-      AChar: Char; ANow: TDateTime; out ARow: Int64; out AColumn: Integer): Boolean;
+      const AText: string; ANow: TDateTime; out ARow: Int64; out AColumn: Integer): Boolean;
   end;
 
 function h5uPlanCellFocus(AColumns: Th5uGridColumns; ASelection: Th5uGridSelection; ARowCount: Int64; AGetRowKey: Th5uNavigationGetRowKey; ARow: Int64; AColumn: Integer;
@@ -266,19 +267,24 @@ begin
 end;
 
 function Th5uGridNavigation.SearchCharacter(AColumns: Th5uGridColumns; ASelection: Th5uGridSelection; ARowCount: Int64; APrepareRange: Th5uNavigationPrepareRange;
-  AGetText: Th5uNavigationGetText; AChar: Char; ANow: TDateTime; out ARow: Int64; out AColumn: Integer): Boolean;
+  AGetText: Th5uNavigationGetText; const AText: string; ANow: TDateTime; out ARow: Int64; out AColumn: Integer): Boolean;
 var
   LColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>;
   LCell: Th5uCellAddress;
   LCount, LRow, LStart, I: Int64;
   LColumn: Integer;
   LText: string;
+  {$IFDEF FPC}
+  LSearchFolded, LTextFolded: UnicodeString;
+  {$ENDIF}
   LContinue: Boolean;
 begin
   Result := False;
   ARow := -1;
   AColumn := -1;
-  if AChar < #32 then
+  if AText = '' then
+    Exit;
+  if AText[1] < #32 then
     Exit;
   LCount := ARowCount;
   LColumns := AColumns.VisibleColumns;
@@ -289,8 +295,17 @@ begin
   LContinue := (SearchText <> '') and ((ANow - SearchTime) * MSecsPerDay < 1000);
   if not LContinue then
     SearchText := '';
-  SearchText := SearchText + AChar;
   SearchTime := ANow;
+  {$IFDEF FPC}
+  // LCL delivers whole UTF-8 characters, including multi-byte keyboard input.
+  // Concatenate Unicode to avoid AnsiString '+' converting UTF-8 to the system codepage.
+  // Character uses FPC's Unicode tables without a widgetset or string-manager dependency.
+  LSearchFolded := UTF8Decode(SearchText) + UTF8Decode(AText);
+  SearchText := string(UTF8Encode(LSearchFolded));
+  LSearchFolded := TCharacter.ToUpper(LSearchFolded);
+  {$ELSE}
+  SearchText := SearchText + AText;
+  {$ENDIF}
   LStart := Max(Int64(0), LCell.RowIndex);
   if LCell.IsValid and not LContinue then
     LStart := (LStart + 1) mod LCount;
@@ -305,7 +320,12 @@ begin
     LRow := (LStart + I) mod LCount;
     APrepareRange(LRow, 1);
     LText := AGetText(LColumns[LColumn], LRow, True);
+    {$IFDEF FPC}
+    LTextFolded := TCharacter.ToUpper(UTF8Decode(LText));
+    if Copy(LTextFolded, 1, Length(LSearchFolded)) = LSearchFolded then
+    {$ELSE}
     if SameText(Copy(LText, 1, Length(SearchText)), SearchText) then
+    {$ENDIF}
     begin
       ARow := LRow;
       AColumn := LColumn;

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="5">
+    <Name Value="h5uGridLcl"/>
+    <Type Value="RunAndDesignTime"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <SearchPaths>
+        <OtherUnitFiles Value="../Source/LCL"/>
+        <UnitOutputDirectory Value="../_dcu/$(TargetOS)_$(TargetCPU)_h5uGridLcl"/>
+      </SearchPaths>
+    </CompilerOptions>
+    <Description Value="h5u Grid LCL runtime for Free Pascal / Lazarus"/>
+    <Files>
+      <Item>
+        <Filename Value="../Source/LCL/Lcl.h5u.Grid.Compat.pas"/>
+        <UnitName Value="Lcl.h5u.Grid.Compat"/>
+      </Item>
+      <Item>
+        <Filename Value="../Source/LCL/Lcl.h5u.Grid.pas"/>
+        <UnitName Value="Lcl.h5u.Grid"/>
+      </Item>
+      <Item>
+        <Filename Value="../Source/LCL/Lcl.h5u.Grid.Editors.pas"/>
+        <UnitName Value="Lcl.h5u.Grid.Editors"/>
+      </Item>
+      <Item>
+        <Filename Value="../Source/LCL/Lcl.h5u.Grid.Styles.pas"/>
+        <UnitName Value="Lcl.h5u.Grid.Styles"/>
+      </Item>
+      <Item>
+        <Filename Value="h5uGridLcl.pas"/>
+        <Type Value="Main Unit"/>
+        <UnitName Value="h5uGridLcl"/>
+      </Item>
+    </Files>
+    <RequiredPkgs>
+      <Item>
+        <PackageName Value="h5uGridCoreLazarus"/>
+      </Item>
+      <Item>
+        <PackageName Value="LCL"/>
+      </Item>
+      <Item>
+        <PackageName Value="DateTimeCtrls"/>
+      </Item>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>

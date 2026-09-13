@@ -1,11 +1,13 @@
-﻿# h5u.Grid – VCL-/FMX-Grid-Prototyp
+﻿# h5u.Grid – VCL-/FMX-/LCL-Grid-Prototyp
 
-`h5u.Grid` ist ein quelloffener Teststand für ein erweiterbares Delphi-Grid mit gemeinsamem Daten-/Controllerkern und getrennten VCL-/FMX-Präsentationen.
+`h5u.Grid` ist ein quelloffener Teststand für ein erweiterbares Delphi-/Lazarus-Grid mit gemeinsamem Daten-/Controllerkern und getrennten VCL-/FMX-/LCL-Präsentationen.
 
 Das Paket dient dazu, Architektur, API, Design-Time-Verhalten und die wichtigsten Interaktionspfade früh in einer realen Delphi-Umgebung zu erproben. Es ist ausdrücklich ein **Prototyp 0.1.4** und noch keine vollständige Grid-Suite.
 
-Der Common-Kern unterstützt auch FreePascal/Lazarus mit `{$MODE OBJFPC}{$H+}`.
-Paket, Verwendung und Tests: [FreePascal / Lazarus](Docs/FREEPASCAL.md).
+Der Common-Kern und die LCL-Fassade `Th5uLclGrid` unterstützen FreePascal/Lazarus
+mit `{$MODE OBJFPC}{$H+}`. Die Packages heißen `h5uGridLcl.lpk` und
+`h5uGridLclDesign.lpk`; drei Lazarus-Demos liegen unter `Demos/LCL`.
+Installation, Verwendung und Tests: [FreePascal / Lazarus](Docs/FREEPASCAL.md).
 
 ## Enthaltene Testschwerpunkte
 
@@ -40,15 +42,20 @@ Source/
   Common/              gemeinsamer Core und DataController
   Vcl/                 VCL-Control, Painter, Styles und Editoren
   FMX/                 FMX-Control, Painter, Styles und Editoren
+  LCL/                 Lazarus-Control, Styles, Editoren und Typanpassungen
   Design/              Komponentenregistrierung
 
-Packages/              Runtime- und Design-Time-DPKs
+Packages/              Runtime- und Design-Time-DPKs sowie Lazarus-LPKs
 Demos/
   VCL/
     ClientDataset/
     ObjectList/
     VirtualLive/
   FMX/
+    ClientDataset/
+    ObjectList/
+    VirtualLive/
+  LCL/
     ClientDataset/
     ObjectList/
     VirtualLive/
@@ -59,7 +66,7 @@ Build/                  Buildskript, Deklarationsformatter und statische Audits
 
 ## Demos
 
-Es liegen sechs eigenständige Anwendungen bei:
+Es liegen neun eigenständige Anwendungen bei:
 
 | Plattform | Demo | Zweck |
 |---|---|---|
@@ -69,6 +76,9 @@ Es liegen sechs eigenständige Anwendungen bei:
 | FMX | ClientDataset | gemeinsamer Dataset-Core im FMX-Control |
 | FMX | ObjectList | gemeinsame Objektlisten-Anbindung unter FMX |
 | FMX | VirtualLive | Event-/VirtualSource unter FMX |
+| LCL | ClientDataset | TBufDataset-Musterdaten, Layout und Optionen unter Lazarus |
+| LCL | ObjectList | published-RTTI, UTF-8-Bearbeitung und Liveänderungen |
+| LCL | VirtualLive | virtuelle Datenereignisse, Paging und Live-Updates |
 
 Die ClientDataset-Demos benötigen keine Datenbank und keine externe `.cds`-Datei. `Th5uSampleClientDataset` legt Felder und Datensätze beim Laden selbst an; nach Installation des Design-Packages können dadurch bereits im Formulardesigner Inhalte erscheinen. Das Feld `TREE_LEVEL` enthält eine kleine, vorab sortierte Beispielhierarchie für die Tree-Abschlussleiste. Das ausgeblendete Feld `FOLD_GROUP` enthält zusammenhängende gleiche IDs; dieselbe ID erscheint später erneut, damit unabhängige Faltzustände direkt getestet werden können.
 

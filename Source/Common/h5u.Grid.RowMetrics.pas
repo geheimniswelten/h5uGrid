@@ -168,7 +168,7 @@ begin
       ATop := AViewportTop - LRemaining;
       Exit(LRow);
     end;
-    LRemaining := LRemaining + LExtent;
+    LRemaining := LRemaining - LExtent;
     {$IFDEF FPC_old}
     Inc(LRow);
     {$ENDIF}

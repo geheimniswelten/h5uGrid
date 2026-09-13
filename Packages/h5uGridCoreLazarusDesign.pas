@@ -19,5 +19,4 @@ end;
 
 initialization
   RegisterPackage('h5uGridCoreLazarusDesign', @Register);
-
 end.

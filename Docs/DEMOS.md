@@ -115,6 +115,30 @@ Zweck:
 - Append-/Update-Verhalten
 - Test von Scrolling und Cache bei sich ändernder Datenmenge
 
+## LCL / Lazarus
+
+Die Lazarus-Portierungen der drei VCL-Demos liegen hier:
+
+| Demo | Projektverzeichnis | Datenquelle |
+| --- | --- | --- |
+| ClientDataset | `Demos/LCL/ClientDataset` | `Th5uSampleClientDataset` auf Basis von `TBufDataset` |
+| ObjectList | `Demos/LCL/ObjectList` | Laufzeitobjekte mit `published`-Properties für FPC-RTTI |
+| VirtualLive | `Demos/LCL/VirtualLive` | Ereignisse des gemeinsamen Virtual-Controllers |
+
+Die jeweilige `.lpi`-Datei in Lazarus öffnen und kompilieren. Die Projekte
+benötigen `Packages/h5uGridLcl.lpk` und dessen Runtime-Abhängigkeiten.
+Für das Öffnen der `.lfm`-Formulare im Designer vorher
+`Packages/h5uGridLclDesign.lpk` installieren; siehe [BUILD.md](BUILD.md).
+
+Die LCL-Demos verwenden `Th5uLclGrid` aus `Lcl.h5u.Grid` und die LCL-Editoren.
+SampleData gehört zum Common-Runtime-Paket. Die Programme benötigen deshalb
+keine Design-Time-Units und die Dataset-Demo keine externe Datenbank.
+Die VCL- und FMX-Demos bleiben als separate Projekte erhalten.
+
+Vor einem manuellen Start unter Windows den Desktop-Hinweis aus
+`Build/visual-test-notice.ps1` anzeigen und vollständig abwarten, wie in
+[BUILD.md](BUILD.md) beschrieben. Reines Kompilieren benötigt keinen Hinweis.
+
 ## Maus und Touch
 
 Alle sechs Demos setzen `Grid.Customization.ColumnMovingGesture := Th5uColumnMovingGesture.Drag`.

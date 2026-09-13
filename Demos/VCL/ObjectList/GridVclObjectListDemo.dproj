@@ -174,7 +174,7 @@
         <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Data.Memory.pas"/>
         <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Data.Objects.pas"/>
         <DCCReference Include="..\..\..\Source\Common\h5u.Grid.Data.Virtual.pas"/>
-        <DCCReference Include="..\..\..\Source\Common\h5u.Grid.SampleData.pas"/>
+        <DCCReference Include="..\..\..\Source\Design\h5u.Grid.SampleData.pas"/>
         <DCCReference Include="..\..\..\Source\Vcl\Vcl.h5u.Grid.Styles.pas"/>
         <DCCReference Include="..\..\..\Source\Vcl\Vcl.h5u.Grid.Editors.pas"/>
         <DCCReference Include="..\..\..\Source\Vcl\Vcl.h5u.Grid.pas"/>
