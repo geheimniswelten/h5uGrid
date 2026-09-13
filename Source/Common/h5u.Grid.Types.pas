@@ -1,15 +1,29 @@
 ﻿unit h5u.Grid.Types;
 
+{$IFDEF FPC}
+  {$MODE OBJFPC}{$H+}
+  {$MODESWITCH ADVANCEDRECORDS}
+  {$CODEPAGE UTF8}
+{$ENDIF}
+
 interface
 
 {$SCOPEDENUMS ON}
 
 uses
-  System.Classes,
-  System.Rtti,
-  System.SysUtils,
-  System.UITypes,
-  System.Types;
+  {$IFDEF FPC}
+    h5u.Grid.Compat,
+    Classes,
+    Rtti,
+    SysUtils,
+    Types;
+  {$ELSE}
+    System.Classes,
+    System.Rtti,
+    System.SysUtils,
+    System.UITypes,
+    System.Types;
+  {$ENDIF}
 
 type
   Th5uClassId = type string;
@@ -52,15 +66,15 @@ type
     class function FromInt64(const AValue: Int64): Th5uRowKey; static;
     function IsEmpty: Boolean;
     function ToString: string;
-    class operator Equal(const ALeft, ARight: Th5uRowKey): Boolean;
-    class operator NotEqual(const ALeft, ARight: Th5uRowKey): Boolean;
+    class operator {$IFDEF FPC}={$ELSE}Equal{$ENDIF}(const ALeft, ARight: Th5uRowKey): Boolean;
+    class operator {$IFDEF FPC}<>{$ELSE}NotEqual{$ENDIF}(const ALeft, ARight: Th5uRowKey): Boolean;
   end;
 
   Th5uRowsMovedContext = record
     // All indexes are zero-based. Source indexes address the controller data.
     FirstRowIndex: Int64;
-    RowKeys: TArray<Th5uRowKey>;
-    SourceRowIndexes: TArray<Int64>;
+    RowKeys: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uRowKey>;
+    SourceRowIndexes: {$IFDEF FPC}specialize {$ENDIF}TArray<Int64>;
     // Target indexes/key refer to the view BEFORE the requested move.
     TargetRowIndex: Int64;
     TargetRowKey: Th5uRowKey;
@@ -261,12 +275,12 @@ implementation
 
 { Th5uRowKey }
 
-class operator Th5uRowKey.Equal(const ALeft, ARight: Th5uRowKey): Boolean;
+class operator Th5uRowKey.{$IFDEF FPC}={$ELSE}Equal{$ENDIF}(const ALeft, ARight: Th5uRowKey): Boolean;
 begin
   Result := ALeft.FValue = ARight.FValue;
 end;
 
-class operator Th5uRowKey.NotEqual(const ALeft, ARight: Th5uRowKey): Boolean;
+class operator Th5uRowKey.{$IFDEF FPC}<>{$ELSE}NotEqual{$ENDIF}(const ALeft, ARight: Th5uRowKey): Boolean;
 begin
   Result := not (ALeft = ARight);
 end;

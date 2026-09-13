@@ -1,14 +1,28 @@
 ﻿unit h5u.Grid.Factory;
 
+{$IFDEF FPC}
+  {$MODE OBJFPC}{$H+}
+  {$MODESWITCH ADVANCEDRECORDS}
+  {$CODEPAGE UTF8}
+{$ENDIF}
+
 interface
 
 {$SCOPEDENUMS ON}
 
 uses
-  System.Classes,
-  System.Generics.Collections,
-  System.SyncObjs,
-  System.SysUtils,
+  {$IFDEF FPC}
+    h5u.Grid.Compat,
+    Classes,
+    Generics.Collections,
+    SyncObjs,
+    SysUtils,
+  {$ELSE}
+    System.Classes,
+    System.Generics.Collections,
+    System.SyncObjs,
+    System.SysUtils,
+  {$ENDIF}
   h5u.Grid.Types;
 
 type
@@ -17,7 +31,7 @@ type
   Th5uCollectionItemClass = class of TCollectionItem;
   Th5uAnyObjectClass = class of TObject;
 
-  Th5uClassRulePredicate = reference to function(const AContext: Th5uFactoryContext): Boolean;
+  Th5uClassRulePredicate = {$IFnDEF FPC}reference to {$ENDIF}function(const AContext: Th5uFactoryContext): Boolean;
   Th5uGetClassEvent = procedure(Sender: TObject; const AContext: Th5uFactoryContext; var AClass: TClass; var ACacheScope: Th5uFactoryCacheScope) of object;
   Th5uCreateInstanceEvent = procedure(Sender: TObject; const AContext: Th5uFactoryContext; AInstanceClass: TClass; var AInstance: TObject; var AHandled: Boolean) of object;
   Th5uConfigureInstanceEvent = procedure(Sender: TObject; const AContext: Th5uFactoryContext; AInstance: TObject) of object;
@@ -52,7 +66,7 @@ type
   private
     FOwner: TObject;
     FParent: Th5uFactoryScope;
-    FRegistrations: TObjectList<Th5uClassRegistration>;
+    FRegistrations: {$IFDEF FPC}specialize {$ENDIF}TObjectList<Th5uClassRegistration>;
     FLock: TMultiReadExclusiveWriteSynchronizer;
     FSequence: Int64;
     FOnGetClass: Th5uGetClassEvent;
@@ -174,7 +188,7 @@ constructor Th5uFactoryScope.Create(AOwner: TObject);
 begin
   inherited Create;
   FOwner := AOwner;
-  FRegistrations := TObjectList<Th5uClassRegistration>.Create(True);
+  FRegistrations := {$IFDEF FPC}specialize {$ENDIF}TObjectList<Th5uClassRegistration>.Create(True);
   FLock := TMultiReadExclusiveWriteSynchronizer.Create;
   FParent := nil;
 end;

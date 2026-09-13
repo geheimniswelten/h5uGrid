@@ -19,7 +19,17 @@ _bin/
 
 # Generated build output
 Build/Delphi/
+Build/FPC/
 
 # Python
 __pycache__/
 *.pyc
+
+# Free Pascal / Lazarus outputs
+Packages/lib/
+backup/
+*.ppu
+*.o
+*.or
+*.compiled
+*.lps

@@ -1,13 +1,26 @@
 ﻿unit h5u.Grid.Values;
 
+{$IFDEF FPC}
+  {$MODE OBJFPC}{$H+}
+  {$MODESWITCH ADVANCEDRECORDS}
+  {$CODEPAGE UTF8}
+{$ENDIF}
+
 interface
 
 {$SCOPEDENUMS ON}
 
 uses
-  System.Rtti,
-  System.SysUtils,
-  System.TypInfo,
+  {$IFDEF FPC}
+    h5u.Grid.Compat,
+    Rtti,
+    SysUtils,
+    TypInfo,
+  {$ELSE}
+    System.Rtti,
+    System.SysUtils,
+    System.TypInfo,
+  {$ENDIF}
   h5u.Grid.Columns,
   h5u.Grid.Data.Core,
   h5u.Grid.Types;
@@ -21,16 +34,13 @@ type
 function h5uParseEditorValue(ADataType: Th5uColumnDataType; const AText: string): TValue;
 function h5uColumnMode(AColumn: Th5uGridColumn; AController: TObject; const ATreeColumnId, AGroupColumnId, AStyleColumnId, AHintColumnId: string): string;
 function h5uColumnModeSymbols(const AMode: string): string;
-function h5uCellPermission(AGrid: TObject; AColumn: Th5uGridColumn; ARow: Int64; AAllow: Boolean;
-  AColumnEvent, AGridEvent: Th5uCellPermissionEvent): Boolean;
-procedure h5uOverrideCellValue(AGrid: TObject; AColumn: Th5uGridColumn; ARow: Int64; ADisplay: Boolean;
-  AGridEvent: Th5uCellGetValueEvent; var AValue: TValue);
-function h5uCellText(AColumn: Th5uGridColumn; ARow: Int64; ADisplay, AHasValueEvent: Boolean;
-  AGetCellValue: Th5uGetCellValueMethod; AGetViewValue: Th5uGetViewValueMethod; AGetViewText: Th5uGetViewTextMethod): string;
-function h5uPrepareCellValue(AGrid: TObject; AColumn: Th5uGridColumn; ARow: Int64; const AValue: TValue;
-  AValidate: Th5uCellValidateEvent; ASetValue: Th5uCellSetValueEvent): TValue;
-procedure h5uNotifyCellClick(AGrid: TObject; AColumn: Th5uGridColumn; ARow: Int64; AHeader, AIndicator: Boolean;
-  ACellClick, AHeaderClick, AIndicatorClick: Th5uCellEvent);
+function h5uCellPermission(AGrid: TObject; AColumn: Th5uGridColumn; ARow: Int64; AAllow: Boolean; AColumnEvent, AGridEvent: Th5uCellPermissionEvent): Boolean;
+procedure h5uOverrideCellValue(AGrid: TObject; AColumn: Th5uGridColumn; ARow: Int64; ADisplay: Boolean; AGridEvent: Th5uCellGetValueEvent; var AValue: TValue);
+function h5uCellText(AColumn: Th5uGridColumn; ARow: Int64; ADisplay, AHasValueEvent: Boolean; AGetCellValue: Th5uGetCellValueMethod; AGetViewValue: Th5uGetViewValueMethod;
+  AGetViewText: Th5uGetViewTextMethod): string;
+function h5uPrepareCellValue(AGrid: TObject; AColumn: Th5uGridColumn; ARow: Int64; const AValue: TValue; AValidate: Th5uCellValidateEvent;
+  ASetValue: Th5uCellSetValueEvent): TValue;
+procedure h5uNotifyCellClick(AGrid: TObject; AColumn: Th5uGridColumn; ARow: Int64; AHeader, AIndicator: Boolean; ACellClick, AHeaderClick, AIndicatorClick: Th5uCellEvent);
 
 implementation
 
@@ -46,28 +56,28 @@ begin
       begin
         if not TryStrToInt64(AText, LInteger) then
           raise EConvertError.CreateFmt('"%s" ist keine ganze Zahl.', [AText]);
-        Result := TValue.From<Int64>(LInteger);
+        Result := TValue.{$IFDEF FPC}specialize {$ENDIF}From<Int64>(LInteger);
       end;
 
     Th5uColumnDataType.Float:
       begin
         if not TryStrToFloat(AText, LFloat) then
           raise EConvertError.CreateFmt('"%s" ist keine Zahl.', [AText]);
-        Result := TValue.From<Double>(LFloat);
+        Result := TValue.{$IFDEF FPC}specialize {$ENDIF}From<Double>(LFloat);
       end;
 
     Th5uColumnDataType.Currency:
       begin
         if not TryStrToCurr(AText, LCurrency) then
           raise EConvertError.CreateFmt('"%s" ist kein gültiger Betrag.', [AText]);
-        Result := TValue.From<Currency>(LCurrency);
+        Result := TValue.{$IFDEF FPC}specialize {$ENDIF}From<Currency>(LCurrency);
       end;
 
     Th5uColumnDataType.Time:
       begin
         if not TryStrToTime(AText, LDateTime) then
           raise EConvertError.CreateFmt('"%s" ist keine gültige Uhrzeit.', [AText]);
-        Result := TValue.From<TDateTime>(LDateTime);
+        Result := TValue.{$IFDEF FPC}specialize {$ENDIF}From<TDateTime>(LDateTime);
       end;
 
     Th5uColumnDataType.Date,
@@ -75,11 +85,11 @@ begin
       begin
         if not TryStrToDateTime(AText, LDateTime) then
           raise EConvertError.CreateFmt('"%s" ist kein gültiges Datum.', [AText]);
-        Result := TValue.From<TDateTime>(LDateTime);
+        Result := TValue.{$IFDEF FPC}specialize {$ENDIF}From<TDateTime>(LDateTime);
       end;
 
     else
-      Result := TValue.From<string>(AText);
+      Result := TValue.{$IFDEF FPC}specialize {$ENDIF}From<string>(AText);
   end;
 end;
 

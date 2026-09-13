@@ -147,8 +147,8 @@
         <DCCReference Include="dsnap.dcp"/>
         <DCCReference Include="designide.dcp"/>
         <DCCReference Include="h5uGridCore.dcp"/>
-        <DCCReference Include="..\Source\Common\h5u.Grid.SampleData.pas"/>
         <DCCReference Include="..\Source\Design\h5u.Grid.Design.pas"/>
+        <DCCReference Include="..\Source\Common\h5u.Grid.SampleData.pas"/>
         <RcItem Include="..\Icons\h5uGridComponent_32x32.png">
             <ResourceType>RCDATA</ResourceType>
             <ResourceId>h5uGridComponent_32x32</ResourceId>

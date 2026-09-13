@@ -1,15 +1,30 @@
 ﻿unit h5u.Grid.Data.Dataset;
 
+{$IFDEF FPC}
+  {$MODE OBJFPC}{$H+}
+  {$MODESWITCH ADVANCEDRECORDS}
+  {$CODEPAGE UTF8}
+{$ENDIF}
+
 interface
 
 {$SCOPEDENUMS ON}
 
 uses
-  System.Classes,
-  System.Generics.Collections,
-  System.Rtti,
-  System.SysUtils,
-  Data.DB,
+  {$IFDEF FPC}
+    h5u.Grid.Compat,
+    Classes,
+    Generics.Collections,
+    Rtti,
+    SysUtils,
+    DB,
+  {$ELSE}
+    System.Classes,
+    System.Generics.Collections,
+    System.Rtti,
+    System.SysUtils,
+    Data.DB,
+  {$ENDIF}
   h5u.Grid.Data.Core,
   h5u.Grid.Types;
 
@@ -32,12 +47,12 @@ type
   Th5uDataRowSnapshot = class
   private
     FRowKey: Th5uRowKey;
-    FValues: TDictionary<string, TValue>;
+    FValues: {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, TValue>;
   public
     constructor Create;
     destructor Destroy; override;
     property RowKey: Th5uRowKey read FRowKey write FRowKey;
-    property Values: TDictionary<string, TValue> read FValues;
+    property Values: {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, TValue> read FValues;
   end;
 
   Th5uDatasetController = class(Th5uCustomDataController)
@@ -45,7 +60,7 @@ type
     FDataSource: TDataSource;
     FDataLink: Th5uDatasetDataLink;
     FKeyFieldName: string;
-    FSnapshotCache: TObjectDictionary<Int64, Th5uDataRowSnapshot>;
+    FSnapshotCache: {$IFDEF FPC}specialize {$ENDIF}TObjectDictionary<Int64, Th5uDataRowSnapshot>;
     FCacheGeneration: Int64;
     FInternalReadCount: Integer;
     FInternalWriteCount: Integer;
@@ -120,7 +135,7 @@ end;
 constructor Th5uDataRowSnapshot.Create;
 begin
   inherited;
-  FValues := TDictionary<string, TValue>.Create;
+  FValues := {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, TValue>.Create;
 end;
 
 destructor Th5uDataRowSnapshot.Destroy;
@@ -141,7 +156,7 @@ constructor Th5uDatasetController.Create(AOwner: TComponent);
 begin
   inherited;
   FDataLink := Th5uDatasetDataLink.Create(Self);
-  FSnapshotCache := TObjectDictionary<Int64, Th5uDataRowSnapshot>.Create([doOwnsValues]);
+  FSnapshotCache := {$IFDEF FPC}specialize {$ENDIF}TObjectDictionary<Int64, Th5uDataRowSnapshot>.Create([doOwnsValues]);
   Cache.Mode := Th5uCacheMode.Viewport;
 end;
 
@@ -370,7 +385,7 @@ var
   LViewIndex: Int64;
   LFirstSource: Int64;
   LLastSource: Int64;
-  LKeys: TArray<Int64>;
+  LKeys: {$IFDEF FPC}specialize {$ENDIF}TArray<Int64>;
   LKey: Int64;
 begin
   inherited;
@@ -429,23 +444,23 @@ begin
     Exit(TValue.Empty);
 
   case AField.DataType of
-    ftSmallint, ftInteger, ftWord, ftAutoInc, ftShortint, ftByte:
-      Result := TValue.From<Integer>(AField.AsInteger);
+    ftSmallint, ftInteger, ftWord, ftAutoInc {$IFnDEF FPC}, ftShortint, ftByte{$ENDIF}:
+      Result := TValue.{$IFDEF FPC}specialize {$ENDIF}From<Integer>(AField.AsInteger);
 
     ftLargeint:
-      Result := TValue.From<Int64>(AField.AsLargeInt);
+      Result := TValue.{$IFDEF FPC}specialize {$ENDIF}From<Int64>(AField.AsLargeInt);
 
     ftBoolean:
-      Result := TValue.From<Boolean>(AField.AsBoolean);
+      Result := TValue.{$IFDEF FPC}specialize {$ENDIF}From<Boolean>(AField.AsBoolean);
 
-    ftFloat, ftSingle, ftExtended:
-      Result := TValue.From<Double>(AField.AsFloat);
+    ftFloat {$IFnDEF FPC}, ftSingle, ftExtended{$ENDIF}:
+      Result := TValue.{$IFDEF FPC}specialize {$ENDIF}From<Double>(AField.AsFloat);
 
     ftCurrency, ftBCD, ftFMTBcd:
-      Result := TValue.From<Currency>(AField.AsCurrency);
+      Result := TValue.{$IFDEF FPC}specialize {$ENDIF}From<Currency>(AField.AsCurrency);
 
     ftDate, ftTime, ftDateTime, ftTimeStamp:
-      Result := TValue.From<TDateTime>(AField.AsDateTime);
+      Result := TValue.{$IFDEF FPC}specialize {$ENDIF}From<TDateTime>(AField.AsDateTime);
 
     ftBlob, ftGraphic, ftOraBlob:
     begin
@@ -458,14 +473,18 @@ begin
           LStream.Position := 0;
           LStream.ReadBuffer(LBytes[0], LStream.Size);
         end;
-        Result := TValue.From<TBytes>(LBytes);
+        Result := TValue.{$IFDEF FPC}specialize {$ENDIF}From<TBytes>(LBytes);
       finally
         LStream.Free;
       end;
     end;
 
     else
+      {$IFDEF FPC}
+      Result := TValue.specialize From<string>(string(AField.AsUTF8String));
+      {$ELSE}
       Result := TValue.From<string>(AField.AsString);
+      {$ENDIF}
   end;
 end;
 
@@ -544,9 +563,9 @@ begin
     Exit;
   end;
 
-  if AValue.IsType<TBytes> and (AField is TBlobField) then
+  if AValue.{$IFDEF FPC}specialize {$ENDIF}IsType<TBytes> and (AField is TBlobField) then
   begin
-    LBytes := AValue.AsType<TBytes>;
+    LBytes := AValue.{$IFDEF FPC}specialize {$ENDIF}AsType<TBytes>;
     LStream := TBytesStream.Create(LBytes);
     try
       TBlobField(AField).LoadFromStream(LStream);
@@ -557,20 +576,30 @@ begin
   end;
 
   case AField.DataType of
-    ftSmallint, ftInteger, ftWord, ftAutoInc, ftShortint, ftByte: AField.AsInteger := AValue.AsInteger;
+    ftSmallint, ftInteger, ftWord, ftAutoInc {$IFnDEF FPC}, ftShortint, ftByte{$ENDIF}:
+      AField.AsInteger := AValue.AsInteger;
 
-    ftLargeint: AField.AsLargeInt := AValue.AsInt64;
+    ftLargeint:
+      AField.AsLargeInt := AValue.AsInt64;
 
-    ftBoolean: AField.AsBoolean := AValue.AsBoolean;
+    ftBoolean:
+      AField.AsBoolean := AValue.AsBoolean;
 
-    ftFloat, ftSingle, ftExtended: AField.AsFloat := AValue.AsExtended;
+    ftFloat{$IFnDEF FPC}, ftSingle, ftExtended{$ENDIF}:
+      AField.AsFloat := AValue.AsExtended;
 
-    ftCurrency, ftBCD, ftFMTBcd: AField.AsCurrency := AValue.AsType<Currency>;
+    ftCurrency, ftBCD, ftFMTBcd:
+      AField.AsCurrency := AValue.{$IFDEF FPC}specialize {$ENDIF}AsType<Currency>;
 
-    ftDate, ftTime, ftDateTime, ftTimeStamp: AField.AsDateTime := AValue.AsType<TDateTime>;
+    ftDate, ftTime, ftDateTime, ftTimeStamp:
+      AField.AsDateTime := AValue.{$IFDEF FPC}specialize {$ENDIF}AsType<TDateTime>;
 
     else
+      {$IFDEF FPC}
+      AField.AsUTF8String := UTF8String(h5uValueAsText(AValue));
+      {$ELSE}
       AField.AsString := AValue.ToString;
+      {$ENDIF}
   end;
 end;
 

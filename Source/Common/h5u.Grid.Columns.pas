@@ -1,17 +1,33 @@
 ﻿unit h5u.Grid.Columns;
 
+{$IFDEF FPC}
+  {$MODE OBJFPC}{$H+}
+  {$MODESWITCH ADVANCEDRECORDS}
+  {$CODEPAGE UTF8}
+{$ENDIF}
+
 interface
 
 {$SCOPEDENUMS ON}
 
 uses
-  System.Classes,
-  System.Rtti,
-  System.Generics.Defaults,
-  System.Generics.Collections,
-  System.Math,
-  System.SysUtils,
-  System.UITypes,
+  {$IFDEF FPC}
+    h5u.Grid.Compat,
+    Classes,
+    Rtti,
+    Generics.Defaults,
+    Generics.Collections,
+    Math,
+    SysUtils,
+  {$ELSE}
+    System.Classes,
+    System.Rtti,
+    System.Generics.Defaults,
+    System.Generics.Collections,
+    System.Math,
+    System.SysUtils,
+    System.UITypes,
+  {$ENDIF}
   h5u.Grid.Types;
 
 type
@@ -96,7 +112,7 @@ type
   protected
     function GetDisplayName: string; override;
   public
-    constructor Create(Collection: TCollection); override;
+    constructor Create(ACollection: TCollection); override;
     procedure Assign(Source: TPersistent); override;
     function GetMode: string;
     function ConstrainWidth(AValue: Integer): Integer;
@@ -137,11 +153,11 @@ type
     property Highlighted: Boolean read FHighlighted write FHighlighted default False;
     property RightSpacing: Integer read FRightSpacing write SetRightSpacing default -1;
     property Color: TColor read FColor write SetColor default TColorRec.SysDefault;
-    [Default(h5uClassIdGridColumn)]
+    {$IFnDEF FPC} [Default(h5uClassIdGridColumn)] {$ENDIF}
     property ClassId: Th5uClassId read FClassId write FClassId;
-    [Default(h5uClassIdGridDataCell)]
+    {$IFnDEF FPC} [Default(h5uClassIdGridDataCell)] {$ENDIF}
     property CellClassId: Th5uClassId read FCellClassId write FCellClassId;
-    [Default(h5uClassIdGridHeaderCell)]
+    {$IFnDEF FPC} [Default(h5uClassIdGridHeaderCell)] {$ENDIF}
     property HeaderCellClassId: Th5uClassId read FHeaderCellClassId write FHeaderCellClassId;
     property MovePermission: Th5uColumnMovePermission read FMovePermission write SetMovePermission default Th5uColumnMovePermission.Default;
     property CanHide: Boolean read FCanHide write FCanHide default True;
@@ -174,7 +190,7 @@ type
     function Add: Th5uGridColumn;
     function FindById(const AId: string): Th5uGridColumn;
     function FindByFieldName(const AFieldName: string): Th5uGridColumn;
-    function VisibleColumns: TArray<Th5uGridColumn>;
+    function VisibleColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>;
     procedure NormalizeVisibleIndexes;
     procedure MoveColumn(AColumn: Th5uGridColumn; ANewVisibleIndex: Integer);
     // ANewVisibleIndex is the block's first index after removal and insertion.
@@ -209,7 +225,7 @@ type
   protected
     function GetDisplayName: string; override;
   public
-    constructor Create(Collection: TCollection); override;
+    constructor Create(ACollection: TCollection); override;
     procedure Assign(Source: TPersistent); override;
   published
     property Id: string read FId write FId;
@@ -224,7 +240,7 @@ type
     property MaxWidth: Integer read FMaxWidth write SetMaxWidth default 0;
     property WidthInPercent: Double read FWidthInPercent write SetWidthInPercent;
     property StyleName: string read FStyleName write FStyleName;
-    [Default(h5uClassIdGridHeaderGroupCell)]
+    {$IFnDEF FPC} [Default(h5uClassIdGridHeaderGroupCell)] {$ENDIF}
     property ClassId: Th5uClassId read FClassId write FClassId;
   end;
 
@@ -256,10 +272,10 @@ type
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
     function ContainsCell(ACell: Th5uHeaderLayoutCell): Boolean;
-    function ColumnRange(ACell: Th5uHeaderLayoutCell; const AColumns: TArray<Th5uGridColumn>; out AFirst, ALast: Integer): Boolean;
-    function CanMoveColumns(const AColumns: TArray<Th5uGridColumn>; AFirst, ACount, ANewIndex: Integer): Boolean;
-    procedure ColumnsMoved(const ABefore, AAfter: TArray<Th5uGridColumn>);
-    function MovesWithColumns(AColumn: Th5uGridColumn; const AColumns: TArray<Th5uGridColumn>; AFirst, ACount: Integer): Boolean;
+    function ColumnRange(ACell: Th5uHeaderLayoutCell; const AColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>; out AFirst, ALast: Integer): Boolean;
+    function CanMoveColumns(const AColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>; AFirst, ACount, ANewIndex: Integer): Boolean;
+    procedure ColumnsMoved(const ABefore, AAfter: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>);
+    function MovesWithColumns(AColumn: Th5uGridColumn; const AColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>; AFirst, ACount: Integer): Boolean;
     property Owner: TPersistent read FOwner;
     property OnChanged: TNotifyEvent read FOnChanged write FOnChanged;
   published
@@ -291,7 +307,7 @@ type
 
 implementation
 
-function CompareVisibleColumns(const ALeft, ARight: Th5uGridColumn): Integer;
+function CompareVisibleColumns({$IFDEF FPC}constref{$ELSE}const{$ENDIF} ALeft, ARight: Th5uGridColumn): Integer;
 begin
   if ALeft.FixedKind <> ARight.FixedKind then
   begin
@@ -391,7 +407,7 @@ begin
   inherited Changed(False);
 end;
 
-constructor Th5uGridColumn.Create(Collection: TCollection);
+constructor Th5uGridColumn.Create(ACollection: TCollection);
 begin
   inherited;
   FId := '';
@@ -632,8 +648,8 @@ end;
 
 procedure Th5uGridColumns.MoveColumns(const AColumns: array of Th5uGridColumn; ANewVisibleIndex: Integer; AHeaderLayout: Th5uHeaderLayout);
 var
-  LColumns: TArray<Th5uGridColumn>;
-  LList, LAll, LMoving: TList<Th5uGridColumn>;
+  LColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>;
+  LList, LAll, LMoving: {$IFDEF FPC}specialize {$ENDIF}TList<Th5uGridColumn>;
   I, J, LFirst, LInsert: Integer;
   LMove: Boolean;
   LAnchor: Th5uGridColumn;
@@ -658,7 +674,7 @@ begin
   ANewVisibleIndex := EnsureRange(ANewVisibleIndex, 0, Length(LColumns) - Length(AColumns));
   if ANewVisibleIndex = LFirst then
     Exit;
-  LList := TList<Th5uGridColumn>.Create;
+  LList := {$IFDEF FPC}specialize {$ENDIF}TList<Th5uGridColumn>.Create;
   try
     LList.AddRange(LColumns);
     LList.DeleteRange(LFirst, Length(AColumns));
@@ -671,12 +687,12 @@ begin
     begin
       if not AHeaderLayout.CanMoveColumns(LColumns, LFirst, Length(AColumns), ANewVisibleIndex) then
         Exit;
-      LAll := TList<Th5uGridColumn>.Create;
-      LMoving := TList<Th5uGridColumn>.Create;
+      LAll := {$IFDEF FPC}specialize {$ENDIF}TList<Th5uGridColumn>.Create;
+      LMoving := {$IFDEF FPC}specialize {$ENDIF}TList<Th5uGridColumn>.Create;
       try
         for I := 0 to Count - 1 do
           LAll.Add(Items[I]);
-        LAll.Sort(TComparer<Th5uGridColumn>.Construct(CompareVisibleColumns));
+        LAll.Sort({$IFDEF FPC}specialize {$ENDIF}TComparer<Th5uGridColumn>.Construct({$IFDEF FPC}@{$ENDIF}CompareVisibleColumns));
         for I := LAll.Count - 1 downto 0 do
         begin
           LMove := AHeaderLayout.MovesWithColumns(LAll[I], LColumns, LFirst, Length(AColumns));
@@ -719,7 +735,7 @@ end;
 
 procedure Th5uGridColumns.NormalizeVisibleIndexes;
 var
-  LColumns: TArray<Th5uGridColumn>;
+  LColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>;
   I: Integer;
 begin
   LColumns := VisibleColumns;
@@ -740,18 +756,18 @@ begin
     FOnChanged(Self, Th5uGridColumn(Item));
 end;
 
-function Th5uGridColumns.VisibleColumns: TArray<Th5uGridColumn>;
+function Th5uGridColumns.VisibleColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>;
 var
-  LList: TList<Th5uGridColumn>;
+  LList: {$IFDEF FPC}specialize {$ENDIF}TList<Th5uGridColumn>;
   I: Integer;
 begin
-  LList := TList<Th5uGridColumn>.Create;
+  LList := {$IFDEF FPC}specialize {$ENDIF}TList<Th5uGridColumn>.Create;
   try
     for I := 0 to Count - 1 do
       if Items[I].Visible then
         LList.Add(Items[I]);
 
-    LList.Sort(TComparer<Th5uGridColumn>.Construct(CompareVisibleColumns));
+    LList.Sort({$IFDEF FPC}specialize {$ENDIF}TComparer<Th5uGridColumn>.Construct({$IFDEF FPC}@{$ENDIF}CompareVisibleColumns));
     Result := LList.ToArray;
   finally
     LList.Free;
@@ -760,7 +776,7 @@ end;
 
 { Th5uHeaderLayoutCell }
 
-constructor Th5uHeaderLayoutCell.Create(Collection: TCollection);
+constructor Th5uHeaderLayoutCell.Create(ACollection: TCollection);
 begin
   inherited;
   FRowSpan := 1;
@@ -941,7 +957,7 @@ begin
   Result := False;
 end;
 
-function Th5uHeaderLayout.ColumnRange(ACell: Th5uHeaderLayoutCell; const AColumns: TArray<Th5uGridColumn>; out AFirst, ALast: Integer): Boolean;
+function Th5uHeaderLayout.ColumnRange(ACell: Th5uHeaderLayoutCell; const AColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>; out AFirst, ALast: Integer): Boolean;
 var
   LCell: Th5uHeaderLayoutCell;
   I, J: Integer;
@@ -987,7 +1003,7 @@ begin
   Result := (AFirst >= 0) and (AFirst <= ALast);
 end;
 
-function Th5uHeaderLayout.CanMoveColumns(const AColumns: TArray<Th5uGridColumn>; AFirst, ACount, ANewIndex: Integer): Boolean;
+function Th5uHeaderLayout.CanMoveColumns(const AColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>; AFirst, ACount, ANewIndex: Integer): Boolean;
 var
   I, J, LFirst, LLast, LMin, LMax, LIndex: Integer;
 
@@ -1025,7 +1041,7 @@ begin
   Result := True;
 end;
 
-function Th5uHeaderLayout.MovesWithColumns(AColumn: Th5uGridColumn; const AColumns: TArray<Th5uGridColumn>; AFirst, ACount: Integer): Boolean;
+function Th5uHeaderLayout.MovesWithColumns(AColumn: Th5uGridColumn; const AColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>; AFirst, ACount: Integer): Boolean;
 var
   LGroup, LLeaf: Th5uHeaderLayoutCell;
   I, J, LFirst, LLast: Integer;
@@ -1048,10 +1064,10 @@ begin
   end;
 end;
 
-procedure Th5uHeaderLayout.ColumnsMoved(const ABefore, AAfter: TArray<Th5uGridColumn>);
+procedure Th5uHeaderLayout.ColumnsMoved(const ABefore, AAfter: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>);
 var
   I, J, K, LFirst, LLast, LNewFirst: Integer;
-  LPositions: TArray<Integer>;
+  LPositions: {$IFDEF FPC}specialize {$ENDIF}TArray<Integer>;
 begin
   SetLength(LPositions, FCells.Count);
   for I := 0 to FCells.Count - 1 do

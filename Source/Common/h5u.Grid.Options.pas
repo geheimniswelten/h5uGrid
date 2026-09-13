@@ -1,5 +1,11 @@
 ﻿unit h5u.Grid.Options;
 
+{$IFDEF FPC}
+  {$MODE OBJFPC}{$H+}
+  {$MODESWITCH ADVANCEDRECORDS}
+  {$CODEPAGE UTF8}
+{$ENDIF}
+
 interface
 
 {$SCOPEDENUMS ON}
@@ -11,10 +17,17 @@ interface
 {$ENDIF}
 
 uses
-  System.Math,
-  System.Classes,
-  System.SysUtils,
-  System.UITypes,
+  {$IFDEF FPC}
+    h5u.Grid.Compat,
+    Math,
+    Classes,
+    SysUtils,
+  {$ELSE}
+    System.Math,
+    System.Classes,
+    System.SysUtils,
+    System.UITypes,
+  {$ENDIF}
   h5u.Grid.Columns,
   h5u.Grid.Types;
 
@@ -329,11 +342,11 @@ type
   published
     property StripePeriod: Integer read FStripePeriod write FStripePeriod default 2;
     property StripeOffset: Integer read FStripeOffset write FStripeOffset default 1;
-    [Default('Stripe')]
+    {$IFnDEF FPC} [Default('Stripe')] {$ENDIF}
     property StripeStyleName: string read FStripeStyleName write FStripeStyleName;
-    [Default('Odd')]
+    {$IFnDEF FPC} [Default('Odd')] {$ENDIF}
     property OddStyleName: string read FOddStyleName write FOddStyleName;
-    [Default('Even')]
+    {$IFnDEF FPC} [Default('Even')] {$ENDIF}
     property EvenStyleName: string read FEvenStyleName write FEvenStyleName;
     property StyleKeyColumnId: string read FStyleKeyColumnId write FStyleKeyColumnId;
     property Mappings: Th5uRowStyleMappings read FMappings write SetMappings;
@@ -659,7 +672,7 @@ begin
   inherited;
   FEnabled := False;
   FBranchEndBand := Th5uTreeBranchEndBandOptions.Create;
-  FBranchEndBand.OnChanged := ChildChanged;
+  FBranchEndBand.OnChanged := {$IFDEF FPC}@{$ENDIF}ChildChanged;
 end;
 
 destructor Th5uTreeOptions.Destroy;
@@ -800,7 +813,7 @@ begin
   FGroupEmptyValues := True;
   FPreserveStateOnDataChange := True;
   FEndBand := Th5uAdjacentGroupEndBandOptions.Create;
-  FEndBand.OnChanged := ChildChanged;
+  FEndBand.OnChanged := {$IFDEF FPC}@{$ENDIF}ChildChanged;
 end;
 
 destructor Th5uAdjacentGroupFoldingOptions.Destroy;

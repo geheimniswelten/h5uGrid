@@ -1,13 +1,26 @@
-unit h5u.Grid.RowMetrics;
+﻿unit h5u.Grid.RowMetrics;
+
+{$IFDEF FPC}
+  {$MODE OBJFPC}{$H+}
+  {$MODESWITCH ADVANCEDRECORDS}
+  {$CODEPAGE UTF8}
+{$ENDIF}
 
 interface
 
 {$SCOPEDENUMS ON}
 
 uses
-  System.Generics.Collections,
-  System.Math,
-  System.SysUtils,
+  {$IFDEF FPC}
+    h5u.Grid.Compat,
+    Generics.Collections,
+    Math,
+    SysUtils,
+  {$ELSE}
+    System.Generics.Collections,
+    System.Math,
+    System.SysUtils,
+  {$ENDIF}
   h5u.Grid.Columns,
   h5u.Grid.Options,
   h5u.Grid.Types;
@@ -17,8 +30,7 @@ const
 
 type
   Th5uMeasureCellHeight = function(ARow: Int64; AColumn: Th5uGridColumn): Double of object;
-  Th5uAdjustRowHeight = procedure(ARow: Int64; const AKey: Th5uRowKey; AEstimated: Boolean;
-    var AHeight: Double; var ACacheResult: Boolean) of object;
+  Th5uAdjustRowHeight = procedure(ARow: Int64; const AKey: Th5uRowKey; AEstimated: Boolean; var AHeight: Double; var ACacheResult: Boolean) of object;
   Th5uGetRowExtent = function(ARow: Int64; AAllowMeasure: Boolean): Double of object;
   Th5uPrepareMetricRange = procedure(AFirst, ACount: Int64) of object;
 
@@ -31,7 +43,7 @@ type
 
   Th5uGridRowMetrics = class
   private
-    FHeights: TDictionary<string, Double>;
+    FHeights: {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, Double>;
   public
     constructor Create;
     destructor Destroy; override;
@@ -52,7 +64,7 @@ implementation
 constructor Th5uGridRowMetrics.Create;
 begin
   inherited;
-  FHeights := TDictionary<string, Double>.Create;
+  FHeights := {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, Double>.Create;
 end;
 
 destructor Th5uGridRowMetrics.Destroy;
@@ -115,7 +127,12 @@ begin
   Result := -1;
   ATop := AViewportTop;
   LRemaining := Max(Int64(0), AOffset);
+  {$IFDEF FPC_old}
+  LRow := 0;
+  while LRow < ARowCount do
+  {$ELSE}
   for LRow := 0 to ARowCount - 1 do
+  {$ENDIF}
   begin
     LExtent := Round(AExtent(LRow, ARowCount <= h5uExactRowHeightLimit));
     if LRemaining < LExtent then
@@ -124,6 +141,9 @@ begin
       Exit(LRow);
     end;
     Dec(LRemaining, LExtent);
+    {$IFDEF FPC_old}
+    Inc(LRow);
+    {$ENDIF}
   end;
 end;
 
@@ -135,7 +155,12 @@ begin
   Result := -1;
   ATop := AViewportTop;
   LRemaining := Max(0.0, AOffset);
+  {$IFDEF FPC_old}
+  LRow := 0;
+  while LRow < ARowCount do
+  {$ELSE}
   for LRow := 0 to ARowCount - 1 do
+  {$ENDIF}
   begin
     LExtent := AExtent(LRow, ARowCount <= h5uExactRowHeightLimit);
     if LRemaining < LExtent then
@@ -143,7 +168,10 @@ begin
       ATop := AViewportTop - LRemaining;
       Exit(LRow);
     end;
-    LRemaining := LRemaining - LExtent;
+    LRemaining := LRemaining + LExtent;
+    {$IFDEF FPC_old}
+    Inc(LRow);
+    {$ENDIF}
   end;
 end;
 
@@ -161,8 +189,17 @@ begin
   begin
     APrepare(0, ARowCount);
     LTotal := 0;
-    for LRow := 0 to ARowCount - 1 do
-      LTotal := LTotal + AExtent(LRow, True);
+    {$IFDEF FPC_old}
+      LRow := 0;
+      while LRow < ARowCount do
+      begin
+        Inc(LTotal, AExtent(LRow, True));
+        Inc(LRow);
+      end;
+    {$ELSE}
+      for LRow := 0 to ARowCount - 1 do
+        LTotal := LTotal + AExtent(LRow, True);
+    {$ENDIF}
     Result.Whole := Trunc(LTotal);
     Result.Fraction := LTotal - Result.Whole;
   end
@@ -175,8 +212,17 @@ var
   I: Int64;
 begin
   Result := 0;
-  for I := 0 to ARow - 1 do
-    Result := Result + AExtent(I, True);
+  {$IFDEF FPC_old}
+    I := 0;
+    while I < ARow do
+    begin
+      Result := Result + AExtent(I, True);
+      Inc(I);
+    end;
+  {$ELSE}
+    for I := 0 to ARow - 1 do
+      Result := Result + AExtent(I, True);
+  {$ENDIF}
 end;
 
 end.

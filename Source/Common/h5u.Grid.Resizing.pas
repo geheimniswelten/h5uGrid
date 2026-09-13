@@ -1,10 +1,22 @@
-unit h5u.Grid.Resizing;
+﻿unit h5u.Grid.Resizing;
+
+{$IFDEF FPC}
+  {$MODE OBJFPC}{$H+}
+  {$MODESWITCH ADVANCEDRECORDS}
+  {$CODEPAGE UTF8}
+{$ENDIF}
 
 interface
 
 uses
-  System.Classes,
-  System.Math,
+  {$IFDEF FPC}
+    h5u.Grid.Compat,
+    Classes,
+    Math,
+  {$ELSE}
+    System.Classes,
+    System.Math,
+  {$ENDIF}
   h5u.Grid.Columns,
   h5u.Grid.Options;
 
@@ -17,14 +29,14 @@ type
 
   Th5uResizeHeaderEdgeTest = function(AX, AY: Double): Boolean of object;
 
-function h5uColumnResizeAt(AOptions: Th5uCustomizationOptions; const ACandidates: TArray<Th5uResizeCandidate>; ALastVisibleIndex: Integer; X, Y: Double; ATouch: Boolean;
-  AHeaderEdge: Th5uResizeHeaderEdgeTest): Th5uGridColumn;
+function h5uColumnResizeAt(AOptions: Th5uCustomizationOptions; const ACandidates: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uResizeCandidate>;
+  ALastVisibleIndex: Integer; X, Y: Double; ATouch: Boolean; AHeaderEdge: Th5uResizeHeaderEdgeTest): Th5uGridColumn;
 function h5uTryResizeColumn(AColumns: Th5uGridColumns; AColumn: Th5uGridColumn; AOriginalWidth, ADelta: Integer): Boolean;
 
 implementation
 
-function h5uColumnResizeAt(AOptions: Th5uCustomizationOptions; const ACandidates: TArray<Th5uResizeCandidate>; ALastVisibleIndex: Integer; X, Y: Double; ATouch: Boolean;
-  AHeaderEdge: Th5uResizeHeaderEdgeTest): Th5uGridColumn;
+function h5uColumnResizeAt(AOptions: Th5uCustomizationOptions; const ACandidates: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uResizeCandidate>;
+  ALastVisibleIndex: Integer; X, Y: Double; ATouch: Boolean; AHeaderEdge: Th5uResizeHeaderEdgeTest): Th5uGridColumn;
 var
   LInfo: Th5uResizeCandidate;
   LLeft, LRight, LLastLeft, LEffectiveLeft, LDelta, LDistance, LBest: Double;

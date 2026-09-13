@@ -1,16 +1,32 @@
 ﻿unit h5u.Grid.Data.Core;
 
+{$IFDEF FPC}
+  {$MODE OBJFPC}{$H+}
+  {$MODESWITCH ADVANCEDRECORDS}
+  {$CODEPAGE UTF8}
+{$ENDIF}
+
 interface
 
 {$SCOPEDENUMS ON}
 
 uses
-  System.Classes,
-  System.Generics.Collections,
-  System.Rtti,
-  System.SysUtils,
-  System.TypInfo,
-  System.Variants,
+  {$IFDEF FPC}
+    h5u.Grid.Compat,
+    Classes,
+    Generics.Collections,
+    Rtti,
+    SysUtils,
+    TypInfo,
+    Variants,
+  {$ELSE}
+    System.Classes,
+    System.Generics.Collections,
+    System.Rtti,
+    System.SysUtils,
+    System.TypInfo,
+    System.Variants,
+  {$ENDIF}
   h5u.Grid.Factory,
   h5u.Grid.Options,
   h5u.Grid.Types;
@@ -50,7 +66,7 @@ type
 
   Th5uCustomDataController = class(TComponent)
   private
-    FLinks: TList<Th5uDataControllerLink>;
+    FLinks: {$IFDEF FPC}specialize {$ENDIF}TList<Th5uDataControllerLink>;
     FFactoryScope: Th5uFactoryScope;
     FSharedClassFactory: Th5uClassFactory;
     FCache: Th5uCacheOptions;
@@ -81,7 +97,7 @@ type
 
     function GetDataSessionClass(const AContext: Th5uFactoryContext): TClass; virtual;
 
-    property Links: TList<Th5uDataControllerLink> read FLinks;
+    property Links: {$IFDEF FPC}specialize {$ENDIF}TList<Th5uDataControllerLink> read FLinks;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -129,9 +145,9 @@ begin
   if AValue.IsEmpty then
     Exit('');
 
-  if AValue.IsType<TBytes> then
+  if AValue.{$IFDEF FPC}specialize {$ENDIF}IsType<TBytes> then
   begin
-    LBytes := AValue.AsType<TBytes>;
+    LBytes := AValue.{$IFDEF FPC}specialize {$ENDIF}AsType<TBytes>;
     if Length(LBytes) = 0 then
       Exit('');
     Exit(Format('[Bild: %d Bytes]', [Length(LBytes)]));
@@ -139,7 +155,7 @@ begin
 
   case AValue.Kind of
     tkString, tkLString, tkWString, tkUString, tkChar, tkWChar:
-      Result := AValue.ToString;
+      Result := {$IFDEF FPC}h5uValueAsText(AValue){$ELSE}AValue.ToString{$ENDIF};
 
     tkInteger, tkInt64, tkEnumeration: if (ADisplayFormat <> '') and (AValue.Kind <> tkEnumeration) then
       Result := FormatFloat(ADisplayFormat, AValue.AsInt64) else Result := AValue.ToString;
@@ -148,7 +164,7 @@ begin
     begin
       if AValue.TypeInfo = TypeInfo(TDateTime) then
       begin
-        LDateTime := AValue.AsType<TDateTime>;
+        LDateTime := AValue.{$IFDEF FPC}specialize {$ENDIF}AsType<TDateTime>;
         if ADisplayFormat <> '' then
           Result := FormatDateTime(ADisplayFormat, LDateTime)
         else
@@ -198,7 +214,7 @@ begin
       Exit(True);
     end;
 
-    tkEnumeration:
+    {$IFDEF FPC}tkBool,{$ENDIF} tkEnumeration:
     begin
       if AValue.TypeInfo = TypeInfo(Boolean) then
         AInteger := Ord(AValue.AsBoolean)
@@ -283,13 +299,13 @@ end;
 constructor Th5uCustomDataController.Create(AOwner: TComponent);
 begin
   inherited;
-  FLinks := TList<Th5uDataControllerLink>.Create;
+  FLinks := {$IFDEF FPC}specialize {$ENDIF}TList<Th5uDataControllerLink>.Create;
   FFactoryScope := Th5uFactoryScope.Create(Self);
   FFactoryScope.Parent := h5uGlobalFactoryScope;
   FCache := Th5uCacheOptions.Create;
-  FCache.OnChanged := CacheOptionsChanged;
+  FCache.OnChanged := {$IFDEF FPC}@{$ENDIF}CacheOptionsChanged;
   FPagination := Th5uPaginationOptions.Create;
-  FPagination.OnChanged := PaginationOptionsChanged;
+  FPagination.OnChanged := {$IFDEF FPC}@{$ENDIF}PaginationOptionsChanged;
   FEnabled := True;
 end;
 
@@ -455,7 +471,7 @@ end;
 
 procedure Th5uCustomDataController.NotifyDataChanged(const AChange: Th5uDataChange);
 var
-  LLinks: TArray<Th5uDataControllerLink>;
+  LLinks: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uDataControllerLink>;
   LLink: Th5uDataControllerLink;
 begin
   if FUpdateCount > 0 then

@@ -1,13 +1,26 @@
-unit h5u.Grid.Layout;
+﻿unit h5u.Grid.Layout;
+
+{$IFDEF FPC}
+  {$MODE OBJFPC}{$H+}
+  {$MODESWITCH ADVANCEDRECORDS}
+  {$CODEPAGE UTF8}
+{$ENDIF}
 
 interface
 
 {$SCOPEDENUMS ON}
 
 uses
-  System.Classes,
-  System.Math,
-  System.Generics.Collections,
+  {$IFDEF FPC}
+    h5u.Grid.Compat,
+    Classes,
+    Math,
+    Generics.Collections,
+  {$ELSE}
+    System.Classes,
+    System.Math,
+    System.Generics.Collections,
+  {$ENDIF}
   h5u.Grid.AdjacentGroups,
   h5u.Grid.Columns,
   h5u.Grid.Options,
@@ -37,7 +50,7 @@ function h5uResolveColumnWidths(AColumns: Th5uGridColumns; AHeader: Th5uHeaderLa
   AMaxWidth: Integer = 0): Boolean;
 function h5uColumnRightSpacing(AColumn: Th5uGridColumn; ADefault: Integer): Integer;
 function h5uBuildColumnLayout(AColumns: Th5uGridColumns; ADefaultSpacing: Integer; AViewLeft, AViewRight, AIndicatorExtent, AHorizontalOffset: Double;
-  AViewHasHeight: Boolean): TArray<Th5uColumnLayoutInfo>;
+  AViewHasHeight: Boolean): {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uColumnLayoutInfo>;
 procedure h5uColumnViewport(AColumns: Th5uGridColumns; AColumn: Th5uGridColumn; ADefaultSpacing: Integer; AIndicatorExtent: Double; var ALeft, ARight: Double);
 function h5uHeaderHeight(ALayout: Th5uHeaderLayout; AShowHeader: Boolean; ARowHeight, ASpacing: Double): Double;
 function h5uRevealOffset(AOffset, AStart, ASize, AViewportSize: Double): Double;
@@ -51,15 +64,15 @@ type
     Column: Th5uGridColumn;
     Header: Th5uHeaderLayoutCell;
     Parent, First, Last, Row, Spacing: Integer;
-    Children: TList<Integer>;
+    Children: {$IFDEF FPC}specialize {$ENDIF}TList<Integer>;
     Weight, Minimum, Maximum, Preferred, Width, Fraction: Double;
   end;
 
 function h5uResolveColumnWidths(AColumns: Th5uGridColumns; AHeader: Th5uHeaderLayout; ADefaultSpacing: Integer; AAvailableWidth: Double; AMinWidth: Integer;
   AMaxWidth: Integer): Boolean;
 var
-  LColumns: TArray<Th5uGridColumn>;
-  LNodes: TArray<Th5uWidthNode>;
+  LColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>;
+  LNodes: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uWidthNode>;
   I, J, K, N, LGroups, LParent, LFirst, LLast, LWidth: Integer;
   LBudget: Double;
 
@@ -263,7 +276,7 @@ begin
       Inc(N);
     end;
     for I := 0 to N - 1 do
-      LNodes[I].Children := TList<Integer>.Create;
+      LNodes[I].Children := {$IFDEF FPC}specialize {$ENDIF}TList<Integer>.Create;
     for I := 1 to N - 1 do
     begin
       LParent := 0;
@@ -312,9 +325,9 @@ begin
 end;
 
 function h5uBuildColumnLayout(AColumns: Th5uGridColumns; ADefaultSpacing: Integer; AViewLeft, AViewRight, AIndicatorExtent, AHorizontalOffset: Double;
-  AViewHasHeight: Boolean): TArray<Th5uColumnLayoutInfo>;
+  AViewHasHeight: Boolean): {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uColumnLayoutInfo>;
 var
-  LColumns: TArray<Th5uGridColumn>;
+  LColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>;
   LDataLeft, LLeft, LRight, LNormal, LStart: Double;
   LSpacing, I: Integer;
 begin

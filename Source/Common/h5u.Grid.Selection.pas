@@ -1,13 +1,26 @@
 ﻿unit h5u.Grid.Selection;
 
+{$IFDEF FPC}
+  {$MODE OBJFPC}{$H+}
+  {$MODESWITCH ADVANCEDRECORDS}
+  {$CODEPAGE UTF8}
+{$ENDIF}
+
 interface
 
 {$SCOPEDENUMS ON}
 
 uses
-  System.Classes,
-  System.Generics.Collections,
-  System.SysUtils,
+  {$IFDEF FPC}
+    h5u.Grid.Compat,
+    Classes,
+    Generics.Collections,
+    SysUtils,
+  {$ELSE}
+    System.Classes,
+    System.Generics.Collections,
+    System.SysUtils,
+  {$ENDIF}
   h5u.Grid.Types;
 
 type
@@ -21,11 +34,11 @@ type
     FMultiRange: Boolean;
     FRightClickSelect: Boolean;
     FKeepAcrossPages: Boolean;
-    FSelectedRows: TDictionary<string, Byte>;
-    FSelectedColumns: TDictionary<string, Byte>;
-    FCellRanges: TList<Th5uCellRange>;
+    FSelectedRows: {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, Byte>;
+    FSelectedColumns: {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, Byte>;
+    FCellRanges: {$IFDEF FPC}specialize {$ENDIF}TList<Th5uCellRange>;
     FAllRowsSelected: Boolean;
-    FExcludedRows: TDictionary<string, Byte>;
+    FExcludedRows: {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, Byte>;
     FFocusedCell: Th5uCellAddress;
     FAnchorCell: Th5uCellAddress;
     FExtensionBase: Th5uGridSelection;
@@ -68,7 +81,7 @@ type
 
     procedure SetFocus(const ACell: Th5uCellAddress; AUpdateAnchor: Boolean);
 
-    property CellRanges: TList<Th5uCellRange> read FCellRanges;
+    property CellRanges: {$IFDEF FPC}specialize {$ENDIF}TList<Th5uCellRange> read FCellRanges;
     property FocusedCell: Th5uCellAddress read FFocusedCell;
     property AnchorCell: Th5uCellAddress read FAnchorCell;
     property AllRowsSelected: Boolean read FAllRowsSelected;
@@ -110,7 +123,7 @@ end;
 
 procedure Th5uGridSelection.CopySelection(ASource: Th5uGridSelection);
 var
-  LPair: TPair<string, Byte>;
+  LPair: {$IFDEF FPC}specialize {$ENDIF}TPair<string, Byte>;
   LRange: Th5uCellRange;
 begin
   FAllRowsSelected := ASource.FAllRowsSelected;
@@ -238,10 +251,10 @@ begin
   FScope := Th5uSelectionScope.CurrentQuery;
   FMultiRange := True;
   FKeepAcrossPages := True;
-  FSelectedRows := TDictionary<string, Byte>.Create;
-  FSelectedColumns := TDictionary<string, Byte>.Create;
-  FCellRanges := TList<Th5uCellRange>.Create;
-  FExcludedRows := TDictionary<string, Byte>.Create;
+  FSelectedRows := {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, Byte>.Create;
+  FSelectedColumns := {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, Byte>.Create;
+  FCellRanges := {$IFDEF FPC}specialize {$ENDIF}TList<Th5uCellRange>.Create;
+  FExcludedRows := {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, Byte>.Create;
   FFocusedCell := Th5uCellAddress.Empty;
   FAnchorCell := Th5uCellAddress.Empty;
 end;
@@ -406,7 +419,7 @@ end;
 procedure Th5uGridSelection.Assign(Source: TPersistent);
 var
   LSource: Th5uGridSelection;
-  LPair: TPair<string, Byte>;
+  LPair: {$IFDEF FPC}specialize {$ENDIF}TPair<string, Byte>;
   LRange: Th5uCellRange;
 begin
   if Source = Self then

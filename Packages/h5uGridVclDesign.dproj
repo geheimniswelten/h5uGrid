@@ -145,8 +145,8 @@
         <DCCReference Include="vcl.dcp"/>
         <DCCReference Include="designide.dcp"/>
         <DCCReference Include="h5uGridCore.dcp"/>
-        <DCCReference Include="h5uGridVcl.dcp"/>
         <DCCReference Include="h5uGridCoreDesign.dcp"/>
+        <DCCReference Include="h5uGridVcl.dcp"/>
         <DCCReference Include="..\Source\Design\Vcl.h5u.Grid.Design.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

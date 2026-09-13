@@ -35,10 +35,11 @@ requires
   vcl,
   designide,
   h5uGridCore,
-  h5uGridVcl,
-  h5uGridCoreDesign;
+  h5uGridCoreDesign,
+  h5uGridVcl;
 
 contains
   Vcl.h5u.Grid.Design in '..\Source\Design\Vcl.h5u.Grid.Design.pas';
 
 end.
+

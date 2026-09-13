@@ -4,6 +4,9 @@
 
 Das Paket dient dazu, Architektur, API, Design-Time-Verhalten und die wichtigsten Interaktionspfade früh in einer realen Delphi-Umgebung zu erproben. Es ist ausdrücklich ein **Prototyp 0.1.4** und noch keine vollständige Grid-Suite.
 
+Der Common-Kern unterstützt auch FreePascal/Lazarus mit `{$MODE OBJFPC}{$H+}`.
+Paket, Verwendung und Tests: [FreePascal / Lazarus](Docs/FREEPASCAL.md).
+
 ## Enthaltene Testschwerpunkte
 
 - gemeinsame Daten- und Spaltenklassen für VCL und FMX,

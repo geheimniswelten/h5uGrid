@@ -1,22 +1,44 @@
-program TestCommonBehavior;
+﻿program TestCommonBehavior;
 
+{$IFDEF FPC}
+{$MODE OBJFPC}{$H+}
+{$MODESWITCH ADVANCEDRECORDS}
+{$CODEPAGE UTF8}
+{$ELSE}
 {$APPTYPE CONSOLE}
+{$ENDIF}
 {$SCOPEDENUMS ON}
 
 uses
+{$IFDEF FPC}
+  h5u.Grid.Compat,
+  SysUtils, Math, Rtti, Classes, DateUtils,
+{$ENDIF}
+{$IFNDEF FPC}
   System.SysUtils,
+{$ENDIF}
   h5u.Grid.Values,
+{$IFNDEF FPC}
   System.Math,
+{$ENDIF}
   h5u.Grid.Layout,
   h5u.Grid.RowMetrics,
+{$IFNDEF FPC}
   System.Rtti,
+{$ENDIF}
   h5u.Grid.AdjacentGroups,
   h5u.Grid.Data.Core,
   h5u.Grid.Data.Memory,
   h5u.Grid.View,
+{$IFNDEF FPC}
   System.Classes,
+{$ENDIF}
+{$IFNDEF FPC}
   System.DateUtils,
+{$ENDIF}
+{$IFNDEF FPC}
   System.UITypes,
+{$ENDIF}
   h5u.Grid.Types,
   h5u.Grid.Selection,
   h5u.Grid.Navigation,
@@ -139,7 +161,7 @@ procedure TestResizeBoundaries;
 var
   LColumns: Th5uGridColumns;
   LOptions: Th5uCustomizationOptions;
-  LItems: TArray<Th5uResizeCandidate>;
+  LItems: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uResizeCandidate>;
   LRemoved: Th5uGridColumn;
 begin
   LColumns := Th5uGridColumns.Create(nil);
@@ -237,27 +259,29 @@ begin
     LColumns.Add.Id := 'b';
     LNav := Default(Th5uGridNavigation);
     LOther := Default(Th5uGridNavigation);
-    Check(LNav.Navigate(LColumns, LSelection, 10, LData.RowKey, LData.Extent, 45, vkF2, [], LAction), 'F2 not handled');
+    Check(LNav.Navigate(LColumns, LSelection, 10, {$IFDEF FPC}@{$ENDIF}LData.RowKey, {$IFDEF FPC}@{$ENDIF}LData.Extent, 45, vkF2, [],
+      LAction), 'F2 not handled');
     Check((LAction.Kind = Th5uNavigationActionKind.Focus) and LAction.EditAfterFocus
       and not LAction.AutomaticEdit, 'F2 initial focus and manual edit');
-    Check(h5uPlanCellFocus(LColumns, LSelection, 10, LData.RowKey, 0, 0, False, LCell, LRange), 'focus plan');
+    Check(h5uPlanCellFocus(LColumns, LSelection, 10, {$IFDEF FPC}@{$ENDIF}LData.RowKey, 0, 0, False, LCell, LRange), 'focus plan');
     LSelection.SetFocus(LCell, True);
-    LNav.Navigate(LColumns, LSelection, 10, LData.RowKey, LData.Extent, 45, vkNext, [ssShift, ssCtrl], LAction);
+    LNav.Navigate(LColumns, LSelection, 10, {$IFDEF FPC}@{$ENDIF}LData.RowKey, {$IFDEF FPC}@{$ENDIF}LData.Extent, 45, vkNext, [ssShift,
+      ssCtrl], LAction);
     Check((LAction.Cell.RowIndex = 3) and LAction.Extend and LAction.Add, 'page navigation and additive extension');
-    LNav.SelectHeaderRange(LColumns, LSelection, 10, LData.RowKey, Th5uSelectionKind.Columns, -1, 0, []);
-    LNav.Navigate(LColumns, LSelection, 10, LData.RowKey, LData.Extent, 45, vkRight, [ssShift], LAction);
+    LNav.SelectHeaderRange(LColumns, LSelection, 10, {$IFDEF FPC}@{$ENDIF}LData.RowKey, Th5uSelectionKind.Columns, -1, 0, []);
+    LNav.Navigate(LColumns, LSelection, 10, {$IFDEF FPC}@{$ENDIF}LData.RowKey, {$IFDEF FPC}@{$ENDIF}LData.Extent, 45, vkRight, [ssShift], LAction);
     Check((LAction.Kind = Th5uNavigationActionKind.Header) and (LAction.Cell.ColumnIndex = 1), 'header navigation action');
     Check(not LOther.HeaderSelectionActive, 'navigation state shared between grids');
     LNav.Cancel(LSelection);
     Check(not LNav.HeaderSelectionActive, 'cancel did not reset header selection');
-    Check(LNav.SearchCharacter(LColumns, LSelection, 3, LData.Prepare, LData.Text, 'a', 100, LRow, LColumn) and (LRow
-      = 2), 'new search must start after focused row');
-    h5uPlanCellFocus(LColumns, LSelection, 3, LData.RowKey, LRow, LColumn, False, LCell, LRange);
+    Check(LNav.SearchCharacter(LColumns, LSelection, 3, {$IFDEF FPC}@{$ENDIF}LData.Prepare, {$IFDEF FPC}@{$ENDIF}LData.Text, 'a', 100, LRow,
+      LColumn) and (LRow = 2), 'new search must start after focused row');
+    h5uPlanCellFocus(LColumns, LSelection, 3, {$IFDEF FPC}@{$ENDIF}LData.RowKey, LRow, LColumn, False, LCell, LRange);
     LSelection.SetFocus(LCell, True);
-    Check(LNav.SearchCharacter(LColumns, LSelection, 3, LData.Prepare, LData.Text, 'l', 100 + 200 / MSecsPerDay, LRow, LColumn) and (LRow = 2)
-      and (LNav.SearchText = 'al'), 'continued search must include focused row');
-    Check(LNav.SearchCharacter(LColumns, LSelection, 3, LData.Prepare, LData.Text, 'b', 100 + 1500 / MSecsPerDay, LRow, LColumn) and (LRow = 1)
-      and (LNav.SearchText = 'b'), 'search timeout and wrap');
+    Check(LNav.SearchCharacter(LColumns, LSelection, 3, {$IFDEF FPC}@{$ENDIF}LData.Prepare, {$IFDEF FPC}@{$ENDIF}LData.Text, 'l',
+      100 + 200 / MSecsPerDay, LRow, LColumn) and (LRow = 2) and (LNav.SearchText = 'al'), 'continued search must include focused row');
+    Check(LNav.SearchCharacter(LColumns, LSelection, 3, {$IFDEF FPC}@{$ENDIF}LData.Prepare, {$IFDEF FPC}@{$ENDIF}LData.Text, 'b',
+      100 + 1500 / MSecsPerDay, LRow, LColumn) and (LRow = 1) and (LNav.SearchText = 'b'), 'search timeout and wrap');
     Writeln('PASS: common navigation, page distance, header extension, independent state and search timeout');
   finally
     LSelection.Free;
@@ -293,7 +317,7 @@ var
   LGroups: Th5uAdjacentGroupFoldingOptions;
   LView, LOther: Th5uGridView;
   LInfo: Th5uAdjacentGroupRowInfo;
-  LChanges: TArray<Th5uAdjacentGroupRowInfo>;
+  LChanges: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uAdjacentGroupRowInfo>;
   LLevel, LClosed: Integer;
 begin
   LData := TViewData.Create;
@@ -304,19 +328,24 @@ begin
   LView := nil;
   LOther := nil;
   try
-    LData.Controller.AppendValues(['group', 'level'], [TValue.From<string>('A'), TValue.From<Integer>(0)]);
-    LData.Controller.AppendValues(['group', 'level'], [TValue.From<string>('A'), TValue.From<Integer>(1)]);
-    LData.Controller.AppendValues(['group', 'level'], [TValue.From<string>('B'), TValue.From<Integer>(0)]);
-    LData.Controller.AppendValues(['group', 'level'], [TValue.From<string>('B'), TValue.From<Integer>(1)]);
-    LData.Controller.AppendValues(['group', 'level'], [TValue.From<string>('A'), TValue.From<Integer>(0)]);
+    LData.Controller.AppendValues(['group', 'level'], [TValue.{$IFDEF FPC}specialize {$ENDIF}From<string>('A'),
+      TValue.{$IFDEF FPC}specialize {$ENDIF}From<Integer>(0)]);
+    LData.Controller.AppendValues(['group', 'level'], [TValue.{$IFDEF FPC}specialize {$ENDIF}From<string>('A'),
+      TValue.{$IFDEF FPC}specialize {$ENDIF}From<Integer>(1)]);
+    LData.Controller.AppendValues(['group', 'level'], [TValue.{$IFDEF FPC}specialize {$ENDIF}From<string>('B'),
+      TValue.{$IFDEF FPC}specialize {$ENDIF}From<Integer>(0)]);
+    LData.Controller.AppendValues(['group', 'level'], [TValue.{$IFDEF FPC}specialize {$ENDIF}From<string>('B'),
+      TValue.{$IFDEF FPC}specialize {$ENDIF}From<Integer>(1)]);
+    LData.Controller.AppendValues(['group', 'level'], [TValue.{$IFDEF FPC}specialize {$ENDIF}From<string>('A'),
+      TValue.{$IFDEF FPC}specialize {$ENDIF}From<Integer>(0)]);
     LGroups.Enabled := True;
     LGroups.IdColumnId := 'group';
     LGroups.InitialState := Th5uAdjacentGroupInitialState.Expanded;
     LTree.Enabled := True;
     LTree.LevelColumnId := 'level';
-    LView := Th5uGridView.Create(LData, LColumns, LTree, LGroups, LData.GetController);
-    LOther := Th5uGridView.Create(LData, LColumns, LTree, LGroups, LData.GetController);
-    LView.OnAdjacentGroupStateChanged := LData.GroupChanged;
+    LView := Th5uGridView.Create(LData, LColumns, LTree, LGroups, {$IFDEF FPC}@{$ENDIF}LData.GetController);
+    LOther := Th5uGridView.Create(LData, LColumns, LTree, LGroups, {$IFDEF FPC}@{$ENDIF}LData.GetController);
+    LView.OnAdjacentGroupStateChanged := {$IFDEF FPC}@{$ENDIF}LData.GroupChanged;
     Check((LView.GetViewRowCount = 5) and (LOther.GetViewRowCount = 5), 'initial view count');
     Check(LView.ChangeAdjacentGroup(0, False, True, LInfo), 'collapse first run');
     LView.DoAdjacentGroupStateChanged(LInfo);
@@ -324,7 +353,7 @@ begin
     Check((LView.GetViewSourceRowIndex(1) = 2) and (LView.GetViewRowKey(1) = LData.Controller.GetRowKey(2)), 'collapsed row/source mapping');
     Check(LView.GetViewValue(1, 'group').AsString = 'B', 'view value mapping');
     Check(LView.CanEditViewValue(1, 'level'), 'view edit permission');
-    LView.SetViewValue(1, 'level', TValue.From<Integer>(0));
+    LView.SetViewValue(1, 'level', TValue.{$IFDEF FPC}specialize {$ENDIF}From<Integer>(0));
     Check(LView.GetTreeBranchEndInfo(2, LView.GetViewRowKey(2), LLevel, LClosed) and (LLevel = 1) and (LClosed
       = 1), 'tree branch closes at next visible row');
     Check(not LView.IsViewRowAvailable(4), 'folded look-ahead passed end');
@@ -412,35 +441,42 @@ begin
     LOptions.MaxHeight := 100;
     LOptions.EstimatedHeight := 17;
     LKey := Th5uRowKey.FromString('metric-row');
-    Check(LMetrics.GetHeight(LOptions, LColumns, 0, LKey, True, LData.Measure, LData.Adjust) = 40, 'explicit height contributors');
+    Check(LMetrics.GetHeight(LOptions, LColumns, 0, LKey, True, {$IFDEF FPC}@{$ENDIF}LData.Measure, {$IFDEF FPC}@{$ENDIF}LData.Adjust) = 40,
+      'explicit height contributors');
     LBefore := LData.Measures;
-    Check(LMetrics.GetHeight(LOptions, LColumns, 3, LKey, True, LData.Measure, LData.Adjust) = 40, 'cache follows row key');
+    Check(LMetrics.GetHeight(LOptions, LColumns, 3, LKey, True, {$IFDEF FPC}@{$ENDIF}LData.Measure, {$IFDEF FPC}@{$ENDIF}LData.Adjust) = 40,
+      'cache follows row key');
     Check(LData.Measures = LBefore, 'height cache not reused');
     LOptions.MeasureScope := Th5uAutoHeightMeasureScope.AllVisibleColumns;
     LMetrics.Clear;
-    Check(LMetrics.GetHeight(LOptions, LColumns, 0, LKey, True, LData.Measure, LData.Adjust) = 80, 'all visible contributors and hidden exclusion');
+    Check(LMetrics.GetHeight(LOptions, LColumns, 0, LKey, True, {$IFDEF FPC}@{$ENDIF}LData.Measure, {$IFDEF FPC}@{$ENDIF}LData.Adjust) = 80,
+      'all visible contributors and hidden exclusion');
     LMetrics.Remove(LKey.ToString);
     LData.Cache := False;
     LData.Forced := True;
     LData.ForceHeight := 0;
-    Check(LMetrics.GetHeight(LOptions, LColumns, 0, LKey, True, LData.Measure, LData.Adjust) = 1, 'event minimum height');
+    Check(LMetrics.GetHeight(LOptions, LColumns, 0, LKey, True, {$IFDEF FPC}@{$ENDIF}LData.Measure, {$IFDEF FPC}@{$ENDIF}LData.Adjust) = 1,
+      'event minimum height');
     LData.ForceHeight := 12.5;
-    Check(LMetrics.GetHeight(LOptions, LColumns, 0, LKey, True, LData.Measure, LData.Adjust) = 12.5, 'fractional event height and cache opt-out');
+    Check(LMetrics.GetHeight(LOptions, LColumns, 0, LKey, True, {$IFDEF FPC}@{$ENDIF}LData.Measure,
+      {$IFDEF FPC}@{$ENDIF}LData.Adjust) = 12.5, 'fractional event height and cache opt-out');
     LData.Forced := False;
-    Check(LMetrics.GetHeight(LOptions, LColumns, 0, LKey, False, LData.Measure, LData.Adjust) = 17, 'estimated height');
+    Check(LMetrics.GetHeight(LOptions, LColumns, 0, LKey, False, {$IFDEF FPC}@{$ENDIF}LData.Measure, {$IFDEF FPC}@{$ENDIF}LData.Adjust) = 17,
+      'estimated height');
     LData.ExtentValue := 10.25;
-    LTotal := h5uTotalRowHeight(LOptions, 3001, 0, True, LData.Prepare, LData.Extent);
+    LTotal := h5uTotalRowHeight(LOptions, 3001, 0, True, {$IFDEF FPC}@{$ENDIF}LData.Prepare, {$IFDEF FPC}@{$ENDIF}LData.Extent);
     Check((LData.Prepared = 3001) and SameValue(LTotal.AsFloat, 3001 * 10.25), 'shared exact measurement threshold and fractional sum');
-    LTotal := h5uTotalRowHeight(LOptions, h5uExactRowHeightLimit + 1, 0, True, LData.Prepare, LData.Extent);
+    LTotal := h5uTotalRowHeight(LOptions, h5uExactRowHeightLimit + 1, 0, True, {$IFDEF FPC}@{$ENDIF}LData.Prepare, {$IFDEF FPC}@{$ENDIF}LData.Extent);
     Check(LTotal.Whole = (h5uExactRowHeightLimit + 1) * LOptions.EstimatedHeight, 'large automatic-height estimate');
     LOptions.Mode := Th5uRowHeightMode.Fixed;
-    LTotal := h5uTotalRowHeight(LOptions, LargeCount, 0, False, LData.Prepare, LData.Extent);
+    LTotal := h5uTotalRowHeight(LOptions, LargeCount, 0, False, {$IFDEF FPC}@{$ENDIF}LData.Prepare, {$IFDEF FPC}@{$ENDIF}LData.Extent);
     Check(LTotal.Whole = LargeCount * LOptions.FixedHeight, 'Int64 total lost precision above 2^53');
     LData.ExtentValue := 20;
-    Check((h5uFindFirstVisibleRow(5, Int64(40), 100, LData.Extent, LTop) = 2) and (LTop = 100), 'integer row boundary');
+    Check((h5uFindFirstVisibleRow(5, Int64(40), 100, {$IFDEF FPC}@{$ENDIF}LData.Extent, LTop) = 2) and (LTop = 100), 'integer row boundary');
     LData.ExtentValue := 20.25;
-    Check((h5uFindFirstVisibleRow(5, 40.75, 100.0, LData.Extent, LFloatTop) = 2) and SameValue(LFloatTop, 99.75), 'fractional row offset');
-    Check((h5uFindFirstVisibleRow(5, -1.0, 100.0, LData.Extent, LFloatTop) = 0) and (LFloatTop = 100), 'negative offset clamp');
+    Check((h5uFindFirstVisibleRow(5, 40.75, 100.0, {$IFDEF FPC}@{$ENDIF}LData.Extent, LFloatTop) = 2) and SameValue(LFloatTop, 99.75),
+      'fractional row offset');
+    Check((h5uFindFirstVisibleRow(5, -1.0, 100.0, {$IFDEF FPC}@{$ENDIF}LData.Extent, LFloatTop) = 0) and (LFloatTop = 100), 'negative offset clamp');
     Writeln('PASS: common row metrics, measurement scope, cache, override minimum, fractions and large Int64 totals');
   finally
     LMetrics.Free;
@@ -453,7 +489,7 @@ end;
 procedure TestColumnLayout;
 var
   LColumns: Th5uGridColumns;
-  LLayout: TArray<Th5uColumnLayoutInfo>;
+  LLayout: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uColumnLayoutInfo>;
   LLeft, LRight: Double;
 begin
   LColumns := Th5uGridColumns.Create(nil);
@@ -490,7 +526,8 @@ var
 begin
   Check(h5uParseEditorValue(Th5uColumnDataType.Integer, '9223372036854775807').AsInt64 = High(Int64), 'Int64 parsing');
   Check(SameValue(h5uParseEditorValue(Th5uColumnDataType.Float, FloatToStr(1.5)).AsExtended, 1.5), 'locale float parsing');
-  Check(h5uParseEditorValue(Th5uColumnDataType.Currency, CurrToStr(12.25)).AsType<Currency> = 12.25, 'currency parsing');
+  Check(h5uParseEditorValue(Th5uColumnDataType.Currency, CurrToStr(12.25)).{$IFDEF FPC}specialize {$ENDIF}AsType<Currency> = 12.25,
+    'currency parsing');
   Check(h5uParseEditorValue(Th5uColumnDataType.Text, ' abc ').AsString = ' abc ', 'text whitespace preservation');
   for LType
     in [Th5uColumnDataType.Integer, Th5uColumnDataType.Float, Th5uColumnDataType.Currency, Th5uColumnDataType.Date, Th5uColumnDataType.DateTime,

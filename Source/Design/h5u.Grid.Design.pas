@@ -1,5 +1,11 @@
 ﻿unit h5u.Grid.Design;
 
+{$IFDEF FPC}
+  {$MODE OBJFPC}{$H+}
+  {$MODESWITCH ADVANCEDRECORDS}
+  {$CODEPAGE UTF8}
+{$ENDIF}
+
 interface
 
 procedure Register;
@@ -7,10 +13,16 @@ procedure Register;
 implementation
 
 uses
-  System.Classes,
-  Imaging.pngimage,
-  DesignIntf,
-  ToolsAPI,
+  {$IFDEF FPC}
+    Classes,
+    //Graphics,
+    LazarusPackageIntf,
+  {$ELSE}
+    System.Classes,
+    Imaging.pngimage,
+    DesignIntf,
+    ToolsAPI,
+  {$ENDIF}
   h5u.Grid.Factory,
   h5u.Grid.Data.Dataset,
   h5u.Grid.Data.Memory,
@@ -19,12 +31,18 @@ uses
   h5u.Grid.SampleData;
 
 procedure Register;
+{$IFnDEF FPC}
 var
   Icon: TPngImage;
+{$ELSE}
+//var
+//  Icon: TPortableNetworkGraphic;
+{$ENDIF}
 begin
   RegisterComponents('h5u', [Th5uClassFactory, Th5uDatasetController, Th5uMemoryController, Th5uObjectListController, Th5uVirtualController,
     Th5uSampleClientDataset]);
 
+  {$IFnDEF FPC}
   Icon := TPngImage.Create;
   try
     Icon.LoadFromResourceName(HInstance, 'h5uGridComponent_32x32');
@@ -32,6 +50,7 @@ begin
   finally
     Icon.Free
   end;
+  {$ENDIF}
 end;
 
 end.

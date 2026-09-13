@@ -475,7 +475,6 @@ type
     procedure WMCaptureChanged(var Message: TMessage); message WM_CAPTURECHANGED;
     procedure CMWantSpecialKey(var Message: TCMWantSpecialKey); message CM_WANTSPECIALKEY;
     procedure Loaded; override;
-    procedure GetChildren(Proc: TGetChildProc; Root: TComponent); override;
     procedure Paint; override;
     procedure Resize; override;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
@@ -491,6 +490,7 @@ type
     function GetCellEditor(AColumn: Th5uGridColumn; ARow: Int64): Th5uGridEditorItem;
     procedure ClearEditorCache;
     property ActiveEditor: Th5uGridEditorItem read FActiveEditor;
+    procedure GetChildren(Proc: TGetChildProc; Root: TComponent); override;
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 

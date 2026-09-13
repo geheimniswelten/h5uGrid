@@ -1,13 +1,26 @@
-unit h5u.Grid.Moving;
+﻿unit h5u.Grid.Moving;
+
+{$IFDEF FPC}
+  {$MODE OBJFPC}{$H+}
+  {$MODESWITCH ADVANCEDRECORDS}
+  {$CODEPAGE UTF8}
+{$ENDIF}
 
 interface
 
 {$SCOPEDENUMS ON}
 
 uses
-  System.Classes,
-  System.Math,
-  System.SysUtils,
+  {$IFDEF FPC}
+    h5u.Grid.Compat,
+    Classes,
+    Math,
+    SysUtils,
+  {$ELSE}
+    System.Classes,
+    System.Math,
+    System.SysUtils,
+  {$ENDIF}
   h5u.Grid.Columns,
   h5u.Grid.Options,
   h5u.Grid.Selection,
@@ -19,27 +32,26 @@ type
   Th5uMoveGetSourceRow = function(ARow: Int64): Int64 of object;
 
   Th5uColumnMovePlan = record
-    Columns: TArray<Th5uGridColumn>;
+    Columns: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>;
     HeaderCell: Th5uHeaderLayoutCell;
     Caption: string;
   end;
 
   Th5uRowMovePlan = record
-    RowKeys: TArray<Th5uRowKey>;
+    RowKeys: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uRowKey>;
     FirstRowIndex: Int64;
   end;
 
 function h5uCanMoveColumn(AColumns: Th5uGridColumns; AAllowByDefault: Boolean; AColumn: Th5uGridColumn): Boolean;
 function h5uMoveGestureAllowed(AEnabled, AAltDrag: Boolean; AShift: TShiftState; ATouchWithoutAlt: Boolean = False): Boolean;
-function h5uPlanColumnMove(AColumns: Th5uGridColumns; AHeaderLayout: Th5uHeaderLayout; ASelection: Th5uGridSelection;
-  ACustomization: Th5uCustomizationOptions; AColumnIndex: Integer; AHeaderCell: Th5uHeaderLayoutCell; out APlan: Th5uColumnMovePlan): Boolean;
+function h5uPlanColumnMove(AColumns: Th5uGridColumns; AHeaderLayout: Th5uHeaderLayout; ASelection: Th5uGridSelection; ACustomization: Th5uCustomizationOptions;
+  AColumnIndex: Integer; AHeaderCell: Th5uHeaderLayoutCell; out APlan: Th5uColumnMovePlan): Boolean;
 function h5uColumnMoveTarget(AColumns: Th5uGridColumns; AHeaderLayout: Th5uHeaderLayout; ACustomization: Th5uCustomizationOptions;
-  const AMovingColumns: TArray<Th5uGridColumn>; AMovingHeader: Th5uHeaderLayoutCell; ATargetColumn: Th5uGridColumn;
+  const AMovingColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>; AMovingHeader: Th5uHeaderLayoutCell; ATargetColumn: Th5uGridColumn;
   ATargetIndex: Integer; ATargetHeader: Th5uHeaderLayoutCell; out ANewIndex: Integer; out AInsertAfter: Boolean): Boolean;
-function h5uPlanRowMove(ASelection: Th5uGridSelection; ARowIndex, ARowCount: Int64; AGetRowKey: Th5uMoveGetRowKey;
-  out APlan: Th5uRowMovePlan): Boolean;
-function h5uRowMoveTarget(ARowCount, ATargetRowIndex: Int64; const ATargetRowKey: Th5uRowKey;
-  AGetRowKey: Th5uMoveGetRowKey; AGetSourceRow: Th5uMoveGetSourceRow; var AContext: Th5uRowsMovedContext): Boolean;
+function h5uPlanRowMove(ASelection: Th5uGridSelection; ARowIndex, ARowCount: Int64; AGetRowKey: Th5uMoveGetRowKey; out APlan: Th5uRowMovePlan): Boolean;
+function h5uRowMoveTarget(ARowCount, ATargetRowIndex: Int64; const ATargetRowKey: Th5uRowKey; AGetRowKey: Th5uMoveGetRowKey; AGetSourceRow: Th5uMoveGetSourceRow;
+  var AContext: Th5uRowsMovedContext): Boolean;
 
 implementation
 
@@ -66,10 +78,10 @@ begin
   Result := AEnabled and (AShift * [ssCtrl, ssShift] = []) and (ATouchWithoutAlt or (AAltDrag = (ssAlt in AShift)));
 end;
 
-function h5uPlanColumnMove(AColumns: Th5uGridColumns; AHeaderLayout: Th5uHeaderLayout; ASelection: Th5uGridSelection;
-  ACustomization: Th5uCustomizationOptions; AColumnIndex: Integer; AHeaderCell: Th5uHeaderLayoutCell; out APlan: Th5uColumnMovePlan): Boolean;
+function h5uPlanColumnMove(AColumns: Th5uGridColumns; AHeaderLayout: Th5uHeaderLayout; ASelection: Th5uGridSelection; ACustomization: Th5uCustomizationOptions;
+  AColumnIndex: Integer; AHeaderCell: Th5uHeaderLayoutCell; out APlan: Th5uColumnMovePlan): Boolean;
 var
-  LColumns: TArray<Th5uGridColumn>;
+  LColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>;
   LFirst, LLast, I: Integer;
 begin
   APlan := Default(Th5uColumnMovePlan);
@@ -115,10 +127,10 @@ begin
 end;
 
 function h5uColumnMoveTarget(AColumns: Th5uGridColumns; AHeaderLayout: Th5uHeaderLayout; ACustomization: Th5uCustomizationOptions;
-  const AMovingColumns: TArray<Th5uGridColumn>; AMovingHeader: Th5uHeaderLayoutCell; ATargetColumn: Th5uGridColumn;
+  const AMovingColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>; AMovingHeader: Th5uHeaderLayoutCell; ATargetColumn: Th5uGridColumn;
   ATargetIndex: Integer; ATargetHeader: Th5uHeaderLayoutCell; out ANewIndex: Integer; out AInsertAfter: Boolean): Boolean;
 var
-  LColumns: TArray<Th5uGridColumn>;
+  LColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>;
   LFirst, LTargetFirst, LTargetLast, I: Integer;
 begin
   Result := False;

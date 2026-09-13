@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectGroup FileVersion="2">
+    <Targets>
+      <Target FileName="Packages\h5uGridCoreLazarus.lpk"/>
+      <Target FileName="Packages\h5uGridCoreLazarusDesign.lpk"/>
+    </Targets>
+  </ProjectGroup>
+</CONFIG>

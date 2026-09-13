@@ -35,10 +35,11 @@ requires
   fmx,
   designide,
   h5uGridCore,
-  h5uGridFmx,
-  h5uGridCoreDesign;
+  h5uGridCoreDesign,
+  h5uGridFmx;
 
 contains
   Fmx.h5u.Grid.Design in '..\Source\Design\Fmx.h5u.Grid.Design.pas';
 
 end.
+

@@ -1,15 +1,30 @@
-unit h5u.Grid.AdjacentGroups;
+﻿unit h5u.Grid.AdjacentGroups;
+
+{$IFDEF FPC}
+  {$MODE OBJFPC}{$H+}
+  {$MODESWITCH ADVANCEDRECORDS}
+  {$CODEPAGE UTF8}
+{$ENDIF}
 
 interface
 
 {$SCOPEDENUMS ON}
 
 uses
-  System.Generics.Collections,
-  System.Rtti,
-  System.SysUtils,
-  System.TypInfo,
-  System.Variants,
+  {$IFDEF FPC}
+    h5u.Grid.Compat,
+    Generics.Collections,
+    Rtti,
+    SysUtils,
+    TypInfo,
+    Variants,
+  {$ELSE}
+    System.Generics.Collections,
+    System.Rtti,
+    System.SysUtils,
+    System.TypInfo,
+    System.Variants,
+  {$ENDIF}
   h5u.Grid.Types;
 
 type
@@ -48,10 +63,10 @@ type
   // only maps visible row indexes to the controller's current view indexes.
   Th5uAdjacentGroupMap = class
   private
-    FRuns: TList<Th5uAdjacentGroupRun>;
-    FVisibleControllerRows: TList<Int64>;
-    FVisibleGroupIndexes: TList<Integer>;
-    FCollapsedStates: TDictionary<string, Boolean>;
+    FRuns: {$IFDEF FPC}specialize {$ENDIF}TList<Th5uAdjacentGroupRun>;
+    FVisibleControllerRows: {$IFDEF FPC}specialize {$ENDIF}TList<Int64>;
+    FVisibleGroupIndexes: {$IFDEF FPC}specialize {$ENDIF}TList<Integer>;
+    FCollapsedStates: {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, Boolean>;
     FActive: Boolean;
     FInitialCollapsed: Boolean;
     FCaseSensitive: Boolean;
@@ -105,10 +120,12 @@ begin
   end;
 
   case AValue.Kind of
-    tkInteger, tkInt64, tkEnumeration: Result := IntToStr(AValue.AsOrdinal);
-    tkFloat: Result := FloatToStr(AValue.AsExtended);
+    {$IFDEF FPC}tkBool,{$ENDIF} tkInteger, tkInt64, tkEnumeration:
+       Result := IntToStr(AValue.AsOrdinal);
+    tkFloat:
+      Result := FloatToStr(AValue.AsExtended);
     else
-      Result := AValue.ToString;
+      Result := {$IFDEF FPC}h5uValueAsText(AValue){$ELSE}AValue.ToString{$ENDIF};
   end;
 end;
 
@@ -196,7 +213,7 @@ begin
     LText := LowerCase(LText);
 
   if Assigned(AGroupId.TypeInfo) then
-    LTypeName := string(AGroupId.TypeInfo.Name)
+    LTypeName := string(AGroupId.TypeInfo^.Name)
   else
     LTypeName := '<empty>';
 
@@ -247,10 +264,10 @@ end;
 constructor Th5uAdjacentGroupMap.Create;
 begin
   inherited;
-  FRuns := TList<Th5uAdjacentGroupRun>.Create;
-  FVisibleControllerRows := TList<Int64>.Create;
-  FVisibleGroupIndexes := TList<Integer>.Create;
-  FCollapsedStates := TDictionary<string, Boolean>.Create;
+  FRuns := {$IFDEF FPC}specialize {$ENDIF}TList<Th5uAdjacentGroupRun>.Create;
+  FVisibleControllerRows := {$IFDEF FPC}specialize {$ENDIF}TList<Int64>.Create;
+  FVisibleGroupIndexes := {$IFDEF FPC}specialize {$ENDIF}TList<Integer>.Create;
+  FCollapsedStates := {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, Boolean>.Create;
 end;
 
 destructor Th5uAdjacentGroupMap.Destroy;

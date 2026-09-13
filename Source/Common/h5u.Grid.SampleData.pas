@@ -1,16 +1,31 @@
 ﻿unit h5u.Grid.SampleData;
 
+{$IFDEF FPC}
+  {$MODE OBJFPC}{$H+}
+  {$MODESWITCH ADVANCEDRECORDS}
+  {$CODEPAGE UTF8}
+{$ENDIF}
+
 interface
 
 uses
-  System.Classes,
-  System.SysUtils,
-  System.NetEncoding,
-  Data.DB,
-  Datasnap.DBClient;
+  {$IFDEF FPC}
+    //h5u.Grid.Compat,
+    Classes,
+    SysUtils,
+    base64,
+    DB,
+    BufDataset;
+  {$ELSE}
+    System.Classes,
+    System.SysUtils,
+    System.NetEncoding,
+    Data.DB,
+    Datasnap.DBClient;
+  {$ENDIF}
 
 type
-  Th5uSampleClientDataset = class(TClientDataset)
+  Th5uSampleClientDataset = class({$IFDEF FPC}TBufDataset{$ELSE}TClientDataset{$ENDIF})
   private
     FAutoCreateSampleData: Boolean;
     FIncludeImages: Boolean;
@@ -191,8 +206,12 @@ end;
 
 procedure Th5uSampleClientDataset.WriteSampleImage(AField: TField; AIndex: Integer);
 var
+  {$IFDEF FPC}
+  LStream: TStringStream;
+  {$ELSE}
   LBytes: TBytes;
   LStream: TBytesStream;
+  {$ENDIF}
 begin
   if not FIncludeImages or not Assigned(AField) or not (AField is TBlobField) then
     Exit;
@@ -201,8 +220,12 @@ begin
   if (AIndex mod 4) <> 1 then
     Exit;
 
-  LBytes := TNetEncoding.Base64.DecodeStringToBytes(cSamplePngBase64);
-  LStream := TBytesStream.Create(LBytes);
+  {$IFDEF FPC}
+    LStream := TStringStream.Create(DecodeStringBase64(cSamplePngBase64));
+  {$ELSE}
+    LBytes  := TNetEncoding.Base64.DecodeStringToBytes(cSamplePngBase64);
+    LStream := TBytesStream.Create(LBytes);
+  {$ENDIF}
   try
     TBlobField(AField).LoadFromStream(LStream);
   finally
@@ -262,13 +285,13 @@ begin
       FieldByName('FOLD_GROUP').AsInteger := FoldGroupForRow(I);
       case LTreeLevel of
         0:
-          FieldByName('NAME').AsString := Format('Baugruppe %.2d', [((I - 1) div 8) + 1]);
+          FieldByName('NAME').{$IFDEF FPC}AsUTF8String{$ELSE}AsString{$ENDIF} := Format('Baugruppe %.2d', [((I - 1) div 8) + 1]);
         1:
-          FieldByName('NAME').AsString := Format('  Untergruppe / Teil %.3d', [I]);
+          FieldByName('NAME').{$IFDEF FPC}AsUTF8String{$ELSE}AsString{$ENDIF} := Format('  Untergruppe / Teil %.3d', [I]);
         else
-          FieldByName('NAME').AsString := Format('    Bauteil %.3d', [I]);
+          FieldByName('NAME').{$IFDEF FPC}AsUTF8String{$ELSE}AsString{$ENDIF} := Format('    Bauteil %.3d', [I]);
       end;
-      FieldByName('CATEGORY').AsString := cCategories[(I - 1) mod Length(cCategories)];
+      FieldByName('CATEGORY').{$IFDEF FPC}AsUTF8String{$ELSE}AsString{$ENDIF} := cCategories[(I - 1) mod Length(cCategories)];
 
       LDescription := Format('Dies ist Datensatz %d. Der Text demonstriert automatische '
         + 'Zeilenhöhe, Umbruch und ein konfigurierbares Höhenlimit.', [I]);
@@ -276,7 +299,7 @@ begin
         LDescription := LDescription + sLineBreak + 'Jede fünfte Zeile enthält bewusst eine zweite Zeile und wird '
           + 'zusätzlich über eine periodische Style-Regel hervorgehoben.';
 
-      FieldByName('DESCRIPTION').AsString := LDescription;
+      FieldByName('DESCRIPTION').{$IFDEF FPC}AsUTF8String{$ELSE}AsString{$ENDIF} := LDescription;
       FieldByName('QUANTITY').AsInteger := 1 + ((I * 7) mod 43);
       FieldByName('UNIT_PRICE').AsCurrency := 12.50 + (I * 3.75);
       FieldByName('ACTIVE').AsBoolean := (I mod 4) <> 0;
@@ -313,8 +336,13 @@ begin
     FieldDefs.Clear;
     BuildFieldDefs;
     CreateDataset;
-    LogChanges := False;
+    {$IFnDEF FPC}
+      LogChanges := False;
+    {$ENDIF}
     AppendSampleRows;
+    {$IFDEF FPC}
+      MergeChangeLog;
+    {$ENDIF}
   finally
     FUpdatingSampleData := False;
   end;

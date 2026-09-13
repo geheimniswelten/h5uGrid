@@ -1,14 +1,28 @@
-unit h5u.Grid.View;
+﻿unit h5u.Grid.View;
+
+{$IFDEF FPC}
+  {$MODE OBJFPC}{$H+}
+  {$MODESWITCH ADVANCEDRECORDS}
+  {$CODEPAGE UTF8}
+{$ENDIF}
 
 interface
 
 {$SCOPEDENUMS ON}
 
 uses
-  System.Generics.Collections,
-  System.Math,
-  System.Rtti,
-  System.SysUtils,
+  {$IFDEF FPC}
+    h5u.Grid.Compat,
+    Generics.Collections,
+    Math,
+    Rtti,
+    SysUtils,
+  {$ELSE}
+    System.Generics.Collections,
+    System.Math,
+    System.Rtti,
+    System.SysUtils,
+  {$ENDIF}
   h5u.Grid.AdjacentGroups,
   h5u.Grid.Columns,
   h5u.Grid.Data.Core,
@@ -36,8 +50,7 @@ type
     FOnAdjacentGroupStateChanged: Th5uAdjacentGroupStateChangedEvent;
     function GetDataController: Th5uCustomDataController;
   public
-    constructor Create(AGrid: TObject; AColumns: Th5uGridColumns; ATree: Th5uTreeOptions;
-      AAdjacentGroups: Th5uAdjacentGroupFoldingOptions; AGetController: Th5uViewGetController);
+    constructor Create(AGrid: TObject; AColumns: Th5uGridColumns; ATree: Th5uTreeOptions; AAdjacentGroups: Th5uAdjacentGroupFoldingOptions; AGetController: Th5uViewGetController);
     destructor Destroy; override;
     property DataController: Th5uCustomDataController read GetDataController;
     procedure InvalidateAdjacentGroupMap(AClearStates: Boolean);
@@ -62,7 +75,7 @@ type
     function GetTreeBranchEndInfo(AViewRowIndex: Int64; const ARowKey: Th5uRowKey; out ATreeLevel: Integer; out AClosedTreeLevels: Integer): Boolean;
     function IsAdjacentGroupCollapsed(AViewRowIndex: Int64): Boolean;
     function ChangeAdjacentGroup(AViewRowIndex: Int64; AToggle, ACollapsed: Boolean; out AInfo: Th5uAdjacentGroupRowInfo): Boolean;
-    function ChangeAllAdjacentGroups(ACollapsed: Boolean): TArray<Th5uAdjacentGroupRowInfo>;
+    function ChangeAllAdjacentGroups(ACollapsed: Boolean): {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uAdjacentGroupRowInfo>;
     procedure ResetAdjacentGroupStates;
     property OnGetAdjacentGroupId: Th5uGetAdjacentGroupIdEvent read FOnGetAdjacentGroupId write FOnGetAdjacentGroupId;
     property OnGetTreeLevel: Th5uGetTreeLevelEvent read FOnGetTreeLevel write FOnGetTreeLevel;
@@ -127,11 +140,21 @@ begin
   if LControllerRowCount > 0 then
     DataController.PrepareRange(0, LControllerRowCount);
 
-  for LControllerRowIndex := 0 to LControllerRowCount - 1 do
-  begin
-    LAvailable := TryGetAdjacentGroupIdForControllerRow(LControllerRowIndex, LGroupId);
-    FAdjacentGroupMap.AddRow(LControllerRowIndex, DataController.GetRowKey(LControllerRowIndex), LGroupId, LAvailable);
-  end;
+  {$IFDEF FPC}
+    LControllerRowIndex := 0;
+    while LControllerRowIndex < LControllerRowCount do
+    begin
+      LAvailable := TryGetAdjacentGroupIdForControllerRow(LControllerRowIndex, LGroupId);
+      FAdjacentGroupMap.AddRow(LControllerRowIndex, DataController.GetRowKey(LControllerRowIndex), LGroupId, LAvailable);
+      Inc(LControllerRowIndex);
+    end;
+  {$ELSE}
+    for LControllerRowIndex := 0 to LControllerRowCount - 1 do
+    begin
+      LAvailable := TryGetAdjacentGroupIdForControllerRow(LControllerRowIndex, LGroupId);
+      FAdjacentGroupMap.AddRow(LControllerRowIndex, DataController.GetRowKey(LControllerRowIndex), LGroupId, LAvailable);
+    end;
+  {$ENDIF}
   FAdjacentGroupMap.EndBuild;
   FAdjacentGroupMapDirty := False;
 end;
@@ -496,17 +519,17 @@ begin
     AInfo.Collapsed := ACollapsed;
 end;
 
-function Th5uGridView.ChangeAllAdjacentGroups(ACollapsed: Boolean): TArray<Th5uAdjacentGroupRowInfo>;
+function Th5uGridView.ChangeAllAdjacentGroups(ACollapsed: Boolean): {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uAdjacentGroupRowInfo>;
 var
   I: Integer;
   LRun: Th5uAdjacentGroupRun;
-  LChanged: TList<Th5uAdjacentGroupRowInfo>;
+  LChanged: {$IFDEF FPC}specialize {$ENDIF}TList<Th5uAdjacentGroupRowInfo>;
   LInfo: Th5uAdjacentGroupRowInfo;
   LChangedMap: Boolean;
 begin
   Result := nil;
   EnsureAdjacentGroupMap;
-  LChanged := TList<Th5uAdjacentGroupRowInfo>.Create;
+  LChanged := {$IFDEF FPC}specialize {$ENDIF}TList<Th5uAdjacentGroupRowInfo>.Create;
   try
     for I := 0 to FAdjacentGroupMap.RunCount - 1 do
     begin

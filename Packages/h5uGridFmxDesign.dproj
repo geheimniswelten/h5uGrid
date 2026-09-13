@@ -146,8 +146,8 @@
         <DCCReference Include="fmx.dcp"/>
         <DCCReference Include="designide.dcp"/>
         <DCCReference Include="h5uGridCore.dcp"/>
-        <DCCReference Include="h5uGridFmx.dcp"/>
         <DCCReference Include="h5uGridCoreDesign.dcp"/>
+        <DCCReference Include="h5uGridFmx.dcp"/>
         <DCCReference Include="..\Source\Design\Fmx.h5u.Grid.Design.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

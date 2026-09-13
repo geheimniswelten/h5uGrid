@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="5">
+    <Name Value="h5uGridCoreLazarus"/>
+    <Type Value="RunAndDesignTime"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <SearchPaths>
+        <OtherUnitFiles Value="../Source/Common"/>
+        <UnitOutputDirectory Value="../_dcu/$(TargetOS)_$(TargetCPU)_Lazarus"/>
+      </SearchPaths>
+    </CompilerOptions>
+    <Description Value="h5u Grid common runtime for Free Pascal / Lazarus (ObjFPC)"/>
+    <Files>
+      <Item>
+        <Filename Value="../Source/Common/h5u.Grid.AdjacentGroups.pas"/>
+        <UnitName Value="h5u.Grid.AdjacentGroups"/>
+      </Item>
+      <Item>
+        <Filename Value="../Source/Common/h5u.Grid.Columns.pas"/>
+        <UnitName Value="h5u.Grid.Columns"/>
+      </Item>
+      <Item>
+        <Filename Value="../Source/Common/h5u.Grid.Compat.pas"/>
+        <UnitName Value="h5u.Grid.Compat"/>
+      </Item>
+      <Item>
+        <Filename Value="../Source/Common/h5u.Grid.Editors.pas"/>
+        <UnitName Value="h5u.Grid.Editors"/>
+      </Item>
+      <Item>
+        <Filename Value="../Source/Common/h5u.Grid.Factory.pas"/>
+        <UnitName Value="h5u.Grid.Factory"/>
+      </Item>
+      <Item>
+        <Filename Value="../Source/Common/h5u.Grid.Layout.pas"/>
+        <UnitName Value="h5u.Grid.Layout"/>
+      </Item>
+      <Item>
+        <Filename Value="../Source/Common/h5u.Grid.Moving.pas"/>
+        <UnitName Value="h5u.Grid.Moving"/>
+      </Item>
+      <Item>
+        <Filename Value="../Source/Common/h5u.Grid.Navigation.pas"/>
+        <UnitName Value="h5u.Grid.Navigation"/>
+      </Item>
+      <Item>
+        <Filename Value="../Source/Common/h5u.Grid.Options.pas"/>
+        <UnitName Value="h5u.Grid.Options"/>
+      </Item>
+      <Item>
+        <Filename Value="../Source/Common/h5u.Grid.Resizing.pas"/>
+        <UnitName Value="h5u.Grid.Resizing"/>
+      </Item>
+      <Item>
+        <Filename Value="../Source/Common/h5u.Grid.RowMetrics.pas"/>
+        <UnitName Value="h5u.Grid.RowMetrics"/>
+      </Item>
+      <Item>
+        <Filename Value="../Source/Common/h5u.Grid.Selection.pas"/>
+        <UnitName Value="h5u.Grid.Selection"/>
+      </Item>
+      <Item>
+        <Filename Value="../Source/Common/h5u.Grid.Types.pas"/>
+        <UnitName Value="h5u.Grid.Types"/>
+      </Item>
+      <Item>
+        <Filename Value="../Source/Common/h5u.Grid.Values.pas"/>
+        <UnitName Value="h5u.Grid.Values"/>
+      </Item>
+      <Item>
+        <Filename Value="../Source/Common/h5u.Grid.View.pas"/>
+        <UnitName Value="h5u.Grid.View"/>
+      </Item>
+      <Item>
+        <Filename Value="../Source/Common/h5u.Grid.Data.Core.pas"/>
+        <UnitName Value="h5u.Grid.Data.Core"/>
+      </Item>
+      <Item>
+        <Filename Value="../Source/Common/h5u.Grid.Data.Dataset.pas"/>
+        <UnitName Value="h5u.Grid.Data.Dataset"/>
+      </Item>
+      <Item>
+        <Filename Value="../Source/Common/h5u.Grid.Data.Memory.pas"/>
+        <UnitName Value="h5u.Grid.Data.Memory"/>
+      </Item>
+      <Item>
+        <Filename Value="../Source/Common/h5u.Grid.Data.Objects.pas"/>
+        <UnitName Value="h5u.Grid.Data.Objects"/>
+      </Item>
+      <Item>
+        <Filename Value="../Source/Common/h5u.Grid.Data.Virtual.pas"/>
+        <UnitName Value="h5u.Grid.Data.Virtual"/>
+      </Item>
+      <Item>
+        <Filename Value="h5uGridCoreLazarus.pas"/>
+        <Type Value="Main Unit"/>
+        <UnitName Value="h5uGridCoreLazarus"/>
+      </Item>
+    </Files>
+    <RequiredPkgs>
+      <Item>
+        <PackageName Value="FCL"/>
+      </Item>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>

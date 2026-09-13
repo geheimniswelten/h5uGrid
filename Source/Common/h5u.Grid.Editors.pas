@@ -1,16 +1,44 @@
 ﻿unit h5u.Grid.Editors;
 
+{$IFDEF FPC}
+  {$MODE OBJFPC}{$H+}
+  {$MODESWITCH ADVANCEDRECORDS}
+  {$CODEPAGE UTF8}
+{$ENDIF}
+
 interface
 
 {$SCOPEDENUMS ON}
 
 uses
-  System.Classes, System.SysUtils, System.Rtti, System.Types, System.UITypes,
-  System.Generics.Collections, h5u.Grid.Types, h5u.Grid.Columns, h5u.Grid.Values;
+  {$IFDEF FPC}
+    h5u.Grid.Compat,
+    Classes,
+    SysUtils,
+    Rtti,
+    Types,
+    Generics.Collections,
+  {$ELSE}
+    System.Classes,
+    System.SysUtils,
+    System.Rtti,
+    System.Types,
+    System.UITypes,
+    System.Generics.Collections,
+  {$ENDIF}
+  h5u.Grid.Types,
+  h5u.Grid.Columns,
+  h5u.Grid.Values;
 
 type
   Th5uEditorMode = (Text, Graphic);
-  Th5uEditorPlatform = (VCL, FMX);
+  Th5uEditorPlatform = (VCL, FMX, LCL);
+
+  {$IFDEF FPC}
+    Th5uEditorPreparePaint = procedure(APart: Th5uElementPaintPart) of object;
+  {$ELSE}
+    Th5uEditorPreparePaint = TProc<Th5uElementPaintPart>;
+  {$ENDIF}
 
   Th5uEditorContext = record
     Grid: TComponent;
@@ -25,7 +53,7 @@ type
     Image: TObject;
     Foreground: TAlphaColor;
     Background: TAlphaColor;
-    PreparePaint: TProc<Th5uElementPaintPart>;
+    PreparePaint: Th5uEditorPreparePaint;
   end;
 
   Th5uEditorMeasureWidthEvent = procedure(Sender: TObject; const AContext: Th5uEditorContext; var AWidth: Double) of object;
@@ -149,7 +177,7 @@ type
     end;
   private
     FItems: TCollection;
-    FEntries: TDictionary<string, TEntry>;
+    FEntries: {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, TEntry>;
   public
     constructor Create;
     destructor Destroy; override;
@@ -166,23 +194,23 @@ type
     function DataTypeEditor(AType: Th5uColumnDataType): string;
     function EditorFor(AColumn: Th5uGridColumn): string;
   published
-    [Default('TextEditor')]
+    {$IFnDEF FPC} [Default('TextEditor')] {$ENDIF}
     property Edit: string read FEdit write FEdit;
-    [Default('IntegerEditor')]
+    {$IFnDEF FPC} [Default('IntegerEditor')] {$ENDIF}
     property Integer: string read FInteger write FInteger;
-    [Default('FloatEditor')]
+    {$IFnDEF FPC} [Default('FloatEditor')] {$ENDIF}
     property Float: string read FFloat write FFloat;
-    [Default('CurrencyEditor')]
+    {$IFnDEF FPC} [Default('CurrencyEditor')] {$ENDIF}
     property Currency: string read FCurrency write FCurrency;
-    [Default('DateEditor')]
+    {$IFnDEF FPC} [Default('DateEditor')] {$ENDIF}
     property Date: string read FDate write FDate;
-    [Default('TimeEditor')]
+    {$IFnDEF FPC} [Default('TimeEditor')] {$ENDIF}
     property Time: string read FTime write FTime;
-    [Default('DateTimeEditor')]
+    {$IFnDEF FPC} [Default('DateTimeEditor')] {$ENDIF}
     property DateTime: string read FDateTime write FDateTime;
-    [Default('CheckBoxEditor')]
+    {$IFnDEF FPC} [Default('CheckBoxEditor')] {$ENDIF}
     property CheckBox: string read FCheckBox write FCheckBox;
-    [Default('ImageEditor')]
+    {$IFnDEF FPC} [Default('ImageEditor')] {$ENDIF}
     property Image: string read FImage write FImage;
   end;
 
@@ -198,14 +226,14 @@ function h5uEditorCheckBounds(const ABounds: TRectF): TRectF;
 implementation
 
 var
-  GEditors: array[Th5uEditorPlatform] of TDictionary<string, Th5uGridEditorItemClass>;
+  GEditors: array[Th5uEditorPlatform] of {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, Th5uGridEditorItemClass>;
 
 procedure h5uRegisterEditor(APlatform: Th5uEditorPlatform; const AEditorName: string; AClass: Th5uGridEditorItemClass);
 begin
   if (Trim(AEditorName) = '') or not Assigned(AClass) then
     raise EArgumentException.Create('EditorName und Editor-Klasse sind erforderlich.');
   if not Assigned(GEditors[APlatform]) then
-    GEditors[APlatform] := TDictionary<string, Th5uGridEditorItemClass>.Create;
+    GEditors[APlatform] := {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, Th5uGridEditorItemClass>.Create;
   GEditors[APlatform].AddOrSetValue(LowerCase(AEditorName), AClass);
 end;
 
@@ -245,7 +273,7 @@ function h5uResolveEditorName(AGrid: TObject; AColumns: Th5uGridColumns; AColumn
       raise Eh5uGrid.CreateFmt('Editor-Spalte "%s" wurde nicht gefunden.', [AId]);
     LValue := AGetValue(LColumn, ARow, False);
     if not LValue.IsEmpty then
-      Result := Trim(LValue.ToString);
+      Result := Trim({$IFDEF FPC}h5uValueAsText(LValue){$ELSE}LValue.ToString{$ENDIF});
   end;
 begin
   Result := '';
@@ -272,7 +300,14 @@ end;
 
 function h5uEditorCheckBounds(const ABounds: TRectF): TRectF;
 begin
-  Result := RectF(ABounds.CenterPoint.X - 7.5, ABounds.CenterPoint.Y - 7.5, ABounds.CenterPoint.X + 7.5, ABounds.CenterPoint.Y + 7.5);
+  {$IFDEF FPC}
+    Result.Left := (ABounds.Left + ABounds.Right) / 2 - 7.5;
+    Result.Top := (ABounds.Top + ABounds.Bottom) / 2 - 7.5;
+    Result.Right := Result.Left + 15;
+    Result.Bottom := Result.Top + 15;
+  {$ELSE}
+    Result := RectF(ABounds.CenterPoint.X - 7.5, ABounds.CenterPoint.Y - 7.5, ABounds.CenterPoint.X + 7.5, ABounds.CenterPoint.Y + 7.5);
+  {$ENDIF}
 end;
 
 function Th5uGridEditors.Find(const AName: string): Th5uGridEditorItem;
@@ -448,7 +483,7 @@ end;
 procedure Th5uGridEditorItem.WriteValue(const AValue: TValue);
 begin
   FValue := AValue;
-  WriteText(AValue.ToString);
+  WriteText({$IFDEF FPC}h5uValueAsText(AValue){$ELSE}AValue.ToString{$ENDIF});
 end;
 
 function Th5uGridEditorItem.GetText: string;
@@ -495,7 +530,7 @@ begin
   if UsesTextValue and not Assigned(FOnGetValue) then
     Result := GetText
   else
-    Result := GetValue.ToString;
+    Result := {$IFDEF FPC}h5uValueAsText(GetValue){$ELSE}GetValue.ToString{$ENDIF};
 end;
 
 function Th5uGridEditorItem.Modified: Boolean;
@@ -533,7 +568,11 @@ end;
 
 function Th5uGridEditorItem.HitTest(const ABounds: TRectF; const APoint: TPointF): Boolean;
 begin
-  Result := ABounds.Contains(APoint);
+  {$IFDEF FPC}
+    Result := (APoint.X >= ABounds.Left) and (APoint.X < ABounds.Right) and (APoint.Y >= ABounds.Top) and (APoint.Y < ABounds.Bottom);
+  {$ELSE}
+    Result := ABounds.Contains(APoint);
+  {$ENDIF};
 end;
 
 procedure Th5uGridEditorItem.Change;
@@ -665,7 +704,7 @@ constructor Th5uGridEditorCache.Create;
 begin
   inherited;
   FItems := TCollection.Create(Th5uGridEditorItem);
-  FEntries := TDictionary<string, TEntry>.Create;
+  FEntries := {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, TEntry>.Create;
 end;
 
 destructor Th5uGridEditorCache.Destroy;

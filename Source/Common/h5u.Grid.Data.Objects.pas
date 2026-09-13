@@ -1,28 +1,45 @@
 ﻿unit h5u.Grid.Data.Objects;
 
+{$IFDEF FPC}
+  {$MODE OBJFPC}{$H+}
+  {$MODESWITCH ADVANCEDRECORDS}
+  {$CODEPAGE UTF8}
+{$ENDIF}
+
 interface
 
 {$SCOPEDENUMS ON}
-{$RTTI EXPLICIT METHODS([]) PROPERTIES([vcPublic, vcPublished]) FIELDS([])}
+{$IFnDEF FPC}
+  {$RTTI EXPLICIT METHODS([]) PROPERTIES([vcPublic, vcPublished]) FIELDS([])}
+{$ENDIF}
 
 uses
-  System.Classes,
-  System.Generics.Collections,
-  System.Math,
-  System.Rtti,
-  System.SysUtils,
+  {$IFDEF FPC}
+    h5u.Grid.Compat,
+    Classes,
+    Generics.Collections,
+    Math,
+    Rtti,
+    SysUtils,
+  {$ELSE}
+    System.Classes,
+    System.Generics.Collections,
+    System.Math,
+    System.Rtti,
+    System.SysUtils,
+  {$ENDIF}
   h5u.Grid.Data.Core,
   h5u.Grid.Types;
 
 type
   Th5uObjectListController = class(Th5uCustomDataController)
   private
-    FItems: TList<TObject>;
+    FItems: {$IFDEF FPC}specialize {$ENDIF}TList<TObject>;
     FOwnsObjects: Boolean;
     FKeyPropertyName: string;
     FRttiContext: TRttiContext;
-    FPropertyCache: TDictionary<string, TRttiProperty>;
-    FValueCache: TDictionary<string, TValue>;
+    FPropertyCache: {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, TRttiProperty>;
+    FValueCache: {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, TValue>;
     function ResolveProperty(AObject: TObject; const APropertyName: string): TRttiProperty;
     function ReadPropertyPath(AObject: TObject; const APath: string): TValue;
     procedure WritePropertyPath(AObject: TObject; const APath: string; const AValue: TValue);
@@ -94,11 +111,11 @@ end;
 constructor Th5uObjectListController.Create(AOwner: TComponent);
 begin
   inherited;
-  FItems := TList<TObject>.Create;
+  FItems := {$IFDEF FPC}specialize {$ENDIF}TList<TObject>.Create;
   FOwnsObjects := False;
   FRttiContext := TRttiContext.Create;
-  FPropertyCache := TDictionary<string, TRttiProperty>.Create;
-  FValueCache := TDictionary<string, TValue>.Create;
+  FPropertyCache := {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, TRttiProperty>.Create;
+  FValueCache := {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, TValue>.Create;
   Cache.Mode := Th5uCacheMode.None;
 end;
 
@@ -142,7 +159,7 @@ end;
 function Th5uObjectListController.GetSourceCanEdit(ASourceRowIndex: Int64; const AFieldName: string): Boolean;
 var
   LObject: TObject;
-  LParts: TArray<string>;
+  LParts: {$IFDEF FPC}specialize {$ENDIF}TArray<string>;
   I: Integer;
   LProperty: TRttiProperty;
   LValue: TValue;
@@ -161,7 +178,7 @@ begin
     LProperty := ResolveProperty(LObject, LParts[I]);
     if not Assigned(LProperty) or not LProperty.IsReadable then
       Exit;
-    LValue := LProperty.GetValue(LObject);
+    LValue := {$IFDEF FPC_old}h5uGetPropertyValue(LObject, LProperty){$ELSE}LProperty.GetValue(LObject){$ENDIF};
     if not LValue.IsObject then
       Exit;
     LObject := LValue.AsObject;
@@ -186,7 +203,7 @@ begin
   begin
     LValue := ReadPropertyPath(FItems[ASourceRowIndex], FKeyPropertyName);
     if not LValue.IsEmpty then
-      Exit(Th5uRowKey.FromString(LValue.ToString));
+      Exit(Th5uRowKey.FromString({$IFDEF FPC_old}h5uValueAsText(LValue){$ELSE}LValue.ToString{$ENDIF}));
   end;
 
   Result := inherited;
@@ -257,7 +274,7 @@ end;
 
 function Th5uObjectListController.ReadPropertyPath(AObject: TObject; const APath: string): TValue;
 var
-  LParts: TArray<string>;
+  LParts: {$IFDEF FPC}specialize {$ENDIF}TArray<string>;
   LPart: string;
   LProperty: TRttiProperty;
 begin
@@ -272,7 +289,11 @@ begin
     if not Assigned(LProperty) or not LProperty.IsReadable then
       Exit(TValue.Empty);
 
-    Result := LProperty.GetValue(AObject);
+    {$IFDEF FPC_old}
+      Result := h5uGetPropertyValue(AObject, LProperty);
+    {$ELSE}
+      Result := LProperty.GetValue(AObject);
+    {$ENDIF}
     if LPart <> LParts[High(LParts)] then
     begin
       if not Result.IsObject then
@@ -323,7 +344,7 @@ end;
 
 procedure Th5uObjectListController.WritePropertyPath(AObject: TObject; const APath: string; const AValue: TValue);
 var
-  LParts: TArray<string>;
+  LParts: {$IFDEF FPC}specialize {$ENDIF}TArray<string>;
   I: Integer;
   LProperty: TRttiProperty;
   LIntermediate: TValue;
@@ -338,7 +359,11 @@ begin
     if not Assigned(LProperty) or not LProperty.IsReadable then
       raise Eh5uDataController.CreateFmt('Property "%s" is not readable.', [LParts[I]]);
 
-    LIntermediate := LProperty.GetValue(AObject);
+    {$IFDEF FPC}
+      LIntermediate := h5uGetPropertyValue(AObject, LProperty);
+    {$ELSE}
+      LIntermediate := LProperty.GetValue(AObject);
+    {$ENDIF}
     if not LIntermediate.IsObject or (LIntermediate.AsObject = nil) then
       raise Eh5uDataController.CreateFmt('Property path "%s" contains a nil object.', [APath]);
 
@@ -349,9 +374,12 @@ begin
   if not Assigned(LProperty) or not LProperty.IsWritable then
     raise Eh5uDataController.CreateFmt('Property "%s" is not writable.', [APath]);
 
-  LProperty.SetValue(AObject, AValue);
+  {$IFDEF FPC}
+    h5uSetPropertyValue(AObject, LProperty, AValue);
+  {$ELSE}
+    LProperty.SetValue(AObject, AValue);
+  {$ENDIF}
 end;
-
 
 function Th5uObjectListController.GetCount: Integer;
 var

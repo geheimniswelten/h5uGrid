@@ -1,14 +1,28 @@
 ﻿unit h5u.Grid.Data.Virtual;
 
+{$IFDEF FPC}
+  {$MODE OBJFPC}{$H+}
+  {$MODESWITCH ADVANCEDRECORDS}
+  {$CODEPAGE UTF8}
+{$ENDIF}
+
 interface
 
 {$SCOPEDENUMS ON}
 
 uses
-  System.Classes,
-  System.Generics.Collections,
-  System.Rtti,
-  System.SysUtils,
+  {$IFDEF FPC}
+    h5u.Grid.Compat,
+    Classes,
+    Generics.Collections,
+    Rtti,
+    SysUtils,
+  {$ELSE}
+    System.Classes,
+    System.Generics.Collections,
+    System.Rtti,
+    System.SysUtils,
+  {$ENDIF}
   h5u.Grid.Data.Core,
   h5u.Grid.Types;
 
@@ -28,7 +42,7 @@ type
     FOnSetValue: Th5uVirtualSetValueEvent;
     FOnCanEdit: Th5uVirtualCanEditEvent;
     FOnPrepareRange: Th5uVirtualPrepareRangeEvent;
-    FValueCache: TDictionary<string, TValue>;
+    FValueCache: {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, TValue>;
     FQueryGeneration: Int64;
     function CacheKey(ASourceRowIndex: Int64; const AFieldName: string): string;
     procedure ClearValueCache;
@@ -85,7 +99,7 @@ end;
 constructor Th5uVirtualController.Create(AOwner: TComponent);
 begin
   inherited;
-  FValueCache := TDictionary<string, TValue>.Create;
+  FValueCache := {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, TValue>.Create;
   FQueryGeneration := 1;
   Cache.Mode := Th5uCacheMode.Viewport;
 end;
@@ -152,7 +166,7 @@ var
   LChange: Th5uDataChange;
   LKeyPrefix: string;
   LKey: string;
-  LKeys: TArray<string>;
+  LKeys: {$IFDEF FPC}specialize {$ENDIF}TArray<string>;
 begin
   LKeyPrefix := IntToStr(FQueryGeneration) + '|' + IntToStr(ASourceRowIndex) + '|';
   LKeys := FValueCache.Keys.ToArray;

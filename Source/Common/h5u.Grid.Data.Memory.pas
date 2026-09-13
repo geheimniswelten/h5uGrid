@@ -1,14 +1,28 @@
 ﻿unit h5u.Grid.Data.Memory;
 
+{$IFDEF FPC}
+  {$MODE OBJFPC}{$H+}
+  {$MODESWITCH ADVANCEDRECORDS}
+  {$CODEPAGE UTF8}
+{$ENDIF}
+
 interface
 
 {$SCOPEDENUMS ON}
 
 uses
-  System.Classes,
-  System.Generics.Collections,
-  System.Rtti,
-  System.SysUtils,
+  {$IFDEF FPC}
+    h5u.Grid.Compat,
+    Classes,
+    Generics.Collections,
+    Rtti,
+    SysUtils,
+  {$ELSE}
+    System.Classes,
+    System.Generics.Collections,
+    System.Rtti,
+    System.SysUtils,
+  {$ENDIF}
   h5u.Grid.Data.Core,
   h5u.Grid.Types;
 
@@ -16,7 +30,7 @@ type
   Th5uMemoryRow = class
   private
     FKey: Th5uRowKey;
-    FValues: TDictionary<string, TValue>;
+    FValues: {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, TValue>;
   public
     constructor Create(const AKey: Th5uRowKey);
     destructor Destroy; override;
@@ -27,7 +41,7 @@ type
 
   Th5uMemoryController = class(Th5uCustomDataController)
   private
-    FRows: TObjectList<Th5uMemoryRow>;
+    FRows: {$IFDEF FPC}specialize {$ENDIF}TObjectList<Th5uMemoryRow>;
     FNextKey: Int64;
   protected
     function GetSourceRowCount: Int64; override;
@@ -54,7 +68,7 @@ constructor Th5uMemoryRow.Create(const AKey: Th5uRowKey);
 begin
   inherited Create;
   FKey := AKey;
-  FValues := TDictionary<string, TValue>.Create;
+  FValues := {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, TValue>.Create;
 end;
 
 destructor Th5uMemoryRow.Destroy;
@@ -117,7 +131,7 @@ end;
 constructor Th5uMemoryController.Create(AOwner: TComponent);
 begin
   inherited;
-  FRows := TObjectList<Th5uMemoryRow>.Create(True);
+  FRows := {$IFDEF FPC}specialize {$ENDIF}TObjectList<Th5uMemoryRow>.Create(True);
   FNextKey := 0;
   Cache.Mode := Th5uCacheMode.None;
 end;
