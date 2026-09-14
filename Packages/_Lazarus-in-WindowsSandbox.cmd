@@ -43,6 +43,18 @@ echo "%%USERPROFILE%%\Desktop\Lazarus\lazbuild.exe" --build-all --add-package "%
 echo if errorlevel 1   ^( echo ERROR %%errorlevel%% ^& pause ^)
 echo.
 echo @echo ########################################################################
+echo "%%USERPROFILE%%\Desktop\Lazarus\lazbuild.exe" --build-all "%%USERPROFILE%%\Desktop\%name%\Demos\LCL\ClientDataset\GridLclClientDatasetDemo.lpr"
+echo if errorlevel 1   ^( echo ERROR %%errorlevel%% ^& pause ^)
+echo.
+echo @echo ########################################################################
+echo "%%USERPROFILE%%\Desktop\Lazarus\lazbuild.exe" --build-all "%%USERPROFILE%%\Desktop\%name%\Demos\LCL\ObjectList\GridLclObjectListDemo.lpr"
+echo if errorlevel 1   ^( echo ERROR %%errorlevel%% ^& pause ^)
+echo.
+echo @echo ########################################################################
+echo "%%USERPROFILE%%\Desktop\Lazarus\lazbuild.exe" --build-all "%%USERPROFILE%%\Desktop\%name%\Demos\LCL\VirtualLive\GridLclVirtualLiveDemo.lpr"
+echo if errorlevel 1   ^( echo ERROR %%errorlevel%% ^& pause ^)
+echo.
+echo @echo ########################################################################
 echo "%%USERPROFILE%%\Desktop\Lazarus\lazbuild.exe" --build-ide=""
 echo if errorlevel 1   ^( echo ERROR %%errorlevel%% ^& pause ^)
 echo.
