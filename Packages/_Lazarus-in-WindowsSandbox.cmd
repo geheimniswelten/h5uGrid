@@ -17,54 +17,69 @@ if not exist "%root%%store%\%setup%"   curl.exe -L -o "%root%%store%\%setup%" %d
 (
 echo TITLE Install and Start Lazarus + h5uGrid
 echo.
+echo if not "%%username%%" == "WDAGUtilityAccount" @^( echo not in sandbox ^& pause ^& exit /b 1 ^)
+echo.
+echo set compdir=%%USERPROFILE%%\Desktop\%name%
+echo set lazdir=%%USERPROFILE%%\Desktop\Lazarus
+echo.
+echo set "PATH=%%lazdir%%\fpc\3.2.2\bin\x86_64-win64;%%PATH%%"
+echo.
 echo if "%%1" == "--rebuild"   goto rebuild
-echo   "%%USERPROFILE%%\Desktop\%name%%store%\%setup%" /SILENT /SUPPRESSMSGBOXES /NORESTART /DIR="%%USERPROFILE%%\Desktop\Lazarus" /LOG="%%USERPROFILE%%\Desktop\lazarus-setup.log"
-echo   echo cmd /k "%%USERPROFILE%%\Desktop\%name%%store%\lazarus_sandbox.cmd" --rebuild ^> "%%USERPROFILE%%\Desktop\rebuild-h5uGrid.cmd"
+echo   setx PATH "%%PATH%%" /M
+echo   echo cmd /k "%%compdir%%%store%\lazarus_sandbox.cmd" --rebuild ^> "%%USERPROFILE%%\Desktop\rebuild-h5uGrid.cmd"
+echo   "%%compdir%%%store%\%setup%" /SILENT /SUPPRESSMSGBOXES /NORESTART /DIR="%%lazdir%%" /LOG="%%lazdir%%-setup.log"
 echo.
 echo :rebuild
 echo   taskkill /im lazarus.exe
 echo.
-echo set "PATH=%%USERPROFILE%%\Desktop\Lazarus\fpc\3.2.2\bin\x86_64-win64;%%PATH%%"
-echo.
 echo @echo ########################################################################
-echo "%%USERPROFILE%%\Desktop\Lazarus\lazbuild.exe" --build-all "%%USERPROFILE%%\Desktop\%name%\Packages\h5uGridCoreLazarus.lpk"
+echo "%%lazdir%%\lazbuild.exe" --build-all "%%compdir%%\Packages\h5uGridCoreLazarus.lpk"
 echo if errorlevel 1   ^( echo ERROR %%errorlevel%% ^& pause ^)
 echo.
 echo @echo ########################################################################
-echo "%%USERPROFILE%%\Desktop\Lazarus\lazbuild.exe" --build-all "%%USERPROFILE%%\Desktop\%name%\Packages\h5uGridLcl.lpk"
+echo "%%lazdir%%\lazbuild.exe" --build-all "%%compdir%%\Packages\h5uGridLcl.lpk"
 echo if errorlevel 1   ^( echo ERROR %%errorlevel%% ^& pause ^)
 echo.
 echo @echo ########################################################################
-echo "%%USERPROFILE%%\Desktop\Lazarus\lazbuild.exe" --build-all --add-package "%%USERPROFILE%%\Desktop\%name%\Packages\h5uGridCoreLazarusDesign.lpk"
+echo "%%lazdir%%\lazbuild.exe" --build-all --add-package "%%compdir%%\Packages\h5uGridCoreLazarusDesign.lpk"
 echo if errorlevel 1   ^( echo ERROR %%errorlevel%% ^& pause ^)
 echo.
 echo @echo ########################################################################
-echo "%%USERPROFILE%%\Desktop\Lazarus\lazbuild.exe" --build-all --add-package "%%USERPROFILE%%\Desktop\%name%\Packages\h5uGridLclDesign.lpk"
+echo "%%lazdir%%\lazbuild.exe" --build-all --add-package "%%compdir%%\Packages\h5uGridLclDesign.lpk"
 echo if errorlevel 1   ^( echo ERROR %%errorlevel%% ^& pause ^)
 echo.
 echo @echo ########################################################################
-echo "%%USERPROFILE%%\Desktop\Lazarus\lazbuild.exe" --build-all "%%USERPROFILE%%\Desktop\%name%\Demos\LCL\ClientDataset\GridLclClientDatasetDemo.lpr"
+echo "%%lazdir%%\lazbuild.exe" --build-all "%%compdir%%\Demos\LCL\ClientDataset\GridLclClientDatasetDemo.lpr"
 echo if errorlevel 1   ^( echo ERROR %%errorlevel%% ^& pause ^)
 echo.
 echo @echo ########################################################################
-echo "%%USERPROFILE%%\Desktop\Lazarus\lazbuild.exe" --build-all "%%USERPROFILE%%\Desktop\%name%\Demos\LCL\ObjectList\GridLclObjectListDemo.lpr"
+echo "%%lazdir%%\lazbuild.exe" --build-all "%%compdir%%\Demos\LCL\ObjectList\GridLclObjectListDemo.lpr"
 echo if errorlevel 1   ^( echo ERROR %%errorlevel%% ^& pause ^)
 echo.
 echo @echo ########################################################################
-echo "%%USERPROFILE%%\Desktop\Lazarus\lazbuild.exe" --build-all "%%USERPROFILE%%\Desktop\%name%\Demos\LCL\VirtualLive\GridLclVirtualLiveDemo.lpr"
+echo "%%lazdir%%\lazbuild.exe" --build-all "%%compdir%%\Demos\LCL\VirtualLive\GridLclVirtualLiveDemo.lpr"
 echo if errorlevel 1   ^( echo ERROR %%errorlevel%% ^& pause ^)
 echo.
 echo @echo ########################################################################
-echo "%%USERPROFILE%%\Desktop\Lazarus\lazbuild.exe" --build-ide=""
+echo :: "%%lazdir%%\lazbuild.exe" --build-ide=""
+echo :: "%%lazdir%%\lazbuild.exe" --build-ide=-dKeepInstalledPackages
+echo :: cd "%%lazdir%%" & make all        Minimal-IDE
+echo :: cd "%%lazdir%%" & make bigide     Base-IDE with Default-Packages ^(ignoriert Externes und Configs^)
+echo :: cd "%%lazdir%%" & make useride    Final-IDE with Default- and Installed-Packages
+echo ::
+echo cd "%%lazdir%%"
+echo make useride
 echo if errorlevel 1   ^( echo ERROR %%errorlevel%% ^& pause ^)
 echo.
-echo start "" "%%USERPROFILE%%\Desktop\%name%\Packages\h5uGridCoreLazarus.lpk"
-echo start "" "%%USERPROFILE%%\Desktop\%name%\Packages\h5uGridCoreLazarusDesign.lpk"
-echo REM start "" "%%USERPROFILE%%\Desktop\%name%\Packages\h5uGridLcl.lpk"
-echo REM start "" "%%USERPROFILE%%\Desktop\%name%\Packages\h5uGridLclDesign.lpk"
+echo cd "%%compdir%%"
+echo REM start "" "%%compdir%%\Packages\h5uGridCoreLazarus.lpk"
+echo REM start "" "%%compdir%%\Packages\h5uGridCoreLazarusDesign.lpk"
+echo REM start "" "%%compdir%%\Packages\h5uGridLcl.lpk"
+echo REM start "" "%%compdir%%\Packages\h5uGridLclDesign.lpk"
+echo start "" "%%compdir%%\Demos\LCL\ObjectList\GridLclObjectListDemo.lpr"
 echo.
-echo REM start "" "%%USERPROFILE%%\Desktop\%name%\GridProjectGroup.lpg"
-echo REM start "" "%%USERPROFILE%%\Desktop\Lazarus\lazarus.exe" "%%USERPROFILE%%\Desktop\%name%\GridProjectGroup.lpg"
+echo REM start "" "%%compdir%%\GridProjectGroup.lpg"
+echo REM start "" "%%lazdir%%\lazarus.exe" "%%compdir%%\GridProjectGroup.lpg"
 ) > "%root%%store%\lazarus_sandbox.cmd"
 
 (
