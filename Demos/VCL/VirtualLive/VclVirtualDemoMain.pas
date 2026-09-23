@@ -232,8 +232,8 @@ procedure TVclVirtualDemoForm.VirtualControllerPrepareRange(Sender: TObject; AFi
 begin
   if not Assigned(FRows) or not Assigned(StatusLabel) then
     Exit;
-  StatusLabel.Caption := Format('Viewport-Anfrage: %d..%d, QueryGeneration %d, Gesamt %d', [AFirstSourceRow, AFirstSourceRow + ACount
-    - 1, AQueryGeneration, FRows.Count]);
+  StatusLabel.Caption := Format('Viewport-Anfrage: %d..%d, QueryGeneration %d, Gesamt %d',
+    [AFirstSourceRow, AFirstSourceRow + ACount - 1, AQueryGeneration, FRows.Count]);
 end;
 
 procedure TVclVirtualDemoForm.VirtualControllerSetValue(Sender: TObject; ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue; var AHandled: Boolean);
