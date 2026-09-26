@@ -612,7 +612,7 @@ Bei unerwartetem Verhalten zuerst prüfen:
 
 ```pascal
 Grid1.Selection.RightClickSelect := True; // Standard: False
-Grid1.Customization.ColumnMovingGesture := Th5uColumnMovingGesture.Drag;
+Grid1.Customization.ColumnMovingGesture := Th5uColumnRowMovingGesture.Drag;
 Grid1.Customization.AllowColumnResizing := True;
 Grid1.Customization.ColumnResizeHitZoneLeft := 4;
 Grid1.Customization.ColumnResizeHitZoneRight := 4;

@@ -141,7 +141,7 @@ Vor einem manuellen Start unter Windows den Desktop-Hinweis aus
 
 ## Maus und Touch
 
-Alle sechs Demos setzen `Grid.Customization.ColumnMovingGesture := Th5uColumnMovingGesture.Drag`.
+Alle sechs Demos setzen `Grid.Customization.ColumnMovingGesture := Th5uColumnRowMovingGesture.Drag`.
 Einfaches Ziehen am Spaltenkopf verschiebt die Spalte. Ctrl-Klick markiert einzelne Spalten;
 Shift-Klick erweitert die Header-Auswahl. Die Komponente selbst verwendet weiterhin
 `AltDrag` als Standard; bei dieser Einstellung markiert normales Ziehen einen Spaltenbereich.

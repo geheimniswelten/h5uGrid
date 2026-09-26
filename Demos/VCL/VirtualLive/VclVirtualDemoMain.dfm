@@ -189,13 +189,13 @@ object VclVirtualDemoForm: TVclVirtualDemoForm
     OnGetValue = VirtualControllerGetValue
     OnSetValue = VirtualControllerSetValue
     OnPrepareRange = VirtualControllerPrepareRange
-    Left = 80
-    Top = 144
+    Left = 64
+    Top = 120
   end
   object LiveTimer: TTimer
     Interval = 900
     OnTimer = LiveTimerTimer
-    Left = 184
-    Top = 144
+    Left = 168
+    Top = 120
   end
 end

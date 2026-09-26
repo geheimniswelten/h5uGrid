@@ -782,3 +782,4 @@ finalization
   GEditors[Th5uEditorPlatform.FMX].Free;
 
 end.
+

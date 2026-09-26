@@ -1,4 +1,4 @@
-object FmxListDemoForm: TFmxListDemoForm
+object FmxObjectDemoForm: TFmxObjectDemoForm
   Left = 0
   Top = 0
   Caption = 'h5u.Grid FMX - Objektliste / RTTI'
@@ -159,15 +159,15 @@ object FmxListDemoForm: TFmxListDemoForm
   object UpdateTimer: TTimer
     Interval = 800
     OnTimer = UpdateTimerTimer
-    Left = 104
-    Top = 80
+    Left = 160
+    Top = 104
   end
   object ObjectController: Th5uObjectListController
     Cache.Mode = None
     Cache.MaxMemoryBytes = 67108864
     OwnsObjects = True
     KeyPropertyName = 'Id'
-    Left = 32
-    Top = 80
+    Left = 64
+    Top = 104
   end
 end

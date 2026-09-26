@@ -9,6 +9,7 @@ uses
   System.Classes,
   System.Rtti,
   System.SysUtils,
+  Winapi.Windows,
   Data.DB,
   Datasnap.DBClient,
   Vcl.Controls,
@@ -21,12 +22,15 @@ uses
   h5u.Grid.Factory,
   h5u.Grid.SampleData,
   h5u.Grid.Types,
+  h5u.Grid.Columns,
+  h5u.Grid.Options,
+  Vcl.h5u.Grid.Styles,
   Vcl.h5u.Grid;
 
 type
   TPriorityDemoCell = class(Th5uVclDataCell)
   protected
-    procedure PaintDefault(AGrid: Th5uVclGrid; ACanvas: TCanvas); override;
+    procedure PaintDefault(AGrid: Th5uVclCustomGrid; ACanvas: TCanvas); override;
   end;
 
   TVclDatasetDemoForm = class(TForm)
@@ -71,15 +75,9 @@ implementation
 
 {$R *.dfm}
 
-uses
-  Winapi.Windows,
-  h5u.Grid.Columns,
-  h5u.Grid.Options,
-  Vcl.h5u.Grid.Styles;
-
 { TPriorityDemoCell }
 
-procedure TPriorityDemoCell.PaintDefault(AGrid: Th5uVclGrid; ACanvas: TCanvas);
+procedure TPriorityDemoCell.PaintDefault(AGrid: Th5uVclCustomGrid; ACanvas: TCanvas);
 var
   LPriority: Integer;
   LRect: TRect;
@@ -214,7 +212,6 @@ end;
 
 procedure TVclDatasetDemoForm.FormCreate(Sender: TObject);
 begin
-  Grid.Customization.ColumnMovingGesture := Th5uColumnMovingGesture.Drag;
   if AdjacentBandModeCombo.ItemIndex < 0 then
     AdjacentBandModeCombo.ItemIndex := 3;
   FAllAdjacentGroupsCollapsed := False;
@@ -290,3 +287,4 @@ begin
 end;
 
 end.
+

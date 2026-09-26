@@ -1,4 +1,4 @@
-﻿unit FmxListDemoMain;
+﻿unit FmxObjectDemoMain;
 
 interface
 
@@ -14,6 +14,7 @@ uses
   FMX.Forms,
   FMX.StdCtrls,
   FMX.Types,
+  h5u.Grid.Types,
   h5u.Grid.Data.Core,
   h5u.Grid.Data.Objects,
   Fmx.h5u.Grid;
@@ -40,7 +41,7 @@ type
     property UpdatedAt: TDateTime read FUpdatedAt write FUpdatedAt;
   end;
 
-  TFmxListDemoForm = class(TForm)
+  TFmxObjectDemoForm = class(TForm)
     ToolBar: TToolBar;
     AddButton: TButton;
     CacheCheck: TCheckBox;
@@ -60,16 +61,13 @@ type
   end;
 
 var
-  FmxListDemoForm: TFmxListDemoForm;
+  FmxObjectDemoForm: TFmxObjectDemoForm;
 
 implementation
 
 {$R *.fmx}
 
-uses
-  h5u.Grid.Types;
-
-function TFmxListDemoForm.AddPerson: TPersonRow;
+function TFmxObjectDemoForm.AddPerson: TPersonRow;
 const
   CDepartments: array[0..4] of string = ('Fertigung', 'Konstruktion', 'Einkauf', 'QS', 'Vertrieb');
 begin
@@ -89,12 +87,12 @@ begin
   ObjectController.Add(Result);
 end;
 
-procedure TFmxListDemoForm.AddButtonClick(Sender: TObject);
+procedure TFmxObjectDemoForm.AddButtonClick(Sender: TObject);
 begin
   AddPerson;
 end;
 
-procedure TFmxListDemoForm.ApplyOptions;
+procedure TFmxObjectDemoForm.ApplyOptions;
 begin
   if CacheCheck.IsChecked then
     ObjectController.Cache.Mode := Th5uCacheMode.Viewport
@@ -109,11 +107,10 @@ begin
     Grid.Theme := Th5uGridTheme.ApplicationStyle;
 end;
 
-procedure TFmxListDemoForm.FormCreate(Sender: TObject);
+procedure TFmxObjectDemoForm.FormCreate(Sender: TObject);
 var
   I: Integer;
 begin
-  Grid.Customization.ColumnMovingGesture := Th5uColumnMovingGesture.Drag;
   ObjectController.OwnsObjects := True;
   ObjectController.BeginUpdate;
   try
@@ -125,12 +122,12 @@ begin
   ApplyOptions;
 end;
 
-procedure TFmxListDemoForm.OptionChange(Sender: TObject);
+procedure TFmxObjectDemoForm.OptionChange(Sender: TObject);
 begin
   ApplyOptions;
 end;
 
-procedure TFmxListDemoForm.UpdateTimerTimer(Sender: TObject);
+procedure TFmxObjectDemoForm.UpdateTimerTimer(Sender: TObject);
 var
   LIndex: Integer;
   LPerson: TPersonRow;
@@ -146,3 +143,4 @@ begin
 end;
 
 end.
+

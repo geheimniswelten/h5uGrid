@@ -8,7 +8,7 @@
   System.UIConsts, FMX.Objects, FMX.Types, FMX.StdCtrls, FMX.Forms, FMX.Controls, FMX.Edit, FMX.DateTimeCtrls, FMX.Graphics,
   Fmx.h5u.Grid.Editors, Fmx.h5u.Grid, Fmx.h5u.Grid.Styles,
   FmxDatasetDemoMain in '..\Demos\FMX\ClientDataset\FmxDatasetDemoMain.pas',
-  FmxListDemoMain in '..\Demos\FMX\ObjectList\FmxListDemoMain.pas',
+  FmxObjectDemoMain in '..\Demos\FMX\ObjectList\FmxObjectDemoMain.pas',
   FmxVirtualDemoMain in '..\Demos\FMX\VirtualLive\FmxVirtualDemoMain.pas';
 {$ELSE}
   Winapi.Windows, Winapi.Messages, Vcl.Forms, Vcl.Controls, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Graphics, Vcl.h5u.Grid.Editors, Vcl.h5u.Grid,
@@ -984,7 +984,7 @@ begin
     Check(Grid.Columns[0].MovePermission=Th5uColumnMovePermission.Deny,'MovePermission=Deny not loaded');
     Check(Grid.Columns[1].MovePermission=Th5uColumnMovePermission.Allow,'Column Allow not loaded');
     Check(not Grid.Customization.AllowColumnMoving and (Grid.Customization.ColumnMovingGesture
-      =Th5uColumnMovingGesture.Drag),'Customization options not loaded');
+      =Th5uColumnRowMovingGesture.Drag),'Customization options not loaded');
     Columns := Th5uGridColumns.Create(Form);
     Options := Th5uCustomizationOptions.Create;
     Selection := Th5uGridSelection.Create;
@@ -1007,10 +1007,10 @@ begin
       Options.TouchColumnResizeHitZoneRight := -1;
       Check((Options.ColumnResizeHitZoneLeft = 0) and (Options.ColumnResizeHitZoneRight = 0) and (Options.TouchColumnResizeHitZoneLeft = 0)
         and (Options.TouchColumnResizeHitZoneRight = 0), 'Negative hit zone sizes must clamp to zero');
-      Check(not Options.AllowRowMoving and (Options.RowMovingGesture=Th5uRowMovingGesture.Drag),'Assign lost row moving options');
+      Check(not Options.AllowRowMoving and (Options.RowMovingGesture=Th5uColumnRowMovingGesture.Drag),'Assign lost row moving options');
       Check((Columns[0].MovePermission=Th5uColumnMovePermission.Deny) and (Columns[1].MovePermission
         =Th5uColumnMovePermission.Allow),'Assign lost column permissions');
-      Check(not Options.AllowColumnMoving and (Options.ColumnMovingGesture=Th5uColumnMovingGesture.Drag),'Assign lost moving gesture');
+      Check(not Options.AllowColumnMoving and (Options.ColumnMovingGesture=Th5uColumnRowMovingGesture.Drag),'Assign lost moving gesture');
     finally
       Selection.Free;
       Options.Free;
@@ -1127,7 +1127,7 @@ begin
     T := TFixture.Create(Th5uCacheMode.None);
     try
       T.Grid.AllowEditing := False;
-      T.Grid.Customization.ColumnMovingGesture := Th5uColumnMovingGesture.Drag;
+      T.Grid.Customization.ColumnMovingGesture := Th5uColumnRowMovingGesture.Drag;
       T.Grid.Cursor := crCross;
       case Scenario of
         0, 1, 2, 3:
@@ -1247,7 +1247,7 @@ begin
       T.Grid.AllowEditing := False;
       T.Grid.Cursor := crCross;
       T.Grid.Theme := Th5uGridTheme(Scenario mod 4);
-      T.Grid.Customization.ColumnMovingGesture := Th5uColumnMovingGesture.Drag;
+      T.Grid.Customization.ColumnMovingGesture := Th5uColumnRowMovingGesture.Drag;
       if Scenario = 3 then T.Grid.Columns[2].FixedKind := Th5uFixedKind.Right;
       if Scenario = 4 then
       begin
@@ -1378,7 +1378,7 @@ begin
   end;
   T := TFixture.Create(Th5uCacheMode.None);
   try
-    T.Grid.Customization.ColumnMovingGesture := Th5uColumnMovingGesture.Drag;
+    T.Grid.Customization.ColumnMovingGesture := Th5uColumnRowMovingGesture.Drag;
     T.Grid.HeaderLayout.RowCount := 3;
     T.Grid.Spacing.RowSpacing := 3;
     Cell := T.Grid.HeaderLayout.Cells.Add;
@@ -1417,7 +1417,7 @@ begin
   try
     T.Grid.AllowEditing := False;
     T.Grid.Cursor := crCross;
-    T.Grid.Customization.ColumnMovingGesture := Th5uColumnMovingGesture.Drag;
+    T.Grid.Customization.ColumnMovingGesture := Th5uColumnRowMovingGesture.Drag;
     P := T.Grid.HeaderBounds(0).CenterPoint;
     Q := T.Grid.HeaderBounds(2).CenterPoint;
     Screen.Cursor := crHourGlass;
@@ -1532,7 +1532,7 @@ begin
     T := TFixture.Create(Th5uCacheMode.None);
     try
       T.Grid.AllowEditing := False;
-      T.Grid.Customization.ColumnMovingGesture := Th5uColumnMovingGesture.Drag;
+      T.Grid.Customization.ColumnMovingGesture := Th5uColumnRowMovingGesture.Drag;
       for I := 3 to 6 do
       begin
         with T.Grid.Columns.Add do
@@ -1897,7 +1897,7 @@ begin
   try
     T.Grid.AllowEditing := False;
     T.Grid.Cursor := crCross;
-    T.Grid.Customization.ColumnMovingGesture := Th5uColumnMovingGesture.Drag;
+    T.Grid.Customization.ColumnMovingGesture := Th5uColumnRowMovingGesture.Drag;
     T.Grid.Columns[0].RightSpacing := 8;
     T.PaintGrid;
     H := T.Grid.HeaderBounds(0);
@@ -2013,7 +2013,7 @@ begin
       try
         T.Grid.AllowEditing := False;
         T.Grid.Cursor := crCross;
-        T.Grid.Customization.ColumnMovingGesture := Th5uColumnMovingGesture.Drag;
+        T.Grid.Customization.ColumnMovingGesture := Th5uColumnRowMovingGesture.Drag;
         if TouchMode = 1 then Shift := [ssTouch] else Shift := [];
         P := T.Grid.HeaderBounds(0).CenterPoint;
         Q := T.Grid.HeaderBounds(2).CenterPoint;
@@ -2396,7 +2396,7 @@ begin
     Drag(Rows[2],Rows[0]);
     Check((Probe.Count=Before+1) and (Length(Probe.Context.RowKeys)=2),'Contiguous select-all minus exclusions could not move');
     T.Grid.Selection.Clear;
-    T.Grid.Customization.RowMovingGesture := Th5uRowMovingGesture.Drag;
+    T.Grid.Customization.RowMovingGesture := Th5uColumnRowMovingGesture.Drag;
     Drag(Rows[0],Rows[2],[]);
     Check((Probe.Count=Before+2) and (Length(Probe.Context.RowKeys)=1),'Plain row moving gesture failed');
     Before := Probe.Count;
@@ -2406,7 +2406,7 @@ begin
     Drag(Rows[0],Rows[2],[]);
     Check(Probe.Count=Before,'Row moving ignored grid prohibition');
     T.Grid.Customization.AllowRowMoving := True;
-    T.Grid.Customization.RowMovingGesture := Th5uRowMovingGesture.AltDrag;
+    T.Grid.Customization.RowMovingGesture := Th5uColumnRowMovingGesture.AltDrag;
     T.Grid.Selection.Clear;
     T.Grid.PointerDown(Rows[0],[ssAlt]);
     T.Grid.PointerMove(Rows[2],[ssAlt]);
@@ -2655,7 +2655,7 @@ begin
     T.Grid.PointerUp(Rows[2],[ssCtrl]);
     CheckRows(True,False,True,'Ctrl row drag contraction incorrect');
 
-    Check(T.Grid.Customization.ColumnMovingGesture=Th5uColumnMovingGesture.AltDrag,'Default moving gesture is not Alt+drag');
+    Check(T.Grid.Customization.ColumnMovingGesture=Th5uColumnRowMovingGesture.AltDrag,'Default moving gesture is not Alt+drag');
     T.Grid.PointerDown(Cols[0]);
     T.Grid.PointerMove(Cols[2]);
     CheckCols(True,True,True,'Column header drag missing');
@@ -2699,7 +2699,7 @@ begin
     Check(T.Grid.Columns[0].VisibleIndex=2,'Alt+drag did not move column');
     T.Grid.MoveColumn(T.Grid.Columns[0],0);
     T.PaintGrid;
-    T.Grid.Customization.ColumnMovingGesture := Th5uColumnMovingGesture.Drag;
+    T.Grid.Customization.ColumnMovingGesture := Th5uColumnRowMovingGesture.Drag;
     T.Grid.PointerDown(Cols[0]);
     T.Grid.PointerMove(Cols[2]);
     T.Grid.PointerUp(Cols[2]);
@@ -2733,7 +2733,7 @@ begin
     Check(T.Grid.Columns[0].VisibleIndex=0,'Column Deny was ignored');
     CheckCols(True,True,True,'Denied column moving blocked range selection');
     T.Grid.Columns[0].MovePermission := Th5uColumnMovePermission.Default;
-    T.Grid.Customization.ColumnMovingGesture := Th5uColumnMovingGesture.AltDrag;
+    T.Grid.Customization.ColumnMovingGesture := Th5uColumnRowMovingGesture.AltDrag;
     Writeln(
       'PASS: live mouse range selection, Ctrl addition, release/capture, immediate and checkbox editing, configurable column moving and permissions');
 
@@ -2934,7 +2934,7 @@ begin
   for I := 0 to High(Columns) do
     if Columns[I].DataType = Th5uColumnDataType.Boolean then
     begin Index := I; Break; end;
-  Check(G.Customization.ColumnMovingGesture = Th5uColumnMovingGesture.Drag, 'Demo header must use normal drag');
+  Check(G.Customization.ColumnMovingGesture = Th5uColumnRowMovingGesture.Drag, 'Demo header must use normal drag');
   Check(Index >= 0, 'Demo Boolean column missing');
   G.SetFocus;
   G.Press(vkHome, [ssCtrl]);
@@ -3498,7 +3498,7 @@ begin
     D.Show;
     Application.ProcessMessages;
     G := TGridAccess(D.Grid);
-    Check(G.Customization.ColumnMovingGesture = Th5uColumnMovingGesture.Drag, 'Dataset demo requires normal header drag');
+    Check(G.Customization.ColumnMovingGesture = Th5uColumnRowMovingGesture.Drag, 'Dataset demo requires normal header drag');
     Check(G.HeaderLayout.Enabled and (G.HeaderLayout.RowCount = 2) and (G.HeaderLayout.Cells.Count
       = 13), 'Dataset demo must expose matching grouped headers');
     Check((G.HeaderLayout.Cells[3].ColumnId = 'id') and (G.HeaderLayout.Cells[3].RowSpan = 2), 'Dataset demo ID must span both header rows');

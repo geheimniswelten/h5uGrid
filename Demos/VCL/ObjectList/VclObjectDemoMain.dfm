@@ -175,13 +175,13 @@ object VclObjectDemoForm: TVclObjectDemoForm
     Cache.MaxMemoryBytes = 67108864
     OwnsObjects = True
     KeyPropertyName = 'Id'
-    Left = 32
-    Top = 88
+    Left = 56
+    Top = 112
   end
   object UpdateTimer: TTimer
     Interval = 800
     OnTimer = UpdateTimerTimer
-    Left = 104
-    Top = 88
+    Left = 152
+    Top = 112
   end
 end

@@ -1,4 +1,4 @@
-unit LclObjectDemoMain;
+﻿unit LclObjectDemoMain;
 
 {$mode objfpc}{$H+}
 {$codepage UTF8}
@@ -120,7 +120,6 @@ procedure TLclObjectDemoForm.FormCreate(Sender: TObject);
 var
   I: Integer;
 begin
-  Grid.Customization.ColumnMovingGesture := Th5uColumnMovingGesture.Drag;
   ObjectController.OwnsObjects := True;
   ObjectController.BeginUpdate;
   try

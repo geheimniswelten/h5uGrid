@@ -6,6 +6,7 @@ interface
 
 uses
   System.SysUtils,
+  Winapi.Windows,
   Vcl.Graphics,
   Vcl.Themes,
   h5u.Grid.Types;
@@ -40,9 +41,6 @@ function h5uGetVclPalette(ATheme: Th5uGridTheme): Th5uVclPalette;
 function h5uBlendColor(AColor1, AColor2: TColor; AWeight: Byte): TColor;
 
 implementation
-
-uses
-  Winapi.Windows;
 
 function h5uBlendColor(AColor1, AColor2: TColor; AWeight: Byte): TColor;
 var
@@ -182,3 +180,4 @@ begin
 end;
 
 end.
+

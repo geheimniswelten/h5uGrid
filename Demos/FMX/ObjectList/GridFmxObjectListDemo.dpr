@@ -26,13 +26,13 @@ uses
   Fmx.h5u.Grid.Styles in '..\..\..\Source\FMX\Fmx.h5u.Grid.Styles.pas',
   Fmx.h5u.Grid.Editors in '..\..\..\Source\FMX\Fmx.h5u.Grid.Editors.pas',
   Fmx.h5u.Grid in '..\..\..\Source\FMX\Fmx.h5u.Grid.pas',
-  FmxListDemoMain in 'FmxListDemoMain.pas' {FmxListDemoForm};
+  FmxObjectDemoMain in 'FmxObjectDemoMain.pas' {FmxObjectDemoForm};
 
 {$R *.res}
 
 begin
   Application.Initialize;
-  Application.CreateForm(TFmxListDemoForm, FmxListDemoForm);
+  Application.CreateForm(TFmxObjectDemoForm, FmxObjectDemoForm);
   Application.Run;
 end.
 

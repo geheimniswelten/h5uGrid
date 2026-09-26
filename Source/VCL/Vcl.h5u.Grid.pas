@@ -16,19 +16,22 @@ uses
   System.UITypes,
   Winapi.Messages,
   Winapi.Windows,
+  Data.DB,
   Vcl.Controls,
   Vcl.ComCtrls,
   Vcl.ExtCtrls,
   Vcl.Graphics,
   Vcl.Menus,
   Vcl.StdCtrls,
+  Vcl.Dialogs,
+  Vcl.Forms,
+  Vcl.Themes,
   Vcl.Imaging.pngimage,
   Vcl.Imaging.jpeg,
   Vcl.Imaging.GIFImg,
   h5u.Grid.AdjacentGroups,
   h5u.Grid.Values,
   h5u.Grid.Editors,
-  Vcl.h5u.Grid.Editors,
   h5u.Grid.Moving,
   h5u.Grid.Resizing,
   h5u.Grid.Navigation,
@@ -41,10 +44,12 @@ uses
   h5u.Grid.Options,
   h5u.Grid.Selection,
   h5u.Grid.Types,
-  Vcl.h5u.Grid.Styles;
+  h5u.Grid.Data.Dataset,
+  Vcl.h5u.Grid.Styles,
+  Vcl.h5u.Grid.Editors;
 
 type
-  Th5uVclGrid = class;
+  Th5uVclCustomGrid = class;
   Th5uVclVisualCell = class;
   Th5uVclVisualCellClass = class of Th5uVclVisualCell;
 
@@ -52,7 +57,7 @@ type
   Th5uHitKind = (None, Header, RowIndicator, DataCell, AdjacentGroupGlyph);
 
   Th5uGetRowHeightContext = record
-    Grid: Th5uVclGrid;
+    Grid: Th5uVclCustomGrid;
     DataController: Th5uCustomDataController;
     RowKey: Th5uRowKey;
     ViewRowIndex: Int64;
@@ -64,7 +69,7 @@ type
   Th5uGetRowSpacingEvent = procedure(Sender: TObject; const AContext: Th5uGetRowHeightContext; var ASpacing: Integer) of object;
 
   Th5uThumbHintContext = record
-    Grid: Th5uVclGrid;
+    Grid: Th5uVclCustomGrid;
     DataController: Th5uCustomDataController;
     Axis: Th5uScrollAxis;
     Trigger: Th5uScrollHintTrigger;
@@ -127,14 +132,14 @@ type
     FAppearance: Th5uResolvedAppearance;
     FInUse: Boolean;
   protected
-    procedure PrepareCanvas(AGrid: Th5uVclGrid; ACanvas: TCanvas; APart: Th5uElementPaintPart);
-    procedure PaintDefault(AGrid: Th5uVclGrid; ACanvas: TCanvas); virtual;
-    function EffectiveBackground(AGrid: Th5uVclGrid): TColor;
-    function EffectiveForeground(AGrid: Th5uVclGrid): TColor;
+    procedure PrepareCanvas(AGrid: Th5uVclCustomGrid; ACanvas: TCanvas; APart: Th5uElementPaintPart);
+    procedure PaintDefault(AGrid: Th5uVclCustomGrid; ACanvas: TCanvas); virtual;
+    function EffectiveBackground(AGrid: Th5uVclCustomGrid): TColor;
+    function EffectiveForeground(AGrid: Th5uVclCustomGrid): TColor;
   public
     procedure BindCell(const AContext: Th5uFactoryContext; const ABounds: TRect; const AValue: TValue; const ADisplayText: string;
       const AAppearance: Th5uResolvedAppearance); virtual;
-    procedure Paint(AGrid: Th5uVclGrid; ACanvas: TCanvas); virtual;
+    procedure Paint(AGrid: Th5uVclCustomGrid; ACanvas: TCanvas); virtual;
 
     property Context: Th5uFactoryContext read FContext;
     property Bounds: TRect read FBounds;
@@ -147,7 +152,7 @@ type
   // and the tree branch-end band. Its ClassId is resolved per grid instance.
   Th5uVclSpacingCell = class(Th5uVclVisualCell)
   protected
-    procedure PaintDefault(AGrid: Th5uVclGrid; ACanvas: TCanvas); override;
+    procedure PaintDefault(AGrid: Th5uVclCustomGrid; ACanvas: TCanvas); override;
   end;
 
   Th5uVclDataCell = class(Th5uVclVisualCell)
@@ -156,14 +161,14 @@ type
     FPictureSignature: Integer;
     procedure EnsurePicture;
   protected
-    procedure PaintDefault(AGrid: Th5uVclGrid; ACanvas: TCanvas); override;
+    procedure PaintDefault(AGrid: Th5uVclCustomGrid; ACanvas: TCanvas); override;
   public
     destructor Destroy; override;
   end;
 
   Th5uVclHeaderCell = class(Th5uVclVisualCell)
   protected
-    procedure PaintDefault(AGrid: Th5uVclGrid; ACanvas: TCanvas); override;
+    procedure PaintDefault(AGrid: Th5uVclCustomGrid; ACanvas: TCanvas); override;
   end;
 
   Th5uVclFixedCell = class(Th5uVclDataCell);
@@ -172,10 +177,10 @@ type
   // The class is resolved through the per-grid FactoryScope.
   Th5uVclAdjacentGroupGlyphCell = class(Th5uVclVisualCell)
   protected
-    procedure PaintDefault(AGrid: Th5uVclGrid; ACanvas: TCanvas); override;
+    procedure PaintDefault(AGrid: Th5uVclCustomGrid; ACanvas: TCanvas); override;
   end;
 
-  Th5uVclGrid = class(TCustomControl)
+  Th5uVclCustomGrid = class(TCustomControl)
   private
     FShowColumnModes: Boolean;
     FColumns: Th5uGridColumns;
@@ -515,20 +520,7 @@ type
     property FactoryScope: Th5uFactoryScope read FFactoryScope;
     property HorizontalOffset: Integer read FHorizontalOffset;
     property VerticalOffset: Integer read FVerticalOffset;
-  published
-    property Align;
-    property Anchors;
-    property Constraints;
-    property Enabled;
-    property Font;
-    property ParentFont;
-    property ParentShowHint;
-    property PopupMenu;
-    property ShowHint;
-    property TabOrder;
-    property TabStop;
-    property Visible;
-
+  protected
     property DataController: Th5uCustomDataController read FDataController write SetDataController;
     property SharedClassFactory: Th5uClassFactory read FSharedClassFactory write SetSharedClassFactory;
     property Editors: Th5uVclGridEditors read FEditors write SetEditors;
@@ -557,8 +549,6 @@ type
     property ShowRowIndicator: Boolean read FShowRowIndicator write FShowRowIndicator default True;
     property AllowEditing: Boolean read FAllowEditing write FAllowEditing default True;
     property ImmediateEdit: Boolean read FImmediateEdit write FImmediateEdit default False;
-    // Convenience switch for all grid-wide one-pixel separators.
-    // Explicit per-column RightSpacing values remain independently configurable.
     property GridLines: Boolean read GetGridLines write SetGridLines default True;
 
     property OnGetClass: Th5uGetClassEvent read GetOnGetClass write SetOnGetClass;
@@ -589,6 +579,84 @@ type
     property OnRowsMoved: Th5uRowsMovedEvent read FOnRowsMoved write FOnRowsMoved;
     property OnSelectionChange: TNotifyEvent read FOnSelectionChange write FOnSelectionChange;
     property ShowColumnModes: Boolean read FShowColumnModes write SetShowColumnModes default False;
+  end;
+
+  Th5uVclGrid = class(Th5uVclCustomGrid)
+  published
+    property Align;
+    property Anchors;
+    property Constraints;
+    property Enabled;
+    property Font;
+    property ParentFont;
+    property ParentShowHint;
+    property PopupMenu;
+    property ShowHint;
+    property TabOrder;
+    property TabStop;
+    property Visible;
+
+    property DataController;
+    property SharedClassFactory;
+    property Editors;
+    property DefaultEditors;
+    // Limits for the combined column content, not the control itself. Zero disables a limit.
+    property MinWidth;
+    property MaxWidth;
+    property AutoWidthRowLimit;
+    property Columns;
+    property HeaderLayout;
+    property Selection;
+    property RowHeight;
+    property Scrolling;
+    property ScrollHints;
+    property RowStyles;
+    property Customization;
+    property Spacing;
+    property Appearance;
+    property AdjacentGroupFolding;
+    property Tree;
+
+    property Theme;
+    property HeaderRowHeight;
+    property RowIndicatorWidth;
+    property ShowHeader;
+    property ShowRowIndicator;
+    property AllowEditing;
+    property ImmediateEdit;
+    // Convenience switch for all grid-wide one-pixel separators.
+    // Explicit per-column RightSpacing values remain independently configurable.
+    property GridLines;
+
+    property OnGetClass;
+    property OnCreateInstance;
+    property OnConfigureInstance;
+    property OnGetRowHeight;
+    property OnGetRowSpacing;
+    property OnGetThumbHint;
+    property OnGetRowAppearance;
+    property OnGetCellAppearance;
+    property OnAfterDraw;
+    property OnPrepareElement;
+    property OnCustomDraw;
+    property OnGetTreeLevel;
+    property OnGetTreeBranchEnd;
+    property OnGetAdjacentGroupId;
+    property OnAdjacentGroupStateChanged;
+    property OnCanFocus;
+    property OnCanEdit;
+    property OnValidate;
+    property OnGetValue;
+    property OnSetValue;
+    property OnCellClick;
+    property OnColumnHeaderClick;
+    property OnCellEnter;
+    property OnCellExit;
+    property OnRowIndicatorClick;
+    property OnRowsMoved;
+    property OnSelectionChange;
+    property ShowColumnModes;
+
     property OnClick;
     property OnDblClick;
     property OnEnter;
@@ -602,13 +670,6 @@ type
   end;
 
 implementation
-
-uses
-  Data.DB,
-  Vcl.Dialogs,
-  Vcl.Forms,
-  Vcl.Themes,
-  h5u.Grid.Data.Dataset;
 
 type
   Th5uAccessGridColumn = class(Th5uGridColumn);
@@ -653,7 +714,7 @@ begin
   FAppearance := AAppearance;
 end;
 
-function Th5uVclVisualCell.EffectiveBackground(AGrid: Th5uVclGrid): TColor;
+function Th5uVclVisualCell.EffectiveBackground(AGrid: Th5uVclCustomGrid): TColor;
 var
   LPalette: Th5uVclPalette;
 begin
@@ -664,7 +725,7 @@ begin
     Result := AGrid.ResolveDefaultCellColor;
 end;
 
-function Th5uVclVisualCell.EffectiveForeground(AGrid: Th5uVclGrid): TColor;
+function Th5uVclVisualCell.EffectiveForeground(AGrid: Th5uVclCustomGrid): TColor;
 var
   LPalette: Th5uVclPalette;
 begin
@@ -675,7 +736,7 @@ begin
     Result := LPalette.CellText;
 end;
 
-procedure Th5uVclVisualCell.PrepareCanvas(AGrid: Th5uVclGrid; ACanvas: TCanvas; APart: Th5uElementPaintPart);
+procedure Th5uVclVisualCell.PrepareCanvas(AGrid: Th5uVclCustomGrid; ACanvas: TCanvas; APart: Th5uElementPaintPart);
 var
   LContext: Th5uVclDrawContext;
 begin
@@ -688,7 +749,7 @@ begin
   AGrid.FOnPrepareElement(AGrid, Self, ACanvas, LContext, APart);
 end;
 
-procedure Th5uVclGrid.PrepareGridCanvas(const ABounds: TRect; AKind: Th5uElementKind);
+procedure Th5uVclCustomGrid.PrepareGridCanvas(const ABounds: TRect; AKind: Th5uElementKind);
 var
   LContext: Th5uVclDrawContext;
 begin
@@ -701,7 +762,7 @@ begin
   FOnPrepareElement(Self, Self, Canvas, LContext, Th5uElementPaintPart.Background);
 end;
 
-procedure Th5uVclVisualCell.Paint(AGrid: Th5uVclGrid; ACanvas: TCanvas);
+procedure Th5uVclVisualCell.Paint(AGrid: Th5uVclCustomGrid; ACanvas: TCanvas);
 var
   LDrawContext: Th5uVclDrawContext;
   LDrawDefault: Boolean;
@@ -737,7 +798,7 @@ begin
   end;
 end;
 
-procedure Th5uVclVisualCell.PaintDefault(AGrid: Th5uVclGrid; ACanvas: TCanvas);
+procedure Th5uVclVisualCell.PaintDefault(AGrid: Th5uVclCustomGrid; ACanvas: TCanvas);
 begin
   // Separators are independent layout elements. Painting them around every
   // cell would double their width and would make per-column spacing impossible.
@@ -749,7 +810,7 @@ end;
 
 { Th5uVclSpacingCell }
 
-procedure Th5uVclSpacingCell.PaintDefault(AGrid: Th5uVclGrid; ACanvas: TCanvas);
+procedure Th5uVclSpacingCell.PaintDefault(AGrid: Th5uVclCustomGrid; ACanvas: TCanvas);
 begin
   if not Appearance.HasBackground then
     Exit;
@@ -761,7 +822,7 @@ end;
 
 { Th5uVclAdjacentGroupGlyphCell }
 
-procedure Th5uVclAdjacentGroupGlyphCell.PaintDefault(AGrid: Th5uVclGrid; ACanvas: TCanvas);
+procedure Th5uVclAdjacentGroupGlyphCell.PaintDefault(AGrid: Th5uVclCustomGrid; ACanvas: TCanvas);
 var
   LPalette: Th5uVclPalette;
   LRect: TRect;
@@ -842,7 +903,7 @@ begin
   end;
 end;
 
-procedure Th5uVclDataCell.PaintDefault(AGrid: Th5uVclGrid; ACanvas: TCanvas);
+procedure Th5uVclDataCell.PaintDefault(AGrid: Th5uVclCustomGrid; ACanvas: TCanvas);
 var
   LEditor: Th5uGridEditorItem;
   LEditorContext: Th5uEditorContext;
@@ -937,7 +998,7 @@ end;
 
 { Th5uVclHeaderCell }
 
-procedure Th5uVclHeaderCell.PaintDefault(AGrid: Th5uVclGrid; ACanvas: TCanvas);
+procedure Th5uVclHeaderCell.PaintDefault(AGrid: Th5uVclCustomGrid; ACanvas: TCanvas);
 var
   LPalette: Th5uVclPalette;
   LTextRect, LSymbolRect: TRect;
@@ -988,7 +1049,7 @@ begin
   ACanvas.Brush.Style := bsSolid;
 end;
 
-function Th5uVclGrid.AcquireVisualCell(const AContext: Th5uFactoryContext; ADefaultClass: Th5uVclVisualCellClass): Th5uVclVisualCell;
+function Th5uVclCustomGrid.AcquireVisualCell(const AContext: Th5uFactoryContext; ADefaultClass: Th5uVclVisualCellClass): Th5uVclVisualCell;
 var
   LClass: Th5uVclVisualCellClass;
   LCell: Th5uVclVisualCell;
@@ -1013,7 +1074,7 @@ begin
   FFactoryScope.BindInstance(AContext, Result);
 end;
 
-procedure Th5uVclGrid.AutoCreateColumnsFromDataset(AClearExisting: Boolean);
+procedure Th5uVclCustomGrid.AutoCreateColumnsFromDataset(AClearExisting: Boolean);
 var
   LController: Th5uDatasetController;
   LField: TField;
@@ -1102,7 +1163,7 @@ begin
   RebuildAfterLayoutChange;
 end;
 
-procedure Th5uVclGrid.BeginVisualPass;
+procedure Th5uVclCustomGrid.BeginVisualPass;
 var
   LCell: Th5uVclVisualCell;
 begin
@@ -1114,7 +1175,7 @@ begin
     end;
 end;
 
-function Th5uVclGrid.BuildThumbHintText(AAxis: Th5uScrollAxis; ATrigger: Th5uScrollHintTrigger; out AContext: Th5uThumbHintContext): string;
+function Th5uVclCustomGrid.BuildThumbHintText(AAxis: Th5uScrollAxis; ATrigger: Th5uScrollHintTrigger; out AContext: Th5uThumbHintContext): string;
 var
   LTop: Integer;
   LRowIndex: Int64;
@@ -1192,7 +1253,7 @@ begin
   end;
 end;
 
-procedure Th5uVclGrid.SetMinWidth(const AValue: Integer);
+procedure Th5uVclCustomGrid.SetMinWidth(const AValue: Integer);
 begin
   if FMinWidth = Max(0, AValue) then
     Exit;
@@ -1202,7 +1263,7 @@ begin
   OptionsChanged(Self);
 end;
 
-procedure Th5uVclGrid.SetMaxWidth(const AValue: Integer);
+procedure Th5uVclCustomGrid.SetMaxWidth(const AValue: Integer);
 begin
   if FMaxWidth = Max(0, AValue) then
     Exit;
@@ -1212,7 +1273,7 @@ begin
   OptionsChanged(Self);
 end;
 
-procedure Th5uVclGrid.SetAutoWidthRowLimit(const AValue: Integer);
+procedure Th5uVclCustomGrid.SetAutoWidthRowLimit(const AValue: Integer);
 begin
   if FAutoWidthRowLimit = Max(0, AValue) then
     Exit;
@@ -1220,13 +1281,13 @@ begin
   InvalidateColumnWidths;
 end;
 
-procedure Th5uVclGrid.InvalidateColumnWidths;
+procedure Th5uVclCustomGrid.InvalidateColumnWidths;
 begin
   FAutoWidthsDirty := True;
   Invalidate;
 end;
 
-procedure Th5uVclGrid.AutoSizeColumn(AColumn: Th5uGridColumn; AFirstRow, ARowCount: Int64);
+procedure Th5uVclCustomGrid.AutoSizeColumn(AColumn: Th5uGridColumn; AFirstRow, ARowCount: Int64);
 var
   LWidth: Integer;
 begin
@@ -1241,7 +1302,7 @@ begin
   end;
 end;
 
-procedure Th5uVclGrid.MeasureAutoWidths;
+procedure Th5uVclCustomGrid.MeasureAutoWidths;
 var
   LColumn: Th5uGridColumn;
   LFont: string;
@@ -1268,7 +1329,7 @@ begin
   end;
 end;
 
-procedure Th5uVclGrid.ResolveColumnWidths(AAvailableWidth: Double);
+procedure Th5uVclCustomGrid.ResolveColumnWidths(AAvailableWidth: Double);
 begin
   if h5uResolveColumnWidths(FColumns, FHeaderLayout, FSpacing.DefaultColumnRightSpacing,
      AAvailableWidth - IndicatorExtent, FMinWidth, FMaxWidth)
@@ -1276,7 +1337,7 @@ begin
      InvalidateAllRowHeights;
 end;
 
-function Th5uVclGrid.MeasureColumnWidth(AColumn: Th5uGridColumn; AFirstRow, ARowCount: Int64): Integer;
+function Th5uVclCustomGrid.MeasureColumnWidth(AColumn: Th5uGridColumn; AFirstRow, ARowCount: Int64): Integer;
 var
   LBitmap: TBitmap;
   LContext: Th5uEditorContext;
@@ -1352,7 +1413,7 @@ begin
   end;
 end;
 
-procedure Th5uVclGrid.BuildColumnLayout;
+procedure Th5uVclCustomGrid.BuildColumnLayout;
 var
   LLayout: TArray<Th5uColumnLayoutInfo>;
   LView: TRect;
@@ -1378,19 +1439,19 @@ begin
   SetLength(FVisibleColumns, LVisibleCount);
 end;
 
-function Th5uVclGrid.IndicatorExtent: Double;
+function Th5uVclCustomGrid.IndicatorExtent: Double;
 begin
   Result := 0;
   if FShowRowIndicator then
     Result := FRowIndicatorWidth + FSpacing.DefaultColumnRightSpacing;
 end;
 
-procedure Th5uVclGrid.CancelEditor;
+procedure Th5uVclCustomGrid.CancelEditor;
 begin
   FinishEditor(False);
 end;
 
-procedure Th5uVclGrid.ColumnChooserClick(Sender: TObject);
+procedure Th5uVclCustomGrid.ColumnChooserClick(Sender: TObject);
 var
   LItem: TMenuItem;
   LColumn: Th5uGridColumn;
@@ -1404,7 +1465,7 @@ begin
   SetColumnVisible(LColumn, not LColumn.Visible);
 end;
 
-function Th5uVclGrid.ColumnInfoAtPoint(X, Y: Integer; out AInfo: Th5uVisibleColumnInfo): Boolean;
+function Th5uVclCustomGrid.ColumnInfoAtPoint(X, Y: Integer; out AInfo: Th5uVisibleColumnInfo): Boolean;
 var
   LInfo: Th5uVisibleColumnInfo;
 begin
@@ -1417,7 +1478,7 @@ begin
   Result := False;
 end;
 
-procedure Th5uVclGrid.SetShowColumnModes(AValue: Boolean);
+procedure Th5uVclCustomGrid.SetShowColumnModes(AValue: Boolean);
 begin
   if FShowColumnModes = AValue then
     Exit;
@@ -1425,27 +1486,27 @@ begin
   Invalidate;
 end;
 
-procedure Th5uVclGrid.GetColumnMode(AColumn: Th5uGridColumn; var AMode: string);
+procedure Th5uVclCustomGrid.GetColumnMode(AColumn: Th5uGridColumn; var AMode: string);
 begin
   AMode := h5uColumnMode(AColumn, FDataController, FTree.LevelColumnId, FAdjacentGroupFolding.IdColumnId, FRowStyles.StyleKeyColumnId,
     FScrollHints.VerticalColumnId);
 end;
 
-function Th5uVclGrid.ColumnModeSymbols(AColumn: Th5uGridColumn): string;
+function Th5uVclCustomGrid.ColumnModeSymbols(AColumn: Th5uGridColumn): string;
 begin
   Result := '';
   if Assigned(AColumn) and (FShowColumnModes or (csDesigning in ComponentState)) then
     Result := h5uColumnModeSymbols(AColumn.Mode);
 end;
 
-procedure Th5uVclGrid.ColumnsChanged(Sender: TObject; AColumn: Th5uGridColumn);
+procedure Th5uVclCustomGrid.ColumnsChanged(Sender: TObject; AColumn: Th5uGridColumn);
 begin
   FAutoWidthsDirty := True;
   InvalidateAdjacentGroupMap(False);
   RebuildAfterLayoutChange;
 end;
 
-function Th5uVclGrid.TryFocusCell(const ACell: Th5uCellAddress; AUpdateAnchor: Boolean): Boolean;
+function Th5uVclCustomGrid.TryFocusCell(const ACell: Th5uCellAddress; AUpdateAnchor: Boolean): Boolean;
 var
   LColumn: Th5uGridColumn;
   LAllow: Boolean;
@@ -1470,7 +1531,7 @@ begin
   Result := True;
 end;
 
-function Th5uVclGrid.AllowCellEdit(AColumn: Th5uGridColumn; ARow: Int64): Boolean;
+function Th5uVclCustomGrid.AllowCellEdit(AColumn: Th5uGridColumn; ARow: Int64): Boolean;
 begin
   Result := False;
   if not CanUpdateLayout then
@@ -1479,20 +1540,20 @@ begin
     and CanEditViewValue(ARow, AColumn.FieldName), AColumn.OnCanEdit, FOnCanEdit);
 end;
 
-function Th5uVclGrid.GetCellValue(AColumn: Th5uGridColumn; ARow: Int64; ADisplay: Boolean): TValue;
+function Th5uVclCustomGrid.GetCellValue(AColumn: Th5uGridColumn; ARow: Int64; ADisplay: Boolean): TValue;
 begin
   Result := GetViewValue(ARow, AColumn.FieldName);
   if CanUpdateLayout then
     h5uOverrideCellValue(Self, AColumn, ARow, ADisplay, FOnGetValue, Result);
 end;
 
-function Th5uVclGrid.GetCellText(AColumn: Th5uGridColumn; ARow: Int64; ADisplay: Boolean): string;
+function Th5uVclCustomGrid.GetCellText(AColumn: Th5uGridColumn; ARow: Int64; ADisplay: Boolean): string;
 begin
   Result := h5uCellText(AColumn, ARow, ADisplay, Assigned(AColumn.OnGetValue)
     or Assigned(FOnGetValue), GetCellValue, GetViewValue, GetViewDisplayText);
 end;
 
-procedure Th5uVclGrid.PutCellValue(AColumn: Th5uGridColumn; ARow: Int64; const AValue: TValue);
+procedure Th5uVclCustomGrid.PutCellValue(AColumn: Th5uGridColumn; ARow: Int64; const AValue: TValue);
 var
   LValue: TValue;
 begin
@@ -1502,13 +1563,13 @@ begin
   SetViewValue(ARow, AColumn.FieldName, LValue);
 end;
 
-procedure Th5uVclGrid.NotifyCellClick(AColumn: Th5uGridColumn; ARow: Int64; AHeader, AIndicator: Boolean);
+procedure Th5uVclCustomGrid.NotifyCellClick(AColumn: Th5uGridColumn; ARow: Int64; AHeader, AIndicator: Boolean);
 begin
   if CanUpdateLayout then
     h5uNotifyCellClick(Self, AColumn, ARow, AHeader, AIndicator, FOnCellClick, FOnColumnHeaderClick, FOnRowIndicatorClick);
 end;
 
-procedure Th5uVclGrid.CommitEditor;
+procedure Th5uVclCustomGrid.CommitEditor;
 var
   LValue: TValue;
 begin
@@ -1541,60 +1602,60 @@ begin
   end;
 end;
 
-function Th5uVclGrid.GetOnGetAdjacentGroupId: Th5uGetAdjacentGroupIdEvent;
+function Th5uVclCustomGrid.GetOnGetAdjacentGroupId: Th5uGetAdjacentGroupIdEvent;
 begin
   Result := nil;
   if Assigned(FView) then
     Result := FView.OnGetAdjacentGroupId;
 end;
 
-procedure Th5uVclGrid.SetOnGetAdjacentGroupId(const AValue: Th5uGetAdjacentGroupIdEvent);
+procedure Th5uVclCustomGrid.SetOnGetAdjacentGroupId(const AValue: Th5uGetAdjacentGroupIdEvent);
 begin
   FView.OnGetAdjacentGroupId := AValue;
 end;
 
-function Th5uVclGrid.GetOnGetTreeLevel: Th5uGetTreeLevelEvent;
+function Th5uVclCustomGrid.GetOnGetTreeLevel: Th5uGetTreeLevelEvent;
 begin
   Result := nil;
   if Assigned(FView) then
     Result := FView.OnGetTreeLevel;
 end;
 
-procedure Th5uVclGrid.SetOnGetTreeLevel(const AValue: Th5uGetTreeLevelEvent);
+procedure Th5uVclCustomGrid.SetOnGetTreeLevel(const AValue: Th5uGetTreeLevelEvent);
 begin
   FView.OnGetTreeLevel := AValue;
 end;
 
-function Th5uVclGrid.GetOnGetTreeBranchEnd: Th5uGetTreeBranchEndEvent;
+function Th5uVclCustomGrid.GetOnGetTreeBranchEnd: Th5uGetTreeBranchEndEvent;
 begin
   Result := nil;
   if Assigned(FView) then
     Result := FView.OnGetTreeBranchEnd;
 end;
 
-procedure Th5uVclGrid.SetOnGetTreeBranchEnd(const AValue: Th5uGetTreeBranchEndEvent);
+procedure Th5uVclCustomGrid.SetOnGetTreeBranchEnd(const AValue: Th5uGetTreeBranchEndEvent);
 begin
   FView.OnGetTreeBranchEnd := AValue;
 end;
 
-function Th5uVclGrid.GetOnAdjacentGroupStateChanged: Th5uAdjacentGroupStateChangedEvent;
+function Th5uVclCustomGrid.GetOnAdjacentGroupStateChanged: Th5uAdjacentGroupStateChangedEvent;
 begin
   Result := nil;
   if Assigned(FView) then
     Result := FView.OnAdjacentGroupStateChanged;
 end;
 
-procedure Th5uVclGrid.SetOnAdjacentGroupStateChanged(const AValue: Th5uAdjacentGroupStateChangedEvent);
+procedure Th5uVclCustomGrid.SetOnAdjacentGroupStateChanged(const AValue: Th5uAdjacentGroupStateChangedEvent);
 begin
   FView.OnAdjacentGroupStateChanged := AValue;
 end;
 
-function Th5uVclGrid.ViewDataController: Th5uCustomDataController;
+function Th5uVclCustomGrid.ViewDataController: Th5uCustomDataController;
 begin
   Result := FDataController;
 end;
 
-constructor Th5uVclGrid.Create(AOwner: TComponent);
+constructor Th5uVclCustomGrid.Create(AOwner: TComponent);
 begin
   inherited;
   // Our interaction handlers own capture. VCL's automatic release happens before
@@ -1693,7 +1754,7 @@ begin
   LayoutScrollBars;
 end;
 
-procedure Th5uVclGrid.DataChanged(Sender: TObject; const AChange: Th5uDataChange);
+procedure Th5uVclCustomGrid.DataChanged(Sender: TObject; const AChange: Th5uDataChange);
 begin
   FAutoWidthsDirty := True;
   // Unknown row changes may reorder positional keys; abandon the pending drop.
@@ -1711,7 +1772,7 @@ begin
   Invalidate;
 end;
 
-destructor Th5uVclGrid.Destroy;
+destructor Th5uVclCustomGrid.Destroy;
 begin
   CancelEditor;
   FEditorCache.Free;
@@ -1740,13 +1801,13 @@ begin
   inherited;
 end;
 
-procedure Th5uVclGrid.DoCustomDraw(ACanvas: TCanvas; const AContext: Th5uVclDrawContext; AStage: Th5uCustomDrawStage; var ADrawDefault: Boolean);
+procedure Th5uVclCustomGrid.DoCustomDraw(ACanvas: TCanvas; const AContext: Th5uVclDrawContext; AStage: Th5uCustomDrawStage; var ADrawDefault: Boolean);
 begin
   if Assigned(FOnCustomDraw) then
     FOnCustomDraw(Self, ACanvas, AContext, AStage, ADrawDefault);
 end;
 
-function Th5uVclGrid.DoMouseWheel(Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint): Boolean;
+function Th5uVclCustomGrid.DoMouseWheel(Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint): Boolean;
 var
   LDelta: Integer;
 begin
@@ -1772,7 +1833,7 @@ begin
   Result := True;
 end;
 
-procedure Th5uVclGrid.DrawCustomHeaderLayout;
+procedure Th5uVclCustomGrid.DrawCustomHeaderLayout;
 var
   I, LFirst, LLast: Integer;
   LCellDef: Th5uHeaderLayoutCell;
@@ -1835,7 +1896,7 @@ begin
   end;
 end;
 
-procedure Th5uVclGrid.DrawDefaultHeaders;
+procedure Th5uVclCustomGrid.DrawDefaultHeaders;
 var
   LInfo: Th5uVisibleColumnInfo;
   LRect: TRect;
@@ -1890,7 +1951,7 @@ begin
   end;
 end;
 
-procedure Th5uVclGrid.DrawContentPadding;
+procedure Th5uVclCustomGrid.DrawContentPadding;
 var
   LOuterRect: TRect;
   LInnerRect: TRect;
@@ -1926,7 +1987,7 @@ begin
   end;
 end;
 
-procedure Th5uVclGrid.DrawHeaders;
+procedure Th5uVclCustomGrid.DrawHeaders;
 var
   LRect: TRect;
   LSeparatorRect: TRect;
@@ -1976,7 +2037,7 @@ begin
   end;
 end;
 
-procedure Th5uVclGrid.DrawRowIndicator(const ARowInfo: Th5uVisibleRowInfo; ASelected: Boolean);
+procedure Th5uVclCustomGrid.DrawRowIndicator(const ARowInfo: Th5uVisibleRowInfo; ASelected: Boolean);
 var
   LRect: TRect;
   LSeparatorRect: TRect;
@@ -2022,7 +2083,7 @@ begin
   end;
 end;
 
-function Th5uVclGrid.GetAdjacentGroupGlyphRect(const ARowInfo: Th5uVisibleRowInfo): TRect;
+function Th5uVclCustomGrid.GetAdjacentGroupGlyphRect(const ARowInfo: Th5uVisibleRowInfo): TRect;
 var
   LInfo: Th5uAdjacentGroupRowInfo;
   LLeft: Integer;
@@ -2048,7 +2109,7 @@ begin
   IntersectRect(Result, Result, GetDataViewportRect);
 end;
 
-procedure Th5uVclGrid.DrawAdjacentGroupGlyph(const ARowInfo: Th5uVisibleRowInfo; ASelected: Boolean);
+procedure Th5uVclCustomGrid.DrawAdjacentGroupGlyph(const ARowInfo: Th5uVisibleRowInfo; ASelected: Boolean);
 var
   LBounds: TRect;
   LContext: Th5uFactoryContext;
@@ -2079,7 +2140,7 @@ begin
   LCell.Paint(Self, Canvas);
 end;
 
-procedure Th5uVclGrid.DrawRows;
+procedure Th5uVclCustomGrid.DrawRows;
 var
   LDataRect: TRect;
   LTop: Integer;
@@ -2245,7 +2306,7 @@ begin
   end;
 end;
 
-procedure Th5uVclGrid.DrawSpacingRect(const ABounds: TRect; AElementKind: Th5uElementKind; AColumn: Th5uGridColumn; AViewRowIndex: Int64; const ARowKey: Th5uRowKey; AColor: TColor;
+procedure Th5uVclCustomGrid.DrawSpacingRect(const ABounds: TRect; AElementKind: Th5uElementKind; AColumn: Th5uGridColumn; AViewRowIndex: Int64; const ARowKey: Th5uRowKey; AColor: TColor;
   const AStyleName: string; ATreeLevel: Integer; AClosedTreeLevels: Integer);
 var
   LClassId: Th5uClassId;
@@ -2297,7 +2358,7 @@ begin
   LCell.Paint(Self, Canvas);
 end;
 
-function Th5uVclGrid.GetColumnViewportRect(AColumn: Th5uGridColumn): TRect;
+function Th5uVclCustomGrid.GetColumnViewportRect(AColumn: Th5uGridColumn): TRect;
 var
   LLeft, LRight: Double;
 begin
@@ -2309,7 +2370,7 @@ begin
   Result.Right := Round(LRight);
 end;
 
-function Th5uVclGrid.GetVisibleCellBounds(AColumn: Th5uGridColumn; const AColumnBounds, ARowBounds: TRect): TRect;
+function Th5uVclCustomGrid.GetVisibleCellBounds(AColumn: Th5uGridColumn; const AColumnBounds, ARowBounds: TRect): TRect;
 begin
   // Painting, pointer hit testing and cell editors must use the same clipped
   // rectangle, including rows partially scrolled underneath the header.
@@ -2320,14 +2381,14 @@ begin
   IntersectRect(Result, Result, AColumnBounds);
 end;
 
-procedure Th5uVclGrid.EditorChanged(Sender: TObject);
+procedure Th5uVclCustomGrid.EditorChanged(Sender: TObject);
 begin
   // A changed value permits another automatic commit. Showing a validation
   // dialog, and the focus changes it causes, must not retry the failed value.
   FEditorExitBlocked := False;
 end;
 
-procedure Th5uVclGrid.EditorExit(Sender: TObject);
+procedure Th5uVclCustomGrid.EditorExit(Sender: TObject);
 begin
   if Assigned(FActiveEditor) and FActiveEditor.DeferExit then
     Exit;
@@ -2335,7 +2396,7 @@ begin
     CommitEditor;
 end;
 
-procedure Th5uVclGrid.EditorKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+procedure Th5uVclCustomGrid.EditorKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
   case Key of
     VK_RETURN:
@@ -2352,7 +2413,7 @@ begin
   end;
 end;
 
-function Th5uVclGrid.FindFirstVisibleRow(AOffset: Int64; out ATop: Integer): Int64;
+function Th5uVclCustomGrid.FindFirstVisibleRow(AOffset: Int64; out ATop: Integer): Int64;
 begin
   Result := -1;
   ATop := GetDataViewportRect.Top;
@@ -2360,7 +2421,7 @@ begin
     Result := h5uFindFirstVisibleRow(GetViewRowCount, AOffset, GetDataViewportRect.Top, MetricRowExtent, ATop);
 end;
 
-function Th5uVclGrid.GetDataCellClass(const AContext: Th5uFactoryContext): Th5uVclVisualCellClass;
+function Th5uVclCustomGrid.GetDataCellClass(const AContext: Th5uFactoryContext): Th5uVclVisualCellClass;
 begin
   if Th5uElementFlag.FixedColumn in AContext.ElementFlags then
     Result := GetFixedCellClass(AContext)
@@ -2368,13 +2429,13 @@ begin
     Result := Th5uVclDataCell;
 end;
 
-function Th5uVclGrid.GetDataViewportRect: TRect;
+function Th5uVclCustomGrid.GetDataViewportRect: TRect;
 begin
   Result := GetViewportRect;
   Inc(Result.Top, GetHeaderHeight);
 end;
 
-function Th5uVclGrid.GetEstimatedTotalRowHeight: Int64;
+function Th5uVclCustomGrid.GetEstimatedTotalRowHeight: Int64;
 var
   LTotal: Th5uTotalRowHeight;
   LVariableSpacing: Boolean;
@@ -2388,47 +2449,47 @@ begin
   Result := LTotal.Whole;
 end;
 
-function Th5uVclGrid.GetFixedCellClass(const AContext: Th5uFactoryContext): Th5uVclVisualCellClass;
+function Th5uVclCustomGrid.GetFixedCellClass(const AContext: Th5uFactoryContext): Th5uVclVisualCellClass;
 begin
   Result := Th5uVclFixedCell;
 end;
 
-function Th5uVclGrid.GetHeaderCellClass(const AContext: Th5uFactoryContext): Th5uVclVisualCellClass;
+function Th5uVclCustomGrid.GetHeaderCellClass(const AContext: Th5uFactoryContext): Th5uVclVisualCellClass;
 begin
   Result := Th5uVclHeaderCell;
 end;
 
-function Th5uVclGrid.GetHeaderHeight: Integer;
+function Th5uVclCustomGrid.GetHeaderHeight: Integer;
 begin
   Result := Round(h5uHeaderHeight(FHeaderLayout, FShowHeader, FHeaderRowHeight, FSpacing.RowSpacing));
 end;
 
-function Th5uVclGrid.GetOnConfigureInstance: Th5uConfigureInstanceEvent;
+function Th5uVclCustomGrid.GetOnConfigureInstance: Th5uConfigureInstanceEvent;
 begin
   Result := FFactoryScope.OnConfigureInstance;
 end;
 
-function Th5uVclGrid.GetOnCreateInstance: Th5uCreateInstanceEvent;
+function Th5uVclCustomGrid.GetOnCreateInstance: Th5uCreateInstanceEvent;
 begin
   Result := FFactoryScope.OnCreateInstance;
 end;
 
-function Th5uVclGrid.GetOnGetClass: Th5uGetClassEvent;
+function Th5uVclCustomGrid.GetOnGetClass: Th5uGetClassEvent;
 begin
   Result := FFactoryScope.OnGetClass;
 end;
 
-function Th5uVclGrid.GetRowHeightFor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey; AAllowMeasure: Boolean): Integer;
+function Th5uVclCustomGrid.GetRowHeightFor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey; AAllowMeasure: Boolean): Integer;
 begin
   Result := Round(FRowMetrics.GetHeight(FRowHeight, FColumns, AViewRowIndex, ARowKey, AAllowMeasure, MetricCellHeight, MetricAdjustHeight));
 end;
 
-function Th5uVclGrid.MetricCellHeight(ARow: Int64; AColumn: Th5uGridColumn): Double;
+function Th5uVclCustomGrid.MetricCellHeight(ARow: Int64; AColumn: Th5uGridColumn): Double;
 begin
   Result := MeasureCellHeight(ARow, AColumn);
 end;
 
-procedure Th5uVclGrid.MetricAdjustHeight(ARow: Int64; const AKey: Th5uRowKey; AEstimated: Boolean; var AHeight: Double; var ACacheResult: Boolean);
+procedure Th5uVclCustomGrid.MetricAdjustHeight(ARow: Int64; const AKey: Th5uRowKey; AEstimated: Boolean; var AHeight: Double; var ACacheResult: Boolean);
 var
   LContext: Th5uGetRowHeightContext;
   LHeight: Integer;
@@ -2447,7 +2508,7 @@ begin
   AHeight := LHeight;
 end;
 
-function Th5uVclGrid.MetricRowExtent(ARow: Int64; AAllowMeasure: Boolean): Double;
+function Th5uVclCustomGrid.MetricRowExtent(ARow: Int64; AAllowMeasure: Boolean): Double;
 var
   LKey: Th5uRowKey;
   LKind: Th5uElementKind;
@@ -2459,12 +2520,12 @@ begin
   Result := GetRowHeightFor(ARow, LKey, AAllowMeasure) + GetEffectiveRowSeparatorFor(ARow, LKey, LKind, LColor, LStyle, LLevel, LClosed);
 end;
 
-function Th5uVclGrid.MetricRowSpacing(ARow: Int64; const AKey: Th5uRowKey): Double;
+function Th5uVclCustomGrid.MetricRowSpacing(ARow: Int64; const AKey: Th5uRowKey): Double;
 begin
   Result := GetRowSpacingFor(ARow, AKey);
 end;
 
-function Th5uVclGrid.GetRowStyle(AViewRowIndex: Int64; out AStyleKey: TValue): string;
+function Th5uVclCustomGrid.GetRowStyle(AViewRowIndex: Int64; out AStyleKey: TValue): string;
 var
   LColumn: Th5uGridColumn;
   LInteger: Integer;
@@ -2490,72 +2551,72 @@ begin
   Result := FRowStyles.ResolveStyle(AViewRowIndex, LInteger, LHasKey);
 end;
 
-function Th5uVclGrid.GetEffectiveColumnRightSpacing(AColumn: Th5uGridColumn): Integer;
+function Th5uVclCustomGrid.GetEffectiveColumnRightSpacing(AColumn: Th5uGridColumn): Integer;
 begin
   Result := h5uColumnRightSpacing(AColumn, FSpacing.DefaultColumnRightSpacing);
 end;
 
-procedure Th5uVclGrid.InvalidateAdjacentGroupMap(AClearStates: Boolean);
+procedure Th5uVclCustomGrid.InvalidateAdjacentGroupMap(AClearStates: Boolean);
 begin
   FView.InvalidateAdjacentGroupMap(AClearStates);
 end;
 
-function Th5uVclGrid.GetViewRowCount: Int64;
+function Th5uVclCustomGrid.GetViewRowCount: Int64;
 begin
   Result := FView.GetViewRowCount;
 end;
 
-function Th5uVclGrid.GetViewSourceRowIndex(AViewRowIndex: Int64): Int64;
+function Th5uVclCustomGrid.GetViewSourceRowIndex(AViewRowIndex: Int64): Int64;
 begin
   Result := FView.GetViewSourceRowIndex(AViewRowIndex);
 end;
 
-function Th5uVclGrid.GetViewRowKey(AViewRowIndex: Int64): Th5uRowKey;
+function Th5uVclCustomGrid.GetViewRowKey(AViewRowIndex: Int64): Th5uRowKey;
 begin
   Result := FView.GetViewRowKey(AViewRowIndex);
 end;
 
-function Th5uVclGrid.GetViewValue(AViewRowIndex: Int64; const AFieldName: string): TValue;
+function Th5uVclCustomGrid.GetViewValue(AViewRowIndex: Int64; const AFieldName: string): TValue;
 begin
   Result := FView.GetViewValue(AViewRowIndex, AFieldName);
 end;
 
-procedure Th5uVclGrid.SetViewValue(AViewRowIndex: Int64; const AFieldName: string; const AValue: TValue);
+procedure Th5uVclCustomGrid.SetViewValue(AViewRowIndex: Int64; const AFieldName: string; const AValue: TValue);
 begin
   FView.SetViewValue(AViewRowIndex, AFieldName, AValue);
 end;
 
-function Th5uVclGrid.CanEditViewValue(AViewRowIndex: Int64; const AFieldName: string): Boolean;
+function Th5uVclCustomGrid.CanEditViewValue(AViewRowIndex: Int64; const AFieldName: string): Boolean;
 begin
   Result := FView.CanEditViewValue(AViewRowIndex, AFieldName);
 end;
 
-function Th5uVclGrid.GetViewDisplayText(AViewRowIndex: Int64; const AFieldName, ADisplayFormat: string): string;
+function Th5uVclCustomGrid.GetViewDisplayText(AViewRowIndex: Int64; const AFieldName, ADisplayFormat: string): string;
 begin
   Result := FView.GetViewDisplayText(AViewRowIndex, AFieldName, ADisplayFormat);
 end;
 
-procedure Th5uVclGrid.PrepareViewRange(AFirstViewRow, ACount: Int64);
+procedure Th5uVclCustomGrid.PrepareViewRange(AFirstViewRow, ACount: Int64);
 begin
   FView.PrepareViewRange(AFirstViewRow, ACount);
 end;
 
-function Th5uVclGrid.TryGetAdjacentGroupRowInfo(AViewRowIndex: Int64; out AInfo: Th5uAdjacentGroupRowInfo): Boolean;
+function Th5uVclCustomGrid.TryGetAdjacentGroupRowInfo(AViewRowIndex: Int64; out AInfo: Th5uAdjacentGroupRowInfo): Boolean;
 begin
   Result := FView.TryGetAdjacentGroupRowInfo(AViewRowIndex, AInfo);
 end;
 
-procedure Th5uVclGrid.PopulateAdjacentGroupContext(var AContext: Th5uFactoryContext; AViewRowIndex: Int64);
+procedure Th5uVclCustomGrid.PopulateAdjacentGroupContext(var AContext: Th5uFactoryContext; AViewRowIndex: Int64);
 begin
   FView.PopulateAdjacentGroupContext(AContext, AViewRowIndex);
 end;
 
-procedure Th5uVclGrid.DoAdjacentGroupStateChanged(const AInfo: Th5uAdjacentGroupRowInfo);
+procedure Th5uVclCustomGrid.DoAdjacentGroupStateChanged(const AInfo: Th5uAdjacentGroupRowInfo);
 begin
   FView.DoAdjacentGroupStateChanged(AInfo);
 end;
 
-function Th5uVclGrid.GetRowSpacingFor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey): Integer;
+function Th5uVclCustomGrid.GetRowSpacingFor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey): Integer;
 var
   LContext: Th5uGetRowHeightContext;
 begin
@@ -2573,7 +2634,7 @@ begin
   Result := EnsureRange(Result, 0, 1000);
 end;
 
-function Th5uVclGrid.GetEffectiveRowSeparatorFor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey; out AElementKind: Th5uElementKind; out AColor: TColor; out AStyleName: string;
+function Th5uVclCustomGrid.GetEffectiveRowSeparatorFor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey; out AElementKind: Th5uElementKind; out AColor: TColor; out AStyleName: string;
   out ATreeLevel: Integer; out AClosedTreeLevels: Integer): Integer;
 var
   LSeparator: Th5uRowSeparatorInfo;
@@ -2594,7 +2655,7 @@ begin
   end;
 end;
 
-function Th5uVclGrid.GetGridLines: Boolean;
+function Th5uVclCustomGrid.GetGridLines: Boolean;
 begin
   // Explicit per-column RightSpacing values are intentionally independent
   // from this compatibility property.
@@ -2602,7 +2663,7 @@ begin
     or (FSpacing.DefaultColumnRightSpacing > 0);
 end;
 
-function Th5uVclGrid.GetTotalColumnWidth: Integer;
+function Th5uVclCustomGrid.GetTotalColumnWidth: Integer;
 var
   LColumn: Th5uGridColumn;
 begin
@@ -2613,7 +2674,7 @@ begin
     Inc(Result, FRowIndicatorWidth + FSpacing.DefaultColumnRightSpacing);
 end;
 
-function Th5uVclGrid.GetUnpaddedViewportRect: TRect;
+function Th5uVclCustomGrid.GetUnpaddedViewportRect: TRect;
 begin
   Result := ClientRect;
   if FVScrollBar.Visible then
@@ -2622,7 +2683,7 @@ begin
     Dec(Result.Bottom, FHScrollBar.Height);
 end;
 
-function Th5uVclGrid.GetViewportRect: TRect;
+function Th5uVclCustomGrid.GetViewportRect: TRect;
 begin
   Result := GetUnpaddedViewportRect;
 
@@ -2637,7 +2698,7 @@ begin
     Result.Bottom := Result.Top;
 end;
 
-function Th5uVclGrid.ResolveColor(const AColor: TColor; AFallback: TColor): TColor;
+function Th5uVclCustomGrid.ResolveColor(const AColor: TColor; AFallback: TColor): TColor;
 begin
   if AColor = clDefault then
     Result := AFallback
@@ -2645,27 +2706,27 @@ begin
     Result := AColor;
 end;
 
-function Th5uVclGrid.ResolveDefaultCellColor: TColor;
+function Th5uVclCustomGrid.ResolveDefaultCellColor: TColor;
 begin
   Result := ResolveColor(FAppearance.DefaultCellColor, h5uGetVclPalette(FTheme).CellBackground);
 end;
 
-function Th5uVclGrid.ResolveRowSpacingColor: TColor;
+function Th5uVclCustomGrid.ResolveRowSpacingColor: TColor;
 begin
   Result := ResolveColor(FSpacing.RowSpacingColor, h5uGetVclPalette(FTheme).CellBorder);
 end;
 
-function Th5uVclGrid.ResolveColumnSpacingColor: TColor;
+function Th5uVclCustomGrid.ResolveColumnSpacingColor: TColor;
 begin
   Result := ResolveColor(FSpacing.ColumnSpacingColor, h5uGetVclPalette(FTheme).CellBorder);
 end;
 
-function Th5uVclGrid.ResolveContentPaddingColor: TColor;
+function Th5uVclCustomGrid.ResolveContentPaddingColor: TColor;
 begin
   Result := ResolveColor(FSpacing.ContentPaddingColor, h5uGetVclPalette(FTheme).CellBorder);
 end;
 
-function Th5uVclGrid.ResolveTreeBranchEndColor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey): TColor;
+function Th5uVclCustomGrid.ResolveTreeBranchEndColor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey): TColor;
 var
   LAppearance: Th5uResolvedAppearance;
 begin
@@ -2685,7 +2746,7 @@ begin
   Result := ResolveRowSpacingColor;
 end;
 
-function Th5uVclGrid.ResolveAdjacentGroupEndColor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey): TColor;
+function Th5uVclCustomGrid.ResolveAdjacentGroupEndColor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey): TColor;
 var
   LAppearance: Th5uResolvedAppearance;
 begin
@@ -2705,14 +2766,14 @@ begin
   Result := ResolveRowSpacingColor;
 end;
 
-function Th5uVclGrid.GetVisualCellClass(const AContext: Th5uFactoryContext; ADefaultClass: Th5uVclVisualCellClass): Th5uVclVisualCellClass;
+function Th5uVclCustomGrid.GetVisualCellClass(const AContext: Th5uFactoryContext; ADefaultClass: Th5uVclVisualCellClass): Th5uVclVisualCellClass;
 var
   LCacheScope: Th5uFactoryCacheScope;
 begin
   Result := Th5uVclVisualCellClass(FFactoryScope.ResolveClass(AContext, Th5uVclVisualCell, ADefaultClass, LCacheScope));
 end;
 
-function Th5uVclGrid.HitTest(X, Y: Integer): Th5uHitTestInfo;
+function Th5uVclCustomGrid.HitTest(X, Y: Integer): Th5uHitTestInfo;
 var
   LFirst, LLast: Integer;
   LColumnInfo: Th5uVisibleColumnInfo;
@@ -2780,25 +2841,25 @@ begin
   end;
 end;
 
-procedure Th5uVclGrid.HideThumbHint;
+procedure Th5uVclCustomGrid.HideThumbHint;
 begin
   FThumbHintTimer.Enabled := False;
   if Assigned(FThumbHint) then
     FThumbHint.Visible := False;
 end;
 
-procedure Th5uVclGrid.InvalidateAllRowHeights;
+procedure Th5uVclCustomGrid.InvalidateAllRowHeights;
 begin
   FRowMetrics.Clear;
 end;
 
-procedure Th5uVclGrid.InvalidateRowHeight(const ARowKey: Th5uRowKey);
+procedure Th5uVclCustomGrid.InvalidateRowHeight(const ARowKey: Th5uRowKey);
 begin
   FRowMetrics.Remove(ARowKey.ToString);
   Invalidate;
 end;
 
-procedure Th5uVclGrid.InvalidateVisibleRowHeights;
+procedure Th5uVclCustomGrid.InvalidateVisibleRowHeights;
 var
   LRow: Th5uVisibleRowInfo;
 begin
@@ -2807,7 +2868,7 @@ begin
   Invalidate;
 end;
 
-function Th5uVclGrid.CanUpdateLayout: Boolean;
+function Th5uVclCustomGrid.CanUpdateLayout: Boolean;
 var
   LComponent: TComponent;
 begin
@@ -2825,7 +2886,7 @@ begin
   Result := True;
 end;
 
-procedure Th5uVclGrid.GetChildren(Proc: TGetChildProc; Root: TComponent);
+procedure Th5uVclCustomGrid.GetChildren(Proc: TGetChildProc; Root: TComponent);
 var
   I: Integer;
 begin
@@ -2835,7 +2896,7 @@ begin
       Proc(Controls[I]);
 end;
 
-procedure Th5uVclGrid.Loaded;
+procedure Th5uVclCustomGrid.Loaded;
 begin
   inherited;
   LayoutScrollBars;
@@ -2843,7 +2904,7 @@ begin
   Invalidate;
 end;
 
-procedure Th5uVclGrid.LayoutScrollBars;
+procedure Th5uVclCustomGrid.LayoutScrollBars;
 var
   LVWidth: Integer;
   LHHeight: Integer;
@@ -2865,7 +2926,7 @@ begin
     FActiveEditor.BringToFront;
 end;
 
-function Th5uVclGrid.MeasureCellHeight(AViewRowIndex: Int64; AColumn: Th5uGridColumn): Integer;
+function Th5uVclCustomGrid.MeasureCellHeight(AViewRowIndex: Int64; AColumn: Th5uGridColumn): Integer;
 var
   LText: string;
   LRect: TRect;
@@ -2911,7 +2972,7 @@ begin
     Result := Min(Result, AColumn.MaxAutoHeight);
 end;
 
-procedure Th5uVclGrid.CMCursorChanged(var Message: TMessage);
+procedure Th5uVclCustomGrid.CMCursorChanged(var Message: TMessage);
 var
   LCursor: TCursor;
 begin
@@ -2925,14 +2986,14 @@ begin
   Winapi.Windows.SetCursor(Screen.Cursors[LCursor]);
 end;
 
-procedure Th5uVclGrid.CMMouseLeave(var Message: TMessage);
+procedure Th5uVclCustomGrid.CMMouseLeave(var Message: TMessage);
 begin
   if not Assigned(FResizingColumn) then
     SetResizeCursor(False);
   inherited;
 end;
 
-function Th5uVclGrid.ColumnResizeAt(X, Y: Integer; ATouch: Boolean): Th5uGridColumn;
+function Th5uVclCustomGrid.ColumnResizeAt(X, Y: Integer; ATouch: Boolean): Th5uGridColumn;
 var
   LCandidates: TArray<Th5uResizeCandidate>;
   LView: TRect;
@@ -2957,7 +3018,7 @@ begin
   Result := h5uColumnResizeAt(FCustomization, LCandidates, High(FAllColumns), X, Y, ATouch, IsResizeHeaderEdge);
 end;
 
-function Th5uVclGrid.IsResizeHeaderEdge(AX, AY: Double): Boolean;
+function Th5uVclCustomGrid.IsResizeHeaderEdge(AX, AY: Double): Boolean;
 var
   LHeader: Th5uHeaderLayoutCell;
 begin
@@ -2969,7 +3030,7 @@ begin
   end;
 end;
 
-procedure Th5uVclGrid.SetResizeCursor(AActive: Boolean);
+procedure Th5uVclCustomGrid.SetResizeCursor(AActive: Boolean);
 begin
   if AActive = FResizeCursorActive then
     Exit;
@@ -2984,7 +3045,7 @@ begin
     Cursor := FResizeCursor;
 end;
 
-function Th5uVclGrid.BeginColumnResize(X, Y: Integer; ATouch: Boolean): Boolean;
+function Th5uVclCustomGrid.BeginColumnResize(X, Y: Integer; ATouch: Boolean): Boolean;
 begin
   FResizingColumn := ColumnResizeAt(X, Y, ATouch);
   Result := Assigned(FResizingColumn);
@@ -2997,7 +3058,7 @@ begin
     SetResizeCursor(True);
 end;
 
-procedure Th5uVclGrid.UpdateColumnResize(X: Integer);
+procedure Th5uVclCustomGrid.UpdateColumnResize(X: Integer);
 begin
   if not Assigned(FResizingColumn) then
     Exit;
@@ -3007,7 +3068,7 @@ begin
   EndSelectionDrag;
 end;
 
-procedure Th5uVclGrid.SelectRightClickCell(const AHit: Th5uHitTestInfo);
+procedure Th5uVclCustomGrid.SelectRightClickCell(const AHit: Th5uHitTestInfo);
 var
   LCell: Th5uCellAddress;
 begin
@@ -3020,23 +3081,24 @@ begin
   h5uSelectRightClick(FSelection, LCell, AHit.Column.CanSelect, TryFocusCell);
 end;
 
-function Th5uVclGrid.CanMoveColumn(AColumn: Th5uGridColumn): Boolean;
+function Th5uVclCustomGrid.CanMoveColumn(AColumn: Th5uGridColumn): Boolean;
 begin
   Result := h5uCanMoveColumn(FColumns, FCustomization.AllowColumnMoving, AColumn);
 end;
 
-function Th5uVclGrid.IsColumnMoveGesture(AColumn: Th5uGridColumn; AShift: TShiftState): Boolean;
+function Th5uVclCustomGrid.IsColumnMoveGesture(AColumn: Th5uGridColumn; AShift: TShiftState): Boolean;
 begin
-  Result := h5uMoveGestureAllowed(CanMoveColumn(AColumn), FCustomization.ColumnMovingGesture = Th5uColumnMovingGesture.AltDrag, AShift);
+  Result := h5uMoveGestureAllowed(CanMoveColumn(AColumn),
+    FCustomization.ColumnMovingGesture = Th5uColumnRowMovingGesture.AltDrag, AShift);
 end;
 
-function Th5uVclGrid.IsRowMoveGesture(AShift: TShiftState): Boolean;
+function Th5uVclCustomGrid.IsRowMoveGesture(AShift: TShiftState): Boolean;
 begin
-  Result := h5uMoveGestureAllowed(Assigned(FOnRowsMoved) and FCustomization.AllowRowMoving, FCustomization.RowMovingGesture
-    = Th5uRowMovingGesture.AltDrag, AShift);
+  Result := h5uMoveGestureAllowed(Assigned(FOnRowsMoved) and FCustomization.AllowRowMoving,
+    FCustomization.RowMovingGesture = Th5uColumnRowMovingGesture.AltDrag, AShift);
 end;
 
-function Th5uVclGrid.GetHeaderCellBounds(ACell: Th5uHeaderLayoutCell): TRect;
+function Th5uVclCustomGrid.GetHeaderCellBounds(ACell: Th5uHeaderLayoutCell): TRect;
 var
   LFirst, LLast, LSpan: Integer;
 begin
@@ -3050,7 +3112,7 @@ begin
   Result.Bottom := Result.Top + LSpan * FHeaderRowHeight + (LSpan - 1) * FSpacing.RowSpacing;
 end;
 
-function Th5uVclGrid.GetHeaderCellViewport(ACell: Th5uHeaderLayoutCell): TRect;
+function Th5uVclCustomGrid.GetHeaderCellViewport(ACell: Th5uHeaderLayoutCell): TRect;
 var
   LFirst, LLast: Integer;
 begin
@@ -3061,7 +3123,7 @@ begin
   Result.Bottom := Min(Result.Bottom, GetDataViewportRect.Top);
 end;
 
-function Th5uVclGrid.HeaderCellAtPoint(X, Y: Integer): Th5uHeaderLayoutCell;
+function Th5uVclCustomGrid.HeaderCellAtPoint(X, Y: Integer): Th5uHeaderLayoutCell;
 var
   I: Integer;
   LRect: TRect;
@@ -3079,7 +3141,7 @@ begin
   end;
 end;
 
-function Th5uVclGrid.BeginColumnMove(AColumnIndex: Integer; X, Y: Integer): Boolean;
+function Th5uVclCustomGrid.BeginColumnMove(AColumnIndex: Integer; X, Y: Integer): Boolean;
 var
   LPlan: Th5uColumnMovePlan;
   LHit: Th5uHitTestInfo;
@@ -3100,7 +3162,7 @@ begin
   Result := True;
 end;
 
-function Th5uVclGrid.BeginRowMove(ARowIndex: Int64; X, Y: Integer): Boolean;
+function Th5uVclCustomGrid.BeginRowMove(ARowIndex: Int64; X, Y: Integer): Boolean;
 var
   LPlan: Th5uRowMovePlan;
 begin
@@ -3116,7 +3178,7 @@ begin
   Result := True;
 end;
 
-procedure Th5uVclGrid.UpdateHeaderMove(X, Y: Integer);
+procedure Th5uVclCustomGrid.UpdateHeaderMove(X, Y: Integer);
 begin
   if (Length(FMovingColumns) = 0) and (Length(FMovingRowKeys) = 0) then
     Exit;
@@ -3142,7 +3204,7 @@ begin
   Invalidate;
 end;
 
-function Th5uVclGrid.GetColumnMoveHeaderBounds(const AInfo: Th5uVisibleColumnInfo): TRect;
+function Th5uVclCustomGrid.GetColumnMoveHeaderBounds(const AInfo: Th5uVisibleColumnInfo): TRect;
 var
   LCell: Th5uHeaderLayoutCell;
   LFirst, LLast, I: Integer;
@@ -3174,7 +3236,7 @@ begin
   Result.Bottom := Min(Result.Bottom, GetDataViewportRect.Top);
 end;
 
-function Th5uVclGrid.ColumnMoveTarget(X, Y: Integer; out ANewIndex, AMarkerX, AMarkerTop: Integer): Boolean;
+function Th5uVclCustomGrid.ColumnMoveTarget(X, Y: Integer; out ANewIndex, AMarkerX, AMarkerTop: Integer): Boolean;
 var
   LHit: Th5uHitTestInfo;
   LAfter: Boolean;
@@ -3202,7 +3264,7 @@ begin
   end;
 end;
 
-procedure Th5uVclGrid.DrawColumnMoveFeedback;
+procedure Th5uVclCustomGrid.DrawColumnMoveFeedback;
 var
   LPalette: Th5uVclPalette;
   LCanvas: TCanvas;
@@ -3319,7 +3381,7 @@ begin
   end;
 end;
 
-function Th5uVclGrid.FinishHeaderMove(X, Y: Integer): Boolean;
+function Th5uVclCustomGrid.FinishHeaderMove(X, Y: Integer): Boolean;
 var
   LHit: Th5uHitTestInfo;
   LMovingColumns: TArray<Th5uGridColumn>;
@@ -3371,7 +3433,7 @@ begin
   end;
 end;
 
-procedure Th5uVclGrid.BeginSelectionDrag(AKind: Th5uSelectionKind; X, Y: Integer; AShift: TShiftState);
+procedure Th5uVclCustomGrid.BeginSelectionDrag(AKind: Th5uSelectionKind; X, Y: Integer; AShift: TShiftState);
 begin
   FSelectingRange := True;
   FSelectionDragging := False;
@@ -3382,7 +3444,7 @@ begin
   MouseCapture := True;
 end;
 
-procedure Th5uVclGrid.EndSelectionDrag;
+procedure Th5uVclCustomGrid.EndSelectionDrag;
 var
   LCaptured: Boolean;
 begin
@@ -3406,7 +3468,7 @@ begin
      MouseCapture := False;
 end;
 
-procedure Th5uVclGrid.UpdateSelectionDrag(X, Y: Integer);
+procedure Th5uVclCustomGrid.UpdateSelectionDrag(X, Y: Integer);
 var
   LHit: Th5uHitTestInfo;
   LCell: Th5uCellAddress;
@@ -3463,32 +3525,32 @@ begin
   FSelectionDragLast := LCell;
 end;
 
-procedure Th5uVclGrid.SelectHeaderRange(AKind: Th5uSelectionKind; ARow: Int64; AColumn: Integer; AShift: TShiftState);
+procedure Th5uVclCustomGrid.SelectHeaderRange(AKind: Th5uSelectionKind; ARow: Int64; AColumn: Integer; AShift: TShiftState);
 begin
   if CanUpdateLayout then
     FNavigation.SelectHeaderRange(FColumns, FSelection, GetViewRowCount, GetViewRowKey, AKind, ARow, AColumn, AShift);
 end;
 
-procedure Th5uVclGrid.DoExit;
+procedure Th5uVclCustomGrid.DoExit;
 begin
   EndSelectionDrag;
   inherited;
 end;
 
-procedure Th5uVclGrid.WMCancelMode(var Message: TWMCancelMode);
+procedure Th5uVclCustomGrid.WMCancelMode(var Message: TWMCancelMode);
 begin
   EndSelectionDrag;
   inherited;
 end;
 
-procedure Th5uVclGrid.WMCaptureChanged(var Message: TMessage);
+procedure Th5uVclCustomGrid.WMCaptureChanged(var Message: TMessage);
 begin
   if Message.LParam <> LPARAM(Handle) then
     EndSelectionDrag;
   inherited;
 end;
 
-procedure Th5uVclGrid.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+procedure Th5uVclCustomGrid.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 var
   LCell: Th5uCellAddress;
   LRange: Th5uCellRange;
@@ -3584,7 +3646,7 @@ begin
   end;
 end;
 
-procedure Th5uVclGrid.MouseMove(Shift: TShiftState; X, Y: Integer);
+procedure Th5uVclCustomGrid.MouseMove(Shift: TShiftState; X, Y: Integer);
 begin
   if Assigned(FActiveEditor) and (FActiveEditor.Mode = Th5uEditorMode.Graphic) then
     FActiveEditor.MouseMove(Shift, PointF(X, Y));
@@ -3610,7 +3672,7 @@ begin
     UpdateSelectionDrag(X, Y);
   end;
 end;
-procedure Th5uVclGrid.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+procedure Th5uVclCustomGrid.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 var
   LHit: Th5uHitTestInfo;
   LDragged, LEdit: Boolean;
@@ -3676,7 +3738,7 @@ begin
   FSelectingRange := False;
 end;
 
-procedure Th5uVclGrid.MoveColumn(AColumn: Th5uGridColumn; ANewVisibleIndex: Integer);
+procedure Th5uVclCustomGrid.MoveColumn(AColumn: Th5uGridColumn; ANewVisibleIndex: Integer);
 begin
   if not CanMoveColumn(AColumn) then
     Exit;
@@ -3684,7 +3746,7 @@ begin
   RebuildAfterLayoutChange;
 end;
 
-procedure Th5uVclGrid.ToggleAdjacentGroup(AViewRowIndex: Int64);
+procedure Th5uVclCustomGrid.ToggleAdjacentGroup(AViewRowIndex: Int64);
 var
   LInfo: Th5uAdjacentGroupRowInfo;
 begin
@@ -3700,7 +3762,7 @@ begin
   end;
 end;
 
-procedure Th5uVclGrid.SetAdjacentGroupCollapsed(AViewRowIndex: Int64; ACollapsed: Boolean);
+procedure Th5uVclCustomGrid.SetAdjacentGroupCollapsed(AViewRowIndex: Int64; ACollapsed: Boolean);
 var
   LInfo: Th5uAdjacentGroupRowInfo;
 begin
@@ -3715,7 +3777,7 @@ begin
   end;
 end;
 
-procedure Th5uVclGrid.ExpandAllAdjacentGroups;
+procedure Th5uVclCustomGrid.ExpandAllAdjacentGroups;
 var
   LChanged: TArray<Th5uAdjacentGroupRowInfo>;
   LInfo: Th5uAdjacentGroupRowInfo;
@@ -3732,7 +3794,7 @@ begin
   Invalidate;
 end;
 
-procedure Th5uVclGrid.CollapseAllAdjacentGroups;
+procedure Th5uVclCustomGrid.CollapseAllAdjacentGroups;
 var
   LChanged: TArray<Th5uAdjacentGroupRowInfo>;
   LInfo: Th5uAdjacentGroupRowInfo;
@@ -3749,7 +3811,7 @@ begin
   Invalidate;
 end;
 
-procedure Th5uVclGrid.ResetAdjacentGroupStates;
+procedure Th5uVclCustomGrid.ResetAdjacentGroupStates;
 begin
   FAutoWidthsDirty := True;
   FView.ResetAdjacentGroupStates;
@@ -3759,12 +3821,12 @@ begin
   Invalidate;
 end;
 
-function Th5uVclGrid.IsAdjacentGroupCollapsed(AViewRowIndex: Int64): Boolean;
+function Th5uVclCustomGrid.IsAdjacentGroupCollapsed(AViewRowIndex: Int64): Boolean;
 begin
   Result := FView.IsAdjacentGroupCollapsed(AViewRowIndex);
 end;
 
-procedure Th5uVclGrid.Notification(AComponent: TComponent; Operation: TOperation);
+procedure Th5uVclCustomGrid.Notification(AComponent: TComponent; Operation: TOperation);
 begin
   inherited;
   if Operation <> opRemove then
@@ -3776,7 +3838,7 @@ begin
     SharedClassFactory := nil;
 end;
 
-procedure Th5uVclGrid.OptionsChanged(Sender: TObject);
+procedure Th5uVclCustomGrid.OptionsChanged(Sender: TObject);
 begin
   FAutoWidthsDirty := True;
   if Sender = FAdjacentGroupFolding then
@@ -3784,7 +3846,7 @@ begin
   RebuildAfterLayoutChange;
 end;
 
-procedure Th5uVclGrid.Paint;
+procedure Th5uVclCustomGrid.Paint;
 var
   LPalette: Th5uVclPalette;
   LViewRect: TRect;
@@ -3824,7 +3886,7 @@ begin
     FOnAfterDraw(Self, Canvas);
 end;
 
-procedure Th5uVclGrid.RebuildAfterLayoutChange;
+procedure Th5uVclCustomGrid.RebuildAfterLayoutChange;
 begin
   CancelEditor;
   InvalidateAllRowHeights;
@@ -3832,7 +3894,7 @@ begin
   Invalidate;
 end;
 
-procedure Th5uVclGrid.Resize;
+procedure Th5uVclCustomGrid.Resize;
 begin
   inherited;
   if not CanUpdateLayout then
@@ -3841,7 +3903,7 @@ begin
   RebuildAfterLayoutChange;
 end;
 
-function Th5uVclGrid.ResolveCellAppearance(const AContext: Th5uFactoryContext; AColumn: Th5uGridColumn; const ARowAppearance: Th5uResolvedAppearance;
+function Th5uVclCustomGrid.ResolveCellAppearance(const AContext: Th5uFactoryContext; AColumn: Th5uGridColumn; const ARowAppearance: Th5uResolvedAppearance;
   ASelected, AFocused: Boolean): Th5uResolvedAppearance;
 var
   LPalette: Th5uVclPalette;
@@ -3879,7 +3941,7 @@ begin
     FOnGetCellAppearance(Self, AContext, Result);
 end;
 
-function Th5uVclGrid.ResolveRowAppearance(AViewRowIndex: Int64; const ARowKey: Th5uRowKey; const AStyleName: string): Th5uResolvedAppearance;
+function Th5uVclCustomGrid.ResolveRowAppearance(AViewRowIndex: Int64; const ARowKey: Th5uRowKey; const AStyleName: string): Th5uResolvedAppearance;
 var
   LPalette: Th5uVclPalette;
 begin
@@ -3909,7 +3971,7 @@ begin
     FOnGetRowAppearance(Self, AViewRowIndex, ARowKey, Result);
 end;
 
-function Th5uVclGrid.RowInfoAtPoint(X, Y: Integer; out AInfo: Th5uVisibleRowInfo): Boolean;
+function Th5uVclCustomGrid.RowInfoAtPoint(X, Y: Integer; out AInfo: Th5uVisibleRowInfo): Boolean;
 var
   LInfo: Th5uVisibleRowInfo;
 begin
@@ -3922,7 +3984,7 @@ begin
   Result := False;
 end;
 
-procedure Th5uVclGrid.ScrollBarScroll(Sender: TObject; ScrollCode: TScrollCode; var ScrollPos: Integer);
+procedure Th5uVclCustomGrid.ScrollBarScroll(Sender: TObject; ScrollCode: TScrollCode; var ScrollPos: Integer);
 var
   LTop: Integer;
   LRowIndex: Int64;
@@ -3964,7 +4026,7 @@ begin
   end;
 end;
 
-procedure Th5uVclGrid.SelectionChanged(Sender: TObject);
+procedure Th5uVclCustomGrid.SelectionChanged(Sender: TObject);
 var
   LOld, LNew: Th5uCellAddress;
 begin
@@ -3977,34 +4039,34 @@ begin
   h5uNotifyFocusChange(Self, FColumns, LOld, LNew, FOnCellExit, FOnCellEnter, FOnSelectionChange);
 end;
 
-procedure Th5uVclGrid.SetColumns(const AValue: Th5uGridColumns);
+procedure Th5uVclCustomGrid.SetColumns(const AValue: Th5uGridColumns);
 begin
   FColumns.Assign(AValue);
 end;
 
-procedure Th5uVclGrid.SetCustomization(const AValue: Th5uCustomizationOptions);
+procedure Th5uVclCustomGrid.SetCustomization(const AValue: Th5uCustomizationOptions);
 begin
   FCustomization.Assign(AValue);
 end;
 
-procedure Th5uVclGrid.SetAppearance(const AValue: Th5uGridAppearanceOptions);
+procedure Th5uVclCustomGrid.SetAppearance(const AValue: Th5uGridAppearanceOptions);
 begin
   FAppearance.Assign(AValue);
 end;
 
-procedure Th5uVclGrid.SetTree(const AValue: Th5uTreeOptions);
+procedure Th5uVclCustomGrid.SetTree(const AValue: Th5uTreeOptions);
 begin
   if Assigned(AValue) then
     FTree.Assign(AValue);
 end;
 
-procedure Th5uVclGrid.SetAdjacentGroupFolding(const AValue: Th5uAdjacentGroupFoldingOptions);
+procedure Th5uVclCustomGrid.SetAdjacentGroupFolding(const AValue: Th5uAdjacentGroupFoldingOptions);
 begin
   if Assigned(AValue) then
     FAdjacentGroupFolding.Assign(AValue);
 end;
 
-procedure Th5uVclGrid.SetGridLines(const AValue: Boolean);
+procedure Th5uVclCustomGrid.SetGridLines(const AValue: Boolean);
 begin
   if AValue then
     FSpacing.SetAllSeparators(1)
@@ -4012,12 +4074,12 @@ begin
     FSpacing.SetAllSeparators(0);
 end;
 
-procedure Th5uVclGrid.SetSpacing(const AValue: Th5uGridSpacingOptions);
+procedure Th5uVclCustomGrid.SetSpacing(const AValue: Th5uGridSpacingOptions);
 begin
   FSpacing.Assign(AValue);
 end;
 
-procedure Th5uVclGrid.SetDataController(const AValue: Th5uCustomDataController);
+procedure Th5uVclCustomGrid.SetDataController(const AValue: Th5uCustomDataController);
 begin
   if FDataController = AValue then
     Exit;
@@ -4041,68 +4103,68 @@ begin
   Invalidate;
 end;
 
-procedure Th5uVclGrid.SetHeaderLayout(const AValue: Th5uHeaderLayout);
+procedure Th5uVclCustomGrid.SetHeaderLayout(const AValue: Th5uHeaderLayout);
 begin
   FHeaderLayout.Assign(AValue);
   RebuildAfterLayoutChange;
 end;
 
-procedure Th5uVclGrid.SetHeaderRowHeight(const AValue: Integer);
+procedure Th5uVclCustomGrid.SetHeaderRowHeight(const AValue: Integer);
 begin
   FHeaderRowHeight := EnsureRange(AValue, 16, 200);
   RebuildAfterLayoutChange;
 end;
 
-procedure Th5uVclGrid.SetOnConfigureInstance(const AValue: Th5uConfigureInstanceEvent);
+procedure Th5uVclCustomGrid.SetOnConfigureInstance(const AValue: Th5uConfigureInstanceEvent);
 begin
   FFactoryScope.OnConfigureInstance := AValue;
 end;
 
-procedure Th5uVclGrid.SetOnCreateInstance(const AValue: Th5uCreateInstanceEvent);
+procedure Th5uVclCustomGrid.SetOnCreateInstance(const AValue: Th5uCreateInstanceEvent);
 begin
   FFactoryScope.OnCreateInstance := AValue;
 end;
 
-procedure Th5uVclGrid.SetOnGetClass(const AValue: Th5uGetClassEvent);
+procedure Th5uVclCustomGrid.SetOnGetClass(const AValue: Th5uGetClassEvent);
 begin
   FFactoryScope.OnGetClass := AValue;
 end;
 
-procedure Th5uVclGrid.SetRowHeight(const AValue: Th5uRowHeightOptions);
+procedure Th5uVclCustomGrid.SetRowHeight(const AValue: Th5uRowHeightOptions);
 begin
   FRowHeight.Assign(AValue);
 end;
 
-procedure Th5uVclGrid.SetRowIndicatorWidth(const AValue: Integer);
+procedure Th5uVclCustomGrid.SetRowIndicatorWidth(const AValue: Integer);
 begin
   FRowIndicatorWidth := EnsureRange(AValue, 0, 300);
   RebuildAfterLayoutChange;
 end;
 
-procedure Th5uVclGrid.SetRowStyles(const AValue: Th5uRowStyleOptions);
+procedure Th5uVclCustomGrid.SetRowStyles(const AValue: Th5uRowStyleOptions);
 begin
   FRowStyles.Assign(AValue);
   Invalidate;
 end;
 
-procedure Th5uVclGrid.SetScrolling(const AValue: Th5uScrollingOptions);
+procedure Th5uVclCustomGrid.SetScrolling(const AValue: Th5uScrollingOptions);
 begin
   FScrolling.Assign(AValue);
   RebuildAfterLayoutChange;
 end;
 
-procedure Th5uVclGrid.SetScrollHints(const AValue: Th5uScrollHintOptions);
+procedure Th5uVclCustomGrid.SetScrollHints(const AValue: Th5uScrollHintOptions);
 begin
   FScrollHints.Assign(AValue);
 end;
 
-procedure Th5uVclGrid.SetSelection(const AValue: Th5uGridSelection);
+procedure Th5uVclCustomGrid.SetSelection(const AValue: Th5uGridSelection);
 begin
   FSelection.Assign(AValue);
   Invalidate;
 end;
 
-procedure Th5uVclGrid.SetSharedClassFactory(const AValue: Th5uClassFactory);
+procedure Th5uVclCustomGrid.SetSharedClassFactory(const AValue: Th5uClassFactory);
 begin
   if FSharedClassFactory = AValue then
     Exit;
@@ -4124,7 +4186,7 @@ begin
   Invalidate;
 end;
 
-procedure Th5uVclGrid.SetTheme(const AValue: Th5uGridTheme);
+procedure Th5uVclCustomGrid.SetTheme(const AValue: Th5uGridTheme);
 var
   LPalette: Th5uVclPalette;
 begin
@@ -4137,7 +4199,7 @@ begin
   Invalidate;
 end;
 
-procedure Th5uVclGrid.SetColumnVisible(AColumn: Th5uGridColumn; AVisible: Boolean);
+procedure Th5uVclCustomGrid.SetColumnVisible(AColumn: Th5uGridColumn; AVisible: Boolean);
 begin
   if not Assigned(AColumn) then
     Exit;
@@ -4151,7 +4213,7 @@ begin
   RebuildAfterLayoutChange;
 end;
 
-procedure Th5uVclGrid.ShowColumnChooser;
+procedure Th5uVclCustomGrid.ShowColumnChooser;
 var
   LMenu: TPopupMenu;
   LItem: TMenuItem;
@@ -4179,7 +4241,7 @@ begin
   end;
 end;
 
-procedure Th5uVclGrid.ShowThumbHint(AAxis: Th5uScrollAxis; ATrigger: Th5uScrollHintTrigger);
+procedure Th5uVclCustomGrid.ShowThumbHint(AAxis: Th5uScrollAxis; ATrigger: Th5uScrollHintTrigger);
 var
   LContext: Th5uThumbHintContext;
   LText: string;
@@ -4259,12 +4321,12 @@ begin
   FThumbHintTimer.Enabled := True;
 end;
 
-function Th5uVclGrid.FocusedCellHit(out AHit: Th5uHitTestInfo): Boolean;
+function Th5uVclCustomGrid.FocusedCellHit(out AHit: Th5uHitTestInfo): Boolean;
 begin
   Result := CellHit(FSelection.FocusedCell, AHit);
 end;
 
-function Th5uVclGrid.CellHit(const LCell: Th5uCellAddress; out AHit: Th5uHitTestInfo): Boolean;
+function Th5uVclCustomGrid.CellHit(const LCell: Th5uCellAddress; out AHit: Th5uHitTestInfo): Boolean;
 var
   LColumns: TArray<Th5uGridColumn>;
   LView: TRect;
@@ -4319,7 +4381,7 @@ begin
   Result := True;
 end;
 
-function Th5uVclGrid.FocusCell(ARow: Int64; AColumn: Integer; AExtend, AEdit: Boolean; AAdd: Boolean): Boolean;
+function Th5uVclCustomGrid.FocusCell(ARow: Int64; AColumn: Integer; AExtend, AEdit: Boolean; AAdd: Boolean): Boolean;
 var
   LCell: Th5uCellAddress;
   LRange: Th5uCellRange;
@@ -4338,7 +4400,7 @@ begin
     EditFocusedCell(True);
 end;
 
-procedure Th5uVclGrid.EditFocusedCell(AAutomatic: Boolean);
+procedure Th5uVclCustomGrid.EditFocusedCell(AAutomatic: Boolean);
 var
   LHit: Th5uHitTestInfo;
 begin
@@ -4349,12 +4411,12 @@ begin
   StartEdit(LHit);
 end;
 
-function Th5uVclGrid.NavigationRowExtent(ARow: Int64): Double;
+function Th5uVclCustomGrid.NavigationRowExtent(ARow: Int64): Double;
 begin
   Result := GetRowHeightFor(ARow, GetViewRowKey(ARow)) + FSpacing.RowSpacing;
 end;
 
-function Th5uVclGrid.HandleNavigationKey(AKey: Word; AShift: TShiftState): Boolean;
+function Th5uVclCustomGrid.HandleNavigationKey(AKey: Word; AShift: TShiftState): Boolean;
 var
   LAction: Th5uNavigationAction;
   LHit: Th5uHitTestInfo;
@@ -4389,7 +4451,7 @@ begin
   end;
 end;
 
-procedure Th5uVclGrid.SearchCharacter(AChar: Char);
+procedure Th5uVclCustomGrid.SearchCharacter(AChar: Char);
 var
   LRow: Int64;
   LColumn: Integer;
@@ -4400,20 +4462,20 @@ begin
     FocusCell(LRow, LColumn, False, False);
 end;
 
-procedure Th5uVclGrid.WMGetDlgCode(var Message: TWMGetDlgCode);
+procedure Th5uVclCustomGrid.WMGetDlgCode(var Message: TWMGetDlgCode);
 begin
   inherited;
   Message.Result := Message.Result or DLGC_WANTARROWS or DLGC_WANTCHARS;
 end;
 
-procedure Th5uVclGrid.CMWantSpecialKey(var Message: TCMWantSpecialKey);
+procedure Th5uVclCustomGrid.CMWantSpecialKey(var Message: TCMWantSpecialKey);
 begin
   inherited;
   if Message.CharCode = vkEscape then
     Message.Result := 1;
 end;
 
-procedure Th5uVclGrid.KeyDown(var Key: Word; Shift: TShiftState);
+procedure Th5uVclCustomGrid.KeyDown(var Key: Word; Shift: TShiftState);
 var
   C: Char;
 begin
@@ -4428,7 +4490,7 @@ begin
     Key := 0;
 end;
 
-procedure Th5uVclGrid.KeyPress(var Key: Char);
+procedure Th5uVclCustomGrid.KeyPress(var Key: Char);
 begin
   inherited;
   if Key >= #32 then
@@ -4438,7 +4500,7 @@ begin
   end;
 end;
 
-procedure Th5uVclGrid.StartEdit(const AHit: Th5uHitTestInfo);
+procedure Th5uVclCustomGrid.StartEdit(const AHit: Th5uHitTestInfo);
 var
   LEditor: Th5uGridEditorItem;
   LCell: Th5uCellAddress;
@@ -4491,12 +4553,12 @@ begin
   Invalidate;
 end;
 
-procedure Th5uVclGrid.ThumbHintTimer(Sender: TObject);
+procedure Th5uVclCustomGrid.ThumbHintTimer(Sender: TObject);
 begin
   HideThumbHint;
 end;
 
-procedure Th5uVclGrid.UpdateScrollBars;
+procedure Th5uVclCustomGrid.UpdateScrollBars;
 var
   LPass: Integer;
   LNeedH, LNeedV: Boolean;
@@ -4559,7 +4621,7 @@ begin
   end;
 end;
 
-procedure Th5uVclGrid.SetEditors(AValue: Th5uVclGridEditors);
+procedure Th5uVclCustomGrid.SetEditors(AValue: Th5uVclGridEditors);
 begin
   CancelEditor;
   FEditors.Assign(AValue);
@@ -4567,7 +4629,7 @@ begin
   Invalidate;
 end;
 
-procedure Th5uVclGrid.SetDefaultEditors(AValue: Th5uDefaultEditors);
+procedure Th5uVclCustomGrid.SetDefaultEditors(AValue: Th5uDefaultEditors);
 begin
   CancelEditor;
   FDefaultEditors.Assign(AValue);
@@ -4575,7 +4637,7 @@ begin
   Invalidate;
 end;
 
-procedure Th5uVclGrid.ClearEditorCache;
+procedure Th5uVclCustomGrid.ClearEditorCache;
 var
   I: Integer;
 begin
@@ -4586,12 +4648,12 @@ begin
     FEditors[I].ReleaseEditor;
 end;
 
-function Th5uVclGrid.CachedEditor(const AName: string): Th5uGridEditorItem;
+function Th5uVclCustomGrid.CachedEditor(const AName: string): Th5uGridEditorItem;
 begin
   Result := FEditorCache.Get(Th5uEditorPlatform.VCL, AName, '', FEditors.Find(AName));
 end;
 
-function Th5uVclGrid.GetCellEditor(AColumn: Th5uGridColumn; ARow: Int64): Th5uGridEditorItem;
+function Th5uVclCustomGrid.GetCellEditor(AColumn: Th5uGridColumn; ARow: Int64): Th5uGridEditorItem;
 var
   LName, LScope: string;
   LColumnScoped: Boolean;
@@ -4609,7 +4671,7 @@ begin
   Result := FEditorCache.Get(Th5uEditorPlatform.VCL, LName, LScope, FEditors.Find(LName));
 end;
 
-function Th5uVclGrid.CellEditorAutoEdit(AColumn: Th5uGridColumn; ARow: Int64): Boolean;
+function Th5uVclCustomGrid.CellEditorAutoEdit(AColumn: Th5uGridColumn; ARow: Int64): Boolean;
 var
   E: Th5uGridEditorItem;
 begin
@@ -4617,7 +4679,7 @@ begin
   Result := Assigned(E) and E.CanAutoEdit;
 end;
 
-function Th5uVclGrid.CellEditorHit(AColumn: Th5uGridColumn; ARow: Int64; const ABounds: TRectF; const APoint: TPointF): Boolean;
+function Th5uVclCustomGrid.CellEditorHit(AColumn: Th5uGridColumn; ARow: Int64; const ABounds: TRectF; const APoint: TPointF): Boolean;
 var
   E: Th5uGridEditorItem;
 begin
@@ -4625,7 +4687,7 @@ begin
   Result := Assigned(E) and E.HitTest(ABounds, APoint);
 end;
 
-function Th5uVclGrid.CellEditorContext(AColumn: Th5uGridColumn; ARow: Int64; const ABounds: TRectF): Th5uEditorContext;
+function Th5uVclCustomGrid.CellEditorContext(AColumn: Th5uGridColumn; ARow: Int64; const ABounds: TRectF): Th5uEditorContext;
 begin
   Result := Default(Th5uEditorContext);
   Result.Grid := Self;
@@ -4639,7 +4701,7 @@ begin
   Result.Background := TAlphaColor(h5uGetVclPalette(FTheme).CellBackground);
 end;
 
-procedure Th5uVclGrid.FinishEditor(ACommitted: Boolean);
+procedure Th5uVclCustomGrid.FinishEditor(ACommitted: Boolean);
 var
   E: Th5uGridEditorItem;
 begin
@@ -4655,23 +4717,23 @@ begin
       E.Cancel;
 end;
 
-procedure Th5uVclGrid.EditorRequestCommit(Sender: TObject);
+procedure Th5uVclCustomGrid.EditorRequestCommit(Sender: TObject);
 begin
   CommitEditor;
 end;
 
-procedure Th5uVclGrid.EditorRequestCancel(Sender: TObject);
+procedure Th5uVclCustomGrid.EditorRequestCancel(Sender: TObject);
 begin
   CancelEditor;
   Invalidate;
 end;
 
-procedure Th5uVclGrid.ProcessEditorKey(Sender: TObject; var Key: Word; var KeyChar: Char; Shift: TShiftState);
+procedure Th5uVclCustomGrid.ProcessEditorKey(Sender: TObject; var Key: Word; var KeyChar: Char; Shift: TShiftState);
 begin
   EditorKeyDown(Sender, Key, Shift);
 end;
 
-function Th5uVclGrid.CellEditorClick(AColumn: Th5uGridColumn; ARow: Int64): Boolean;
+function Th5uVclCustomGrid.CellEditorClick(AColumn: Th5uGridColumn; ARow: Int64): Boolean;
 var
   E: Th5uGridEditorItem;
 begin
@@ -4680,3 +4742,4 @@ begin
 end;
 
 end.
+

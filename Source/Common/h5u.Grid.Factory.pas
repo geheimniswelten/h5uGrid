@@ -443,3 +443,4 @@ finalization
   FreeAndNil(GGlobalFactoryScope);
 
 end.
+

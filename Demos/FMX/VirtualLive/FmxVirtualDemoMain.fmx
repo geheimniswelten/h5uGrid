@@ -154,8 +154,8 @@ object FmxVirtualDemoForm: TFmxVirtualDemoForm
   object LiveTimer: TTimer
     Interval = 900
     OnTimer = LiveTimerTimer
-    Left = 104
-    Top = 80
+    Left = 152
+    Top = 96
   end
   object VirtualController: Th5uVirtualController
     Cache.MaxMemoryBytes = 67108864
@@ -163,7 +163,7 @@ object FmxVirtualDemoForm: TFmxVirtualDemoForm
     OnGetRowKey = VirtualGetRowKey
     OnGetValue = VirtualGetValue
     OnSetValue = VirtualSetValue
-    Left = 32
-    Top = 80
+    Left = 64
+    Top = 96
   end
 end

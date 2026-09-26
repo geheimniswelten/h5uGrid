@@ -5,7 +5,11 @@ interface
 {$SCOPEDENUMS ON}
 
 uses
+  System.UIConsts,
   System.UITypes,
+  {$IFDEF MSWINDOWS}
+  Winapi.Windows,
+  {$ENDIF}
   FMX.Graphics,
   h5u.Grid.Types;
 
@@ -39,12 +43,6 @@ function h5uGetFmxPalette(ATheme: Th5uGridTheme): Th5uFmxPalette;
 function h5uColorToFmx(const AColor: TColor): TAlphaColor;
 
 implementation
-
-uses
-  {$IFDEF MSWINDOWS}
-  Winapi.Windows,
-  {$ENDIF}
-  System.UIConsts;
 
 function h5uColorToFmx(const AColor: TColor): TAlphaColor;
 var
@@ -148,3 +146,4 @@ begin
 end;
 
 end.
+

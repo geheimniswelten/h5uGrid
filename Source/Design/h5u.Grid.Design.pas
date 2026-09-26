@@ -8,10 +8,6 @@
 
 interface
 
-procedure Register;
-
-implementation
-
 uses
   {$IFDEF FPC}
     Classes,
@@ -29,7 +25,12 @@ uses
   h5u.Grid.Data.Memory,
   h5u.Grid.Data.Objects,
   h5u.Grid.Data.Virtual,
-  h5u.Grid.SampleData;
+  h5u.Grid.SampleData,
+  h5u.FormDesigner;
+
+procedure Register;
+
+implementation
 
 procedure Register;
 {$IFnDEF FPC}
@@ -45,6 +46,7 @@ begin
   {$ENDIF}
   RegisterComponents('h5u Grid', [Th5uClassFactory, Th5uDatasetController, Th5uMemoryController, Th5uObjectListController, Th5uVirtualController,
     Th5uSampleClientDataset]);
+  RegisterComponents('h5u FormDesign', [Th5uFormDesigner]);
 
   {$IFnDEF FPC}
     Icon := TPngImage.Create;

@@ -357,9 +357,9 @@ type
   Th5uCustomizationOptions = class(TPersistent)
   private
     FAllowColumnMoving: Boolean;
-    FColumnMovingGesture: Th5uColumnMovingGesture;
+    FColumnMovingGesture: Th5uColumnRowMovingGesture;
     FAllowRowMoving: Boolean;
-    FRowMovingGesture: Th5uRowMovingGesture;
+    FRowMovingGesture: Th5uColumnRowMovingGesture;
     FAllowColumnHiding: Boolean;
     FAllowColumnResizing: Boolean;
     FShowColumnChooser: Boolean;
@@ -381,8 +381,8 @@ type
   published
     property AllowColumnMoving: Boolean read FAllowColumnMoving write FAllowColumnMoving default True;
     property AllowRowMoving: Boolean read FAllowRowMoving write FAllowRowMoving default True;
-    property RowMovingGesture: Th5uRowMovingGesture read FRowMovingGesture write FRowMovingGesture default Th5uRowMovingGesture.AltDrag;
-    property ColumnMovingGesture: Th5uColumnMovingGesture read FColumnMovingGesture write FColumnMovingGesture default Th5uColumnMovingGesture.AltDrag;
+    property RowMovingGesture: Th5uColumnRowMovingGesture read FRowMovingGesture write FRowMovingGesture default Th5uColumnRowMovingGesture.Drag;
+    property ColumnMovingGesture: Th5uColumnRowMovingGesture read FColumnMovingGesture write FColumnMovingGesture default Th5uColumnRowMovingGesture.Drag;
     property AllowColumnHiding: Boolean read FAllowColumnHiding write FAllowColumnHiding default True;
     property AllowColumnResizing: Boolean read FAllowColumnResizing write FAllowColumnResizing default True;
     property ColumnResizeHitZoneLeft: Integer read FColumnResizeHitZoneLeft write SetColumnResizeHitZoneLeft default 4;
@@ -1198,9 +1198,9 @@ constructor Th5uCustomizationOptions.Create;
 begin
   inherited;
   FAllowColumnMoving := True;
-  FColumnMovingGesture := Th5uColumnMovingGesture.AltDrag;
+  FColumnMovingGesture := Th5uColumnRowMovingGesture.Drag;
   FAllowRowMoving := True;
-  FRowMovingGesture := Th5uRowMovingGesture.AltDrag;
+  FRowMovingGesture := Th5uColumnRowMovingGesture.Drag;
   FAllowColumnHiding := True;
   FAllowColumnResizing := True;
   FShowColumnChooser := True;
@@ -1243,3 +1243,4 @@ begin
 end;
 
 end.
+

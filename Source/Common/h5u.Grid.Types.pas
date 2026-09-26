@@ -191,8 +191,7 @@ type
 
   Th5uAdjacentGroupStateChangedEvent = procedure(Sender: TObject; const AContext: Th5uAdjacentGroupStateChangedContext) of object;
 
-  Th5uColumnMovingGesture = (AltDrag, Drag);
-  Th5uRowMovingGesture = (AltDrag, Drag);
+  Th5uColumnRowMovingGesture = (AltDrag, Drag);
   Th5uColumnMovePermission = (Default, Allow, Deny);
 
   Th5uGridTheme = (ApplicationStyle, Classic2000, Modern, Dark);
@@ -410,3 +409,4 @@ begin
 end;
 
 end.
+

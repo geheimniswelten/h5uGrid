@@ -1,4 +1,4 @@
-unit Lcl.h5u.Grid;
+﻿unit Lcl.h5u.Grid;
 
 {$mode objfpc}{$H+}
 {$modeswitch advancedrecords}
@@ -18,6 +18,10 @@ uses
   Rtti,
   SysUtils,
   Types,
+  DB,
+  Dialogs,
+  Forms,
+  Themes,
   Lcl.h5u.Grid.Compat,
   LMessages,
   LCLIntf,
@@ -32,7 +36,6 @@ uses
   h5u.Grid.AdjacentGroups,
   h5u.Grid.Values,
   h5u.Grid.Editors,
-  Lcl.h5u.Grid.Editors,
   h5u.Grid.Moving,
   h5u.Grid.Resizing,
   h5u.Grid.Navigation,
@@ -45,6 +48,8 @@ uses
   h5u.Grid.Options,
   h5u.Grid.Selection,
   h5u.Grid.Types,
+  h5u.Grid.Data.Dataset,
+  Lcl.h5u.Grid.Editors,
   Lcl.h5u.Grid.Styles;
 
 type
@@ -182,7 +187,7 @@ type
     procedure PaintDefault(AGrid: Th5uLclGrid; ACanvas: TCanvas); override;
   end;
 
-  Th5uLclGrid = class(TCustomControl)
+  Th5uLclCustomGrid = class(TCustomControl)
   private
     FShowColumnModes: Boolean;
     FColumns: Th5uGridColumns;
@@ -524,25 +529,11 @@ type
     property FactoryScope: Th5uFactoryScope read FFactoryScope;
     property HorizontalOffset: Integer read FHorizontalOffset;
     property VerticalOffset: Integer read FVerticalOffset;
-  published
-    property Align;
-    property Anchors;
-    property Constraints;
-    property Enabled;
-    property Font;
-    property ParentFont;
-    property ParentShowHint;
-    property PopupMenu;
-    property ShowHint;
-    property TabOrder;
-    property TabStop;
-    property Visible;
-
+  protected
     property DataController: Th5uCustomDataController read FDataController write SetDataController;
     property SharedClassFactory: Th5uClassFactory read FSharedClassFactory write SetSharedClassFactory;
     property Editors: Th5uLclGridEditors read FEditors write SetEditors;
     property DefaultEditors: Th5uDefaultEditors read FDefaultEditors write SetDefaultEditors;
-    // Limits for the combined column content, not the control itself. Zero disables a limit.
     property MinWidth: Integer read FMinWidth write SetMinWidth default 0;
     property MaxWidth: Integer read FMaxWidth write SetMaxWidth default 0;
     property AutoWidthRowLimit: Integer read FAutoWidthRowLimit write SetAutoWidthRowLimit default 1000;
@@ -566,8 +557,6 @@ type
     property ShowRowIndicator: Boolean read FShowRowIndicator write FShowRowIndicator default True;
     property AllowEditing: Boolean read FAllowEditing write FAllowEditing default True;
     property ImmediateEdit: Boolean read FImmediateEdit write FImmediateEdit default False;
-    // Convenience switch for all grid-wide one-pixel separators.
-    // Explicit per-column RightSpacing values remain independently configurable.
     property GridLines: Boolean read GetGridLines write SetGridLines default True;
 
     property OnGetClass: Th5uGetClassEvent read GetOnGetClass write SetOnGetClass;
@@ -598,6 +587,84 @@ type
     property OnRowsMoved: Th5uRowsMovedEvent read FOnRowsMoved write FOnRowsMoved;
     property OnSelectionChange: TNotifyEvent read FOnSelectionChange write FOnSelectionChange;
     property ShowColumnModes: Boolean read FShowColumnModes write SetShowColumnModes default False;
+  end;
+
+  Th5uLclGrid = class(Th5uLclCustomGrid)
+  published
+    property Align;
+    property Anchors;
+    property Constraints;
+    property Enabled;
+    property Font;
+    property ParentFont;
+    property ParentShowHint;
+    property PopupMenu;
+    property ShowHint;
+    property TabOrder;
+    property TabStop;
+    property Visible;
+
+    property DataController;
+    property SharedClassFactory;
+    property Editors;
+    property DefaultEditors;
+    // Limits for the combined column content, not the control itself. Zero disables a limit.
+    property MinWidth;
+    property MaxWidth;
+    property AutoWidthRowLimit;
+    property Columns;
+    property HeaderLayout;
+    property Selection;
+    property RowHeight;
+    property Scrolling;
+    property ScrollHints;
+    property RowStyles;
+    property Customization;
+    property Spacing;
+    property Appearance;
+    property AdjacentGroupFolding;
+    property Tree;
+
+    property Theme;
+    property HeaderRowHeight;
+    property RowIndicatorWidth;
+    property ShowHeader;
+    property ShowRowIndicator;
+    property AllowEditing;
+    property ImmediateEdit;
+    // Convenience switch for all grid-wide one-pixel separators.
+    // Explicit per-column RightSpacing values remain independently configurable.
+    property GridLines;
+
+    property OnGetClass;
+    property OnCreateInstance;
+    property OnConfigureInstance;
+    property OnGetRowHeight;
+    property OnGetRowSpacing;
+    property OnGetThumbHint;
+    property OnGetRowAppearance;
+    property OnGetCellAppearance;
+    property OnAfterDraw;
+    property OnPrepareElement;
+    property OnCustomDraw;
+    property OnGetTreeLevel;
+    property OnGetTreeBranchEnd;
+    property OnGetAdjacentGroupId;
+    property OnAdjacentGroupStateChanged;
+    property OnCanFocus;
+    property OnCanEdit;
+    property OnValidate;
+    property OnGetValue;
+    property OnSetValue;
+    property OnCellClick;
+    property OnColumnHeaderClick;
+    property OnCellEnter;
+    property OnCellExit;
+    property OnRowIndicatorClick;
+    property OnRowsMoved;
+    property OnSelectionChange;
+    property ShowColumnModes;
+
     property OnClick;
     property OnDblClick;
     property OnEnter;
@@ -612,13 +679,6 @@ type
   end;
 
 implementation
-
-uses
-  DB,
-  Dialogs,
-  Forms,
-  Themes,
-  h5u.Grid.Data.Dataset;
 
 type
   Th5uAccessGridColumn = class(Th5uGridColumn);
@@ -3020,13 +3080,13 @@ end;
 
 function Th5uLclGrid.IsColumnMoveGesture(AColumn: Th5uGridColumn; AShift: TShiftState): Boolean;
 begin
-  Result := h5uMoveGestureAllowed(CanMoveColumn(AColumn), FCustomization.ColumnMovingGesture = Th5uColumnMovingGesture.AltDrag, AShift);
+  Result := h5uMoveGestureAllowed(CanMoveColumn(AColumn), FCustomization.ColumnMovingGesture = Th5uColumnRowMovingGesture.AltDrag, AShift);
 end;
 
 function Th5uLclGrid.IsRowMoveGesture(AShift: TShiftState): Boolean;
 begin
-  Result := h5uMoveGestureAllowed(Assigned(FOnRowsMoved) and FCustomization.AllowRowMoving, FCustomization.RowMovingGesture
-    = Th5uRowMovingGesture.AltDrag, AShift);
+  Result := h5uMoveGestureAllowed(Assigned(FOnRowsMoved) and FCustomization.AllowRowMoving,
+    FCustomization.RowMovingGesture = Th5uColumnRowMovingGesture.AltDrag, AShift);
 end;
 
 function Th5uLclGrid.GetHeaderCellBounds(ACell: Th5uHeaderLayoutCell): TRect;
@@ -4668,3 +4728,4 @@ begin
 end;
 
 end.
+

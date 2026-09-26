@@ -9,10 +9,12 @@ uses
   System.Classes,
   System.DateUtils,
   System.SysUtils,
+  System.Rtti,
   Vcl.Controls,
   Vcl.ExtCtrls,
   Vcl.Forms,
   Vcl.StdCtrls,
+  h5u.Grid.Types,
   h5u.Grid.Data.Core,
   h5u.Grid.Data.Objects,
   Vcl.h5u.Grid;
@@ -67,10 +69,6 @@ implementation
 
 {$R *.dfm}
 
-uses
-  System.Rtti,
-  h5u.Grid.Types;
-
 function TVclObjectDemoForm.AddPerson: TPersonRow;
 const
   CDepartments: array[0..4] of string = ('Fertigung', 'Konstruktion', 'Einkauf', 'QS', 'Vertrieb');
@@ -117,7 +115,6 @@ procedure TVclObjectDemoForm.FormCreate(Sender: TObject);
 var
   I: Integer;
 begin
-  Grid.Customization.ColumnMovingGesture := Th5uColumnMovingGesture.Drag;
   ObjectController.OwnsObjects := True;
   ObjectController.BeginUpdate;
   try
@@ -149,3 +146,4 @@ begin
 end;
 
 end.
+

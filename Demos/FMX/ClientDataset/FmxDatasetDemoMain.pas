@@ -19,6 +19,8 @@ uses
   FMX.Edit,
   FMX.Types,
   FMX.Controls.Presentation,
+  h5u.Grid.Columns,
+  h5u.Grid.Types,
   h5u.Grid.Data.Core,
   h5u.Grid.Data.DataSet,
   h5u.Grid.SampleData,
@@ -62,10 +64,6 @@ var
 implementation
 
 {$R *.fmx}
-
-uses
-  h5u.Grid.Columns,
-  h5u.Grid.Types;
 
 procedure TFmxDatasetDemoForm.ApplyOptions;
 var
@@ -179,7 +177,6 @@ end;
 
 procedure TFmxDatasetDemoForm.FormCreate(Sender: TObject);
 begin
-  Grid.Customization.ColumnMovingGesture := Th5uColumnMovingGesture.Drag;
   if AdjacentBandModeCombo.ItemIndex < 0 then
     AdjacentBandModeCombo.ItemIndex := 3;
   FAllAdjacentGroupsCollapsed := False;
@@ -230,3 +227,4 @@ begin
 end;
 
 end.
+

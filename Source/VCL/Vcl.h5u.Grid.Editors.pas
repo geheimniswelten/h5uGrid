@@ -942,3 +942,4 @@ initialization
   h5uRegisterEditor(Th5uEditorPlatform.VCL, 'CustomEditor', Th5uVclCustomEditor);
 
 end.
+

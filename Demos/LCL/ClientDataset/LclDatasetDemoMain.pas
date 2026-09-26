@@ -1,4 +1,4 @@
-unit LclDatasetDemoMain;
+﻿unit LclDatasetDemoMain;
 
 {$mode objfpc}{$H+}
 {$codepage UTF8}
@@ -222,7 +222,6 @@ end;
 
 procedure TLclDatasetDemoForm.FormCreate(Sender: TObject);
 begin
-  Grid.Customization.ColumnMovingGesture := Th5uColumnMovingGesture.Drag;
   if AdjacentBandModeCombo.ItemIndex < 0 then
     AdjacentBandModeCombo.ItemIndex := 3;
   FAllAdjacentGroupsCollapsed := False;
