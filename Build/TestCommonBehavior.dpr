@@ -416,6 +416,7 @@ type
     Cache: Boolean;
     ExtentValue: Double;
     Prepared: Int64;
+    Extents: Integer;
     function Measure(ARow: Int64; AColumn: Th5uGridColumn): Double;
     procedure Adjust(ARow: Int64; const AKey: Th5uRowKey; AEstimated: Boolean; var AHeight: Double; var ACacheResult: Boolean);
     function Extent(ARow: Int64; AAllowMeasure: Boolean): Double;
@@ -436,6 +437,7 @@ end;
 
 function TMetricData.Extent(ARow: Int64; AAllowMeasure: Boolean): Double;
 begin
+  Inc(Extents);
   Result := ExtentValue;
 end;
 
@@ -495,6 +497,16 @@ begin
     LData.Forced := False;
     Check(LMetrics.GetHeight(LOptions, LColumns, 0, LKey, False, {$IFDEF FPC}@{$ENDIF}LData.Measure, {$IFDEF FPC}@{$ENDIF}LData.Adjust) = 17,
       'estimated height');
+    LData.Cache := True;
+    LMetrics.Clear;
+    LBefore := LData.Measures;
+    Check(LMetrics.GetHeight(LOptions, LColumns, 0, LKey, False,
+      {$IFDEF FPC}@{$ENDIF}LData.Measure, {$IFDEF FPC}@{$ENDIF}LData.Adjust) = 17,
+      'an estimate must not become a measured cache entry');
+    Check(LMetrics.GetHeight(LOptions, LColumns, 0, LKey, True,
+      {$IFDEF FPC}@{$ENDIF}LData.Measure, {$IFDEF FPC}@{$ENDIF}LData.Adjust) = 80,
+      'visible row must be measured after an estimated lookup');
+    Check(LData.Measures > LBefore, 'estimate suppressed later measurement');
     LData.ExtentValue := 10.25;
     LTotal := h5uTotalRowHeight(LOptions, 3001, 0, True, {$IFDEF FPC}@{$ENDIF}LData.Prepare, {$IFDEF FPC}@{$ENDIF}LData.Extent);
     Check((LData.Prepared = 3001) and SameValue(LTotal.AsFloat, 3001 * 10.25), 'shared exact measurement threshold and fractional sum');
@@ -515,6 +527,153 @@ begin
     LOptions.Free;
     LColumns.Free;
     LData.Free;
+  end;
+end;
+
+procedure TestIndexedRowMetrics;
+const
+  RowCount: Int64 = 3000000;
+  DeepRow: Int64 = 2999990;
+  LargeCount: Int64 = 9007199254740993;
+var
+  Metrics: Th5uGridRowMetrics;
+  Options: Th5uRowHeightOptions;
+  Columns: Th5uGridColumns;
+  Data: TMetricData;
+  Total, Top: Th5uTotalRowHeight;
+  FloatTop, ExpectedTop, Delta, PrefixDelta: Double;
+  IntegerTop, I, Before: Integer;
+  Key: Th5uRowKey;
+begin
+  Metrics := Th5uGridRowMetrics.Create;
+  Options := Th5uRowHeightOptions.Create;
+  Columns := Th5uGridColumns.Create(nil);
+  Data := TMetricData.Create;
+  try
+    Options.Mode := Th5uRowHeightMode.Automatic;
+    Options.EstimatedHeight := 17;
+    Data.ExtentValue := 20.25;
+    Metrics.Configure(Options, 8, 3, True,
+      {$IFDEF FPC}@{$ENDIF}Data.Prepare, {$IFDEF FPC}@{$ENDIF}Data.Extent);
+    Total := Metrics.Total(False);
+    Check((Total.Whole = 160) and (Data.Extents = 0), 'provisional totals must not measure');
+    Total := Metrics.Total;
+    Check(SameValue(Total.AsFloat, 162) and (Data.Extents = 8) and (Data.Prepared = 8),
+      'small lists retain exact fractional row extents');
+    Check((Metrics.FindFirstVisibleRow(40.75, 100.0, FloatTop) = 2)
+      and SameValue(FloatTop, 99.75), 'indexed fractional boundary');
+    Top := Metrics.RowTop(7);
+    Total := Metrics.Total;
+    Check(SameValue(Top.AsFloat, 141.75) and (Data.Extents = 8),
+      'exact extent callbacks must be reused across positioning and totals');
+    Metrics.InvalidateRow(3);
+    Total := Metrics.Total;
+    Check((Data.Extents = 16) and SameValue(Total.AsFloat, 162), 'invalidated exact extents are recomputed');
+
+    Metrics.Configure(Options, RowCount, 3, True,
+      {$IFDEF FPC}@{$ENDIF}Data.Prepare, {$IFDEF FPC}@{$ENDIF}Data.Extent);
+    Before := Data.Extents;
+    Total := Metrics.Total;
+    Check((Total.Whole = RowCount * 20) and (Metrics.ExtentCount = 0),
+      'large lists begin with a sparse uniform estimate');
+    for I := 0 to 99 do
+    begin
+      Check((Metrics.FindFirstVisibleRow(DeepRow * 20.0 + 7.5, 100.0, FloatTop) = DeepRow)
+        and SameValue(FloatTop, 92.5), 'deep lookup must locate a uniform gap directly');
+      Top := Metrics.RowTop(DeepRow);
+      Check(Top.Whole = DeepRow * 20, 'deep row top must use the shared index');
+    end;
+    Check((Data.Extents = Before) and (Metrics.ExtentCount = 0),
+      'three million unvisited rows must cause no callbacks or extent allocations');
+    Metrics.RecordExtent(0, 25.5);
+    Metrics.RecordExtent(10000, 15.25);
+    Metrics.RecordExtent(DeepRow - 2, 33.25);
+    Metrics.RecordExtent(DeepRow, 30.5);
+    Top := Metrics.RowTop(DeepRow);
+    Check(SameValue(Top.AsFloat, DeepRow * 20.0 + 14), 'positive and negative sparse deltas accumulate');
+    Check((Metrics.FindFirstVisibleRow(Top.AsFloat + 30.25, 100.0, FloatTop) = DeepRow)
+      and SameValue(FloatTop, 69.75), 'measured row extent controls hit testing');
+    Check((Metrics.FindFirstVisibleRow(Top.AsFloat + 30.5, 100.0, FloatTop) = DeepRow + 1)
+      and SameValue(FloatTop, 100), 'measured row end belongs to the following row');
+    Total := Metrics.Total;
+    Check(SameValue(Total.AsFloat, RowCount * 20.0 + 24.5) and (Metrics.ExtentCount = 4),
+      'total includes only the four known deviations');
+    Metrics.RecordExtent(10000, 20);
+    Check(Metrics.ExtentCount = 3, 'returning to the estimate removes a sparse node');
+
+    Metrics.InvalidateExtents;
+    for I := 0 to 4095 do
+      Metrics.RecordExtent(Int64(I) * 701, 20 + ((I mod 7) - 3) * 0.25);
+    PrefixDelta := 0;
+    for I := 0 to 4095 do
+    begin
+      Delta := ((I mod 7) - 3) * 0.25;
+      ExpectedTop := Int64(I) * 701 * 20.0 + PrefixDelta;
+      Top := Metrics.RowTop(Int64(I) * 701);
+      Check(SameValue(Top.AsFloat, ExpectedTop), 'sorted sparse insertion preserves prefix sums');
+      Check(Metrics.FindFirstVisibleRow(ExpectedTop + 1, 0.0, FloatTop) = Int64(I) * 701,
+        'balanced sparse search agrees with measured prefix offsets');
+      PrefixDelta := PrefixDelta + Delta;
+    end;
+    for I := 0 to 2047 do
+      Metrics.InvalidateRow(Int64(I) * 2 * 701);
+    PrefixDelta := 0;
+    for I := 0 to 4095 do
+    begin
+      Top := Metrics.RowTop(Int64(I) * 701);
+      Check(SameValue(Top.AsFloat, Int64(I) * 701 * 20.0 + PrefixDelta),
+        'sparse removal preserves remaining prefix sums');
+      if Odd(I) then
+        PrefixDelta := PrefixDelta + ((I mod 7) - 3) * 0.25;
+    end;
+    Check(Data.Extents = Before, 'sparse lookup cost must not invoke skipped-row callbacks');
+
+    Options.Mode := Th5uRowHeightMode.Fixed;
+    Metrics.Configure(Options, LargeCount, 0, False,
+      {$IFDEF FPC}@{$ENDIF}Data.Prepare, {$IFDEF FPC}@{$ENDIF}Data.Extent);
+    Total := Metrics.Total;
+    Check(Total.Whole = LargeCount * Options.FixedHeight, 'indexed total preserves Int64 above 2^53');
+    Top := Metrics.RowTop(LargeCount - 2);
+    Check(Top.Whole = (LargeCount - 2) * Options.FixedHeight, 'indexed row top preserves Int64 above 2^53');
+    Check((Metrics.FindFirstVisibleRow(Top.Whole + 3, 100, IntegerTop) = LargeCount - 2)
+      and (IntegerTop = 97), 'integer offset lookup must not pass through floating-point row numbers');
+
+    Options.Mode := Th5uRowHeightMode.Automatic;
+    Options.MinHeight := 1;
+    Columns.Add.Caption := '40';
+    Columns[0].AutoHeight := True;
+    Data.Cache := True;
+    Metrics.CheckColumnWidths(Columns);
+    Metrics.Configure(Options, RowCount, 3, True,
+      {$IFDEF FPC}@{$ENDIF}Data.Prepare, {$IFDEF FPC}@{$ENDIF}Data.Extent);
+    Key := Th5uRowKey.FromString('reordered-row');
+    Metrics.GetHeight(Options, Columns, 100, Key, True,
+      {$IFDEF FPC}@{$ENDIF}Data.Measure, {$IFDEF FPC}@{$ENDIF}Data.Adjust);
+    Metrics.RecordExtent(100, 43);
+    Before := Data.Measures;
+    Metrics.InvalidateExtents;
+    Metrics.GetHeight(Options, Columns, DeepRow, Key, True,
+      {$IFDEF FPC}@{$ENDIF}Data.Measure, {$IFDEF FPC}@{$ENDIF}Data.Adjust);
+    Metrics.RecordExtent(DeepRow, 43);
+    Check(Data.Measures = Before, 'reordered rows retain their keyed measured height');
+    Metrics.Remove(Key.ToString);
+    Check(Metrics.ExtentCount = 0, 'key invalidation removes its current view-row extent');
+    Metrics.GetHeight(Options, Columns, DeepRow, Key, True,
+      {$IFDEF FPC}@{$ENDIF}Data.Measure, {$IFDEF FPC}@{$ENDIF}Data.Adjust);
+    Check(Data.Measures > Before, 'key invalidation permits remeasurement');
+    Before := Data.Measures;
+    Check(not Metrics.CheckColumnWidths(Columns), 'unchanged widths retain measured cache');
+    Columns[0].SetLayoutWidth(Columns[0].LayoutWidth + 25);
+    Check(Metrics.CheckColumnWidths(Columns), 'changed actual width invalidates measured cache');
+    Metrics.GetHeight(Options, Columns, DeepRow, Key, True,
+      {$IFDEF FPC}@{$ENDIF}Data.Measure, {$IFDEF FPC}@{$ENDIF}Data.Adjust);
+    Check(Data.Measures > Before, 'actual width change causes remeasurement');
+    Writeln('PASS: sparse three-million-row offsets, bounded callbacks, AVL updates, exact small lists, keyed invalidation and Int64');
+  finally
+    Data.Free;
+    Columns.Free;
+    Options.Free;
+    Metrics.Free;
   end;
 end;
 
@@ -615,6 +774,7 @@ begin
     TestNavigation;
     TestIndependentViews;
     TestRowMetrics;
+    TestIndexedRowMetrics;
     TestColumnLayout;
     TestColumnWidths;
     TestControllerLinkLifetime;

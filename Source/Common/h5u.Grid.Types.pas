@@ -57,6 +57,34 @@ type
   Eh5uFactory = class(Eh5uGrid);
   Eh5uDataController = class(Eh5uGrid);
 
+  Th5uGridPerformanceStage = (Paint, Layout, ColumnLayout, HeightMeasurement, DataUpdate);
+
+  Th5uGridTiming = record
+    Count: Int64;
+    LastMilliseconds: Double;
+    TotalMilliseconds: Double;
+    MaxMilliseconds: Double;
+  end;
+
+  // Durations measure completed CPU-side work. Nested stages overlap and must
+  // not be added together; Paint does not include GPU/display presentation.
+  Th5uGridPerformance = class
+  private
+    FEnabled: Boolean;
+    FTimings: array[Th5uGridPerformanceStage] of Th5uGridTiming;
+    function GetStage(AIndex: Integer): Th5uGridTiming;
+  public
+    constructor Create;
+    procedure Reset;
+    procedure RecordElapsed(AStage: Th5uGridPerformanceStage; AElapsedMilliseconds: Double);
+    property Enabled: Boolean read FEnabled write FEnabled;
+    property Paint: Th5uGridTiming index 0 read GetStage;
+    property Layout: Th5uGridTiming index 1 read GetStage;
+    property ColumnLayout: Th5uGridTiming index 2 read GetStage;
+    property HeightMeasurement: Th5uGridTiming index 3 read GetStage;
+    property DataUpdate: Th5uGridTiming index 4 read GetStage;
+  end;
+
   Th5uRowKey = record
   private
     FValue: string;
@@ -271,6 +299,38 @@ type
   end;
 
 implementation
+
+{ Th5uGridPerformance }
+
+constructor Th5uGridPerformance.Create;
+begin
+  inherited Create;
+  FEnabled := True;
+end;
+
+function Th5uGridPerformance.GetStage(AIndex: Integer): Th5uGridTiming;
+begin
+  Result := FTimings[Th5uGridPerformanceStage(AIndex)];
+end;
+
+procedure Th5uGridPerformance.Reset;
+var
+  LStage: Th5uGridPerformanceStage;
+begin
+  for LStage := Low(Th5uGridPerformanceStage) to High(Th5uGridPerformanceStage) do
+    FTimings[LStage] := Default(Th5uGridTiming);
+end;
+
+procedure Th5uGridPerformance.RecordElapsed(AStage: Th5uGridPerformanceStage; AElapsedMilliseconds: Double);
+begin
+  if not FEnabled or not (AElapsedMilliseconds >= 0) then
+    Exit;
+  Inc(FTimings[AStage].Count);
+  FTimings[AStage].LastMilliseconds := AElapsedMilliseconds;
+  FTimings[AStage].TotalMilliseconds := FTimings[AStage].TotalMilliseconds + AElapsedMilliseconds;
+  if AElapsedMilliseconds > FTimings[AStage].MaxMilliseconds then
+    FTimings[AStage].MaxMilliseconds := AElapsedMilliseconds;
+end;
 
 { Th5uRowKey }
 
