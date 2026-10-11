@@ -27,7 +27,7 @@ Für den Formulardesigner die Pakete in dieser Reihenfolge öffnen und bauen:
 
 Anschließend `h5uGridLclDesign` über **Verwenden → Installieren** installieren
 und Lazarus neu bauen lassen. Die Design-Pakete verwenden `IDEIntf` und
-registrieren die Common-Komponenten auf der Seite `h5u` sowie `Th5uLclGrid`
+registrieren die Common-Komponenten auf der Seite `h5u` sowie `ThiiGrid`
 auf `h5u Grid`. `h5u.Grid.SampleData` gehört zum Runtime-Paket, sodass
 Anwendungen und Demos keine Design-Pakete benötigen.
 
@@ -66,9 +66,9 @@ uses
   Rtti, h5u.Grid.Compat, h5u.Grid.Data.Memory;
 
 var
-  Controller: Th5uMemoryController;
+  Controller: ThiiMemoryController;
 begin
-  Controller := Th5uMemoryController.Create(nil);
+  Controller := ThiiMemoryController.Create(nil);
   try
     Controller.AppendValues(['Name', 'Anzahl'], [
       TValue.specialize From<string>('Grüße 東京'),
@@ -85,12 +85,12 @@ end.
   `Value.specialize AsType<TBytes>`.
 - Ereignisse erhalten in ObjFPC eine Methodenadresse, zum Beispiel
   `Controller.OnGetValue := @Events.GetValue`.
-- `Th5uObjectListController` greift unter FPC auf **published**-Properties zu.
+- `ThiiObjectListController` greift unter FPC auf **published**-Properties zu.
   Dafür eignen sich z. B. von `TPersistent` abgeleitete Klassen. FPC 3.2.2
   stellt Delphis erweiterte RTTI für beliebige `public`-Properties nicht bereit.
   Verschachtelte Objektpfade, UnicodeString-/WideString- und skalare
   Variant-Properties werden unterstützt.
-- `Th5uClassRulePredicate` ist unter FPC eine normale Funktion ohne Closure.
+- `ThiiClassRulePredicate` ist unter FPC eine normale Funktion ohne Closure.
   Registrieren mit `@MeineRegel`; zusätzliche Zustände stehen über den
   Factory-Kontext zur Verfügung. Für Methoden mit Objektzustand gibt es
   außerdem `OnGetClass`. `Th5uEditorPreparePaint` ist unter FPC ein
@@ -106,7 +106,7 @@ end.
   `h5uValueFromVariant` konvertiert skalare Variants in unterstützte TValue-Typen;
   `Null` und `Unassigned` werden zu `TValue.Empty`. Variant-Arrays werden mit
   einer Ausnahme abgewiesen. Für BLOBs `TBytes` verwenden.
-- `Th5uSampleClientDataset` basiert unter FPC auf `TBufDataset`, unter Delphi
+- `ThiiSampleClientDataset` basiert unter FPC auf `TBufDataset`, unter Delphi
   auf `TClientDataset`. Die Klasse behält ihren Namen und die SampleData-API;
   zusätzliche DataSnap-spezifische APIs gehören nicht zur FPC-Variante.
 
@@ -116,10 +116,10 @@ Portiert sind Common-Klassen für Daten, Spalten, Layout, Navigation, Auswahl,
 Gruppierung, Factory und Editor-Abstraktionen. Der Kern benötigt kein Widgetset.
 `h5u.Grid.Compat` stellt dafür kleine Farb-, Schriftstil-, Maus- und Tastaturtypen
 bereit. Der Adapter in `Source/LCL` ordnet native LCL-Typen an dieser Grenze zu
-und registriert seine Editoren für `Th5uEditorPlatform.LCL`.
+und registriert seine Editoren für `ThiiEditorPlatform.LCL`.
 
-Die LCL-Fassade heißt `Th5uLclGrid` aus `Lcl.h5u.Grid`. Die entsprechenden
-Editor- und Style-Klassen tragen ebenfalls das Präfix `Th5uLcl`.
+Die LCL-Fassade heißt `ThiiGrid` aus `Lcl.h5u.Grid`. Die entsprechenden
+Editor- und Style-Klassen tragen ebenfalls das Präfix `ThiiLcl`.
 VCL und FMX behalten ihre eigenen Units und Delphi-Packages. In `Source/Design`
 ist die Common-Registrierung compilerabhängig; die visuelle Registrierung
 liegt je Framework in `Vcl.h5u.Grid.Design`, `Fmx.h5u.Grid.Design` oder

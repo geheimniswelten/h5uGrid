@@ -129,6 +129,7 @@
         <DCCReference Include="..\Source\Vcl\Vcl.h5u.Grid.Styles.pas"/>
         <DCCReference Include="..\Source\Vcl\Vcl.h5u.Grid.pas"/>
         <DCCReference Include="..\Source\VCL\Vcl.h5u.FormDesigner.pas"/>
+        <DCCReference Include="..\Source\VCL\Vcl.h5u.PropertyEditor.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

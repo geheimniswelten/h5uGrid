@@ -12,62 +12,17 @@ interface
 // FPC/LCL support awaits its extended RTTI implementation.
 {$IFNDEF FPC}
 uses
-  System.Classes, System.SysUtils, System.Generics.Collections, System.Rtti,
-  h5u.Grid.Data.Objects, h5u.FormDesigner.Properties;
+  System.Classes, System.SysUtils, System.Generics.Collections, System.Masks;
 
 type
-  // Preserve the original entry point for applications using h5u.FormDesigner.
-  Th5uPropertyEditor = h5u.FormDesigner.Properties.Th5uPropertyEditor;
-  Th5uPropertyItem = h5u.FormDesigner.Properties.Th5uPropertyItem;
-  Th5uValueEditor = h5u.FormDesigner.Properties.Th5uValueEditor;
-
-  Th5uPropertyGroupRow = class(TPersistent)
-  private
-    FID: Integer;
-    FGroupName: string;
-    function GetCaption: string;
-    function GetDisplayValue: string;
-  published
-    property ID: Integer read FID;
-    property Caption: string read GetCaption;
-    property GroupName: string read FGroupName;
-    property DisplayValue: string read GetDisplayValue;
-  end;
-
-  Th5uPropertyListController = class(Th5uObjectListController)
-  private
-    FPropertyEditor: Th5uPropertyEditor;
-    FGroupRows: TObjectList<TObject>;
-    FGroupIDs: TDictionary<string, Integer>;
-    FNextGroupID: Integer;
-    FOnGetValue: Th5uGetPropertyValueEvent;
-    FOnSetValue: Th5uSetPropertyValueEvent;
-    function PropertyItem(ASourceRowIndex: Int64): Th5uPropertyItem;
-    function GetHasGroups: Boolean;
-  protected
-    function GetSourceValue(ASourceRowIndex: Int64; const AFieldName: string): TValue; override;
-    procedure SetSourceValue(ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue); override;
-    function GetSourceCanEdit(ASourceRowIndex: Int64; const AFieldName: string): Boolean; override;
-  public
-    constructor Create(AOwner: TComponent); override;
-    destructor Destroy; override;
-    procedure Refresh;
-    procedure RebuildItems(AShowGroups: Boolean = True);
-    property HasGroups: Boolean read GetHasGroups;
-    property PropertyEditor: Th5uPropertyEditor read FPropertyEditor;
-  published
-    property OnGetValue: Th5uGetPropertyValueEvent read FOnGetValue write FOnGetValue;
-    property OnSetValue: Th5uSetPropertyValueEvent read FOnSetValue write FOnSetValue;
-  end;
-
   TComponentEvent = procedure(Sender: TObject; Component: TComponent) of object;
   TComponentMoveEvent = procedure(Sender: TObject; Component, OldParent, NewParent: TComponent) of object;
-  Th5uComponentList = TList<TComponent>;
+  ThiiComponentList = TList<TComponent>;
 
-  Th5uStructureItem = class(TPersistent)
+  ThiiStructureItem = class(TPersistent)
   private
     FComponent: TComponent;
-    FParent: Th5uStructureItem;
+    FParent: ThiiStructureItem;
     FID: Integer;
     FImageIndex: Integer;
     FVisible: Boolean;
@@ -77,7 +32,7 @@ type
     function GetComponentClassName: string;
   public
     property Component: TComponent read FComponent;
-    property Parent: Th5uStructureItem read FParent;
+    property Parent: ThiiStructureItem read FParent;
     property Visible: Boolean read FVisible;
   published
     property ID: Integer read FID;
@@ -88,7 +43,7 @@ type
     property ImageIndex: Integer read FImageIndex write FImageIndex;
   end;
 
-  Th5uStructureItems = TObjectList<Th5uStructureItem>;
+  ThiiStructureItems = TObjectList<ThiiStructureItem>;
   Th5uStructureChangeListener = class
   public
     Changing: TNotifyEvent;
@@ -98,12 +53,12 @@ type
     Changing, Changed: TNotifyEvent;
   end;
 
-  Th5uStructureView = class(TComponent)
+  ThiiStructureModel = class(TComponent)
   public type
-    TElement = Th5uStructureItem;
+    TElement = ThiiStructureItem;
   private
-    FAllItems: Th5uStructureItems;
-    FComponentList: Th5uStructureItems;
+    FAllItems: ThiiStructureItems;
+    FComponentList: ThiiStructureItems;
     FListeners: TObjectList<Th5uStructureChangeListener>;
     FRootComponent: TComponent;
     FSelectedComponent: TComponent;
@@ -124,16 +79,16 @@ type
     procedure SetResolveByParent(AValue: Boolean);
     procedure SetFilterText(const AValue: string);
     procedure ApplyFilter;
-    procedure AppendVisibleChildren(AParent: Th5uStructureItem);
+    procedure AppendVisibleChildren(AParent: ThiiStructureItem);
     procedure ClearItems;
-    procedure AddChildren(AItem: Th5uStructureItem);
+    procedure AddChildren(AItem: ThiiStructureItem);
     procedure RemoveBranch(AComponent: TComponent);
     procedure NotifyListeners(AChanging: Boolean);
   protected
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure Loaded; override;
     // Framework adapters append visual children first, then call inherited.
-    procedure CollectChildren(AComponent: TComponent; AChildren: Th5uComponentList); virtual;
+    procedure CollectChildren(AComponent: TComponent; AChildren: ThiiComponentList); virtual;
     procedure DoLoaded; virtual;
     procedure DoChanging; virtual;
     procedure DoChange; virtual;
@@ -144,16 +99,16 @@ type
     procedure EndUpdate;
     procedure Clear;
     procedure Reload;
-    function AddComponent(AComponent: TComponent; AParent: Th5uStructureItem = nil; AIncludeChildren: Boolean = False): Th5uStructureItem;
-    function FindComponent(AComponent: TComponent): Th5uStructureItem; reintroduce;
-    function FindItemByID(AID: Integer): Th5uStructureItem;
+    function AddComponent(AComponent: TComponent; AParent: ThiiStructureItem = nil; AIncludeChildren: Boolean = False): ThiiStructureItem;
+    function FindComponent(AComponent: TComponent): ThiiStructureItem; reintroduce;
+    function FindItemByID(AID: Integer): ThiiStructureItem;
     procedure SelectComponent(AComponent: TComponent);
     procedure AddChangeListener(AChanging, AChanged: TNotifyEvent);
     procedure RemoveChangeListener(AChanging, AChanged: TNotifyEvent);
     // Treat these lists as read-only; use AddComponent to add rows in OnLoaded.
     // Rows never own the represented components.
-    property ComponentList: Th5uStructureItems read FComponentList;
-    property AllItems: Th5uStructureItems read FAllItems;
+    property ComponentList: ThiiStructureItems read FComponentList;
+    property AllItems: ThiiStructureItems read FAllItems;
     property SelectedComponent: TComponent read FSelectedComponent write SelectComponent;
   published
     property RootComponent: TComponent read FRootComponent write SetRootComponent;
@@ -168,204 +123,21 @@ type
   end;
 
   // Reserved extension points from the original FormDesigner scaffolding.
-  Th5uEventEditor = class(TComponent);
-  Th5uComponentPalette = class(TComponent);
-  Th5uFormDesigner = class(TComponent);
+  ThiiEventEditor = class(TComponent);
+  ThiiComponentPalette = class(TComponent);
+  ThiiFormDesigner = class(TComponent);
 
 {$ENDIF}
 
 implementation
 
 {$IFNDEF FPC}
-type
-  Th5uControllerPropertyEditor = class(Th5uPropertyEditor)
-  private
-    FController: Th5uPropertyListController;
-  protected
-    procedure DoGetValue(AItem: Th5uPropertyItem; var AValue: TValue; var AHandled: Boolean); override;
-    procedure DoSetValue(AItem: Th5uPropertyItem; const AValue: TValue; var AHandled: Boolean); override;
-  public
-    procedure Refresh; override;
-  end;
-
-function Th5uPropertyGroupRow.GetCaption: string;
-begin
-  // Leave room for the grid's fold glyph when the row indicator is hidden.
-  Result := '     ' + FGroupName;
-end;
-
-function Th5uPropertyGroupRow.GetDisplayValue: string;
-begin
-  Result := '';
-end;
-
-procedure Th5uControllerPropertyEditor.DoGetValue(AItem: Th5uPropertyItem;
-  var AValue: TValue; var AHandled: Boolean);
-begin
-  inherited;
-  if not AHandled and Assigned(FController.FOnGetValue) then
-    FController.FOnGetValue(FController, AItem, AValue, AHandled);
-end;
-
-procedure Th5uControllerPropertyEditor.DoSetValue(AItem: Th5uPropertyItem;
-  const AValue: TValue; var AHandled: Boolean);
-begin
-  inherited;
-  if not AHandled and Assigned(FController.FOnSetValue) then
-    FController.FOnSetValue(FController, AItem, AValue, AHandled);
-end;
-
-procedure Th5uControllerPropertyEditor.Refresh;
-begin
-  FController.BeginUpdate;
-  try
-    inherited;
-  finally
-    FController.EndUpdate;
-  end;
-end;
-
-constructor Th5uPropertyListController.Create(AOwner: TComponent);
-begin
-  inherited;
-  KeyPropertyName := 'ID';
-  OwnsObjects := False;
-  FGroupRows := TObjectList<TObject>.Create(True);
-  FGroupIDs := TDictionary<string, Integer>.Create;
-  FPropertyEditor := Th5uControllerPropertyEditor.Create(Self);
-  Th5uControllerPropertyEditor(FPropertyEditor).FController := Self;
-  FPropertyEditor.SetSubComponent(True);
-end;
-
-destructor Th5uPropertyListController.Destroy;
-begin
-  Clear;
-  FreeAndNil(FGroupRows);
-  FreeAndNil(FGroupIDs);
-  FreeAndNil(FPropertyEditor);
-  inherited;
-end;
-
-function Th5uPropertyListController.GetHasGroups: Boolean;
-begin
-  Result := FGroupRows.Count > 0;
-end;
-
-procedure Th5uPropertyListController.RebuildItems(AShowGroups: Boolean);
-var
-  LItem: Th5uPropertyItem;
-  LHeader: Th5uPropertyGroupRow;
-  LPreviousGroup, LKey: string;
-  LOccurrences: TDictionary<string, Integer>;
-  LOccurrence, LID: Integer;
-begin
-  LOccurrences := TDictionary<string, Integer>.Create;
-  BeginUpdate;
-  try
-    Clear;
-    FGroupRows.Clear;
-    LPreviousGroup := '';
-    for LItem in FPropertyEditor.Items do
-    begin
-      if LItem.Hidden then
-        Continue;
-      if AShowGroups and (LItem.GroupName <> '') and (LItem.GroupName <> LPreviousGroup) then
-      begin
-        if not LOccurrences.TryGetValue(LItem.GroupName, LOccurrence) then
-          LOccurrence := 0;
-        Inc(LOccurrence);
-        LOccurrences.AddOrSetValue(LItem.GroupName, LOccurrence);
-        LKey := LItem.GroupName + #0 + IntToStr(LOccurrence);
-        if not FGroupIDs.TryGetValue(LKey, LID) then
-        begin
-          Dec(FNextGroupID);
-          LID := FNextGroupID;
-          FGroupIDs.Add(LKey, LID);
-        end;
-        LHeader := Th5uPropertyGroupRow.Create;
-        LHeader.FID := LID;
-        LHeader.FGroupName := LItem.GroupName;
-        FGroupRows.Add(LHeader);
-        Add(LHeader);
-      end;
-      Add(LItem);
-      LPreviousGroup := LItem.GroupName;
-    end;
-  finally
-    EndUpdate;
-    LOccurrences.Free;
-  end;
-end;
-
-function Th5uPropertyListController.PropertyItem(ASourceRowIndex: Int64): Th5uPropertyItem;
-begin
-  Result := nil;
-  if (ASourceRowIndex >= 0) and (ASourceRowIndex < Count)
-    and (Item(ASourceRowIndex) is Th5uPropertyItem) then
-    Result := Th5uPropertyItem(Item(ASourceRowIndex));
-end;
-
-function Th5uPropertyListController.GetSourceValue(ASourceRowIndex: Int64;
-  const AFieldName: string): TValue;
-var
-  LItem: Th5uPropertyItem;
-begin
-  LItem := PropertyItem(ASourceRowIndex);
-  if LItem <> nil then
-  begin
-    if SameText(AFieldName, 'Value') then
-      Exit(LItem.Value);
-    if SameText(AFieldName, 'DisplayValue') then
-      Exit(TValue.From<string>(LItem.DisplayValue));
-  end;
-  Result := inherited;
-end;
-
-procedure Th5uPropertyListController.SetSourceValue(ASourceRowIndex: Int64;
-  const AFieldName: string; const AValue: TValue);
-var
-  LItem: Th5uPropertyItem;
-begin
-  LItem := PropertyItem(ASourceRowIndex);
-  if LItem <> nil then
-  begin
-    if SameText(AFieldName, 'Value') then
-    begin
-      LItem.Value := AValue;
-      Exit;
-    end;
-    if SameText(AFieldName, 'DisplayValue') then
-    begin
-      LItem.DisplayValue := AValue.AsString;
-      Exit;
-    end;
-  end;
-  inherited;
-end;
-
-function Th5uPropertyListController.GetSourceCanEdit(ASourceRowIndex: Int64;
-  const AFieldName: string): Boolean;
-var
-  LItem: Th5uPropertyItem;
-begin
-  LItem := PropertyItem(ASourceRowIndex);
-  if (LItem <> nil) and (SameText(AFieldName, 'Value') or SameText(AFieldName, 'DisplayValue')) then
-    Result := LItem.CanEdit
-  else
-    Result := inherited;
-end;
-
-procedure Th5uPropertyListController.Refresh;
-begin
-  FPropertyEditor.Refresh;
-end;
-
 function SameNotifyEvent(A, B: TNotifyEvent): Boolean;
 begin
   Result := (TMethod(A).Code = TMethod(B).Code) and (TMethod(A).Data = TMethod(B).Data);
 end;
 
-function Th5uStructureItem.GetParentID: Integer;
+function ThiiStructureItem.GetParentID: Integer;
 begin
   if FParent = nil then
     Result := 0
@@ -373,9 +145,9 @@ begin
     Result := FParent.ID;
 end;
 
-function Th5uStructureItem.GetLevel: Integer;
+function ThiiStructureItem.GetLevel: Integer;
 var
-  LParent: Th5uStructureItem;
+  LParent: ThiiStructureItem;
 begin
   Result := 0;
   LParent := FParent;
@@ -386,30 +158,30 @@ begin
   end;
 end;
 
-function Th5uStructureItem.GetName: string;
+function ThiiStructureItem.GetName: string;
 begin
   Result := FComponent.Name;
   if Result = '' then
     Result := FComponent.ClassName;
 end;
 
-function Th5uStructureItem.GetComponentClassName: string;
+function ThiiStructureItem.GetComponentClassName: string;
 begin
   Result := FComponent.ClassName;
 end;
 
-constructor Th5uStructureView.Create(AOwner: TComponent);
+constructor ThiiStructureModel.Create(AOwner: TComponent);
 begin
   inherited;
-  FAllItems := Th5uStructureItems.Create(True);
-  FComponentList := Th5uStructureItems.Create(False);
+  FAllItems := ThiiStructureItems.Create(True);
+  FComponentList := ThiiStructureItems.Create(False);
   FListeners := TObjectList<Th5uStructureChangeListener>.Create(True);
   FResolveByOwner := True;
   FResolveByParent := True;
   FNextID := 1;
 end;
 
-destructor Th5uStructureView.Destroy;
+destructor ThiiStructureModel.Destroy;
 begin
   FDestroying := True;
   ClearItems;
@@ -421,14 +193,14 @@ begin
   inherited;
 end;
 
-procedure Th5uStructureView.BeginUpdate;
+procedure ThiiStructureModel.BeginUpdate;
 begin
   if FUpdateCount = 0 then
     DoChanging;
   Inc(FUpdateCount);
 end;
 
-procedure Th5uStructureView.EndUpdate;
+procedure ThiiStructureModel.EndUpdate;
 begin
   if FUpdateCount = 0 then
     Exit;
@@ -440,7 +212,7 @@ begin
   end;
 end;
 
-procedure Th5uStructureView.DoChanging;
+procedure ThiiStructureModel.DoChanging;
 begin
   if FDestroying then
     Exit;
@@ -449,7 +221,7 @@ begin
     FOnChanging(Self);
 end;
 
-procedure Th5uStructureView.DoChange;
+procedure ThiiStructureModel.DoChange;
 begin
   if FDestroying then
     Exit;
@@ -458,7 +230,7 @@ begin
     FOnChange(Self);
 end;
 
-procedure Th5uStructureView.NotifyListeners(AChanging: Boolean);
+procedure ThiiStructureModel.NotifyListeners(AChanging: Boolean);
 var
   LSnapshot: array of Th5uStructureChangeEvents;
   LCallback: TNotifyEvent;
@@ -474,8 +246,7 @@ begin
   // Copy method pointers, not subscription objects, and skip removed entries.
   for I := 0 to High(LSnapshot) do
     for J := 0 to FListeners.Count - 1 do
-      if SameNotifyEvent(LSnapshot[I].Changing, FListeners[J].Changing)
-        and SameNotifyEvent(LSnapshot[I].Changed, FListeners[J].Changed) then
+      if SameNotifyEvent(LSnapshot[I].Changing, FListeners[J].Changing) and SameNotifyEvent(LSnapshot[I].Changed, FListeners[J].Changed) then
       begin
         if AChanging then
           LCallback := LSnapshot[I].Changing
@@ -487,19 +258,19 @@ begin
       end;
 end;
 
-procedure Th5uStructureView.DoLoaded;
+procedure ThiiStructureModel.DoLoaded;
 begin
   if Assigned(FOnLoaded) then
     FOnLoaded(Self);
 end;
 
-procedure Th5uStructureView.Loaded;
+procedure ThiiStructureModel.Loaded;
 begin
   inherited;
   Reload;
 end;
 
-procedure Th5uStructureView.CollectChildren(AComponent: TComponent; AChildren: Th5uComponentList);
+procedure ThiiStructureModel.CollectChildren(AComponent: TComponent; AChildren: ThiiComponentList);
 var
   I: Integer;
 begin
@@ -509,12 +280,12 @@ begin
         AChildren.Add(AComponent.Components[I]);
 end;
 
-procedure Th5uStructureView.AddChildren(AItem: Th5uStructureItem);
+procedure ThiiStructureModel.AddChildren(AItem: ThiiStructureItem);
 var
-  LChildren: Th5uComponentList;
+  LChildren: ThiiComponentList;
   LChild: TComponent;
 begin
-  LChildren := Th5uComponentList.Create;
+  LChildren := ThiiComponentList.Create;
   try
     CollectChildren(AItem.Component, LChildren);
     for LChild in LChildren do
@@ -524,7 +295,7 @@ begin
   end;
 end;
 
-function Th5uStructureView.AddComponent(AComponent: TComponent; AParent: Th5uStructureItem; AIncludeChildren: Boolean): Th5uStructureItem;
+function ThiiStructureModel.AddComponent(AComponent: TComponent; AParent: ThiiStructureItem; AIncludeChildren: Boolean): ThiiStructureItem;
 begin
   Result := nil;
   if (AComponent = nil) or (AComponent = Self) or (csDestroying in AComponent.ComponentState) then
@@ -537,7 +308,7 @@ begin
     Exit;
   BeginUpdate;
   try
-    Result := Th5uStructureItem.Create;
+    Result := ThiiStructureItem.Create;
     Result.FComponent := AComponent;
     Result.FParent := AParent;
     Result.FID := FNextID;
@@ -552,9 +323,9 @@ begin
   end;
 end;
 
-function Th5uStructureView.FindComponent(AComponent: TComponent): Th5uStructureItem;
+function ThiiStructureModel.FindComponent(AComponent: TComponent): ThiiStructureItem;
 var
-  LItem: Th5uStructureItem;
+  LItem: ThiiStructureItem;
 begin
   Result := nil;
   for LItem in FAllItems do
@@ -562,9 +333,9 @@ begin
       Exit(LItem);
 end;
 
-function Th5uStructureView.FindItemByID(AID: Integer): Th5uStructureItem;
+function ThiiStructureModel.FindItemByID(AID: Integer): ThiiStructureItem;
 var
-  LItem: Th5uStructureItem;
+  LItem: ThiiStructureItem;
 begin
   Result := nil;
   for LItem in FAllItems do
@@ -572,9 +343,9 @@ begin
       Exit(LItem);
 end;
 
-procedure Th5uStructureView.ClearItems;
+procedure ThiiStructureModel.ClearItems;
 var
-  LItem: Th5uStructureItem;
+  LItem: ThiiStructureItem;
 begin
   FComponentList.Clear;
   for LItem in FAllItems do
@@ -583,7 +354,7 @@ begin
   FAllItems.Clear;
 end;
 
-procedure Th5uStructureView.Clear;
+procedure ThiiStructureModel.Clear;
 begin
   BeginUpdate;
   try
@@ -596,7 +367,7 @@ begin
   end;
 end;
 
-procedure Th5uStructureView.Reload;
+procedure ThiiStructureModel.Reload;
 begin
   if FReloading or FDestroying or (csLoading in ComponentState) then
     Exit;
@@ -617,7 +388,7 @@ begin
   end;
 end;
 
-procedure Th5uStructureView.SetRootComponent(AValue: TComponent);
+procedure ThiiStructureModel.SetRootComponent(AValue: TComponent);
 begin
   if FRootComponent = AValue then
     Exit;
@@ -637,7 +408,7 @@ begin
   end;
 end;
 
-procedure Th5uStructureView.SetResolveByOwner(AValue: Boolean);
+procedure ThiiStructureModel.SetResolveByOwner(AValue: Boolean);
 begin
   if FResolveByOwner = AValue then
     Exit;
@@ -645,7 +416,7 @@ begin
   Reload;
 end;
 
-procedure Th5uStructureView.SetResolveByParent(AValue: Boolean);
+procedure ThiiStructureModel.SetResolveByParent(AValue: Boolean);
 begin
   if FResolveByParent = AValue then
     Exit;
@@ -653,12 +424,12 @@ begin
   Reload;
 end;
 
-procedure Th5uStructureView.SetFilterText(const AValue: string);
+procedure ThiiStructureModel.SetFilterText(const AValue: string);
 begin
   if FFilterText = AValue then
     Exit;
   // Compile before detaching the list, so a malformed mask leaves it intact.
-  h5uMatchesMask('', AValue);
+  System.Masks.MatchesMask('', AValue);
   BeginUpdate;
   try
     FFilterText := AValue;
@@ -667,9 +438,9 @@ begin
   end;
 end;
 
-procedure Th5uStructureView.ApplyFilter;
+procedure ThiiStructureModel.ApplyFilter;
 var
-  LItem, LParent: Th5uStructureItem;
+  LItem, LParent: ThiiStructureItem;
   LMask: string;
 begin
   FComponentList.Clear;
@@ -679,7 +450,7 @@ begin
   for LItem in FAllItems do
     LItem.FVisible := False;
   for LItem in FAllItems do
-    if h5uMatchesMask(LItem.Name, LMask) or h5uMatchesMask(LItem.ComponentClassName, LMask) then
+    if System.Masks.MatchesMask(LItem.Name, LMask) or System.Masks.MatchesMask(LItem.ComponentClassName, LMask) then
     begin
       LParent := LItem;
       while LParent <> nil do
@@ -691,9 +462,9 @@ begin
   AppendVisibleChildren(nil);
 end;
 
-procedure Th5uStructureView.AppendVisibleChildren(AParent: Th5uStructureItem);
+procedure ThiiStructureModel.AppendVisibleChildren(AParent: ThiiStructureItem);
 var
-  LItem: Th5uStructureItem;
+  LItem: ThiiStructureItem;
 begin
   // OnLoaded can append children to an earlier branch. Present them beside
   // that branch, rather than at the end of the flat ObjectListController.
@@ -705,7 +476,7 @@ begin
     end;
 end;
 
-procedure Th5uStructureView.SelectComponent(AComponent: TComponent);
+procedure ThiiStructureModel.SelectComponent(AComponent: TComponent);
 begin
   if (AComponent <> nil) and (FindComponent(AComponent) = nil) then
     raise EArgumentException.Create('The selected component does not belong to this structure view.');
@@ -716,10 +487,10 @@ begin
     FOnSelect(Self, FSelectedComponent);
 end;
 
-procedure Th5uStructureView.RemoveBranch(AComponent: TComponent);
+procedure ThiiStructureModel.RemoveBranch(AComponent: TComponent);
 var
   I: Integer;
-  LItem, LParent: Th5uStructureItem;
+  LItem, LParent: ThiiStructureItem;
 begin
   BeginUpdate;
   try
@@ -744,7 +515,7 @@ begin
   end;
 end;
 
-procedure Th5uStructureView.Notification(AComponent: TComponent; Operation: TOperation);
+procedure ThiiStructureModel.Notification(AComponent: TComponent; Operation: TOperation);
 begin
   inherited;
   if (Operation <> opRemove) or FDestroying or (FAllItems = nil) then
@@ -758,7 +529,7 @@ begin
     RemoveBranch(AComponent);
 end;
 
-procedure Th5uStructureView.AddChangeListener(AChanging, AChanged: TNotifyEvent);
+procedure ThiiStructureModel.AddChangeListener(AChanging, AChanged: TNotifyEvent);
 var
   LListener: Th5uStructureChangeListener;
 begin
@@ -771,13 +542,12 @@ begin
   FListeners.Add(LListener);
 end;
 
-procedure Th5uStructureView.RemoveChangeListener(AChanging, AChanged: TNotifyEvent);
+procedure ThiiStructureModel.RemoveChangeListener(AChanging, AChanged: TNotifyEvent);
 var
   I: Integer;
 begin
   for I := FListeners.Count - 1 downto 0 do
-    if SameNotifyEvent(FListeners[I].Changing, AChanging)
-      and SameNotifyEvent(FListeners[I].Changed, AChanged) then
+    if SameNotifyEvent(FListeners[I].Changing, AChanging) and SameNotifyEvent(FListeners[I].Changed, AChanged) then
       FListeners.Delete(I);
 end;
 

@@ -32,25 +32,25 @@ uses
   h5u.Grid.Types;
 
 type
-  Th5uGridColumn = class;
-  Th5uGridColumns = class;
-  Th5uHeaderLayout = class;
+  ThiiGridColumn = class;
+  ThiiGridColumns = class;
+  ThiiHeaderLayout = class;
 
-  Th5uCellEvent = procedure(Sender: TObject; AColumn: Th5uGridColumn; ARowIndex: Int64) of object;
-  Th5uCellPermissionEvent = procedure(Sender: TObject; AColumn: Th5uGridColumn; ARowIndex: Int64; var AAllow: Boolean) of object;
-  Th5uCellGetValueEvent = procedure(Sender: TObject; AColumn: Th5uGridColumn; ARowIndex: Int64; var AValue: TValue; ADisplayValue: Boolean) of object;
-  Th5uCellSetValueEvent = procedure(Sender: TObject; AColumn: Th5uGridColumn; ARowIndex: Int64; var AValue: TValue) of object;
-  Th5uCellValidateEvent = procedure(Sender: TObject; AColumn: Th5uGridColumn; ARowIndex: Int64; var AValue: TValue; var AValid: Boolean; var AErrorText: string) of object;
-  Th5uGetColumnModeEvent = procedure(AColumn: Th5uGridColumn; var AMode: string) of object;
-  Th5uGetCellEditorEvent = procedure(Sender: TObject; AColumn: Th5uGridColumn; ARowIndex: Int64; var AEditorName: string) of object;
-  Th5uColumnChangedEvent = procedure(Sender: TObject; AColumn: Th5uGridColumn) of object;
+  ThiiCellEvent = procedure(Sender: TObject; AColumn: ThiiGridColumn; ARowIndex: Int64) of object;
+  ThiiCellPermissionEvent = procedure(Sender: TObject; AColumn: ThiiGridColumn; ARowIndex: Int64; var AAllow: Boolean) of object;
+  ThiiCellGetValueEvent = procedure(Sender: TObject; AColumn: ThiiGridColumn; ARowIndex: Int64; var AValue: TValue; ADisplayValue: Boolean) of object;
+  ThiiCellSetValueEvent = procedure(Sender: TObject; AColumn: ThiiGridColumn; ARowIndex: Int64; var AValue: TValue) of object;
+  ThiiCellValidateEvent = procedure(Sender: TObject; AColumn: ThiiGridColumn; ARowIndex: Int64; var AValue: TValue; var AValid: Boolean; var AErrorText: string) of object;
+  ThiiGetColumnModeEvent = procedure(AColumn: ThiiGridColumn; var AMode: string) of object;
+  ThiiGetCellEditorEvent = procedure(Sender: TObject; AColumn: ThiiGridColumn; ARowIndex: Int64; var AEditorName: string) of object;
+  ThiiColumnChangedEvent = procedure(Sender: TObject; AColumn: ThiiGridColumn) of object;
 
-  Th5uGridColumn = class(TCollectionItem)
+  ThiiGridColumn = class(TCollectionItem)
   private
     FId: string;
     FCaption: string;
     FFieldName: string;
-    FWidth: Th5uWidth;
+    FWidth: ThiiWidth;
     FAutoWidth: Boolean;
     FDefaultWidth, FDefaultMaxWidth, FReferenceWidth: Single;
     FDefaultMinWidth: Single;
@@ -59,15 +59,15 @@ type
     FLayoutWidth: Single;
     FMeasuredWidth: Single;
     FMinWidth: Single;
-    FMaxWidth: Th5uWidth;
+    FMaxWidth: ThiiWidth;
     FVisible: Boolean;
     FVisibleIndex: Integer;
-    FFixedKind: Th5uFixedKind;
+    FFixedKind: ThiiFixedKind;
     FReadOnly: Boolean;
-    FDataType: Th5uColumnDataType;
-    FEditorKind: Th5uColumnEditorKind;
+    FDataType: ThiiColumnDataType;
+    FEditorKind: ThiiColumnEditorKind;
     FEditor, FCellEditorColumnId, FRowEditorColumnId: string;
-    FOnGetCellEditor, FOnGetRowEditor: Th5uGetCellEditorEvent;
+    FOnGetCellEditor, FOnGetRowEditor: ThiiGetCellEditorEvent;
     FWordWrap: Boolean;
     FAutoHeight: Boolean;
     FMaxAutoHeight: Single;
@@ -79,38 +79,38 @@ type
     FHighlighted: Boolean;
     FRightSpacing: Single;
     FColor: TColor;
-    FClassId: Th5uClassId;
-    FCellClassId: Th5uClassId;
-    FHeaderCellClassId: Th5uClassId;
-    FMovePermission: Th5uColumnMovePermission;
+    FClassId: ThiiClassId;
+    FCellClassId: ThiiClassId;
+    FHeaderCellClassId: ThiiClassId;
+    FMovePermission: ThiiColumnMovePermission;
     FCanHide: Boolean;
     FCanResize: Boolean;
     FCanSelect: Boolean;
     FShowInColumnChooser: Boolean;
     FImagePreserveAspectRatio: Boolean;
-    FOnCanFocus: Th5uCellPermissionEvent;
-    FOnCanEdit: Th5uCellPermissionEvent;
-    FOnValidate: Th5uCellValidateEvent;
-    FOnGetValue: Th5uCellGetValueEvent;
-    FOnSetValue: Th5uCellSetValueEvent;
-    FOnCellClick: Th5uCellEvent;
-    FOnColumnHeaderClick: Th5uCellEvent;
-    FOnCellEnter: Th5uCellEvent;
-    FOnCellExit: Th5uCellEvent;
+    FOnCanFocus: ThiiCellPermissionEvent;
+    FOnCanEdit: ThiiCellPermissionEvent;
+    FOnValidate: ThiiCellValidateEvent;
+    FOnGetValue: ThiiCellGetValueEvent;
+    FOnSetValue: ThiiCellSetValueEvent;
+    FOnCellClick: ThiiCellEvent;
+    FOnColumnHeaderClick: ThiiCellEvent;
+    FOnCellEnter: ThiiCellEvent;
+    FOnCellExit: ThiiCellEvent;
     procedure Changed;
     procedure SetCaption(const AValue: string);
     procedure SetFieldName(const AValue: string);
-    procedure SetFixedKind(const AValue: Th5uFixedKind);
+    procedure SetFixedKind(const AValue: ThiiFixedKind);
     procedure SetId(const AValue: string);
     procedure SetColor(const AValue: TColor);
     procedure SetRightSpacing(const AValue: Single);
     procedure SetVisible(const AValue: Boolean);
     procedure SetVisibleIndex(const AValue: Integer);
-    procedure SetWidth(const AValue: Th5uWidth);
+    procedure SetWidth(const AValue: ThiiWidth);
     procedure SetAutoWidth(const AValue: Boolean);
     procedure SetWidthInPercent(const AValue: Single);
     procedure SetMinWidth(const AValue: Single);
-    procedure SetMaxWidth(const AValue: Th5uWidth);
+    procedure SetMaxWidth(const AValue: ThiiWidth);
     procedure SetMaxAutoHeight(const AValue: Single);
     function GetWidthInPercent: Single;
     function GetWidthSpecification: Single;
@@ -121,7 +121,7 @@ type
     function IsMinWidthStored: Boolean;
     procedure ReadLegacyWidthInPercent(AReader: TReader);
     function GetLayoutWidth: Single;
-    procedure SetMovePermission(AValue: Th5uColumnMovePermission);
+    procedure SetMovePermission(AValue: ThiiColumnMovePermission);
   protected
     procedure DefineProperties(AFiler: TFiler); override;
     function GetDisplayName: string; override;
@@ -143,27 +143,27 @@ type
     procedure SetMeasuredWidth(AValue: Single);
     property LayoutWidth: Single read GetLayoutWidth;
     property MeasuredWidth: Single read FMeasuredWidth;
-    function GetColumns: Th5uGridColumns;
-    property Columns: Th5uGridColumns read GetColumns;
+    function GetColumns: ThiiGridColumns;
+    property Columns: ThiiGridColumns read GetColumns;
   published
     property Id: string read FId write SetId;
     property Caption: string read FCaption write SetCaption;
     property FieldName: string read FFieldName write SetFieldName;
-    property Width: Th5uWidth read FWidth write SetWidth;
+    property Width: ThiiWidth read FWidth write SetWidth;
     property AutoWidth: Boolean read FAutoWidth write SetAutoWidth default False;
     property MinWidth: Single read FMinWidth write SetMinWidth stored IsMinWidthStored nodefault;
-    property MaxWidth: Th5uWidth read FMaxWidth write SetMaxWidth;
+    property MaxWidth: ThiiWidth read FMaxWidth write SetMaxWidth;
     property Visible: Boolean read FVisible write SetVisible default True;
     property VisibleIndex: Integer read FVisibleIndex write SetVisibleIndex default -1;
-    property FixedKind: Th5uFixedKind read FFixedKind write SetFixedKind default Th5uFixedKind.None;
+    property FixedKind: ThiiFixedKind read FFixedKind write SetFixedKind default ThiiFixedKind.None;
     property ReadOnly: Boolean read FReadOnly write FReadOnly default False;
-    property DataType: Th5uColumnDataType read FDataType write FDataType default Th5uColumnDataType.Auto;
+    property DataType: ThiiColumnDataType read FDataType write FDataType default ThiiColumnDataType.Auto;
     property Editor: string read FEditor write FEditor;
     property CellEditorColumnId: string read FCellEditorColumnId write FCellEditorColumnId;
     property RowEditorColumnId: string read FRowEditorColumnId write FRowEditorColumnId;
-    property OnGetCellEditor: Th5uGetCellEditorEvent read FOnGetCellEditor write FOnGetCellEditor;
-    property OnGetRowEditor: Th5uGetCellEditorEvent read FOnGetRowEditor write FOnGetRowEditor;
-    property EditorKind: Th5uColumnEditorKind read FEditorKind write FEditorKind default Th5uColumnEditorKind.Automatic;
+    property OnGetCellEditor: ThiiGetCellEditorEvent read FOnGetCellEditor write FOnGetCellEditor;
+    property OnGetRowEditor: ThiiGetCellEditorEvent read FOnGetRowEditor write FOnGetRowEditor;
+    property EditorKind: ThiiColumnEditorKind read FEditorKind write FEditorKind default ThiiColumnEditorKind.Automatic;
     property WordWrap: Boolean read FWordWrap write FWordWrap default False;
     property AutoHeight: Boolean read FAutoHeight write FAutoHeight default False;
     property MaxAutoHeight: Single read FMaxAutoHeight write SetMaxAutoHeight nodefault;
@@ -176,53 +176,53 @@ type
     property RightSpacing: Single read FRightSpacing write SetRightSpacing nodefault;
     property Color: TColor read FColor write SetColor default TColorRec.SysDefault;
     {$IFnDEF FPC} [Default(h5uClassIdGridColumn)] {$ENDIF}
-    property ClassId: Th5uClassId read FClassId write FClassId;
+    property ClassId: ThiiClassId read FClassId write FClassId;
     {$IFnDEF FPC} [Default(h5uClassIdGridDataCell)] {$ENDIF}
-    property CellClassId: Th5uClassId read FCellClassId write FCellClassId;
+    property CellClassId: ThiiClassId read FCellClassId write FCellClassId;
     {$IFnDEF FPC} [Default(h5uClassIdGridHeaderCell)] {$ENDIF}
-    property HeaderCellClassId: Th5uClassId read FHeaderCellClassId write FHeaderCellClassId;
-    property MovePermission: Th5uColumnMovePermission read FMovePermission write SetMovePermission default Th5uColumnMovePermission.Default;
+    property HeaderCellClassId: ThiiClassId read FHeaderCellClassId write FHeaderCellClassId;
+    property MovePermission: ThiiColumnMovePermission read FMovePermission write SetMovePermission default ThiiColumnMovePermission.Default;
     property CanHide: Boolean read FCanHide write FCanHide default True;
     property CanResize: Boolean read FCanResize write FCanResize default True;
     property CanSelect: Boolean read FCanSelect write FCanSelect default True;
     property ShowInColumnChooser: Boolean read FShowInColumnChooser write FShowInColumnChooser default True;
     property Mode: string read GetMode stored False;
     property ImagePreserveAspectRatio: Boolean read FImagePreserveAspectRatio write FImagePreserveAspectRatio default True;
-    property OnCanFocus: Th5uCellPermissionEvent read FOnCanFocus write FOnCanFocus;
-    property OnCanEdit: Th5uCellPermissionEvent read FOnCanEdit write FOnCanEdit;
-    property OnValidate: Th5uCellValidateEvent read FOnValidate write FOnValidate;
-    property OnGetValue: Th5uCellGetValueEvent read FOnGetValue write FOnGetValue;
-    property OnSetValue: Th5uCellSetValueEvent read FOnSetValue write FOnSetValue;
-    property OnCellClick: Th5uCellEvent read FOnCellClick write FOnCellClick;
-    property OnColumnHeaderClick: Th5uCellEvent read FOnColumnHeaderClick write FOnColumnHeaderClick;
-    property OnCellEnter: Th5uCellEvent read FOnCellEnter write FOnCellEnter;
-    property OnCellExit: Th5uCellEvent read FOnCellExit write FOnCellExit;
+    property OnCanFocus: ThiiCellPermissionEvent read FOnCanFocus write FOnCanFocus;
+    property OnCanEdit: ThiiCellPermissionEvent read FOnCanEdit write FOnCanEdit;
+    property OnValidate: ThiiCellValidateEvent read FOnValidate write FOnValidate;
+    property OnGetValue: ThiiCellGetValueEvent read FOnGetValue write FOnGetValue;
+    property OnSetValue: ThiiCellSetValueEvent read FOnSetValue write FOnSetValue;
+    property OnCellClick: ThiiCellEvent read FOnCellClick write FOnCellClick;
+    property OnColumnHeaderClick: ThiiCellEvent read FOnColumnHeaderClick write FOnColumnHeaderClick;
+    property OnCellEnter: ThiiCellEvent read FOnCellEnter write FOnCellEnter;
+    property OnCellExit: ThiiCellEvent read FOnCellExit write FOnCellExit;
   end;
 
-  Th5uGridColumns = class(TOwnedCollection)
+  ThiiGridColumns = class(TOwnedCollection)
   private
-    FOnGetMode: Th5uGetColumnModeEvent;
-    FOnChanged: Th5uColumnChangedEvent;
-    function GetItem(AIndex: Integer): Th5uGridColumn;
-    procedure SetItem(AIndex: Integer; const AValue: Th5uGridColumn);
+    FOnGetMode: ThiiGetColumnModeEvent;
+    FOnChanged: ThiiColumnChangedEvent;
+    function GetItem(AIndex: Integer): ThiiGridColumn;
+    procedure SetItem(AIndex: Integer; const AValue: ThiiGridColumn);
   protected
     procedure Update(Item: TCollectionItem); override;
   public
     constructor Create(AOwner: TPersistent);
-    function Add: Th5uGridColumn;
-    function FindById(const AId: string): Th5uGridColumn;
-    function FindByFieldName(const AFieldName: string): Th5uGridColumn;
-    function VisibleColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>;
+    function Add: ThiiGridColumn;
+    function FindById(const AId: string): ThiiGridColumn;
+    function FindByFieldName(const AFieldName: string): ThiiGridColumn;
+    function VisibleColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<ThiiGridColumn>;
     procedure NormalizeVisibleIndexes;
-    procedure MoveColumn(AColumn: Th5uGridColumn; ANewVisibleIndex: Integer);
+    procedure MoveColumn(AColumn: ThiiGridColumn; ANewVisibleIndex: Integer);
     // ANewVisibleIndex is the block's first index after removal and insertion.
-    procedure MoveColumns(const AColumns: array of Th5uGridColumn; ANewVisibleIndex: Integer; AHeaderLayout: Th5uHeaderLayout = nil);
-    property Items[AIndex: Integer]: Th5uGridColumn read GetItem write SetItem; default;
-    property OnGetMode: Th5uGetColumnModeEvent read FOnGetMode write FOnGetMode;
-    property OnChanged: Th5uColumnChangedEvent read FOnChanged write FOnChanged;
+    procedure MoveColumns(const AColumns: array of ThiiGridColumn; ANewVisibleIndex: Integer; AHeaderLayout: ThiiHeaderLayout = nil);
+    property Items[AIndex: Integer]: ThiiGridColumn read GetItem write SetItem; default;
+    property OnGetMode: ThiiGetColumnModeEvent read FOnGetMode write FOnGetMode;
+    property OnChanged: ThiiColumnChangedEvent read FOnChanged write FOnChanged;
   end;
 
-  Th5uHeaderLayoutCell = class(TCollectionItem)
+  ThiiHeaderLayoutCell = class(TCollectionItem)
   private
     FId: string;
     FCaption: string;
@@ -231,13 +231,13 @@ type
     FLayoutColumn: Integer;
     FRowSpan: Integer;
     FColumnSpan: Integer;
-    FWidth, FMaxWidth: Th5uWidth;
+    FWidth, FMaxWidth: ThiiWidth;
     FMinWidth: Single;
     FLegacyWidthInPercent: Single;
     FStyleName: string;
-    procedure SetWidth(const AValue: Th5uWidth);
+    procedure SetWidth(const AValue: ThiiWidth);
     procedure SetMinWidth(const AValue: Single);
-    procedure SetMaxWidth(const AValue: Th5uWidth);
+    procedure SetMaxWidth(const AValue: ThiiWidth);
     function GetWidthInPercent: Single;
     procedure ReadLegacyWidthInPercent(AReader: TReader);
     procedure SetWidthInPercent(const AValue: Single);
@@ -246,7 +246,7 @@ type
     procedure SetColumnSpan(const AValue: Integer);
     procedure SetColumnId(const AValue: string);
   private
-    FClassId: Th5uClassId;
+    FClassId: ThiiClassId;
   protected
     procedure DefineProperties(AFiler: TFiler); override;
     function GetDisplayName: string; override;
@@ -263,55 +263,57 @@ type
     property LayoutColumn: Integer read FLayoutColumn write SetLayoutColumn default 0;
     property RowSpan: Integer read FRowSpan write FRowSpan default 1;
     property ColumnSpan: Integer read FColumnSpan write SetColumnSpan default 1;
-    property Width: Th5uWidth read FWidth write SetWidth;
+    property Width: ThiiWidth read FWidth write SetWidth;
     property MinWidth: Single read FMinWidth write SetMinWidth;
-    property MaxWidth: Th5uWidth read FMaxWidth write SetMaxWidth;
+    property MaxWidth: ThiiWidth read FMaxWidth write SetMaxWidth;
     property StyleName: string read FStyleName write FStyleName;
     {$IFnDEF FPC} [Default(h5uClassIdGridHeaderGroupCell)] {$ENDIF}
-    property ClassId: Th5uClassId read FClassId write FClassId;
+    property ClassId: ThiiClassId read FClassId write FClassId;
   end;
 
-  Th5uHeaderLayoutCells = class(TOwnedCollection)
+  ThiiHeaderLayoutCells = class(TOwnedCollection)
   private
-    function GetItem(AIndex: Integer): Th5uHeaderLayoutCell;
+    function GetItem(AIndex: Integer): ThiiHeaderLayoutCell;
   protected
     procedure Update(Item: TCollectionItem); override;
   public
     constructor Create(AOwner: TPersistent);
-    function Add: Th5uHeaderLayoutCell;
-    property Items[AIndex: Integer]: Th5uHeaderLayoutCell read GetItem; default;
+    function Add: ThiiHeaderLayoutCell;
+    property Items[AIndex: Integer]: ThiiHeaderLayoutCell read GetItem; default;
   end;
 
-  Th5uHeaderLayout = class(TPersistent)
+  ThiiHeaderLayout = class(TPersistent)
   private
     FOwner: TPersistent;
     FRowCount: Integer;
-    FCells: Th5uHeaderLayoutCells;
+    FCells: ThiiHeaderLayoutCells;
     FEnabled: Boolean;
     FOnChanged: TNotifyEvent;
     procedure SetEnabled(const AValue: Boolean);
     procedure Changed;
-    procedure SetCells(const AValue: Th5uHeaderLayoutCells);
+    procedure SetCells(const AValue: ThiiHeaderLayoutCells);
     procedure SetRowCount(const AValue: Integer);
-    function UsesColumnBindings(ACell: Th5uHeaderLayoutCell): Boolean;
+    function UsesColumnBindings(ACell: ThiiHeaderLayoutCell): Boolean;
   public
     constructor Create(AOwner: TPersistent);
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
-    function ContainsCell(ACell: Th5uHeaderLayoutCell): Boolean;
-    function ColumnRange(ACell: Th5uHeaderLayoutCell; const AColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>; out AFirst, ALast: Integer): Boolean;
-    function CanMoveColumns(const AColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>; AFirst, ACount, ANewIndex: Integer): Boolean;
-    procedure ColumnsMoved(const ABefore, AAfter: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>);
-    function MovesWithColumns(AColumn: Th5uGridColumn; const AColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>; AFirst, ACount: Integer): Boolean;
+    function ContainsCell(ACell: ThiiHeaderLayoutCell): Boolean;
+    function ColumnRange(ACell: ThiiHeaderLayoutCell; const AColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<ThiiGridColumn>;
+      out AFirst, ALast: Integer): Boolean;
+    function CanMoveColumns(const AColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<ThiiGridColumn>; AFirst, ACount, ANewIndex: Integer): Boolean;
+    procedure ColumnsMoved(const ABefore, AAfter: {$IFDEF FPC}specialize {$ENDIF}TArray<ThiiGridColumn>);
+    function MovesWithColumns(AColumn: ThiiGridColumn; const AColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<ThiiGridColumn>;
+      AFirst, ACount: Integer): Boolean;
     property Owner: TPersistent read FOwner;
     property OnChanged: TNotifyEvent read FOnChanged write FOnChanged;
   published
     property Enabled: Boolean read FEnabled write SetEnabled default False;
     property RowCount: Integer read FRowCount write SetRowCount default 1;
-    property Cells: Th5uHeaderLayoutCells read FCells write SetCells;
+    property Cells: ThiiHeaderLayoutCells read FCells write SetCells;
   end;
 
-  Th5uRowStyleMapping = class(TCollectionItem)
+  ThiiRowStyleMapping = class(TCollectionItem)
   private
     FValue: Integer;
     FStyleName: string;
@@ -322,29 +324,29 @@ type
     property StyleName: string read FStyleName write FStyleName;
   end;
 
-  Th5uRowStyleMappings = class(TOwnedCollection)
+  ThiiRowStyleMappings = class(TOwnedCollection)
   private
-    function GetItem(AIndex: Integer): Th5uRowStyleMapping;
+    function GetItem(AIndex: Integer): ThiiRowStyleMapping;
   public
     constructor Create(AOwner: TPersistent);
-    function Add: Th5uRowStyleMapping;
+    function Add: ThiiRowStyleMapping;
     function FindStyle(AValue: Integer; out AStyleName: string): Boolean;
-    property Items[AIndex: Integer]: Th5uRowStyleMapping read GetItem; default;
+    property Items[AIndex: Integer]: ThiiRowStyleMapping read GetItem; default;
   end;
 
 implementation
 
-function CompareVisibleColumns({$IFDEF FPC}constref{$ELSE}const{$ENDIF} ALeft, ARight: Th5uGridColumn): Integer;
+function CompareVisibleColumns({$IFDEF FPC}constref{$ELSE}const{$ENDIF} ALeft, ARight: ThiiGridColumn): Integer;
 begin
   if ALeft.FixedKind <> ARight.FixedKind then
   begin
-    if ALeft.FixedKind = Th5uFixedKind.Left then
+    if ALeft.FixedKind = ThiiFixedKind.Left then
       Exit(-1);
-    if ARight.FixedKind = Th5uFixedKind.Left then
+    if ARight.FixedKind = ThiiFixedKind.Left then
       Exit(1);
-    if ALeft.FixedKind = Th5uFixedKind.Right then
+    if ALeft.FixedKind = ThiiFixedKind.Right then
       Exit(1);
-    if ARight.FixedKind = Th5uFixedKind.Right then
+    if ARight.FixedKind = ThiiFixedKind.Right then
       Exit(-1);
   end;
 
@@ -353,11 +355,11 @@ begin
     Result := ALeft.Index - ARight.Index;
 end;
 
-{ Th5uGridColumn }
+{ ThiiGridColumn }
 
-function Th5uGridColumn.GetMode: string;
+function ThiiGridColumn.GetMode: string;
 var
-  LColumns: Th5uGridColumns;
+  LColumns: ThiiGridColumns;
 begin
   Result := '';
   LColumns := GetColumns;
@@ -365,13 +367,13 @@ begin
     LColumns.OnGetMode(Self, Result);
 end;
 
-procedure Th5uGridColumn.Assign(Source: TPersistent);
+procedure ThiiGridColumn.Assign(Source: TPersistent);
 var
-  LSource: Th5uGridColumn;
+  LSource: ThiiGridColumn;
 begin
-  if Source is Th5uGridColumn then
+  if Source is ThiiGridColumn then
   begin
-    LSource := Th5uGridColumn(Source);
+    LSource := ThiiGridColumn(Source);
     FId := LSource.FId;
     FCaption := LSource.FCaption;
     FFieldName := LSource.FFieldName;
@@ -435,13 +437,13 @@ begin
     inherited;
 end;
 
-procedure Th5uGridColumn.Changed;
+procedure ThiiGridColumn.Changed;
 begin
   FLayoutWidth := -1;
   inherited Changed(False);
 end;
 
-constructor Th5uGridColumn.Create(ACollection: TCollection);
+constructor ThiiGridColumn.Create(ACollection: TCollection);
 begin
   inherited;
   FId := '';
@@ -456,10 +458,10 @@ begin
   FMaxWidth := 0;
   FVisible := True;
   FVisibleIndex := -1;
-  FFixedKind := Th5uFixedKind.None;
+  FFixedKind := ThiiFixedKind.None;
   FReadOnly := False;
-  FDataType := Th5uColumnDataType.Auto;
-  FEditorKind := Th5uColumnEditorKind.Automatic;
+  FDataType := ThiiColumnDataType.Auto;
+  FEditorKind := ThiiColumnEditorKind.Automatic;
   FWordWrap := False;
   FAutoHeight := False;
   FMaxAutoHeight := 160;
@@ -469,7 +471,7 @@ begin
   FClassId := h5uClassIdGridColumn;
   FCellClassId := h5uClassIdGridDataCell;
   FHeaderCellClassId := h5uClassIdGridHeaderCell;
-  FMovePermission := Th5uColumnMovePermission.Default;
+  FMovePermission := ThiiColumnMovePermission.Default;
   FCanHide := True;
   FCanResize := True;
   FCanSelect := True;
@@ -477,7 +479,7 @@ begin
   FImagePreserveAspectRatio := True;
 end;
 
-function Th5uGridColumn.GetDisplayName: string;
+function ThiiGridColumn.GetDisplayName: string;
 begin
   if FCaption <> '' then
     Result := FCaption
@@ -489,7 +491,7 @@ begin
     Result := inherited;
 end;
 
-procedure Th5uGridColumn.SetColor(const AValue: TColor);
+procedure ThiiGridColumn.SetColor(const AValue: TColor);
 begin
   if FColor = AValue then
     Exit;
@@ -497,7 +499,7 @@ begin
   Changed;
 end;
 
-procedure Th5uGridColumn.SetCaption(const AValue: string);
+procedure ThiiGridColumn.SetCaption(const AValue: string);
 begin
   if FCaption = AValue then
     Exit;
@@ -505,7 +507,7 @@ begin
   Changed;
 end;
 
-procedure Th5uGridColumn.SetFieldName(const AValue: string);
+procedure ThiiGridColumn.SetFieldName(const AValue: string);
 begin
   if FFieldName = AValue then
     Exit;
@@ -517,7 +519,7 @@ begin
   Changed;
 end;
 
-procedure Th5uGridColumn.SetFixedKind(const AValue: Th5uFixedKind);
+procedure ThiiGridColumn.SetFixedKind(const AValue: ThiiFixedKind);
 begin
   if FFixedKind = AValue then
     Exit;
@@ -525,7 +527,7 @@ begin
   Changed;
 end;
 
-procedure Th5uGridColumn.SetId(const AValue: string);
+procedure ThiiGridColumn.SetId(const AValue: string);
 begin
   if FId = AValue then
     Exit;
@@ -533,7 +535,7 @@ begin
   Changed;
 end;
 
-procedure Th5uGridColumn.SetRightSpacing(const AValue: Single);
+procedure ThiiGridColumn.SetRightSpacing(const AValue: Single);
 begin
   h5uValidateWidth(AValue);
   if FRightSpacing = AValue then
@@ -545,7 +547,7 @@ begin
   Changed;
 end;
 
-procedure Th5uGridColumn.SetVisible(const AValue: Boolean);
+procedure ThiiGridColumn.SetVisible(const AValue: Boolean);
 begin
   if FVisible = AValue then
     Exit;
@@ -553,7 +555,7 @@ begin
   Changed;
 end;
 
-procedure Th5uGridColumn.SetVisibleIndex(const AValue: Integer);
+procedure ThiiGridColumn.SetVisibleIndex(const AValue: Integer);
 begin
   if FVisibleIndex = AValue then
     Exit;
@@ -561,7 +563,7 @@ begin
   Changed;
 end;
 
-procedure Th5uGridColumn.SetMovePermission(AValue: Th5uColumnMovePermission);
+procedure ThiiGridColumn.SetMovePermission(AValue: ThiiColumnMovePermission);
 begin
   if FMovePermission = AValue then
     Exit;
@@ -569,7 +571,7 @@ begin
   Changed;
 end;
 
-procedure Th5uGridColumn.SetWidth(const AValue: Th5uWidth);
+procedure ThiiGridColumn.SetWidth(const AValue: ThiiWidth);
 begin
   h5uValidateWidth(AValue);
   FWidthSpecified := True;
@@ -579,7 +581,7 @@ begin
   Changed;
 end;
 
-function Th5uGridColumn.GetWidthSpecification: Single;
+function ThiiGridColumn.GetWidthSpecification: Single;
 begin
   Result := FWidth;
   if Result = 0 then
@@ -588,13 +590,12 @@ begin
     Result := 100;
 end;
 
-function Th5uGridColumn.GetResolvedWidth: Single;
+function ThiiGridColumn.GetResolvedWidth: Single;
 begin
-  Result := EnsureRange(h5uResolveWidth(WidthSpecification, FReferenceWidth),
-    Single(ResolvedMinWidth), Single(ResolvedMaxWidth));
+  Result := EnsureRange(h5uResolveWidth(WidthSpecification, FReferenceWidth), Single(ResolvedMinWidth), Single(ResolvedMaxWidth));
 end;
 
-function Th5uGridColumn.GetResolvedMinWidth: Single;
+function ThiiGridColumn.GetResolvedMinWidth: Single;
 begin
   if FMinWidthSpecified then
     Result := FMinWidth
@@ -602,7 +603,7 @@ begin
     Result := FDefaultMinWidth;
 end;
 
-function Th5uGridColumn.GetMaxWidthSpecification: Single;
+function ThiiGridColumn.GetMaxWidthSpecification: Single;
 begin
   Result := FMaxWidth;
   if Result = 0 then
@@ -611,13 +612,12 @@ begin
     Result := 3000;
 end;
 
-function Th5uGridColumn.GetResolvedMaxWidth: Single;
+function ThiiGridColumn.GetResolvedMaxWidth: Single;
 begin
   Result := Max(ResolvedMinWidth, h5uResolveWidth(MaxWidthSpecification, FReferenceWidth));
 end;
 
-procedure Th5uGridColumn.SetWidthDefaults(AWidth: Single; AMinWidth: Single;
-  AMaxWidth, AReferenceWidth: Single);
+procedure ThiiGridColumn.SetWidthDefaults(AWidth: Single; AMinWidth: Single; AMaxWidth, AReferenceWidth: Single);
 begin
   h5uValidateWidth(AWidth);
   h5uValidateWidth(AMinWidth);
@@ -628,20 +628,20 @@ begin
   SetWidthReference(AReferenceWidth);
 end;
 
-procedure Th5uGridColumn.SetWidthReference(AReferenceWidth: Single);
+procedure ThiiGridColumn.SetWidthReference(AReferenceWidth: Single);
 begin
   h5uValidateWidth(AReferenceWidth);
   FReferenceWidth := EnsureRange(AReferenceWidth, 0.0, Single(h5uUnlimitedWidth));
 end;
 
-function Th5uGridColumn.ConstrainWidth(AValue: Single): Single;
+function ThiiGridColumn.ConstrainWidth(AValue: Single): Single;
 begin
   if IsNan(AValue) or IsInfinite(AValue) then
     raise EArgumentOutOfRangeException.Create('Width must be finite.');
   Result := EnsureRange(AValue, ResolvedMinWidth, ResolvedMaxWidth);
 end;
 
-function Th5uGridColumn.GetLayoutWidth: Single;
+function ThiiGridColumn.GetLayoutWidth: Single;
 begin
   if FLayoutWidth >= 0 then
     Result := FLayoutWidth
@@ -649,18 +649,18 @@ begin
     Result := ResolvedWidth;
 end;
 
-procedure Th5uGridColumn.SetLayoutWidth(AValue: Single);
+procedure ThiiGridColumn.SetLayoutWidth(AValue: Single);
 begin
   // Layout results are transient and must not trigger collection notifications.
   FLayoutWidth := ConstrainWidth(AValue);
 end;
 
-procedure Th5uGridColumn.SetMeasuredWidth(AValue: Single);
+procedure ThiiGridColumn.SetMeasuredWidth(AValue: Single);
 begin
   FMeasuredWidth := ConstrainWidth(AValue);
 end;
 
-procedure Th5uGridColumn.SetAutoWidth(const AValue: Boolean);
+procedure ThiiGridColumn.SetAutoWidth(const AValue: Boolean);
 begin
   if FAutoWidth = AValue then
     Exit;
@@ -668,12 +668,12 @@ begin
   Changed;
 end;
 
-function Th5uGridColumn.GetWidthInPercent: Single;
+function ThiiGridColumn.GetWidthInPercent: Single;
 begin
   Result := Max(0.0, -FWidth);
 end;
 
-procedure Th5uGridColumn.SetWidthInPercent(const AValue: Single);
+procedure ThiiGridColumn.SetWidthInPercent(const AValue: Single);
 begin
   h5uValidateWidth(AValue);
   if AValue < 0 then
@@ -682,7 +682,7 @@ begin
     SetWidth(-AValue);
 end;
 
-procedure Th5uGridColumn.SetMinWidth(const AValue: Single);
+procedure ThiiGridColumn.SetMinWidth(const AValue: Single);
 var
   LValue: Single;
 begin
@@ -695,7 +695,7 @@ begin
   Changed;
 end;
 
-procedure Th5uGridColumn.SetMaxWidth(const AValue: Th5uWidth);
+procedure ThiiGridColumn.SetMaxWidth(const AValue: ThiiWidth);
 begin
   h5uValidateWidth(AValue);
   FMaxWidthSpecified := True;
@@ -705,7 +705,7 @@ begin
   Changed;
 end;
 
-procedure Th5uGridColumn.SetMaxAutoHeight(const AValue: Single);
+procedure ThiiGridColumn.SetMaxAutoHeight(const AValue: Single);
 var
   LValue: Single;
 begin
@@ -717,18 +717,18 @@ begin
   Changed;
 end;
 
-function Th5uGridColumn.IsMinWidthStored: Boolean;
+function ThiiGridColumn.IsMinWidthStored: Boolean;
 begin
   Result := FMinWidthSpecified;
 end;
 
-procedure Th5uGridColumn.DefineProperties(AFiler: TFiler);
+procedure ThiiGridColumn.DefineProperties(AFiler: TFiler);
 begin
   inherited;
   AFiler.DefineProperty('WidthInPercent', {$IFDEF FPC}@{$ENDIF}ReadLegacyWidthInPercent, nil, False);
 end;
 
-procedure Th5uGridColumn.ReadLegacyWidthInPercent(AReader: TReader);
+procedure ThiiGridColumn.ReadLegacyWidthInPercent(AReader: TReader);
 begin
   FLegacyWidthInPercent := AReader.ReadFloat;
   h5uValidateWidth(FLegacyWidthInPercent);
@@ -736,7 +736,7 @@ begin
     FWidth := -FLegacyWidthInPercent;
 end;
 
-procedure Th5uGridColumn.ApplyLegacySizing;
+procedure ThiiGridColumn.ApplyLegacySizing;
 begin
   if not FWidthSpecified and (FWidth = 0) then
     FWidth := 100;
@@ -753,21 +753,21 @@ begin
   Changed;
 end;
 
-{ Th5uGridColumns }
+{ ThiiGridColumns }
 
-function Th5uGridColumns.Add: Th5uGridColumn;
+function ThiiGridColumns.Add: ThiiGridColumn;
 begin
-  Result := Th5uGridColumn(inherited Add);
+  Result := ThiiGridColumn(inherited Add);
   if Result.VisibleIndex < 0 then
     Result.VisibleIndex := Count - 1;
 end;
 
-constructor Th5uGridColumns.Create(AOwner: TPersistent);
+constructor ThiiGridColumns.Create(AOwner: TPersistent);
 begin
-  inherited Create(AOwner, Th5uGridColumn);
+  inherited Create(AOwner, ThiiGridColumn);
 end;
 
-function Th5uGridColumns.FindByFieldName(const AFieldName: string): Th5uGridColumn;
+function ThiiGridColumns.FindByFieldName(const AFieldName: string): ThiiGridColumn;
 var
   I: Integer;
 begin
@@ -777,7 +777,7 @@ begin
       Exit(Items[I]);
 end;
 
-function Th5uGridColumns.FindById(const AId: string): Th5uGridColumn;
+function ThiiGridColumns.FindById(const AId: string): ThiiGridColumn;
 var
   I: Integer;
 begin
@@ -787,23 +787,23 @@ begin
       Exit(Items[I]);
 end;
 
-function Th5uGridColumns.GetItem(AIndex: Integer): Th5uGridColumn;
+function ThiiGridColumns.GetItem(AIndex: Integer): ThiiGridColumn;
 begin
-  Result := Th5uGridColumn(inherited GetItem(AIndex));
+  Result := ThiiGridColumn(inherited GetItem(AIndex));
 end;
 
-procedure Th5uGridColumns.MoveColumn(AColumn: Th5uGridColumn; ANewVisibleIndex: Integer);
+procedure ThiiGridColumns.MoveColumn(AColumn: ThiiGridColumn; ANewVisibleIndex: Integer);
 begin
   MoveColumns([AColumn], ANewVisibleIndex);
 end;
 
-procedure Th5uGridColumns.MoveColumns(const AColumns: array of Th5uGridColumn; ANewVisibleIndex: Integer; AHeaderLayout: Th5uHeaderLayout);
+procedure ThiiGridColumns.MoveColumns(const AColumns: array of ThiiGridColumn; ANewVisibleIndex: Integer; AHeaderLayout: ThiiHeaderLayout);
 var
-  LColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>;
-  LList, LAll, LMoving: {$IFDEF FPC}specialize {$ENDIF}TList<Th5uGridColumn>;
+  LColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<ThiiGridColumn>;
+  LList, LAll, LMoving: {$IFDEF FPC}specialize {$ENDIF}TList<ThiiGridColumn>;
   I, J, LFirst, LInsert: Integer;
   LMove: Boolean;
-  LAnchor: Th5uGridColumn;
+  LAnchor: ThiiGridColumn;
 begin
   if Length(AColumns) = 0 then
     Exit;
@@ -819,13 +819,13 @@ begin
     // Validate ownership/contiguity before dereferencing supplied columns.
     if LColumns[LFirst + I] <> AColumns[I] then
       Exit;
-    if (AColumns[I].MovePermission = Th5uColumnMovePermission.Deny) or (AColumns[I].FixedKind <> AColumns[0].FixedKind) then
+    if (AColumns[I].MovePermission = ThiiColumnMovePermission.Deny) or (AColumns[I].FixedKind <> AColumns[0].FixedKind) then
       Exit;
   end;
   ANewVisibleIndex := EnsureRange(ANewVisibleIndex, 0, Length(LColumns) - Length(AColumns));
   if ANewVisibleIndex = LFirst then
     Exit;
-  LList := {$IFDEF FPC}specialize {$ENDIF}TList<Th5uGridColumn>.Create;
+  LList := {$IFDEF FPC}specialize {$ENDIF}TList<ThiiGridColumn>.Create;
   try
     LList.AddRange(LColumns);
     LList.DeleteRange(LFirst, Length(AColumns));
@@ -838,12 +838,12 @@ begin
     begin
       if not AHeaderLayout.CanMoveColumns(LColumns, LFirst, Length(AColumns), ANewVisibleIndex) then
         Exit;
-      LAll := {$IFDEF FPC}specialize {$ENDIF}TList<Th5uGridColumn>.Create;
-      LMoving := {$IFDEF FPC}specialize {$ENDIF}TList<Th5uGridColumn>.Create;
+      LAll := {$IFDEF FPC}specialize {$ENDIF}TList<ThiiGridColumn>.Create;
+      LMoving := {$IFDEF FPC}specialize {$ENDIF}TList<ThiiGridColumn>.Create;
       try
         for I := 0 to Count - 1 do
           LAll.Add(Items[I]);
-        LAll.Sort({$IFDEF FPC}specialize {$ENDIF}TComparer<Th5uGridColumn>.Construct({$IFDEF FPC}@{$ENDIF}CompareVisibleColumns));
+        LAll.Sort({$IFDEF FPC}specialize {$ENDIF}TComparer<ThiiGridColumn>.Construct({$IFDEF FPC}@{$ENDIF}CompareVisibleColumns));
         for I := LAll.Count - 1 downto 0 do
         begin
           LMove := AHeaderLayout.MovesWithColumns(LAll[I], LColumns, LFirst, Length(AColumns));
@@ -851,7 +851,7 @@ begin
             LMove := LMove or (LAll[I] = AColumns[J]);
           if not LMove then
             Continue;
-          if (LAll[I].MovePermission = Th5uColumnMovePermission.Deny) or (LAll[I].FixedKind <> AColumns[0].FixedKind) then
+          if (LAll[I].MovePermission = ThiiColumnMovePermission.Deny) or (LAll[I].FixedKind <> AColumns[0].FixedKind) then
             Exit;
           LMoving.Insert(0, LAll[I]);
           LAll.Delete(I);
@@ -861,8 +861,9 @@ begin
         begin
           LAnchor := LList[ANewVisibleIndex + Length(AColumns)];
           LInsert := LAll.IndexOf(LAnchor);
-          while (LInsert > 0) and AHeaderLayout.MovesWithColumns(LAll[LInsert - 1], LList.ToArray, ANewVisibleIndex + Length(AColumns), LList.Count
-            - ANewVisibleIndex - Length(AColumns)) do
+          while (LInsert > 0)
+            and AHeaderLayout.MovesWithColumns(LAll[LInsert - 1], LList.ToArray, ANewVisibleIndex + Length(AColumns),
+            LList.Count - ANewVisibleIndex - Length(AColumns)) do
             Dec(LInsert);
         end;
         LAll.InsertRange(LInsert, LMoving.ToArray);
@@ -884,9 +885,9 @@ begin
   end;
 end;
 
-procedure Th5uGridColumns.NormalizeVisibleIndexes;
+procedure ThiiGridColumns.NormalizeVisibleIndexes;
 var
-  LColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>;
+  LColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<ThiiGridColumn>;
   I: Integer;
 begin
   LColumns := VisibleColumns;
@@ -895,39 +896,39 @@ begin
   Changed;
 end;
 
-procedure Th5uGridColumns.SetItem(AIndex: Integer; const AValue: Th5uGridColumn);
+procedure ThiiGridColumns.SetItem(AIndex: Integer; const AValue: ThiiGridColumn);
 begin
   inherited SetItem(AIndex, AValue);
 end;
 
-procedure Th5uGridColumns.Update(Item: TCollectionItem);
+procedure ThiiGridColumns.Update(Item: TCollectionItem);
 begin
   inherited;
   if Assigned(FOnChanged) then
-    FOnChanged(Self, Th5uGridColumn(Item));
+    FOnChanged(Self, ThiiGridColumn(Item));
 end;
 
-function Th5uGridColumns.VisibleColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>;
+function ThiiGridColumns.VisibleColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<ThiiGridColumn>;
 var
-  LList: {$IFDEF FPC}specialize {$ENDIF}TList<Th5uGridColumn>;
+  LList: {$IFDEF FPC}specialize {$ENDIF}TList<ThiiGridColumn>;
   I: Integer;
 begin
-  LList := {$IFDEF FPC}specialize {$ENDIF}TList<Th5uGridColumn>.Create;
+  LList := {$IFDEF FPC}specialize {$ENDIF}TList<ThiiGridColumn>.Create;
   try
     for I := 0 to Count - 1 do
       if Items[I].Visible then
         LList.Add(Items[I]);
 
-    LList.Sort({$IFDEF FPC}specialize {$ENDIF}TComparer<Th5uGridColumn>.Construct({$IFDEF FPC}@{$ENDIF}CompareVisibleColumns));
+    LList.Sort({$IFDEF FPC}specialize {$ENDIF}TComparer<ThiiGridColumn>.Construct({$IFDEF FPC}@{$ENDIF}CompareVisibleColumns));
     Result := LList.ToArray;
   finally
     LList.Free;
   end;
 end;
 
-{ Th5uHeaderLayoutCell }
+{ ThiiHeaderLayoutCell }
 
-constructor Th5uHeaderLayoutCell.Create(ACollection: TCollection);
+constructor ThiiHeaderLayoutCell.Create(ACollection: TCollection);
 begin
   inherited;
   FRowSpan := 1;
@@ -935,7 +936,7 @@ begin
   FClassId := h5uClassIdGridHeaderGroupCell;
 end;
 
-function Th5uHeaderLayoutCell.GetDisplayName: string;
+function ThiiHeaderLayoutCell.GetDisplayName: string;
 begin
   if FCaption <> '' then
     Result := FCaption
@@ -945,16 +946,16 @@ begin
     Result := inherited;
 end;
 
-procedure Th5uHeaderLayoutCell.Assign(Source: TPersistent);
+procedure ThiiHeaderLayoutCell.Assign(Source: TPersistent);
 var
-  S: Th5uHeaderLayoutCell;
+  S: ThiiHeaderLayoutCell;
 begin
-  if not (Source is Th5uHeaderLayoutCell) then
+  if not (Source is ThiiHeaderLayoutCell) then
   begin
     inherited;
     Exit;
   end;
-  S := Th5uHeaderLayoutCell(Source);
+  S := ThiiHeaderLayoutCell(Source);
   FId := S.FId;
   FCaption := S.FCaption;
   FColumnId := S.FColumnId;
@@ -971,7 +972,7 @@ begin
   Changed(False);
 end;
 
-procedure Th5uHeaderLayoutCell.SetWidth(const AValue: Th5uWidth);
+procedure ThiiHeaderLayoutCell.SetWidth(const AValue: ThiiWidth);
 begin
   h5uValidateWidth(AValue);
   if FWidth = AValue then
@@ -980,7 +981,7 @@ begin
   Changed(False);
 end;
 
-procedure Th5uHeaderLayoutCell.SetMinWidth(const AValue: Single);
+procedure ThiiHeaderLayoutCell.SetMinWidth(const AValue: Single);
 var
   LValue: Single;
 begin
@@ -992,7 +993,7 @@ begin
   Changed(False);
 end;
 
-procedure Th5uHeaderLayoutCell.SetMaxWidth(const AValue: Th5uWidth);
+procedure ThiiHeaderLayoutCell.SetMaxWidth(const AValue: ThiiWidth);
 begin
   h5uValidateWidth(AValue);
   if FMaxWidth = AValue then
@@ -1001,13 +1002,13 @@ begin
   Changed(False);
 end;
 
-procedure Th5uHeaderLayoutCell.DefineProperties(AFiler: TFiler);
+procedure ThiiHeaderLayoutCell.DefineProperties(AFiler: TFiler);
 begin
   inherited;
   AFiler.DefineProperty('WidthInPercent', {$IFDEF FPC}@{$ENDIF}ReadLegacyWidthInPercent, nil, False);
 end;
 
-procedure Th5uHeaderLayoutCell.ReadLegacyWidthInPercent(AReader: TReader);
+procedure ThiiHeaderLayoutCell.ReadLegacyWidthInPercent(AReader: TReader);
 begin
   FLegacyWidthInPercent := AReader.ReadFloat;
   h5uValidateWidth(FLegacyWidthInPercent);
@@ -1015,7 +1016,7 @@ begin
     FWidth := -FLegacyWidthInPercent;
 end;
 
-procedure Th5uHeaderLayoutCell.ApplyLegacySizing;
+procedure ThiiHeaderLayoutCell.ApplyLegacySizing;
 begin
   if (FLegacyWidthInPercent > 0) and (FWidth >= 0) then
     FWidth := -FLegacyWidthInPercent;
@@ -1023,7 +1024,7 @@ begin
   Changed(False);
 end;
 
-procedure Th5uHeaderLayoutCell.SetLayoutRow(const AValue: Integer);
+procedure ThiiHeaderLayoutCell.SetLayoutRow(const AValue: Integer);
 begin
   if FLayoutRow = Max(0, AValue) then
     Exit;
@@ -1031,7 +1032,7 @@ begin
   Changed(False);
 end;
 
-procedure Th5uHeaderLayoutCell.SetLayoutColumn(const AValue: Integer);
+procedure ThiiHeaderLayoutCell.SetLayoutColumn(const AValue: Integer);
 begin
   if FLayoutColumn = Max(0, AValue) then
     Exit;
@@ -1039,7 +1040,7 @@ begin
   Changed(False);
 end;
 
-procedure Th5uHeaderLayoutCell.SetColumnSpan(const AValue: Integer);
+procedure ThiiHeaderLayoutCell.SetColumnSpan(const AValue: Integer);
 begin
   if FColumnSpan = Max(1, AValue) then
     Exit;
@@ -1047,7 +1048,7 @@ begin
   Changed(False);
 end;
 
-procedure Th5uHeaderLayoutCell.SetColumnId(const AValue: string);
+procedure ThiiHeaderLayoutCell.SetColumnId(const AValue: string);
 begin
   if FColumnId = AValue then
     Exit;
@@ -1055,12 +1056,12 @@ begin
   Changed(False);
 end;
 
-function Th5uHeaderLayoutCell.GetWidthInPercent: Single;
+function ThiiHeaderLayoutCell.GetWidthInPercent: Single;
 begin
   Result := Max(0.0, -FWidth);
 end;
 
-procedure Th5uHeaderLayoutCell.SetWidthInPercent(const AValue: Single);
+procedure ThiiHeaderLayoutCell.SetWidthInPercent(const AValue: Single);
 begin
   h5uValidateWidth(AValue);
   if AValue < 0 then
@@ -1069,20 +1070,20 @@ begin
     SetWidth(-AValue);
 end;
 
-procedure Th5uHeaderLayoutCells.Update(Item: TCollectionItem);
+procedure ThiiHeaderLayoutCells.Update(Item: TCollectionItem);
 begin
   inherited;
-  if GetOwner is Th5uHeaderLayout then
-    Th5uHeaderLayout(GetOwner).Changed;
+  if GetOwner is ThiiHeaderLayout then
+    ThiiHeaderLayout(GetOwner).Changed;
 end;
 
-procedure Th5uHeaderLayout.Changed;
+procedure ThiiHeaderLayout.Changed;
 begin
   if Assigned(FOnChanged) then
     FOnChanged(Self);
 end;
 
-procedure Th5uHeaderLayout.SetEnabled(const AValue: Boolean);
+procedure ThiiHeaderLayout.SetEnabled(const AValue: Boolean);
 begin
   if FEnabled = AValue then
     Exit;
@@ -1090,26 +1091,26 @@ begin
   Changed;
 end;
 
-{ Th5uHeaderLayoutCells }
+{ ThiiHeaderLayoutCells }
 
-function Th5uHeaderLayoutCells.Add: Th5uHeaderLayoutCell;
+function ThiiHeaderLayoutCells.Add: ThiiHeaderLayoutCell;
 begin
-  Result := Th5uHeaderLayoutCell(inherited Add);
+  Result := ThiiHeaderLayoutCell(inherited Add);
 end;
 
-constructor Th5uHeaderLayoutCells.Create(AOwner: TPersistent);
+constructor ThiiHeaderLayoutCells.Create(AOwner: TPersistent);
 begin
-  inherited Create(AOwner, Th5uHeaderLayoutCell);
+  inherited Create(AOwner, ThiiHeaderLayoutCell);
 end;
 
-function Th5uHeaderLayoutCells.GetItem(AIndex: Integer): Th5uHeaderLayoutCell;
+function ThiiHeaderLayoutCells.GetItem(AIndex: Integer): ThiiHeaderLayoutCell;
 begin
-  Result := Th5uHeaderLayoutCell(inherited GetItem(AIndex));
+  Result := ThiiHeaderLayoutCell(inherited GetItem(AIndex));
 end;
 
-{ Th5uHeaderLayout }
+{ ThiiHeaderLayout }
 
-function Th5uHeaderLayout.ContainsCell(ACell: Th5uHeaderLayoutCell): Boolean;
+function ThiiHeaderLayout.ContainsCell(ACell: ThiiHeaderLayoutCell): Boolean;
 var
   I: Integer;
 begin
@@ -1119,9 +1120,9 @@ begin
   Result := False;
 end;
 
-function Th5uHeaderLayout.UsesColumnBindings(ACell: Th5uHeaderLayoutCell): Boolean;
+function ThiiHeaderLayout.UsesColumnBindings(ACell: ThiiHeaderLayoutCell): Boolean;
 var
-  LCell: Th5uHeaderLayoutCell;
+  LCell: ThiiHeaderLayoutCell;
   I: Integer;
 begin
   if ACell.ColumnId <> '' then
@@ -1129,16 +1130,17 @@ begin
   for I := 0 to FCells.Count - 1 do
   begin
     LCell := FCells[I];
-    if (LCell.ColumnId <> '') and (LCell.LayoutRow >= ACell.LayoutRow) and (LCell.LayoutColumn >= ACell.LayoutColumn) and (LCell.LayoutColumn
-      < ACell.LayoutColumn + Max(1, ACell.ColumnSpan)) then
+    if (LCell.ColumnId <> '') and (LCell.LayoutRow >= ACell.LayoutRow) and (LCell.LayoutColumn >= ACell.LayoutColumn)
+      and (LCell.LayoutColumn < ACell.LayoutColumn + Max(1, ACell.ColumnSpan)) then
       Exit(True);
   end;
   Result := False;
 end;
 
-function Th5uHeaderLayout.ColumnRange(ACell: Th5uHeaderLayoutCell; const AColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>; out AFirst, ALast: Integer): Boolean;
+function ThiiHeaderLayout.ColumnRange(ACell: ThiiHeaderLayoutCell; const AColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<ThiiGridColumn>;
+    out AFirst, ALast: Integer): Boolean;
 var
-  LCell: Th5uHeaderLayoutCell;
+  LCell: ThiiHeaderLayoutCell;
   I, J: Integer;
 begin
   AFirst := Length(AColumns);
@@ -1159,8 +1161,8 @@ begin
           Continue;
       end
       else
-        if (LCell.LayoutRow < ACell.LayoutRow) or (LCell.LayoutColumn < ACell.LayoutColumn) or (LCell.LayoutColumn >= ACell.LayoutColumn
-          + Max(1, ACell.ColumnSpan)) then
+        if (LCell.LayoutRow < ACell.LayoutRow) or (LCell.LayoutColumn < ACell.LayoutColumn)
+          or (LCell.LayoutColumn >= ACell.LayoutColumn + Max(1, ACell.ColumnSpan)) then
           Continue;
       if LCell.ColumnId = '' then
         Continue;
@@ -1182,7 +1184,8 @@ begin
   Result := (AFirst >= 0) and (AFirst <= ALast);
 end;
 
-function Th5uHeaderLayout.CanMoveColumns(const AColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>; AFirst, ACount, ANewIndex: Integer): Boolean;
+function ThiiHeaderLayout.CanMoveColumns(const AColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<ThiiGridColumn>;
+    AFirst, ACount, ANewIndex: Integer): Boolean;
 var
   I, J, LFirst, LLast, LMin, LMax, LIndex: Integer;
 
@@ -1220,9 +1223,10 @@ begin
   Result := True;
 end;
 
-function Th5uHeaderLayout.MovesWithColumns(AColumn: Th5uGridColumn; const AColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>; AFirst, ACount: Integer): Boolean;
+function ThiiHeaderLayout.MovesWithColumns(AColumn: ThiiGridColumn; const AColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<ThiiGridColumn>;
+    AFirst, ACount: Integer): Boolean;
 var
-  LGroup, LLeaf: Th5uHeaderLayoutCell;
+  LGroup, LLeaf: ThiiHeaderLayoutCell;
   I, J, LFirst, LLast: Integer;
 begin
   Result := False;
@@ -1243,7 +1247,7 @@ begin
   end;
 end;
 
-procedure Th5uHeaderLayout.ColumnsMoved(const ABefore, AAfter: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>);
+procedure ThiiHeaderLayout.ColumnsMoved(const ABefore, AAfter: {$IFDEF FPC}specialize {$ENDIF}TArray<ThiiGridColumn>);
 var
   I, J, K, LFirst, LLast, LNewFirst: Integer;
   LPositions: {$IFDEF FPC}specialize {$ENDIF}TArray<Integer>;
@@ -1266,47 +1270,47 @@ begin
     FCells[I].LayoutColumn := LPositions[I];
 end;
 
-procedure Th5uHeaderLayout.Assign(Source: TPersistent);
+procedure ThiiHeaderLayout.Assign(Source: TPersistent);
 begin
-  if Source is Th5uHeaderLayout then
+  if Source is ThiiHeaderLayout then
   begin
-    FEnabled := Th5uHeaderLayout(Source).FEnabled;
-    FRowCount := Th5uHeaderLayout(Source).FRowCount;
-    FCells.Assign(Th5uHeaderLayout(Source).FCells);
+    FEnabled := ThiiHeaderLayout(Source).FEnabled;
+    FRowCount := ThiiHeaderLayout(Source).FRowCount;
+    FCells.Assign(ThiiHeaderLayout(Source).FCells);
   end
   else
     inherited;
 end;
 
-constructor Th5uHeaderLayout.Create(AOwner: TPersistent);
+constructor ThiiHeaderLayout.Create(AOwner: TPersistent);
 begin
   inherited Create;
   FOwner := AOwner;
   FEnabled := False;
   FRowCount := 1;
-  FCells := Th5uHeaderLayoutCells.Create(Self);
+  FCells := ThiiHeaderLayoutCells.Create(Self);
 end;
 
-destructor Th5uHeaderLayout.Destroy;
+destructor ThiiHeaderLayout.Destroy;
 begin
   FCells.Free;
   inherited;
 end;
 
-procedure Th5uHeaderLayout.SetCells(const AValue: Th5uHeaderLayoutCells);
+procedure ThiiHeaderLayout.SetCells(const AValue: ThiiHeaderLayoutCells);
 begin
   FCells.Assign(AValue);
 end;
 
-procedure Th5uHeaderLayout.SetRowCount(const AValue: Integer);
+procedure ThiiHeaderLayout.SetRowCount(const AValue: Integer);
 begin
   FRowCount := EnsureRange(AValue, 1, 16);
   Changed;
 end;
 
-{ Th5uRowStyleMapping }
+{ ThiiRowStyleMapping }
 
-function Th5uRowStyleMapping.GetDisplayName: string;
+function ThiiRowStyleMapping.GetDisplayName: string;
 begin
   if FStyleName <> '' then
     Result := Format('%d = %s', [FValue, FStyleName])
@@ -1314,19 +1318,19 @@ begin
     Result := IntToStr(FValue);
 end;
 
-{ Th5uRowStyleMappings }
+{ ThiiRowStyleMappings }
 
-function Th5uRowStyleMappings.Add: Th5uRowStyleMapping;
+function ThiiRowStyleMappings.Add: ThiiRowStyleMapping;
 begin
-  Result := Th5uRowStyleMapping(inherited Add);
+  Result := ThiiRowStyleMapping(inherited Add);
 end;
 
-constructor Th5uRowStyleMappings.Create(AOwner: TPersistent);
+constructor ThiiRowStyleMappings.Create(AOwner: TPersistent);
 begin
-  inherited Create(AOwner, Th5uRowStyleMapping);
+  inherited Create(AOwner, ThiiRowStyleMapping);
 end;
 
-function Th5uRowStyleMappings.FindStyle(AValue: Integer; out AStyleName: string): Boolean;
+function ThiiRowStyleMappings.FindStyle(AValue: Integer; out AStyleName: string): Boolean;
 var
   I: Integer;
 begin
@@ -1340,15 +1344,15 @@ begin
   Result := False;
 end;
 
-function Th5uRowStyleMappings.GetItem(AIndex: Integer): Th5uRowStyleMapping;
+function ThiiRowStyleMappings.GetItem(AIndex: Integer): ThiiRowStyleMapping;
 begin
-  Result := Th5uRowStyleMapping(inherited GetItem(AIndex));
+  Result := ThiiRowStyleMapping(inherited GetItem(AIndex));
 end;
 
 
-function Th5uGridColumn.GetColumns: Th5uGridColumns;
+function ThiiGridColumn.GetColumns: ThiiGridColumns;
 begin
-  Result := Th5uGridColumns(Collection);
+  Result := ThiiGridColumns(Collection);
 end;
 
 end.

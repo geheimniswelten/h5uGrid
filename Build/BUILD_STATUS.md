@@ -1,5 +1,30 @@
 ﻿# Build- und Prüfstatus
 
+## Aktuelle Umstellung auf hiiGrid - 12. Oktober 2026
+
+Geprüft mit Embarcadero Delphi 37.0:
+
+- Common-, VCL- und FMX-Runtime-Packages unter Win32 und Win64 erfolgreich gebaut.
+- Alle drei DesignTime-Packages unter Win32 erfolgreich gebaut.
+- Alle acht VCL-/FMX-Demos unter Win32 erfolgreich über ihre DPROJ-Dateien gebaut.
+- Common-Verhaltenstests unter Win32 sowie Property-Modell- und VCL-/FMX-Adaptertests unter Win32 und Win64 erfolgreich.
+- `test-public-api.ps1` unter Win32 und Win64 erfolgreich: Verwendung jeweils nur über die Framework-Haupt-Unit, Alias-Typen und Streaming der neuen Grid-/PropertyEditor-Klassennamen.
+- Derselbe Test lädt alle acht Demo-Formulare unsichtbar und prüft Grid-Klasse, Spalten und Controller-Verknüpfung.
+- Pascal-Formatprüfung und statischer Quellaudit ohne Fehler oder Warnungen; Tree-, Adjacent-Group- und Formatter-Semantiktests erfolgreich.
+- LCL-Namen, Aliase und Formularressourcen statisch geprüft; kein FPC-/Lazarus-Compiler in dieser Sitzung verfügbar.
+
+Die Tests zeigen keine Formulare und starten keine Anwendungsschleife. Die Delphi-IDE wurde nicht gestartet und Packages wurden nicht installiert.
+Die umbenannte öffentliche API erfordert Anpassungen in bestehenden Anwendungen und ihren Formularressourcen; die Repository-Demos sind bereits angepasst.
+
+Reproduzierbare API- und Formularprüfungen:
+
+```powershell
+Build\test-public-api.ps1
+Build\test-public-api.ps1 -Platform Win64
+```
+
+## Historischer Prüfstand
+
 **Stand:** 2. September 2026  
 **Prototypversion:** 0.1.4
 

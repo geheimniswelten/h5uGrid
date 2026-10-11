@@ -8,7 +8,7 @@
 Datenquelle
    │
    ▼
-Th5uCustomDataController
+ThiiCustomDataController
    │
    ├── Dataset
    ├── Objektliste
@@ -51,11 +51,11 @@ Vcl.h5u.Grid
 Fmx.h5u.Grid
 ```
 
-VCL und FMX teilen bewusst keine visuelle Basisklasse. `Th5uVclGrid` basiert auf einem VCL-Control; `Th5uFmxGrid` auf einem FMX-Styled-Control. Beide delegieren ihre Daten- und Factorylogik an denselben Core.
+VCL und FMX teilen bewusst keine visuelle Basisklasse. `ThiiGrid` basiert auf einem VCL-Control; `ThiiGrid` auf einem FMX-Styled-Control. Beide delegieren ihre Daten- und Factorylogik an denselben Core.
 
 ## 3. DataController
 
-Das Grid kennt keine konkrete Datenquelle. Es arbeitet über `Th5uCustomDataController`.
+Das Grid kennt keine konkrete Datenquelle. Es arbeitet über `ThiiCustomDataController`.
 
 Der Controller stellt mindestens bereit:
 
@@ -68,23 +68,23 @@ Der Controller stellt mindestens bereit:
 
 ### 3.1 Dataset-Controller
 
-`Th5uDatasetController` verbindet eine `TDataSource`.
+`ThiiDatasetController` verbindet eine `TDataSource`.
 
 Bei aktivem Cache zeichnet das Grid aus Controller-Snapshots. Damit muss ein Paint-Durchlauf nicht für jede Zelle den aktuellen Datensatz des `TDataset` umpositionieren. Editieroperationen werden an das Dataset zurückgeschrieben und der betroffene Snapshot anschließend invalidiert.
 
 ### 3.2 Objektlisten-Controller
 
-`Th5uObjectListController` verwendet vorbereitete RTTI-Accessoren für Property-Pfade. Der Value-Cache kann abgeschaltet werden, wenn Propertyzugriffe günstig sind, oder für sichtbare beziehungsweise paginierte Bereiche aktiviert werden.
+`ThiiObjectListController` verwendet vorbereitete RTTI-Accessoren für Property-Pfade. Der Value-Cache kann abgeschaltet werden, wenn Propertyzugriffe günstig sind, oder für sichtbare beziehungsweise paginierte Bereiche aktiviert werden.
 
 ### 3.3 Virtual-/Live-Controller
 
-`Th5uVirtualController` fragt Anzahl, RowKey, Wert und Schreiboperationen über Events ab. Daten können aus einem beliebigen Backend, einer Queue oder einem laufenden Prozess stammen.
+`ThiiVirtualController` fragt Anzahl, RowKey, Wert und Schreiboperationen über Events ab. Daten können aus einem beliebigen Backend, einer Queue oder einem laufenden Prozess stammen.
 
 Liveänderungen werden nicht durch komplettes Neuladen erzwungen. Die Quelle kann Zeilen- und Zelländerungen gezielt melden. Query-Generationen verhindern, dass verspätete Antworten einer älteren Ansicht in die aktuelle Ansicht gelangen.
 
 ### 3.4 Memory-Controller
 
-`Th5uMemoryController` stellt einen kleinen eigenen tabellarischen Speicher bereit. Er eignet sich für Tests, temporäre Tabellen und als Referenzcontroller.
+`ThiiMemoryController` stellt einen kleinen eigenen tabellarischen Speicher bereit. Er eignet sich für Tests, temporäre Tabellen und als Referenzcontroller.
 
 ## 4. Factory und Registry pro Gridinstanz
 
@@ -93,22 +93,22 @@ Jede Gridinstanz besitzt einen eigenen `FactoryScope`. Dadurch können zwei Grid
 ```pascal
 OrdersGrid.FactoryScope.RegisterClass(
   h5uClassIdGridDataCell,
-  Th5uVclVisualCell,
+  ThiiVclVisualCell,
   TOrdersDataCell,
   100
 );
 
 LogGrid.FactoryScope.RegisterClass(
   h5uClassIdGridDataCell,
-  Th5uVclVisualCell,
+  ThiiVclVisualCell,
   TLogDataCell,
   100
 );
 ```
 
-Unter FMX wird entsprechend `Th5uFmxVisualCell` als erwartete Basisklasse verwendet. Der optionale fünfte Parameter ist ein Prädikat über `Th5uFactoryContext` und erlaubt Regeln für einzelne Grids, Views, Columns, Rows oder Elementarten.
+Unter FMX wird entsprechend `ThiiFmxVisualCell` als erwartete Basisklasse verwendet. Der optionale fünfte Parameter ist ein Prädikat über `ThiiFactoryContext` und erlaubt Regeln für einzelne Grids, Views, Columns, Rows oder Elementarten.
 
-Eine optionale `Th5uClassFactory` kann gemeinsam verwendet werden. Lokale Regeln des Grids haben gegenüber globaleren Vorgaben Vorrang.
+Eine optionale `ThiiClassFactory` kann gemeinsam verwendet werden. Lokale Regeln des Grids haben gegenüber globaleren Vorgaben Vorrang.
 
 ### 4.1 Factory-Kontext
 
@@ -187,7 +187,7 @@ Bildwerte werden im gemeinsamen Core als Bytes beziehungsweise Stream behandelt.
 
 ## 7. Headerlayout
 
-`Th5uHeaderLayout` beschreibt mehrzeilige Headerzellen über:
+`ThiiHeaderLayout` beschreibt mehrzeilige Headerzellen über:
 
 ```text
 LayoutRow
@@ -248,7 +248,7 @@ Der Zeilenabstand kann pro Datensatz angepasst werden. `OnGetRowSpacing` erhält
 ```pascal
 procedure TForm1.GridGetRowSpacing(
   Sender: TObject;
-  const AContext: Th5uGetRowHeightContext;
+  const AContext: ThiiGetRowHeightContext;
   var ASpacing: Integer);
 begin
   if (AContext.ViewRowIndex + 1) mod 5 = 0 then
@@ -269,9 +269,9 @@ NameColumn.Color := TColorRec.SysDefault;
 Für besondere Separator-Darstellungen existieren eigene CustomDraw-Elementarten:
 
 ```pascal
-Th5uElementKind.RowSpacing
-Th5uElementKind.ColumnSpacing
-Th5uElementKind.ContentPadding
+ThiiElementKind.RowSpacing
+ThiiElementKind.ColumnSpacing
+ThiiElementKind.ContentPadding
 ```
 
 Der aktive Skin darf als Fallback die Farbe liefern, wenn eine Separatorfarbe auf `TColorRec.SysDefault` gesetzt wird. Die Größe der Abstände bleibt jedoch eine statische Layoutproperty und ändert sich nicht mit einem Zellzustand.
@@ -399,7 +399,7 @@ Die Darstellung wird in dieser Reihenfolge aufgelöst:
 3. normale Row-Separatorfarbe,
 4. plattformspezifisches CustomDraw.
 
-Die Leiste erhält eine eigene Factory-ID (`h5u.grid.spacing.tree-branch-end`) und `Th5uElementKind.TreeBranchEndBand`. Sie wird – wie die übrigen Separatoren – als leichtgewichtiges, gepooltes sichtbares Element über den lokalen Factory-Scope materialisiert. Dadurch kann sie pro Gridinstanz durch eine eigene `Th5uVclVisualCell`-/`Th5uFmxVisualCell`-Nachfahrin oder durch CustomDraw anders dargestellt werden. Der Kontext transportiert Grid, Controller, RowKey, Source-/View-Index, Tree-Level und Anzahl geschlossener Ebenen. `OnGetTreeLevel` und `OnGetTreeBranchEnd` entkoppeln die Erkennung von einer bestimmten Controllerimplementierung.
+Die Leiste erhält eine eigene Factory-ID (`h5u.grid.spacing.tree-branch-end`) und `ThiiElementKind.TreeBranchEndBand`. Sie wird – wie die übrigen Separatoren – als leichtgewichtiges, gepooltes sichtbares Element über den lokalen Factory-Scope materialisiert. Dadurch kann sie pro Gridinstanz durch eine eigene `ThiiVclVisualCell`-/`ThiiFmxVisualCell`-Nachfahrin oder durch CustomDraw anders dargestellt werden. Der Kontext transportiert Grid, Controller, RowKey, Source-/View-Index, Tree-Level und Anzahl geschlossener Ebenen. `OnGetTreeLevel` und `OnGetTreeBranchEnd` entkoppeln die Erkennung von einer bestimmten Controllerimplementierung.
 
 ## 16. Adjacent-Group-Folding
 
@@ -431,7 +431,7 @@ Der Abschluss eines Laufs kann deutlicher als die normale Zeilentrennung dargest
 Grid.AdjacentGroupFolding.EndBand.Height := 7;
 Grid.AdjacentGroupFolding.EndBand.StyleName := 'AdjacentGroupEnd';
 Grid.AdjacentGroupFolding.EndBand.Visibility :=
-  Th5uAdjacentGroupEndBandVisibility.Always;
+  ThiiAdjacentGroupEndBandVisibility.Always;
 ```
 
 `Visibility` besitzt vier Betriebsarten:
@@ -456,8 +456,8 @@ Für Faltzeichen und Abschlussleiste existieren eigene Factory-IDs und Elementar
 h5uClassIdGridAdjacentGroupFoldGlyph
 h5uClassIdGridAdjacentGroupEndBand
 
-Th5uElementKind.AdjacentGroupFoldGlyph
-Th5uElementKind.AdjacentGroupEndBand
+ThiiElementKind.AdjacentGroupFoldGlyph
+ThiiElementKind.AdjacentGroupEndBand
 ```
 
 Der Factory-/CustomDraw-Kontext enthält unter anderem Gruppenindex, Gruppen-ID, Anchor-RowKey, Zeilenzahl, Faltzustand sowie Kennzeichen für erste und letzte sichtbare Zeile. Damit können verschiedene Gridinstanzen dieselbe Datenquelle nutzen und trotzdem unterschiedliche Faltzeichen, Styles oder Endleisten darstellen.
@@ -506,7 +506,7 @@ Ein konservativer Formatter und der Release-Audit prüfen diese Regel reproduzie
 
 ## Farbtyp und Migration
 
-Alle gemeinsamen Farbproperties und `Th5uResolvedAppearance` verwenden direkt
+Alle gemeinsamen Farbproperties und `ThiiResolvedAppearance` verwenden direkt
 `System.UITypes.TColor`. Damit erkennt der VCL-Formdesigner den Standard-Farbeditor.
 `clDefault` und `clNone` aus `Vcl.Graphics` entsprechen `TColorRec.SysDefault`
 und `TColorRec.SysNone` aus `System.UITypes`; die gemeinsamen Units benötigen keine VCL.

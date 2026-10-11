@@ -313,11 +313,11 @@ def test_case_inside_if_does_not_capture_outer_else() -> None:
 
 def test_compact_methods_are_expanded_and_separated() -> None:
     source = [
-        'procedure Th5uPropertyEditor.DoLoaded;',
+        'procedure ThiiPropertyModel.DoLoaded;',
         'begin if Assigned(FOnLoaded) then FOnLoaded(Self); end;',
-        'procedure Th5uPropertyEditor.DoGetValue(AItem: Th5uPropertyItem; var AValue: TValue; var AHandled: Boolean);',
+        'procedure ThiiPropertyModel.DoGetValue(AItem: ThiiPropertyItem; var AValue: TValue; var AHandled: Boolean);',
         'begin if Assigned(FOnGetValue) then FOnGetValue(Self, AItem, AValue, AHandled); end;',
-        'procedure Th5uPropertyEditor.DoSetValue(AItem: Th5uPropertyItem; const AValue: TValue; var AHandled: Boolean);',
+        'procedure ThiiPropertyModel.DoSetValue(AItem: ThiiPropertyItem; const AValue: TValue; var AHandled: Boolean);',
         'begin if Assigned(FOnSetValue) then FOnSetValue(Self, AItem, AValue, AHandled); end;',
     ]
     expected = [

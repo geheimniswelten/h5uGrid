@@ -32,7 +32,7 @@ uses
   h5u.Grid.Types;
 
 type
-  Th5uObjectListController = class(Th5uCustomDataController)
+  ThiiObjectListController = class(ThiiCustomDataController)
   private
     FItems: {$IFDEF FPC}specialize {$ENDIF}TList<TObject>;
     FOwnsObjects: Boolean;
@@ -47,7 +47,7 @@ type
     procedure ClearValueCache;
   protected
     function GetSourceRowCount: Int64; override;
-    function GetSourceRowKey(ASourceRowIndex: Int64): Th5uRowKey; override;
+    function GetSourceRowKey(ASourceRowIndex: Int64): ThiiRowKey; override;
     function GetSourceValue(ASourceRowIndex: Int64; const AFieldName: string): TValue; override;
     procedure SetSourceValue(ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue); override;
     function GetSourceCanEdit(ASourceRowIndex: Int64; const AFieldName: string): Boolean; override;
@@ -72,25 +72,25 @@ type
 
 implementation
 
-{ Th5uObjectListController }
+{ ThiiObjectListController }
 
-procedure Th5uObjectListController.Add(AObject: TObject);
+procedure ThiiObjectListController.Add(AObject: TObject);
 var
-  LChange: Th5uDataChange;
+  LChange: ThiiDataChange;
 begin
   if not Assigned(AObject) then
     Exit;
   FItems.Add(AObject);
   ClearValueCache;
 
-  LChange := Default(Th5uDataChange);
-  LChange.Kind := Th5uDataChangeKind.RowsInserted;
+  LChange := Default(ThiiDataChange);
+  LChange.Kind := ThiiDataChangeKind.RowsInserted;
   LChange.FirstIndex := FItems.Count - 1;
   LChange.Count := 1;
   NotifyDataChanged(LChange);
 end;
 
-procedure Th5uObjectListController.Clear;
+procedure ThiiObjectListController.Clear;
 var
   LObject: TObject;
 begin
@@ -103,12 +103,12 @@ begin
   Invalidate;
 end;
 
-procedure Th5uObjectListController.ClearValueCache;
+procedure ThiiObjectListController.ClearValueCache;
 begin
   FValueCache.Clear;
 end;
 
-constructor Th5uObjectListController.Create(AOwner: TComponent);
+constructor ThiiObjectListController.Create(AOwner: TComponent);
 begin
   inherited;
   FItems := {$IFDEF FPC}specialize {$ENDIF}TList<TObject>.Create;
@@ -116,13 +116,13 @@ begin
   FRttiContext := TRttiContext.Create;
   FPropertyCache := {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, TRttiProperty>.Create;
   FValueCache := {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, TValue>.Create;
-  Cache.Mode := Th5uCacheMode.None;
+  Cache.Mode := ThiiCacheMode.None;
 end;
 
-procedure Th5uObjectListController.Delete(AIndex: Integer);
+procedure ThiiObjectListController.Delete(AIndex: Integer);
 var
   LObject: TObject;
-  LChange: Th5uDataChange;
+  LChange: ThiiDataChange;
 begin
   if (AIndex < 0) or (AIndex >= FItems.Count) then
     Exit;
@@ -133,14 +133,14 @@ begin
     LObject.Free;
 
   ClearValueCache;
-  LChange := Default(Th5uDataChange);
-  LChange.Kind := Th5uDataChangeKind.RowsDeleted;
+  LChange := Default(ThiiDataChange);
+  LChange.Kind := ThiiDataChangeKind.RowsDeleted;
   LChange.FirstIndex := AIndex;
   LChange.Count := 1;
   NotifyDataChanged(LChange);
 end;
 
-destructor Th5uObjectListController.Destroy;
+destructor ThiiObjectListController.Destroy;
 begin
   Clear;
   FValueCache.Free;
@@ -150,13 +150,13 @@ begin
   inherited;
 end;
 
-procedure Th5uObjectListController.DoCacheOptionsChanged;
+procedure ThiiObjectListController.DoCacheOptionsChanged;
 begin
   inherited;
   ClearValueCache;
 end;
 
-function Th5uObjectListController.GetSourceCanEdit(ASourceRowIndex: Int64; const AFieldName: string): Boolean;
+function ThiiObjectListController.GetSourceCanEdit(ASourceRowIndex: Int64; const AFieldName: string): Boolean;
 var
   LObject: TObject;
   LParts: {$IFDEF FPC}specialize {$ENDIF}TArray<string>;
@@ -190,12 +190,12 @@ begin
   Result := Assigned(LProperty) and LProperty.IsWritable;
 end;
 
-function Th5uObjectListController.GetSourceRowCount: Int64;
+function ThiiObjectListController.GetSourceRowCount: Int64;
 begin
   Result := FItems.Count;
 end;
 
-function Th5uObjectListController.GetSourceRowKey(ASourceRowIndex: Int64): Th5uRowKey;
+function ThiiObjectListController.GetSourceRowKey(ASourceRowIndex: Int64): ThiiRowKey;
 var
   LValue: TValue;
 begin
@@ -203,13 +203,13 @@ begin
   begin
     LValue := ReadPropertyPath(FItems[ASourceRowIndex], FKeyPropertyName);
     if not LValue.IsEmpty then
-      Exit(Th5uRowKey.FromString({$IFDEF FPC}h5uValueAsText(LValue){$ELSE}LValue.ToString{$ENDIF}));
+      Exit(ThiiRowKey.FromString({$IFDEF FPC}h5uValueAsText(LValue){$ELSE}LValue.ToString{$ENDIF}));
   end;
 
   Result := inherited;
 end;
 
-function Th5uObjectListController.GetSourceValue(ASourceRowIndex: Int64; const AFieldName: string): TValue;
+function ThiiObjectListController.GetSourceValue(ASourceRowIndex: Int64; const AFieldName: string): TValue;
 var
   LCacheKey: string;
 begin
@@ -217,18 +217,18 @@ begin
     Exit(TValue.Empty);
 
   LCacheKey := ValueCacheKey(ASourceRowIndex, AFieldName);
-  if (Cache.Mode <> Th5uCacheMode.None) and FValueCache.TryGetValue(LCacheKey, Result) then
+  if (Cache.Mode <> ThiiCacheMode.None) and FValueCache.TryGetValue(LCacheKey, Result) then
     Exit;
 
   Result := ReadPropertyPath(FItems[ASourceRowIndex], AFieldName);
 
-  if Cache.Mode <> Th5uCacheMode.None then
+  if Cache.Mode <> ThiiCacheMode.None then
     FValueCache.AddOrSetValue(LCacheKey, Result);
 end;
 
-procedure Th5uObjectListController.Insert(AIndex: Integer; AObject: TObject);
+procedure ThiiObjectListController.Insert(AIndex: Integer; AObject: TObject);
 var
-  LChange: Th5uDataChange;
+  LChange: ThiiDataChange;
 begin
   if not Assigned(AObject) then
     Exit;
@@ -236,43 +236,43 @@ begin
   FItems.Insert(AIndex, AObject);
   ClearValueCache;
 
-  LChange := Default(Th5uDataChange);
-  LChange.Kind := Th5uDataChangeKind.RowsInserted;
+  LChange := Default(ThiiDataChange);
+  LChange.Kind := ThiiDataChangeKind.RowsInserted;
   LChange.FirstIndex := AIndex;
   LChange.Count := 1;
   NotifyDataChanged(LChange);
 end;
 
-function Th5uObjectListController.Item(AIndex: Integer): TObject;
+function ThiiObjectListController.Item(AIndex: Integer): TObject;
 begin
   Result := FItems[AIndex];
 end;
 
-procedure Th5uObjectListController.NotifyObjectChanged(AObject: TObject; const APropertyName: string);
+procedure ThiiObjectListController.NotifyObjectChanged(AObject: TObject; const APropertyName: string);
 var
   LIndex: Integer;
-  LChange: Th5uDataChange;
+  LChange: ThiiDataChange;
 begin
   LIndex := FItems.IndexOf(AObject);
   if LIndex < 0 then
     Exit;
 
   ClearValueCache;
-  LChange := Default(Th5uDataChange);
+  LChange := Default(ThiiDataChange);
   LChange.FirstIndex := LIndex;
   LChange.Count := 1;
   LChange.RowKey := GetSourceRowKey(LIndex);
   LChange.ColumnId := APropertyName;
 
   if APropertyName = '' then
-    LChange.Kind := Th5uDataChangeKind.RowsChanged
+    LChange.Kind := ThiiDataChangeKind.RowsChanged
   else
-    LChange.Kind := Th5uDataChangeKind.CellChanged;
+    LChange.Kind := ThiiDataChangeKind.CellChanged;
 
   NotifyDataChanged(LChange);
 end;
 
-function Th5uObjectListController.ReadPropertyPath(AObject: TObject; const APath: string): TValue;
+function ThiiObjectListController.ReadPropertyPath(AObject: TObject; const APath: string): TValue;
 var
   LParts: {$IFDEF FPC}specialize {$ENDIF}TArray<string>;
   LPart: string;
@@ -305,7 +305,7 @@ begin
   end;
 end;
 
-function Th5uObjectListController.ResolveProperty(AObject: TObject; const APropertyName: string): TRttiProperty;
+function ThiiObjectListController.ResolveProperty(AObject: TObject; const APropertyName: string): TRttiProperty;
 var
   LKey: string;
   LRttiType: TRttiType;
@@ -325,7 +325,7 @@ begin
   FPropertyCache.AddOrSetValue(LKey, Result);
 end;
 
-procedure Th5uObjectListController.SetSourceValue(ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue);
+procedure ThiiObjectListController.SetSourceValue(ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue);
 var
   LObject: TObject;
 begin
@@ -337,12 +337,12 @@ begin
   NotifyObjectChanged(LObject, AFieldName);
 end;
 
-function Th5uObjectListController.ValueCacheKey(ASourceRowIndex: Int64; const AFieldName: string): string;
+function ThiiObjectListController.ValueCacheKey(ASourceRowIndex: Int64; const AFieldName: string): string;
 begin
   Result := IntToStr(ASourceRowIndex) + '|' + AFieldName.ToUpperInvariant;
 end;
 
-procedure Th5uObjectListController.WritePropertyPath(AObject: TObject; const APath: string; const AValue: TValue);
+procedure ThiiObjectListController.WritePropertyPath(AObject: TObject; const APath: string; const AValue: TValue);
 var
   LParts: {$IFDEF FPC}specialize {$ENDIF}TArray<string>;
   I: Integer;
@@ -357,7 +357,7 @@ begin
   begin
     LProperty := ResolveProperty(AObject, LParts[I]);
     if not Assigned(LProperty) or not LProperty.IsReadable then
-      raise Eh5uDataController.CreateFmt('Property "%s" is not readable.', [LParts[I]]);
+      raise EhiiDataController.CreateFmt('Property "%s" is not readable.', [LParts[I]]);
 
     {$IFDEF FPC}
       LIntermediate := h5uGetPropertyValue(AObject, LProperty);
@@ -365,14 +365,14 @@ begin
       LIntermediate := LProperty.GetValue(AObject);
     {$ENDIF}
     if not LIntermediate.IsObject or (LIntermediate.AsObject = nil) then
-      raise Eh5uDataController.CreateFmt('Property path "%s" contains a nil object.', [APath]);
+      raise EhiiDataController.CreateFmt('Property path "%s" contains a nil object.', [APath]);
 
     AObject := LIntermediate.AsObject;
   end;
 
   LProperty := ResolveProperty(AObject, LParts[High(LParts)]);
   if not Assigned(LProperty) or not LProperty.IsWritable then
-    raise Eh5uDataController.CreateFmt('Property "%s" is not writable.', [APath]);
+    raise EhiiDataController.CreateFmt('Property "%s" is not writable.', [APath]);
 
   {$IFDEF FPC}
     h5uSetPropertyValue(AObject, LProperty, AValue);
@@ -381,7 +381,7 @@ begin
   {$ENDIF}
 end;
 
-function Th5uObjectListController.GetCount: Integer;
+function ThiiObjectListController.GetCount: Integer;
 var
   LCount: Int64;
 begin

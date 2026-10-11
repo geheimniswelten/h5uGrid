@@ -68,7 +68,7 @@ object VclObjectDemoForm: TVclObjectDemoForm
       OnClick = DarkCheckClick
     end
   end
-  object Grid: Th5uVclGrid
+  object Grid: ThiiGrid
     Left = 0
     Top = 64
     Width = 1040
@@ -170,7 +170,7 @@ object VclObjectDemoForm: TVclObjectDemoForm
         StyleName = 'Error'
       end>
   end
-  object ObjectController: Th5uObjectListController
+  object ObjectController: ThiiObjectListController
     Cache.Mode = None
     Cache.MaxMemoryBytes = 67108864
     OwnsObjects = True

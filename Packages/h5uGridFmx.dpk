@@ -25,7 +25,7 @@
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'h5u Grid FMX runtime'}
+{$DESCRIPTION 'hiiGrid FMX runtime'}
 {$LIBSUFFIX AUTO}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
@@ -39,7 +39,8 @@ contains
   Fmx.h5u.Grid.Styles in '..\Source\FMX\Fmx.h5u.Grid.Styles.pas',
   Fmx.h5u.Grid.Editors in '..\Source\FMX\Fmx.h5u.Grid.Editors.pas',
   Fmx.h5u.Grid in '..\Source\FMX\Fmx.h5u.Grid.pas',
-  Fmx.h5u.FormDesigner in '..\Source\FMX\Fmx.h5u.FormDesigner.pas';
+  Fmx.h5u.FormDesigner in '..\Source\FMX\Fmx.h5u.FormDesigner.pas',
+  Fmx.h5u.PropertyEditor in '..\Source\FMX\Fmx.h5u.PropertyEditor.pas';
 
 end.
 

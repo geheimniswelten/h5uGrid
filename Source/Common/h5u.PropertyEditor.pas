@@ -1,4 +1,4 @@
-﻿unit h5u.FormDesigner.Properties;
+﻿unit h5u.PropertyEditor;
 
 interface
 
@@ -7,52 +7,50 @@ interface
 uses
   System.Classes, System.SysUtils, System.TypInfo, System.Rtti,
   System.Generics.Collections, System.Variants, System.Masks,
-  h5u.Grid.Types, h5u.Grid.Sizing;
+  h5u.Grid.Types, h5u.Grid.Sizing, h5u.Grid.Data.Objects;
 
 type
-  Eh5uPropertyError = class(Exception);
-  Th5uPropertyEditor = class;
-  Th5uPropertyItem = class;
-  Th5uManualProperty = class;
-  Th5uPropertySortOrder = (psoName, psoDeclaration);
-  Th5uPropertyItemChangedEvent = procedure(Sender: TObject; Item: Th5uPropertyItem) of object;
-  Th5uGetPropertyValueEvent = procedure(Sender: TObject; Item: Th5uPropertyItem;
-    var Value: TValue; var Handled: Boolean) of object;
-  Th5uSetPropertyValueEvent = procedure(Sender: TObject; Item: Th5uPropertyItem;
-    const Value: TValue; var Handled: Boolean) of object;
+  EhiiPropertyError = class(Exception);
+  ThiiPropertyModel = class;
+  ThiiPropertyItem = class;
+  ThiiManualProperty = class;
+  ThiiPropertySortOrder = (psoName, psoDeclaration);
+  ThiiPropertyItemChangedEvent = procedure(Sender: TObject; Item: ThiiPropertyItem) of object;
+  ThiiGetPropertyValueEvent = procedure(Sender: TObject; Item: ThiiPropertyItem; var Value: TValue; var Handled: Boolean) of object;
+  ThiiSetPropertyValueEvent = procedure(Sender: TObject; Item: ThiiPropertyItem; const Value: TValue; var Handled: Boolean) of object;
 
   { Editors convert the model value to/from its editable presentation. Override
     these three methods to supply e.g. component references or method names. }
-  Th5uValueEditor = class
+  ThiiValueEditor = class
   private
-    FItem: Th5uPropertyItem;
+    FItem: ThiiPropertyItem;
   protected
-    property Item: Th5uPropertyItem read FItem;
+    property Item: ThiiPropertyItem read FItem;
   public
-    constructor Create(AItem: Th5uPropertyItem); virtual;
+    constructor Create(AItem: ThiiPropertyItem); virtual;
     function GetValue: string; virtual;
     procedure SetValue(const AText: string); virtual;
     procedure GetComboList(AList: TStrings); virtual;
   end;
-  Th5uValueEditorClass = class of Th5uValueEditor;
+  ThiiValueEditorClass = class of ThiiValueEditor;
 
-  Th5uWidthValueEditor = class(Th5uValueEditor)
+  ThiiWidthValueEditor = class(ThiiValueEditor)
   public
     function GetValue: string; override;
     procedure SetValue(const AText: string); override;
     procedure GetComboList(AList: TStrings); override;
   end;
 
-  Th5uPropertyItem = class(TPersistent)
+  ThiiPropertyItem = class(TPersistent)
   private
-    FOwner: Th5uPropertyEditor;
+    FOwner: ThiiPropertyModel;
     FInstance: Pointer;
     FName, FCaption, FGroupName, FDeclaringClassName, FTypeName, FReadError: string;
     FDeclaringClass: TClass;
     FValueTypeInfo: PTypeInfo;
     FProperty: TRttiProperty;
     FField: TRttiField;
-    FManual: Th5uManualProperty;
+    FManual: ThiiManualProperty;
     FCachedValue: TValue;
     FCacheValid, FReadOnly, FHidden, FIsManual: Boolean;
     FID, FParentID, FClassOrder, FMemberOrder: Integer;
@@ -63,7 +61,7 @@ type
     function GetCanEdit: Boolean;
     function GetIsManual: Boolean;
   public
-    property Owner: Th5uPropertyEditor read FOwner;
+    property Owner: ThiiPropertyModel read FOwner;
     property Instance: Pointer read FInstance;
     property Value: TValue read GetValue write SetValue;
     property ValueTypeInfo: PTypeInfo read FValueTypeInfo;
@@ -87,7 +85,7 @@ type
     property IsManual: Boolean read GetIsManual;
   end;
 
-  Th5uPropertyFilter = class(TCollectionItem)
+  ThiiPropertyFilter = class(TCollectionItem)
   private
     FClassMask, FNameMask, FTypeMask: string;
     FReadOnly, FHidden: Boolean;
@@ -101,14 +99,14 @@ type
     property Hidden: Boolean index 1 read FHidden write SetFlag default False;
   end;
 
-  Th5uPropertyFilters = class(TOwnedCollection)
+  ThiiPropertyFilters = class(TOwnedCollection)
   protected
     procedure Update(Item: TCollectionItem); override;
   public
-    function Add: Th5uPropertyFilter;
+    function Add: ThiiPropertyFilter;
   end;
 
-  Th5uManualProperty = class(TCollectionItem)
+  ThiiManualProperty = class(TCollectionItem)
   private
     FTargetClass: TClass;
     FPropertyName: string;
@@ -128,79 +126,77 @@ type
     property PropertyName: string read FPropertyName write SetPropertyName;
   end;
 
-  Th5uManualProperties = class(TOwnedCollection)
+  ThiiManualProperties = class(TOwnedCollection)
   protected
     procedure Update(Item: TCollectionItem); override;
   public
-    function Add: Th5uManualProperty;
+    function Add: ThiiManualProperty;
   end;
 
-  Th5uPropertyEditor = class(TComponent)
+  ThiiPropertyModel = class(TComponent)
   private type
     TManualCacheEntry = class
       Instance: Pointer;
-      Definition: Th5uManualProperty;
+      Definition: ThiiManualProperty;
       Value: TValue;
       ExplicitValue: Boolean;
     end;
     TChangeListener = class
       Changing, Changed: TNotifyEvent;
-      ItemChanged: Th5uPropertyItemChangedEvent;
+      ItemChanged: ThiiPropertyItemChangedEvent;
     end;
   private
     FDataObject: TObject;
-    FItems: TObjectList<Th5uPropertyItem>;
+    FItems: TObjectList<ThiiPropertyItem>;
     FManualCache: TObjectList<TManualCacheEntry>;
     FListeners: TObjectList<TChangeListener>;
     FObservedComponents: TList<TComponent>;
     FNextItemID: Integer;
-    FValueUpdateItem: Th5uPropertyItem;
+    FValueUpdateItem: ThiiPropertyItem;
     FValueBeforeUpdate: TValue;
     FReadErrorBeforeUpdate: string;
     FContext: TRttiContext;
     FPublishedProperties, FPublicProperties, FPublicFields, FPrivateFields: Boolean;
     FLimitClass: TClass;
-    FSortOrder: Th5uPropertySortOrder;
+    FSortOrder: ThiiPropertySortOrder;
     FClassMask, FNameMask, FTypeMask: string;
-    FFilters: Th5uPropertyFilters;
-    FManualProperties: Th5uManualProperties;
+    FFilters: ThiiPropertyFilters;
+    FManualProperties: ThiiManualProperties;
     FOnLoaded, FOnChanging, FOnChange: TNotifyEvent;
-    FOnItemChanged: Th5uPropertyItemChangedEvent;
-    FOnGetValue: Th5uGetPropertyValueEvent;
-    FOnSetValue: Th5uSetPropertyValueEvent;
+    FOnItemChanged: ThiiPropertyItemChangedEvent;
+    FOnGetValue: ThiiGetPropertyValueEvent;
+    FOnSetValue: ThiiSetPropertyValueEvent;
     FReloading, FDestroying: Boolean;
     procedure SetDataObject(AValue: TObject);
     procedure SetSelection(AIndex: Integer; AValue: Boolean);
     procedure SetLimitClass(AValue: TClass);
-    procedure SetSortOrder(AValue: Th5uPropertySortOrder);
+    procedure SetSortOrder(AValue: ThiiPropertySortOrder);
     procedure SetMask(AIndex: Integer; const AValue: string);
-    procedure CheckItem(AItem: Th5uPropertyItem);
+    procedure CheckItem(AItem: ThiiPropertyItem);
     procedure NotifyChanging;
     procedure NotifyChanged;
-    procedure NotifyItemChanged(AItem: Th5uPropertyItem);
+    procedure NotifyItemChanged(AItem: ThiiPropertyItem);
     procedure ObserveInstance(AInstance: Pointer);
     procedure PrepareItems;
-    procedure CompleteNewItem(AItem: Th5uPropertyItem);
-    function UpdateCachedValue(AItem: Th5uPropertyItem; const APreviousValue: TValue;
-      const APreviousError: string): Boolean;
+    procedure CompleteNewItem(AItem: ThiiPropertyItem);
+    function UpdateCachedValue(AItem: ThiiPropertyItem; const APreviousValue: TValue; const APreviousError: string): Boolean;
     function ValuesEqual(const A, B: TValue): Boolean;
     function SnapshotValue(const AValue: TValue): TValue;
-    procedure ApplyFilters(AItem: Th5uPropertyItem);
+    procedure ApplyFilters(AItem: ThiiPropertyItem);
     procedure SortItems;
-    function NewItem(AInstance: Pointer; const AName: string; AClass: TClass;
-      ATypeInfo: PTypeInfo): Th5uPropertyItem;
-    function ReadMember(AItem: Th5uPropertyItem): TValue;
-    procedure WriteMember(AItem: Th5uPropertyItem; const AValue: TValue);
-    function ManualCache(AItem: Th5uPropertyItem; ACreate: Boolean): TManualCacheEntry;
-    procedure ForgetDefinition(ADefinition: Th5uManualProperty);
-    procedure UpdateDefinitionDefault(ADefinition: Th5uManualProperty);
-    function CreateValueEditor(AItem: Th5uPropertyItem): Th5uValueEditor;
+    function NewItem(AInstance: Pointer; const AName: string; AClass: TClass; ATypeInfo: PTypeInfo): ThiiPropertyItem;
+    function ReadMember(AItem: ThiiPropertyItem): TValue;
+    procedure WriteMember(AItem: ThiiPropertyItem; const AValue: TValue);
+    function ManualCache(AItem: ThiiPropertyItem; ACreate: Boolean): TManualCacheEntry;
+    procedure ForgetDefinition(ADefinition: ThiiManualProperty);
+    procedure UpdateDefinitionDefault(ADefinition: ThiiManualProperty);
+    function CreateValueEditor(AItem: ThiiPropertyItem): ThiiValueEditor;
   protected
     procedure Loaded; override;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure DoLoaded; virtual;
-    procedure DoGetValue(AItem: Th5uPropertyItem; var AValue: TValue; var AHandled: Boolean); virtual;
-    procedure DoSetValue(AItem: Th5uPropertyItem; const AValue: TValue; var AHandled: Boolean); virtual;
+    procedure DoGetValue(AItem: ThiiPropertyItem; var AValue: TValue; var AHandled: Boolean); virtual;
+    procedure DoSetValue(AItem: ThiiPropertyItem; const AValue: TValue; var AHandled: Boolean); virtual;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -208,51 +204,86 @@ type
     procedure Refresh; virtual;
     procedure Invalidate;
     procedure ForgetObject(AObject: TObject);
-    procedure AddChangeListener(AChanging, AChanged: TNotifyEvent;
-      AItemChanged: Th5uPropertyItemChangedEvent = nil);
-    procedure RemoveChangeListener(AChanging, AChanged: TNotifyEvent;
-      AItemChanged: Th5uPropertyItemChangedEvent = nil);
+    procedure AddChangeListener(AChanging, AChanged: TNotifyEvent; AItemChanged: ThiiPropertyItemChangedEvent = nil);
+    procedure RemoveChangeListener(AChanging, AChanged: TNotifyEvent; AItemChanged: ThiiPropertyItemChangedEvent = nil);
     procedure NotifyItemsChanged;
-    function AddProperty(AInstance: Pointer; AProperty: TRttiProperty): Th5uPropertyItem;
-    function AddField(AInstance: Pointer; AField: TRttiField): Th5uPropertyItem;
-    function AddManualProperty(AInstance: Pointer; const AName: string;
-      const AValue: TValue): Th5uPropertyItem;
-    function FindProperty(const AName: string): Th5uPropertyItem; overload;
-    function FindProperty(AInstance: Pointer; const AName: string): Th5uPropertyItem; overload;
-    function FindProperty(const AName: string; ADeclaringClass: TClass): Th5uPropertyItem; overload;
-    function GetValue(AItem: Th5uPropertyItem): TValue;
-    procedure SetValue(AItem: Th5uPropertyItem; const AValue: TValue);
-    function GetText(AItem: Th5uPropertyItem): string;
-    procedure SetText(AItem: Th5uPropertyItem; const AText: string);
-    procedure GetComboList(AItem: Th5uPropertyItem; AList: TStrings);
+    function AddProperty(AInstance: Pointer; AProperty: TRttiProperty): ThiiPropertyItem;
+    function AddField(AInstance: Pointer; AField: TRttiField): ThiiPropertyItem;
+    function AddManualProperty(AInstance: Pointer; const AName: string; const AValue: TValue): ThiiPropertyItem;
+    function FindProperty(const AName: string): ThiiPropertyItem; overload;
+    function FindProperty(AInstance: Pointer; const AName: string): ThiiPropertyItem; overload;
+    function FindProperty(const AName: string; ADeclaringClass: TClass): ThiiPropertyItem; overload;
+    function GetValue(AItem: ThiiPropertyItem): TValue;
+    procedure SetValue(AItem: ThiiPropertyItem; const AValue: TValue);
+    function GetText(AItem: ThiiPropertyItem): string;
+    procedure SetText(AItem: ThiiPropertyItem; const AText: string);
+    procedure GetComboList(AItem: ThiiPropertyItem; AList: TStrings);
     property DataObject: TObject read FDataObject write SetDataObject;
     property LimitClass: TClass read FLimitClass write SetLimitClass;
-    property Items: TObjectList<Th5uPropertyItem> read FItems;
-    property PropertyList: TObjectList<Th5uPropertyItem> read FItems;
-    property Filters: Th5uPropertyFilters read FFilters;
-    property ManualProperties: Th5uManualProperties read FManualProperties;
+    property Items: TObjectList<ThiiPropertyItem> read FItems;
+    property PropertyList: TObjectList<ThiiPropertyItem> read FItems;
+    property Filters: ThiiPropertyFilters read FFilters;
+    property ManualProperties: ThiiManualProperties read FManualProperties;
   published
     property PublishedProperties: Boolean index 0 read FPublishedProperties write SetSelection default True;
     property PublicProperties: Boolean index 1 read FPublicProperties write SetSelection default False;
     property PublicFields: Boolean index 2 read FPublicFields write SetSelection default False;
     property PrivateFields: Boolean index 3 read FPrivateFields write SetSelection default False;
-    property SortOrder: Th5uPropertySortOrder read FSortOrder write SetSortOrder default psoName;
+    property SortOrder: ThiiPropertySortOrder read FSortOrder write SetSortOrder default psoName;
     property ClassMask: string index 0 read FClassMask write SetMask;
     property NameMask: string index 1 read FNameMask write SetMask;
     property TypeMask: string index 2 read FTypeMask write SetMask;
     property OnLoaded: TNotifyEvent read FOnLoaded write FOnLoaded;
     property OnChanging: TNotifyEvent read FOnChanging write FOnChanging;
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
-    property OnItemChanged: Th5uPropertyItemChangedEvent read FOnItemChanged write FOnItemChanged;
-    property OnGetValue: Th5uGetPropertyValueEvent read FOnGetValue write FOnGetValue;
-    property OnSetValue: Th5uSetPropertyValueEvent read FOnSetValue write FOnSetValue;
+    property OnItemChanged: ThiiPropertyItemChangedEvent read FOnItemChanged write FOnItemChanged;
+    property OnGetValue: ThiiGetPropertyValueEvent read FOnGetValue write FOnGetValue;
+    property OnSetValue: ThiiSetPropertyValueEvent read FOnSetValue write FOnSetValue;
+  end;
+
+  Th5uPropertyGroupRow = class(TPersistent)
+  private
+    FID: Integer;
+    FGroupName: string;
+    function GetCaption: string;
+    function GetDisplayValue: string;
+  published
+    property ID: Integer read FID;
+    property Caption: string read GetCaption;
+    property GroupName: string read FGroupName;
+    property DisplayValue: string read GetDisplayValue;
+  end;
+
+  ThiiPropertyListController = class(ThiiObjectListController)
+  private
+    FPropertyEditor: ThiiPropertyModel;
+    FGroupRows: TObjectList<TObject>;
+    FGroupIDs: TDictionary<string, Integer>;
+    FNextGroupID: Integer;
+    FOnGetValue: ThiiGetPropertyValueEvent;
+    FOnSetValue: ThiiSetPropertyValueEvent;
+    function PropertyItem(ASourceRowIndex: Int64): ThiiPropertyItem;
+    function GetHasGroups: Boolean;
+  protected
+    function GetSourceValue(ASourceRowIndex: Int64; const AFieldName: string): TValue; override;
+    procedure SetSourceValue(ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue); override;
+    function GetSourceCanEdit(ASourceRowIndex: Int64; const AFieldName: string): Boolean; override;
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+    procedure Refresh;
+    procedure RebuildItems(AShowGroups: Boolean = True);
+    property HasGroups: Boolean read GetHasGroups;
+    property PropertyEditor: ThiiPropertyModel read FPropertyEditor;
+  published
+    property OnGetValue: ThiiGetPropertyValueEvent read FOnGetValue write FOnGetValue;
+    property OnSetValue: ThiiSetPropertyValueEvent read FOnSetValue write FOnSetValue;
   end;
 
 { Delphi RTL masks: case insensitive *, ?, [a-z]; dots remain literal.
   An empty mask selects everything. }
 function h5uMatchesMask(const AText, AMask: string): Boolean;
-function h5uRegisterPropertyEditor(ATypeInfo: PTypeInfo; AObjectClass: TClass;
-  const APropertyName: string; AEditorClass: Th5uValueEditorClass): Integer;
+function h5uRegisterPropertyEditor(ATypeInfo: PTypeInfo; AObjectClass: TClass; const APropertyName: string; AEditorClass: ThiiValueEditorClass): Integer;
 procedure h5uUnregisterPropertyEditor(ARegistration: Integer);
 
 {$ENDIF}
@@ -267,7 +298,7 @@ type
     ValueTypeInfo: PTypeInfo;
     ObjectClass: TClass;
     PropertyName: string;
-    EditorClass: Th5uValueEditorClass;
+    EditorClass: ThiiValueEditorClass;
   end;
 
 var
@@ -288,14 +319,10 @@ end;
 
 function ClassMatches(AClass: TClass; const AMask: string): Boolean;
 begin
-  Result := (AMask = '')
-    or ((AClass <> nil)
-      and (h5uMatchesMask(ModelClassName(AClass), AMask)
-        or h5uMatchesMask(AClass.ClassName, AMask)));
+  Result := (AMask = '') or ((AClass <> nil) and (h5uMatchesMask(ModelClassName(AClass), AMask) or h5uMatchesMask(AClass.ClassName, AMask)));
 end;
 
-function h5uRegisterPropertyEditor(ATypeInfo: PTypeInfo; AObjectClass: TClass;
-  const APropertyName: string; AEditorClass: Th5uValueEditorClass): Integer;
+function h5uRegisterPropertyEditor(ATypeInfo: PTypeInfo; AObjectClass: TClass; const APropertyName: string; AEditorClass: ThiiValueEditorClass): Integer;
 var
   R: Th5uEditorRegistration;
 begin
@@ -323,17 +350,17 @@ end;
 
 { Model items }
 
-function Th5uPropertyItem.GetValue: TValue;
+function ThiiPropertyItem.GetValue: TValue;
 begin
   Result := FOwner.GetValue(Self);
 end;
 
-procedure Th5uPropertyItem.SetValue(const AValue: TValue);
+procedure ThiiPropertyItem.SetValue(const AValue: TValue);
 begin
   FOwner.SetValue(Self, AValue);
 end;
 
-function Th5uPropertyItem.GetDisplayValue: string;
+function ThiiPropertyItem.GetDisplayValue: string;
 begin
   { The published presentation is consumed during grid painting. A failing
     application getter must not abort painting the remaining rows. Direct
@@ -348,30 +375,29 @@ begin
   end;
 end;
 
-procedure Th5uPropertyItem.SetDisplayValue(const AValue: string);
+procedure ThiiPropertyItem.SetDisplayValue(const AValue: string);
 begin
   FOwner.SetText(Self, AValue);
 end;
 
-function Th5uPropertyItem.GetCanEdit: Boolean;
+function ThiiPropertyItem.GetCanEdit: Boolean;
 begin
-  Result := (FOwner <> nil) and not FReadOnly and not FHidden
-    and ((FInstance <> nil) or ((FProperty = nil) and (FField = nil)));
+  Result := (FOwner <> nil) and not FReadOnly and not FHidden and ((FInstance <> nil) or ((FProperty = nil) and (FField = nil)));
 end;
 
-function Th5uPropertyItem.GetIsManual: Boolean;
+function ThiiPropertyItem.GetIsManual: Boolean;
 begin
   Result := FIsManual;
 end;
 
-procedure Th5uPropertyItem.GetComboList(AList: TStrings);
+procedure ThiiPropertyItem.GetComboList(AList: TStrings);
 begin
   FOwner.GetComboList(Self, AList);
 end;
 
 { Definition collections }
 
-procedure Th5uPropertyFilter.SetMask(AIndex: Integer; const AValue: string);
+procedure ThiiPropertyFilter.SetMask(AIndex: Integer; const AValue: string);
 begin
   h5uMatchesMask('', AValue); // Validate before changing a live definition.
   case AIndex of
@@ -385,7 +411,7 @@ begin
   Changed(False);
 end;
 
-procedure Th5uPropertyFilter.SetFlag(AIndex: Integer; AValue: Boolean);
+procedure ThiiPropertyFilter.SetFlag(AIndex: Integer; AValue: Boolean);
 begin
   case AIndex of
     0:
@@ -396,37 +422,37 @@ begin
   Changed(False);
 end;
 
-function Th5uPropertyFilters.Add: Th5uPropertyFilter;
+function ThiiPropertyFilters.Add: ThiiPropertyFilter;
 begin
-  Result := Th5uPropertyFilter(inherited Add);
+  Result := ThiiPropertyFilter(inherited Add);
 end;
 
-procedure Th5uPropertyFilters.Update(Item: TCollectionItem);
-begin
-  inherited;
-  if GetOwner <> nil then
-    Th5uPropertyEditor(GetOwner).Reload;
-end;
-
-function Th5uManualProperties.Add: Th5uManualProperty;
-begin
-  Result := Th5uManualProperty(inherited Add);
-end;
-
-procedure Th5uManualProperties.Update(Item: TCollectionItem);
+procedure ThiiPropertyFilters.Update(Item: TCollectionItem);
 begin
   inherited;
   if GetOwner <> nil then
-    Th5uPropertyEditor(GetOwner).Reload;
+    ThiiPropertyModel(GetOwner).Reload;
 end;
 
-procedure Th5uManualProperty.ClearCachedValues;
+function ThiiManualProperties.Add: ThiiManualProperty;
+begin
+  Result := ThiiManualProperty(inherited Add);
+end;
+
+procedure ThiiManualProperties.Update(Item: TCollectionItem);
+begin
+  inherited;
+  if GetOwner <> nil then
+    ThiiPropertyModel(GetOwner).Reload;
+end;
+
+procedure ThiiManualProperty.ClearCachedValues;
 begin
   if (Collection <> nil) and (Collection.Owner <> nil) then
-    Th5uPropertyEditor(Collection.Owner).ForgetDefinition(Self);
+    ThiiPropertyModel(Collection.Owner).ForgetDefinition(Self);
 end;
 
-procedure Th5uManualProperty.SetTargetClass(AValue: TClass);
+procedure ThiiManualProperty.SetTargetClass(AValue: TClass);
 begin
   if FTargetClass = AValue then
     Exit;
@@ -435,7 +461,7 @@ begin
   Changed(False);
 end;
 
-procedure Th5uManualProperty.SetPropertyName(const AValue: string);
+procedure ThiiManualProperty.SetPropertyName(const AValue: string);
 begin
   if FPropertyName = AValue then
     Exit;
@@ -444,7 +470,7 @@ begin
   Changed(False);
 end;
 
-procedure Th5uManualProperty.SetValueTypeInfo(AValue: PTypeInfo);
+procedure ThiiManualProperty.SetValueTypeInfo(AValue: PTypeInfo);
 begin
   if FValueTypeInfo = AValue then
     Exit;
@@ -455,17 +481,17 @@ begin
   Changed(False);
 end;
 
-procedure Th5uManualProperty.SetDefaultValue(const AValue: TValue);
+procedure ThiiManualProperty.SetDefaultValue(const AValue: TValue);
 begin
   FDefaultValue := AValue;
   if FValueTypeInfo = nil then
     FValueTypeInfo := AValue.TypeInfo;
   if (Collection <> nil) and (Collection.Owner <> nil) then
-    Th5uPropertyEditor(Collection.Owner).UpdateDefinitionDefault(Self);
+    ThiiPropertyModel(Collection.Owner).UpdateDefinitionDefault(Self);
   Changed(False);
 end;
 
-destructor Th5uManualProperty.Destroy;
+destructor ThiiManualProperty.Destroy;
 begin
   ClearCachedValues;
   inherited;
@@ -473,20 +499,20 @@ end;
 
 { Model lifetime and subscriptions }
 
-constructor Th5uPropertyEditor.Create(AOwner: TComponent);
+constructor ThiiPropertyModel.Create(AOwner: TComponent);
 begin
   inherited;
   FContext := TRttiContext.Create;
-  FItems := TObjectList<Th5uPropertyItem>.Create(True);
+  FItems := TObjectList<ThiiPropertyItem>.Create(True);
   FManualCache := TObjectList<TManualCacheEntry>.Create(True);
   FListeners := TObjectList<TChangeListener>.Create(True);
   FObservedComponents := TList<TComponent>.Create;
-  FFilters := Th5uPropertyFilters.Create(Self, Th5uPropertyFilter);
-  FManualProperties := Th5uManualProperties.Create(Self, Th5uManualProperty);
+  FFilters := ThiiPropertyFilters.Create(Self, ThiiPropertyFilter);
+  FManualProperties := ThiiManualProperties.Create(Self, ThiiManualProperty);
   FPublishedProperties := True;
 end;
 
-destructor Th5uPropertyEditor.Destroy;
+destructor ThiiPropertyModel.Destroy;
 var
   Component: TComponent;
 begin
@@ -504,20 +530,20 @@ begin
   inherited;
 end;
 
-procedure Th5uPropertyEditor.Loaded;
+procedure ThiiPropertyModel.Loaded;
 begin
   inherited;
   Reload;
 end;
 
-procedure Th5uPropertyEditor.Notification(AComponent: TComponent; Operation: TOperation);
+procedure ThiiPropertyModel.Notification(AComponent: TComponent; Operation: TOperation);
 begin
   inherited;
   if (Operation = opRemove) and not FDestroying then
     ForgetObject(AComponent);
 end;
 
-procedure Th5uPropertyEditor.ObserveInstance(AInstance: Pointer);
+procedure ThiiPropertyModel.ObserveInstance(AInstance: Pointer);
 var
   Component: TComponent;
 begin
@@ -532,7 +558,7 @@ begin
   end;
 end;
 
-procedure Th5uPropertyEditor.ForgetObject(AObject: TObject);
+procedure ThiiPropertyModel.ForgetObject(AObject: TObject);
 var
   I: Integer;
   HasItems: Boolean;
@@ -568,7 +594,7 @@ begin
   end;
 end;
 
-procedure Th5uPropertyEditor.ForgetDefinition(ADefinition: Th5uManualProperty);
+procedure ThiiPropertyModel.ForgetDefinition(ADefinition: ThiiManualProperty);
 var
   I: Integer;
 begin
@@ -577,7 +603,7 @@ begin
       FManualCache.Delete(I);
 end;
 
-procedure Th5uPropertyEditor.UpdateDefinitionDefault(ADefinition: Th5uManualProperty);
+procedure ThiiPropertyModel.UpdateDefinitionDefault(ADefinition: ThiiManualProperty);
 var
   Cache: TManualCacheEntry;
 begin
@@ -591,19 +617,17 @@ begin
   Result := (TMethod(A).Code = TMethod(B).Code) and (TMethod(A).Data = TMethod(B).Data);
 end;
 
-function SameItemEvent(A, B: Th5uPropertyItemChangedEvent): Boolean;
+function SameItemEvent(A, B: ThiiPropertyItemChangedEvent): Boolean;
 begin
   Result := (TMethod(A).Code = TMethod(B).Code) and (TMethod(A).Data = TMethod(B).Data);
 end;
 
-procedure Th5uPropertyEditor.AddChangeListener(AChanging, AChanged: TNotifyEvent;
-  AItemChanged: Th5uPropertyItemChangedEvent);
+procedure ThiiPropertyModel.AddChangeListener(AChanging, AChanged: TNotifyEvent; AItemChanged: ThiiPropertyItemChangedEvent);
 var
   L: TChangeListener;
 begin
   for L in FListeners do
-    if SameEvent(L.Changing, AChanging) and SameEvent(L.Changed, AChanged)
-      and SameItemEvent(L.ItemChanged, AItemChanged) then
+    if SameEvent(L.Changing, AChanging) and SameEvent(L.Changed, AChanged) and SameItemEvent(L.ItemChanged, AItemChanged) then
       Exit;
   L := TChangeListener.Create;
   L.Changing := AChanging;
@@ -612,8 +636,7 @@ begin
   FListeners.Add(L);
 end;
 
-procedure Th5uPropertyEditor.RemoveChangeListener(AChanging, AChanged: TNotifyEvent;
-  AItemChanged: Th5uPropertyItemChangedEvent);
+procedure ThiiPropertyModel.RemoveChangeListener(AChanging, AChanged: TNotifyEvent; AItemChanged: ThiiPropertyItemChangedEvent);
 var
   I: Integer;
 begin
@@ -623,7 +646,7 @@ begin
       FListeners.Delete(I);
 end;
 
-procedure Th5uPropertyEditor.NotifyChanging;
+procedure ThiiPropertyModel.NotifyChanging;
 var
   Snapshot: TArray<TNotifyEvent>;
   L: TChangeListener;
@@ -645,7 +668,7 @@ begin
     FOnChanging(Self);
 end;
 
-procedure Th5uPropertyEditor.NotifyChanged;
+procedure ThiiPropertyModel.NotifyChanged;
 var
   Snapshot: TArray<TNotifyEvent>;
   L: TChangeListener;
@@ -667,11 +690,11 @@ begin
     FOnChange(Self);
 end;
 
-procedure Th5uPropertyEditor.NotifyItemChanged(AItem: Th5uPropertyItem);
+procedure ThiiPropertyModel.NotifyItemChanged(AItem: ThiiPropertyItem);
 var
-  Snapshot: TArray<Th5uPropertyItemChangedEvent>;
+  Snapshot: TArray<ThiiPropertyItemChangedEvent>;
   L: TChangeListener;
-  Callback: Th5uPropertyItemChangedEvent;
+  Callback: ThiiPropertyItemChangedEvent;
   I: Integer;
 begin
   SetLength(Snapshot, FListeners.Count);
@@ -689,7 +712,7 @@ begin
     FOnItemChanged(Self, AItem);
 end;
 
-procedure Th5uPropertyEditor.SetDataObject(AValue: TObject);
+procedure ThiiPropertyModel.SetDataObject(AValue: TObject);
 begin
   if FDataObject = AValue then
     Exit;
@@ -700,7 +723,7 @@ begin
   Reload;
 end;
 
-procedure Th5uPropertyEditor.SetSelection(AIndex: Integer; AValue: Boolean);
+procedure ThiiPropertyModel.SetSelection(AIndex: Integer; AValue: Boolean);
 begin
 
   case AIndex of
@@ -716,20 +739,20 @@ begin
   Reload;
 end;
 
-procedure Th5uPropertyEditor.SetLimitClass(AValue: TClass);
+procedure ThiiPropertyModel.SetLimitClass(AValue: TClass);
 begin
   FLimitClass := AValue;
   Reload;
 end;
 
-procedure Th5uPropertyEditor.SetSortOrder(AValue: Th5uPropertySortOrder);
+procedure ThiiPropertyModel.SetSortOrder(AValue: ThiiPropertySortOrder);
 begin
 
   FSortOrder := AValue;
   Reload;
 end;
 
-procedure Th5uPropertyEditor.SetMask(AIndex: Integer; const AValue: string);
+procedure ThiiPropertyModel.SetMask(AIndex: Integer; const AValue: string);
 begin
   h5uMatchesMask('', AValue);
   case AIndex of
@@ -743,13 +766,13 @@ begin
   Reload;
 end;
 
-procedure Th5uPropertyEditor.CheckItem(AItem: Th5uPropertyItem);
+procedure ThiiPropertyModel.CheckItem(AItem: ThiiPropertyItem);
 begin
   if (AItem = nil) or not FItems.Contains(AItem) or (AItem.FOwner <> Self) then
-    raise Eh5uPropertyError.Create('The property does not belong to this list.');
+    raise EhiiPropertyError.Create('The property does not belong to this list.');
 end;
 
-function Th5uPropertyEditor.FindProperty(const AName: string): Th5uPropertyItem;
+function ThiiPropertyModel.FindProperty(const AName: string): ThiiPropertyItem;
 var
   I: Integer;
 begin
@@ -759,12 +782,11 @@ begin
   for I := 0 to FItems.Count - 1 do
     if SameText(FItems[I].Name, AName) then
       if (Result = nil) or (Result.DeclaringClass = nil)
-        or ((FItems[I].DeclaringClass <> nil)
-          and FItems[I].DeclaringClass.InheritsFrom(Result.DeclaringClass)) then
+        or ((FItems[I].DeclaringClass <> nil) and FItems[I].DeclaringClass.InheritsFrom(Result.DeclaringClass)) then
         Result := FItems[I];
 end;
 
-function Th5uPropertyEditor.FindProperty(const AName: string; ADeclaringClass: TClass): Th5uPropertyItem;
+function ThiiPropertyModel.FindProperty(const AName: string; ADeclaringClass: TClass): ThiiPropertyItem;
 var
   I: Integer;
 begin
@@ -774,7 +796,7 @@ begin
   Result := nil;
 end;
 
-function Th5uPropertyEditor.FindProperty(AInstance: Pointer; const AName: string): Th5uPropertyItem;
+function ThiiPropertyModel.FindProperty(AInstance: Pointer; const AName: string): ThiiPropertyItem;
 var
   I: Integer;
 begin
@@ -782,17 +804,15 @@ begin
   for I := 0 to FItems.Count - 1 do
     if (FItems[I].Instance = AInstance) and SameText(FItems[I].Name, AName) then
       if (Result = nil) or (Result.DeclaringClass = nil)
-        or ((FItems[I].DeclaringClass <> nil)
-          and FItems[I].DeclaringClass.InheritsFrom(Result.DeclaringClass)) then
+        or ((FItems[I].DeclaringClass <> nil) and FItems[I].DeclaringClass.InheritsFrom(Result.DeclaringClass)) then
         Result := FItems[I];
 end;
 
-function Th5uPropertyEditor.NewItem(AInstance: Pointer; const AName: string; AClass: TClass;
-  ATypeInfo: PTypeInfo): Th5uPropertyItem;
+function ThiiPropertyModel.NewItem(AInstance: Pointer; const AName: string; AClass: TClass; ATypeInfo: PTypeInfo): ThiiPropertyItem;
 var
   ValueType: TRttiType;
 begin
-  Result := Th5uPropertyItem.Create;
+  Result := ThiiPropertyItem.Create;
   Result.FOwner := Self;
   Result.FInstance := AInstance;
   Result.FName := AName;
@@ -815,7 +835,7 @@ begin
   ObserveInstance(AInstance);
 end;
 
-procedure Th5uPropertyEditor.CompleteNewItem(AItem: Th5uPropertyItem);
+procedure ThiiPropertyModel.CompleteNewItem(AItem: ThiiPropertyItem);
 begin
   ApplyFilters(AItem);
   if not FReloading then
@@ -825,24 +845,23 @@ begin
   end;
 end;
 
-function Th5uPropertyEditor.AddProperty(AInstance: Pointer; AProperty: TRttiProperty): Th5uPropertyItem;
+function ThiiPropertyModel.AddProperty(AInstance: Pointer; AProperty: TRttiProperty): ThiiPropertyItem;
 begin
   if (AInstance = nil) or (AProperty = nil) or not (AProperty.Parent is TRttiInstanceType) then
     raise EArgumentException.Create('A property and its object instance are required.');
   if not TObject(AInstance).InheritsFrom(TRttiInstanceType(AProperty.Parent).MetaclassType) then
     raise EArgumentException.Create('The property does not belong to this instance class.');
   if not AProperty.IsReadable then
-    raise Eh5uPropertyError.CreateFmt('Property %s is not readable.', [AProperty.Name]);
+    raise EhiiPropertyError.CreateFmt('Property %s is not readable.', [AProperty.Name]);
   if not FReloading then
     NotifyChanging;
-  Result := NewItem(AInstance, AProperty.Name,
-    TRttiInstanceType(AProperty.Parent).MetaclassType, AProperty.PropertyType.Handle);
+  Result := NewItem(AInstance, AProperty.Name, TRttiInstanceType(AProperty.Parent).MetaclassType, AProperty.PropertyType.Handle);
   Result.FProperty := AProperty;
   Result.FReadOnly := not AProperty.IsWritable;
   CompleteNewItem(Result);
 end;
 
-function Th5uPropertyEditor.AddField(AInstance: Pointer; AField: TRttiField): Th5uPropertyItem;
+function ThiiPropertyModel.AddField(AInstance: Pointer; AField: TRttiField): ThiiPropertyItem;
 begin
   if (AInstance = nil) or (AField = nil) or not (AField.Parent is TRttiInstanceType) then
     raise EArgumentException.Create('A field and its object instance are required.');
@@ -850,15 +869,13 @@ begin
     raise EArgumentException.Create('The field does not belong to this instance class.');
   if not FReloading then
     NotifyChanging;
-  Result := NewItem(AInstance, AField.Name,
-    TRttiInstanceType(AField.Parent).MetaclassType, AField.FieldType.Handle);
+  Result := NewItem(AInstance, AField.Name, TRttiInstanceType(AField.Parent).MetaclassType, AField.FieldType.Handle);
   Result.FField := AField;
   Result.FReadOnly := not AField.IsWritable;
   CompleteNewItem(Result);
 end;
 
-function Th5uPropertyEditor.AddManualProperty(AInstance: Pointer; const AName: string;
-  const AValue: TValue): Th5uPropertyItem;
+function ThiiPropertyModel.AddManualProperty(AInstance: Pointer; const AName: string; const AValue: TValue): ThiiPropertyItem;
 var
   InstanceClass: TClass;
 begin
@@ -875,9 +892,9 @@ begin
   CompleteNewItem(Result);
 end;
 
-procedure Th5uPropertyEditor.PrepareItems;
+procedure ThiiPropertyModel.PrepareItems;
 var
-  Item: Th5uPropertyItem;
+  Item: ThiiPropertyItem;
   IDs: TDictionary<Integer, Boolean>;
 begin
   IDs := TDictionary<Integer, Boolean>.Create;
@@ -887,7 +904,7 @@ begin
       if Item = nil then
         raise EArgumentException.Create('A property list cannot contain nil items.');
       if (Item.FOwner <> nil) and (Item.FOwner <> Self) then
-        raise Eh5uPropertyError.Create('A property item already belongs to another list.');
+        raise EhiiPropertyError.Create('A property item already belongs to another list.');
       Item.FOwner := Self;
       if (Item.FID <= 0) or IDs.ContainsKey(Item.FID) then
       begin
@@ -907,7 +924,7 @@ begin
   end;
 end;
 
-procedure Th5uPropertyEditor.NotifyItemsChanged;
+procedure ThiiPropertyModel.NotifyItemsChanged;
 begin
   if FDestroying or FReloading then
     Exit;
@@ -919,10 +936,10 @@ begin
   end;
 end;
 
-procedure Th5uPropertyEditor.ApplyFilters(AItem: Th5uPropertyItem);
+procedure ThiiPropertyModel.ApplyFilters(AItem: ThiiPropertyItem);
 var
   I: Integer;
-  Rule: Th5uPropertyFilter;
+  Rule: ThiiPropertyFilter;
 
   function ObjectClassMatches(const AMask: string): Boolean;
   var
@@ -944,21 +961,16 @@ var
 
   function TypeMatches(const AMask: string): Boolean;
   begin
-    Result := h5uMatchesMask(AItem.TypeName, AMask)
-      or ((AItem.ValueTypeInfo <> nil)
-        and h5uMatchesMask(string(AItem.ValueTypeInfo^.Name), AMask));
+    Result := h5uMatchesMask(AItem.TypeName, AMask) or ((AItem.ValueTypeInfo <> nil) and h5uMatchesMask(string(AItem.ValueTypeInfo^.Name), AMask));
   end;
 
 begin
-  AItem.FReadOnly := ((AItem.FProperty <> nil) and not AItem.FProperty.IsWritable)
-    or ((AItem.FField <> nil) and not AItem.FField.IsWritable);
-  AItem.FHidden := not (ObjectClassMatches(FClassMask)
-    and h5uMatchesMask(AItem.Name, FNameMask) and TypeMatches(FTypeMask));
+  AItem.FReadOnly := ((AItem.FProperty <> nil) and not AItem.FProperty.IsWritable) or ((AItem.FField <> nil) and not AItem.FField.IsWritable);
+  AItem.FHidden := not (ObjectClassMatches(FClassMask) and h5uMatchesMask(AItem.Name, FNameMask) and TypeMatches(FTypeMask));
   for I := 0 to FFilters.Count - 1 do
   begin
-    Rule := Th5uPropertyFilter(FFilters.Items[I]);
-    if ObjectClassMatches(Rule.ClassMask) and h5uMatchesMask(AItem.Name, Rule.NameMask)
-      and TypeMatches(Rule.TypeMask) then
+    Rule := ThiiPropertyFilter(FFilters.Items[I]);
+    if ObjectClassMatches(Rule.ClassMask) and h5uMatchesMask(AItem.Name, Rule.NameMask) and TypeMatches(Rule.TypeMask) then
     begin
       AItem.FHidden := AItem.FHidden or Rule.Hidden;
       AItem.FReadOnly := AItem.FReadOnly or Rule.ReadOnly;
@@ -966,10 +978,10 @@ begin
   end;
 end;
 
-procedure Th5uPropertyEditor.SortItems;
+procedure ThiiPropertyModel.SortItems;
 var
   I, J, C: Integer;
-  A, B: Th5uPropertyItem;
+  A, B: ThiiPropertyItem;
 begin
   { Stable insertion sort avoids comparator closure/compiler dependencies. }
   for I := 1 to FItems.Count - 1 do
@@ -995,7 +1007,7 @@ begin
   end;
 end;
 
-procedure Th5uPropertyEditor.Reload;
+procedure ThiiPropertyModel.Reload;
 var
   Hierarchy: TList<TClass>;
   MemberCounts: TArray<Integer>;
@@ -1006,8 +1018,8 @@ var
   R: TRttiType;
   P: TRttiProperty;
   F: TRttiField;
-  Item: Th5uPropertyItem;
-  M: Th5uManualProperty;
+  Item: ThiiPropertyItem;
+  M: ThiiManualProperty;
 begin
   if FDestroying or FReloading or (csLoading in ComponentState) then
     Exit;
@@ -1046,8 +1058,7 @@ begin
       begin
         C := TRttiInstanceType(F.Parent).MetaclassType;
         I := Hierarchy.IndexOf(C);
-        if (I < 0) or not (((F.Visibility = mvPublic) and FPublicFields)
-          or ((F.Visibility = mvPrivate) and FPrivateFields)) then
+        if (I < 0) or not (((F.Visibility = mvPublic) and FPublicFields) or ((F.Visibility = mvPrivate) and FPrivateFields)) then
           Continue;
         Item := AddField(Pointer(FDataObject), F);
         Item.FIsManual := False;
@@ -1060,10 +1071,9 @@ begin
         C := TRttiInstanceType(P.Parent).MetaclassType;
         I := Hierarchy.IndexOf(C);
         if (I < 0) or not P.IsReadable
-          or not (((P.Visibility = mvPublished) and FPublishedProperties)
-            or ((P.Visibility = mvPublic) and FPublicProperties)) then
+          or not (((P.Visibility = mvPublished) and FPublishedProperties) or ((P.Visibility = mvPublic) and FPublicProperties)) then
           Continue;
-        if (R.GetProperty(P.Name) <> P) or P.HasAttribute<Th5uLegacyOptionAttribute> then
+        if (R.GetProperty(P.Name) <> P) or P.HasAttribute<ThiiLegacyOptionAttribute> then
           Continue;
         Item := AddProperty(Pointer(FDataObject), P);
         Item.FIsManual := False;
@@ -1076,9 +1086,8 @@ begin
         C := Hierarchy[I];
         for J := 0 to FManualProperties.Count - 1 do
         begin
-          M := Th5uManualProperty(FManualProperties.Items[J]);
-          if (M.PropertyName = '')
-            or not ((M.TargetClass = C) or ((M.TargetClass = nil) and (I = Hierarchy.Count - 1))) then
+          M := ThiiManualProperty(FManualProperties.Items[J]);
+          if (M.PropertyName = '') or not ((M.TargetClass = C) or ((M.TargetClass = nil) and (I = Hierarchy.Count - 1))) then
             Continue;
           Item := FindProperty(Pointer(FDataObject), M.PropertyName);
           if Item = nil then
@@ -1105,25 +1114,25 @@ begin
   end;
 end;
 
-procedure Th5uPropertyEditor.DoLoaded;
+procedure ThiiPropertyModel.DoLoaded;
 begin
   if Assigned(FOnLoaded) then
     FOnLoaded(Self);
 end;
 
-procedure Th5uPropertyEditor.DoGetValue(AItem: Th5uPropertyItem; var AValue: TValue; var AHandled: Boolean);
+procedure ThiiPropertyModel.DoGetValue(AItem: ThiiPropertyItem; var AValue: TValue; var AHandled: Boolean);
 begin
   if Assigned(FOnGetValue) then
     FOnGetValue(Self, AItem, AValue, AHandled);
 end;
 
-procedure Th5uPropertyEditor.DoSetValue(AItem: Th5uPropertyItem; const AValue: TValue; var AHandled: Boolean);
+procedure ThiiPropertyModel.DoSetValue(AItem: ThiiPropertyItem; const AValue: TValue; var AHandled: Boolean);
 begin
   if Assigned(FOnSetValue) then
     FOnSetValue(Self, AItem, AValue, AHandled);
 end;
 
-function Th5uPropertyEditor.ManualCache(AItem: Th5uPropertyItem; ACreate: Boolean): TManualCacheEntry;
+function ThiiPropertyModel.ManualCache(AItem: ThiiPropertyItem; ACreate: Boolean): TManualCacheEntry;
 var
   C: TManualCacheEntry;
 begin
@@ -1140,7 +1149,7 @@ begin
   FManualCache.Add(Result);
 end;
 
-function Th5uPropertyEditor.ReadMember(AItem: Th5uPropertyItem): TValue;
+function ThiiPropertyModel.ReadMember(AItem: ThiiPropertyItem): TValue;
 begin
   if AItem.FProperty <> nil then
     Exit(AItem.FProperty.GetValue(AItem.Instance));
@@ -1151,7 +1160,7 @@ begin
   Result := AItem.FCachedValue;
 end;
 
-procedure Th5uPropertyEditor.WriteMember(AItem: Th5uPropertyItem; const AValue: TValue);
+procedure ThiiPropertyModel.WriteMember(AItem: ThiiPropertyItem; const AValue: TValue);
 var
   Cache: TManualCacheEntry;
 begin
@@ -1203,14 +1212,13 @@ begin
   if Dimensions <> VarArrayDimCount(B) then
     Exit(False);
   for Dimension := 1 to Dimensions do
-    if (VarArrayLowBound(A, Dimension) <> VarArrayLowBound(B, Dimension))
-      or (VarArrayHighBound(A, Dimension) <> VarArrayHighBound(B, Dimension)) then
+    if (VarArrayLowBound(A, Dimension) <> VarArrayLowBound(B, Dimension)) or (VarArrayHighBound(A, Dimension) <> VarArrayHighBound(B, Dimension)) then
       Exit(False);
   SetLength(Indices, Dimensions);
   Result := CompareDimension(1);
 end;
 
-function Th5uPropertyEditor.ValuesEqual(const A, B: TValue): Boolean;
+function ThiiPropertyModel.ValuesEqual(const A, B: TValue): Boolean;
 var
   I, J: Integer;
   RecordType: TRttiRecordType;
@@ -1265,28 +1273,24 @@ begin
         begin
           if CoveredBytes[ManagedField.FieldOffset] then
             Continue;
-          TValue.Make(PByte(A.GetReferenceToRawData) + ManagedField.FieldOffset,
-            ManagedField.FieldType.Handle, AField);
-          TValue.Make(PByte(B.GetReferenceToRawData) + ManagedField.FieldOffset,
-            ManagedField.FieldType.Handle, BField);
+          TValue.Make(PByte(A.GetReferenceToRawData) + ManagedField.FieldOffset, ManagedField.FieldType.Handle, AField);
+          TValue.Make(PByte(B.GetReferenceToRawData) + ManagedField.FieldOffset, ManagedField.FieldType.Handle, BField);
           if not ValuesEqual(AField, BField) then
             Exit(False);
           for J := ManagedField.FieldOffset to ManagedField.FieldOffset + AField.DataSize - 1 do
             CoveredBytes[J] := True;
         end;
         for I := 0 to A.DataSize - 1 do
-          if not CoveredBytes[I]
-            and (PByte(A.GetReferenceToRawData)[I] <> PByte(B.GetReferenceToRawData)[I]) then
+          if not CoveredBytes[I] and (PByte(A.GetReferenceToRawData)[I] <> PByte(B.GetReferenceToRawData)[I]) then
             Exit(False);
         Result := True;
       end;
     else
-      Result := (A.DataSize = B.DataSize)
-        and CompareMem(A.GetReferenceToRawData, B.GetReferenceToRawData, A.DataSize);
+      Result := (A.DataSize = B.DataSize) and CompareMem(A.GetReferenceToRawData, B.GetReferenceToRawData, A.DataSize);
   end;
 end;
 
-function Th5uPropertyEditor.SnapshotValue(const AValue: TValue): TValue;
+function ThiiPropertyModel.SnapshotValue(const AValue: TValue): TValue;
 var
   Values: TArray<TValue>;
   I: Integer;
@@ -1309,8 +1313,7 @@ begin
         RecordType := TRttiRecordType(FContext.GetType(AValue.TypeInfo));
         for Field in RecordType.ManagedFields do
         begin
-          TValue.Make(PByte(AValue.GetReferenceToRawData) + Field.FieldOffset,
-            Field.FieldType.Handle, FieldValue);
+          TValue.Make(PByte(AValue.GetReferenceToRawData) + Field.FieldOffset, Field.FieldType.Handle, FieldValue);
           FieldValue := SnapshotValue(FieldValue);
           FieldValue.ExtractRawData(PByte(Result.GetReferenceToRawData) + Field.FieldOffset);
         end;
@@ -1320,8 +1323,7 @@ begin
   end;
 end;
 
-function Th5uPropertyEditor.UpdateCachedValue(AItem: Th5uPropertyItem; const APreviousValue: TValue;
-  const APreviousError: string): Boolean;
+function ThiiPropertyModel.UpdateCachedValue(AItem: ThiiPropertyItem; const APreviousValue: TValue; const APreviousError: string): Boolean;
 var
   PreviousValue, NewValue: TValue;
   PreviousError, NewError: string;
@@ -1343,8 +1345,7 @@ begin
     on E: Exception do
       NewError := E.Message;
   end;
-  Result := (PreviousError <> NewError)
-    or ((NewError = '') and not ValuesEqual(PreviousValue, NewValue));
+  Result := (PreviousError <> NewError) or ((NewError = '') and not ValuesEqual(PreviousValue, NewValue));
   if NewError = '' then
   begin
     AItem.FCachedValue := NewValue;
@@ -1359,26 +1360,26 @@ begin
   AItem.FCacheValid := True;
 end;
 
-function Th5uPropertyEditor.GetValue(AItem: Th5uPropertyItem): TValue;
+function ThiiPropertyModel.GetValue(AItem: ThiiPropertyItem): TValue;
 begin
   CheckItem(AItem);
   if not AItem.FCacheValid then
     UpdateCachedValue(AItem, AItem.FCachedValue, AItem.FReadError);
   if AItem.FReadError <> '' then
-    raise Eh5uPropertyError.Create(AItem.FReadError);
+    raise EhiiPropertyError.Create(AItem.FReadError);
   Result := AItem.FCachedValue;
 end;
 
-procedure Th5uPropertyEditor.SetValue(AItem: Th5uPropertyItem; const AValue: TValue);
+procedure ThiiPropertyModel.SetValue(AItem: ThiiPropertyItem; const AValue: TValue);
 var
   Handled: Boolean;
-  PreviousUpdateItem: Th5uPropertyItem;
+  PreviousUpdateItem: ThiiPropertyItem;
   PreviousUpdateValue: TValue;
   PreviousUpdateError: string;
 begin
   CheckItem(AItem);
   if not AItem.CanEdit then
-    raise Eh5uPropertyError.CreateFmt('Property %s is read-only or hidden.', [AItem.Name]);
+    raise EhiiPropertyError.CreateFmt('Property %s is read-only or hidden.', [AItem.Name]);
   PreviousUpdateItem := FValueUpdateItem;
   PreviousUpdateValue := FValueBeforeUpdate;
   PreviousUpdateError := FReadErrorBeforeUpdate;
@@ -1404,18 +1405,18 @@ begin
   end;
 end;
 
-procedure Th5uPropertyEditor.Invalidate;
+procedure ThiiPropertyModel.Invalidate;
 var
-  Item: Th5uPropertyItem;
+  Item: ThiiPropertyItem;
 begin
   for Item in FItems do
     Item.FCacheValid := False;
 end;
 
-procedure Th5uPropertyEditor.Refresh;
+procedure ThiiPropertyModel.Refresh;
 var
-  Snapshot: TArray<Th5uPropertyItem>;
-  Item: Th5uPropertyItem;
+  Snapshot: TArray<ThiiPropertyItem>;
+  Item: ThiiPropertyItem;
   ItemChanged, AnyChanged: Boolean;
 begin
   AnyChanged := False;
@@ -1438,14 +1439,14 @@ begin
     FOnChange(Self);
 end;
 
-function Th5uPropertyEditor.CreateValueEditor(AItem: Th5uPropertyItem): Th5uValueEditor;
+function ThiiPropertyModel.CreateValueEditor(AItem: ThiiPropertyItem): ThiiValueEditor;
 var
   R: Th5uEditorRegistration;
-  Best: Th5uValueEditorClass;
+  Best: ThiiValueEditorClass;
   C: TClass;
   Distance, NameScore, TypeScore, BestName, BestDistance, BestType: Integer;
 begin
-  Best := Th5uValueEditor;
+  Best := ThiiValueEditor;
   BestName := -1;
   BestDistance := MaxInt;
   BestType := -1;
@@ -1455,8 +1456,7 @@ begin
       Continue;
     if (R.PropertyName <> '') and not SameText(R.PropertyName, AItem.Name) then
       Continue;
-    if (R.ObjectClass <> nil)
-      and ((AItem.Instance = nil) or not TObject(AItem.Instance).InheritsFrom(R.ObjectClass)) then
+    if (R.ObjectClass <> nil) and ((AItem.Instance = nil) or not TObject(AItem.Instance).InheritsFrom(R.ObjectClass)) then
       Continue;
     NameScore := Ord(R.PropertyName <> '');
     TypeScore := Ord(R.ValueTypeInfo <> nil);
@@ -1472,9 +1472,7 @@ begin
       end;
     end;
     if (NameScore > BestName)
-      or ((NameScore = BestName)
-        and ((Distance < BestDistance)
-          or ((Distance = BestDistance) and (TypeScore >= BestType)))) then
+      or ((NameScore = BestName) and ((Distance < BestDistance) or ((Distance = BestDistance) and (TypeScore >= BestType)))) then
     begin
       Best := R.EditorClass;
       BestName := NameScore;
@@ -1485,9 +1483,9 @@ begin
   Result := Best.Create(AItem);
 end;
 
-function Th5uPropertyEditor.GetText(AItem: Th5uPropertyItem): string;
+function ThiiPropertyModel.GetText(AItem: ThiiPropertyItem): string;
 var
-  E: Th5uValueEditor;
+  E: ThiiValueEditor;
 begin
   CheckItem(AItem);
   E := CreateValueEditor(AItem);
@@ -1498,13 +1496,13 @@ begin
   end;
 end;
 
-procedure Th5uPropertyEditor.SetText(AItem: Th5uPropertyItem; const AText: string);
+procedure ThiiPropertyModel.SetText(AItem: ThiiPropertyItem; const AText: string);
 var
-  E: Th5uValueEditor;
+  E: ThiiValueEditor;
 begin
   CheckItem(AItem);
   if not AItem.CanEdit then
-    raise Eh5uPropertyError.CreateFmt('Property %s is read-only or hidden.', [AItem.Name]);
+    raise EhiiPropertyError.CreateFmt('Property %s is read-only or hidden.', [AItem.Name]);
   E := CreateValueEditor(AItem);
   try
     E.SetValue(AText);
@@ -1513,9 +1511,9 @@ begin
   end;
 end;
 
-procedure Th5uPropertyEditor.GetComboList(AItem: Th5uPropertyItem; AList: TStrings);
+procedure ThiiPropertyModel.GetComboList(AItem: ThiiPropertyItem; AList: TStrings);
 var
-  E: Th5uValueEditor;
+  E: ThiiValueEditor;
 begin
   CheckItem(AItem);
   if AList = nil then
@@ -1531,13 +1529,13 @@ end;
 
 { Default value editor }
 
-constructor Th5uValueEditor.Create(AItem: Th5uPropertyItem);
+constructor ThiiValueEditor.Create(AItem: ThiiPropertyItem);
 begin
   inherited Create;
   FItem := AItem;
 end;
 
-function Th5uValueEditor.GetValue: string;
+function ThiiValueEditor.GetValue: string;
 var
   V: TValue;
   M: TMethod;
@@ -1582,7 +1580,7 @@ begin
   end;
 end;
 
-procedure Th5uValueEditor.SetValue(const AText: string);
+procedure ThiiValueEditor.SetValue(const AText: string);
 var
   TI, EnumTI: PTypeInfo;
   D: PTypeData;
@@ -1671,7 +1669,7 @@ begin
               TValue.Make(@CY, TI, V);
             end;
           else
-            raise Eh5uPropertyError.Create('This floating-point storage requires a registered editor.');
+            raise EhiiPropertyError.Create('This floating-point storage requires a registered editor.');
         end;
       end;
     tkChar:
@@ -1720,12 +1718,10 @@ begin
     tkSet:
       begin
         if D^.CompType = nil then
-          raise Eh5uPropertyError.Create(
-            'Set element RTTI is unavailable; use a named element type or register an editor.');
+          raise EhiiPropertyError.Create('Set element RTTI is unavailable; use a named element type or register an editor.');
         EnumTI := D^.CompType^;
         if EnumTI = nil then
-          raise Eh5uPropertyError.Create(
-            'Set element RTTI is unavailable; use a named element type or register an editor.');
+          raise EhiiPropertyError.Create('Set element RTTI is unavailable; use a named element type or register an editor.');
         BitOffset := GetTypeData(EnumTI)^.MinValue and (not 7);
         FillChar(Bits, SizeOf(Bits), 0);
         Text := Trim(AText);
@@ -1739,8 +1735,7 @@ begin
           for N := 0 to Tokens.Count - 1 do
           begin
             Bit := GetEnumValue(EnumTI, Trim(Tokens[N]));
-            if (Bit < GetTypeData(EnumTI)^.MinValue) or (Bit > GetTypeData(EnumTI)^.MaxValue)
-              or (Bit < 0) or (Bit > 255) then
+            if (Bit < GetTypeData(EnumTI)^.MinValue) or (Bit > GetTypeData(EnumTI)^.MaxValue) or (Bit < 0) or (Bit > 255) then
               raise EConvertError.CreateFmt('Unknown set element: %s', [Tokens[N]]);
             Dec(Bit, BitOffset);
             Bits[Bit div 8] := Bits[Bit div 8] or (1 shl (Bit mod 8));
@@ -1753,16 +1748,14 @@ begin
     tkMethod:
       begin
         if Trim(AText) <> '' then
-          raise Eh5uPropertyError.Create(
-            'Assign event handlers through a registered editor or OnSetValue using a typed TValue.');
+          raise EhiiPropertyError.Create('Assign event handlers through a registered editor or OnSetValue using a typed TValue.');
         FillChar(M, SizeOf(M), 0);
         TValue.Make(@M, TI, V);
       end;
     tkClass:
       begin
-        if (Trim(AText) <> '') and not SameText(Trim(AText), '(nil)')
-          and not SameText(Trim(AText), 'nil') then
-          raise Eh5uPropertyError.Create('Assign object references through a registered editor.');
+        if (Trim(AText) <> '') and not SameText(Trim(AText), '(nil)') and not SameText(Trim(AText), 'nil') then
+          raise EhiiPropertyError.Create('Assign object references through a registered editor.');
         O := nil;
         TValue.Make(@O, TI, V);
       end;
@@ -1775,12 +1768,12 @@ begin
         V := TValue.From<Variant>(VariantValue);
       end;
     else
-      raise Eh5uPropertyError.CreateFmt('Type %s requires a registered property editor.', [string(TI^.Name)]);
+      raise EhiiPropertyError.CreateFmt('Type %s requires a registered property editor.', [string(TI^.Name)]);
   end;
   Item.Value := V;
 end;
 
-procedure Th5uValueEditor.GetComboList(AList: TStrings);
+procedure ThiiValueEditor.GetComboList(AList: TStrings);
 var
   D: PTypeData;
   I: Integer;
@@ -1792,28 +1785,206 @@ begin
     AList.Add(GetEnumName(Item.ValueTypeInfo, I));
 end;
 
-function Th5uWidthValueEditor.GetValue: string;
+function ThiiWidthValueEditor.GetValue: string;
 begin
   Result := h5uWidthToText(Item.Value.AsExtended);
 end;
 
-procedure Th5uWidthValueEditor.SetValue(const AText: string);
+procedure ThiiWidthValueEditor.SetValue(const AText: string);
 var
-  Width: Th5uWidth;
+  Width: ThiiWidth;
 begin
   if not h5uTryTextToWidth(AText, Width) then
-    raise Eh5uPropertyError.Create('Breite als Zahl, Prozentangabe oder Default erwartet.');
-  Item.Value := TValue.From<Th5uWidth>(Width);
+    raise EhiiPropertyError.Create('Breite als Zahl, Prozentangabe oder Default erwartet.');
+  Item.Value := TValue.From<ThiiWidth>(Width);
 end;
 
-procedure Th5uWidthValueEditor.GetComboList(AList: TStrings);
+procedure ThiiWidthValueEditor.GetComboList(AList: TStrings);
 begin
   AList.Add('Default');
 end;
 
+type
+  Th5uControllerPropertyEditor = class(ThiiPropertyModel)
+  private
+    FController: ThiiPropertyListController;
+  protected
+    procedure DoGetValue(AItem: ThiiPropertyItem; var AValue: TValue; var AHandled: Boolean); override;
+    procedure DoSetValue(AItem: ThiiPropertyItem; const AValue: TValue; var AHandled: Boolean); override;
+  public
+    procedure Refresh; override;
+  end;
+
+function Th5uPropertyGroupRow.GetCaption: string;
+begin
+  // Leave room for the grid's fold glyph when the row indicator is hidden.
+  Result := '     ' + FGroupName;
+end;
+
+function Th5uPropertyGroupRow.GetDisplayValue: string;
+begin
+  Result := '';
+end;
+
+procedure Th5uControllerPropertyEditor.DoGetValue(AItem: ThiiPropertyItem; var AValue: TValue; var AHandled: Boolean);
+begin
+  inherited;
+  if not AHandled and Assigned(FController.FOnGetValue) then
+    FController.FOnGetValue(FController, AItem, AValue, AHandled);
+end;
+
+procedure Th5uControllerPropertyEditor.DoSetValue(AItem: ThiiPropertyItem; const AValue: TValue; var AHandled: Boolean);
+begin
+  inherited;
+  if not AHandled and Assigned(FController.FOnSetValue) then
+    FController.FOnSetValue(FController, AItem, AValue, AHandled);
+end;
+
+procedure Th5uControllerPropertyEditor.Refresh;
+begin
+  FController.BeginUpdate;
+  try
+    inherited;
+  finally
+    FController.EndUpdate;
+  end;
+end;
+
+constructor ThiiPropertyListController.Create(AOwner: TComponent);
+begin
+  inherited;
+  KeyPropertyName := 'ID';
+  OwnsObjects := False;
+  FGroupRows := TObjectList<TObject>.Create(True);
+  FGroupIDs := TDictionary<string, Integer>.Create;
+  FPropertyEditor := Th5uControllerPropertyEditor.Create(Self);
+  Th5uControllerPropertyEditor(FPropertyEditor).FController := Self;
+  FPropertyEditor.SetSubComponent(True);
+end;
+
+destructor ThiiPropertyListController.Destroy;
+begin
+  Clear;
+  FreeAndNil(FGroupRows);
+  FreeAndNil(FGroupIDs);
+  FreeAndNil(FPropertyEditor);
+  inherited;
+end;
+
+function ThiiPropertyListController.GetHasGroups: Boolean;
+begin
+  Result := FGroupRows.Count > 0;
+end;
+
+procedure ThiiPropertyListController.RebuildItems(AShowGroups: Boolean);
+var
+  LItem: ThiiPropertyItem;
+  LHeader: Th5uPropertyGroupRow;
+  LPreviousGroup, LKey: string;
+  LOccurrences: TDictionary<string, Integer>;
+  LOccurrence, LID: Integer;
+begin
+  LOccurrences := TDictionary<string, Integer>.Create;
+  BeginUpdate;
+  try
+    Clear;
+    FGroupRows.Clear;
+    LPreviousGroup := '';
+    for LItem in FPropertyEditor.Items do
+    begin
+      if LItem.Hidden then
+        Continue;
+      if AShowGroups and (LItem.GroupName <> '') and (LItem.GroupName <> LPreviousGroup) then
+      begin
+        if not LOccurrences.TryGetValue(LItem.GroupName, LOccurrence) then
+          LOccurrence := 0;
+        Inc(LOccurrence);
+        LOccurrences.AddOrSetValue(LItem.GroupName, LOccurrence);
+        LKey := LItem.GroupName + #0 + IntToStr(LOccurrence);
+        if not FGroupIDs.TryGetValue(LKey, LID) then
+        begin
+          Dec(FNextGroupID);
+          LID := FNextGroupID;
+          FGroupIDs.Add(LKey, LID);
+        end;
+        LHeader := Th5uPropertyGroupRow.Create;
+        LHeader.FID := LID;
+        LHeader.FGroupName := LItem.GroupName;
+        FGroupRows.Add(LHeader);
+        Add(LHeader);
+      end;
+      Add(LItem);
+      LPreviousGroup := LItem.GroupName;
+    end;
+  finally
+    EndUpdate;
+    LOccurrences.Free;
+  end;
+end;
+
+function ThiiPropertyListController.PropertyItem(ASourceRowIndex: Int64): ThiiPropertyItem;
+begin
+  Result := nil;
+  if (ASourceRowIndex >= 0) and (ASourceRowIndex < Count) and (Item(ASourceRowIndex) is ThiiPropertyItem) then
+    Result := ThiiPropertyItem(Item(ASourceRowIndex));
+end;
+
+function ThiiPropertyListController.GetSourceValue(ASourceRowIndex: Int64; const AFieldName: string): TValue;
+var
+  LItem: ThiiPropertyItem;
+begin
+  LItem := PropertyItem(ASourceRowIndex);
+  if LItem <> nil then
+  begin
+    if SameText(AFieldName, 'Value') then
+      Exit(LItem.Value);
+    if SameText(AFieldName, 'DisplayValue') then
+      Exit(TValue.From<string>(LItem.DisplayValue));
+  end;
+  Result := inherited;
+end;
+
+procedure ThiiPropertyListController.SetSourceValue(ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue);
+var
+  LItem: ThiiPropertyItem;
+begin
+  LItem := PropertyItem(ASourceRowIndex);
+  if LItem <> nil then
+  begin
+    if SameText(AFieldName, 'Value') then
+    begin
+      LItem.Value := AValue;
+      Exit;
+    end;
+    if SameText(AFieldName, 'DisplayValue') then
+    begin
+      LItem.DisplayValue := AValue.AsString;
+      Exit;
+    end;
+  end;
+  inherited;
+end;
+
+function ThiiPropertyListController.GetSourceCanEdit(ASourceRowIndex: Int64; const AFieldName: string): Boolean;
+var
+  LItem: ThiiPropertyItem;
+begin
+  LItem := PropertyItem(ASourceRowIndex);
+  if (LItem <> nil) and (SameText(AFieldName, 'Value') or SameText(AFieldName, 'DisplayValue')) then
+    Result := LItem.CanEdit
+  else
+    Result := inherited;
+end;
+
+procedure ThiiPropertyListController.Refresh;
+begin
+  FPropertyEditor.Refresh;
+end;
+
+
 initialization
   EditorRegistrations := TObjectList<Th5uEditorRegistration>.Create(True);
-  h5uRegisterPropertyEditor(TypeInfo(Th5uWidth), nil, '', Th5uWidthValueEditor);
+  h5uRegisterPropertyEditor(TypeInfo(ThiiWidth), nil, '', ThiiWidthValueEditor);
 
 finalization
   EditorRegistrations.Free;

@@ -21,43 +21,43 @@ uses
   {$ENDIF}
 
 type
-  Th5uWidth = type Single;
-  Th5uColumnFitMode = (None, PercentColumns, AllColumns);
-  Th5uMaxWidthSource = (Default, Monitor);
+  ThiiWidth = type Single;
+  ThiiColumnFitMode = (None, PercentColumns, AllColumns);
+  ThiiMaxWidthSource = (Default, Monitor);
 
-  Th5uColumnSizingOptions = class(TPersistent)
+  ThiiColumnSizingOptions = class(TPersistent)
   private
-    FDefaultWidth: Th5uWidth;
+    FDefaultWidth: ThiiWidth;
     FDefaultMinWidth: Single;
-    FDefaultMaxWidth: Th5uWidth;
-    FMaxWidthSource: Th5uMaxWidthSource;
+    FDefaultMaxWidth: ThiiWidth;
+    FMaxWidthSource: ThiiMaxWidthSource;
     FAutoWidthRowLimit: Integer;
     FMinContentWidth: Single;
     FMaxContentWidth: Single;
-    FFitMode: Th5uColumnFitMode;
+    FFitMode: ThiiColumnFitMode;
     FOnChanged: TNotifyEvent;
     procedure Changed;
-    procedure SetDefaultWidth(AValue: Th5uWidth);
+    procedure SetDefaultWidth(AValue: ThiiWidth);
     procedure SetDefaultMinWidth(AValue: Single);
-    procedure SetDefaultMaxWidth(AValue: Th5uWidth);
-    procedure SetMaxWidthSource(AValue: Th5uMaxWidthSource);
+    procedure SetDefaultMaxWidth(AValue: ThiiWidth);
+    procedure SetMaxWidthSource(AValue: ThiiMaxWidthSource);
     procedure SetAutoWidthRowLimit(AValue: Integer);
     procedure SetMinContentWidth(AValue: Single);
     procedure SetMaxContentWidth(AValue: Single);
-    procedure SetFitMode(AValue: Th5uColumnFitMode);
+    procedure SetFitMode(AValue: ThiiColumnFitMode);
   public
     constructor Create;
     procedure Assign(Source: TPersistent); override;
     property OnChanged: TNotifyEvent read FOnChanged write FOnChanged;
   published
-    property DefaultWidth: Th5uWidth read FDefaultWidth write SetDefaultWidth;
+    property DefaultWidth: ThiiWidth read FDefaultWidth write SetDefaultWidth;
     property DefaultMinWidth: Single read FDefaultMinWidth write SetDefaultMinWidth;
-    property DefaultMaxWidth: Th5uWidth read FDefaultMaxWidth write SetDefaultMaxWidth;
-    property MaxWidthSource: Th5uMaxWidthSource read FMaxWidthSource write SetMaxWidthSource default Th5uMaxWidthSource.Default;
+    property DefaultMaxWidth: ThiiWidth read FDefaultMaxWidth write SetDefaultMaxWidth;
+    property MaxWidthSource: ThiiMaxWidthSource read FMaxWidthSource write SetMaxWidthSource default ThiiMaxWidthSource.Default;
     property AutoWidthRowLimit: Integer read FAutoWidthRowLimit write SetAutoWidthRowLimit default 1000;
     property MinContentWidth: Single read FMinContentWidth write SetMinContentWidth;
     property MaxContentWidth: Single read FMaxContentWidth write SetMaxContentWidth;
-    property FitMode: Th5uColumnFitMode read FFitMode write SetFitMode default Th5uColumnFitMode.PercentColumns;
+    property FitMode: ThiiColumnFitMode read FFitMode write SetFitMode default ThiiColumnFitMode.PercentColumns;
   end;
 
 const
@@ -65,8 +65,8 @@ const
 
 procedure h5uValidateWidth(AValue: Single);
 function h5uResolveWidth(AValue, AReferenceWidth: Single): Single;
-function h5uWidthToText(AValue: Th5uWidth): string;
-function h5uTryTextToWidth(const AText: string; out AValue: Th5uWidth): Boolean;
+function h5uWidthToText(AValue: ThiiWidth): string;
+function h5uTryTextToWidth(const AText: string; out AValue: ThiiWidth): Boolean;
 
 implementation
 
@@ -84,7 +84,7 @@ begin
     Result := Min(h5uUnlimitedWidth, AValue);
 end;
 
-function h5uWidthToText(AValue: Th5uWidth): string;
+function h5uWidthToText(AValue: ThiiWidth): string;
 begin
   if AValue = 0 then
     Result := 'Default'
@@ -96,7 +96,7 @@ begin
     Result := FloatToStr(AValue);
 end;
 
-function h5uTryTextToWidth(const AText: string; out AValue: Th5uWidth): Boolean;
+function h5uTryTextToWidth(const AText: string; out AValue: ThiiWidth): Boolean;
 var
   LText: string;
   LValue: Double;
@@ -119,8 +119,7 @@ begin
   Result := TryStrToFloat(LText, LValue);
   if not Result then
     Exit;
-  Result := not IsNan(LValue) and not IsInfinite(LValue)
-    and (Abs(LValue) <= h5uUnlimitedWidth);
+  Result := not IsNan(LValue) and not IsInfinite(LValue) and (Abs(LValue) <= h5uUnlimitedWidth);
   if Result then
   begin
     if LPercent then
@@ -129,23 +128,23 @@ begin
   end;
 end;
 
-constructor Th5uColumnSizingOptions.Create;
+constructor ThiiColumnSizingOptions.Create;
 begin
   inherited;
   FAutoWidthRowLimit := 1000;
-  FFitMode := Th5uColumnFitMode.PercentColumns;
+  FFitMode := ThiiColumnFitMode.PercentColumns;
 end;
 
-procedure Th5uColumnSizingOptions.Assign(Source: TPersistent);
+procedure ThiiColumnSizingOptions.Assign(Source: TPersistent);
 var
-  LSource: Th5uColumnSizingOptions;
+  LSource: ThiiColumnSizingOptions;
 begin
-  if not (Source is Th5uColumnSizingOptions) then
+  if not (Source is ThiiColumnSizingOptions) then
   begin
     inherited;
     Exit;
   end;
-  LSource := Th5uColumnSizingOptions(Source);
+  LSource := ThiiColumnSizingOptions(Source);
   FDefaultWidth := LSource.FDefaultWidth;
   FDefaultMinWidth := LSource.FDefaultMinWidth;
   FDefaultMaxWidth := LSource.FDefaultMaxWidth;
@@ -157,13 +156,13 @@ begin
   Changed;
 end;
 
-procedure Th5uColumnSizingOptions.Changed;
+procedure ThiiColumnSizingOptions.Changed;
 begin
   if Assigned(FOnChanged) then
     FOnChanged(Self);
 end;
 
-procedure Th5uColumnSizingOptions.SetDefaultWidth(AValue: Th5uWidth);
+procedure ThiiColumnSizingOptions.SetDefaultWidth(AValue: ThiiWidth);
 begin
   h5uValidateWidth(AValue);
   if FDefaultWidth = AValue then
@@ -172,7 +171,7 @@ begin
   Changed;
 end;
 
-procedure Th5uColumnSizingOptions.SetDefaultMinWidth(AValue: Single);
+procedure ThiiColumnSizingOptions.SetDefaultMinWidth(AValue: Single);
 begin
   h5uValidateWidth(AValue);
   AValue := EnsureRange(AValue, 0, h5uUnlimitedWidth);
@@ -182,7 +181,7 @@ begin
   Changed;
 end;
 
-procedure Th5uColumnSizingOptions.SetDefaultMaxWidth(AValue: Th5uWidth);
+procedure ThiiColumnSizingOptions.SetDefaultMaxWidth(AValue: ThiiWidth);
 begin
   h5uValidateWidth(AValue);
   if FDefaultMaxWidth = AValue then
@@ -191,7 +190,7 @@ begin
   Changed;
 end;
 
-procedure Th5uColumnSizingOptions.SetMaxWidthSource(AValue: Th5uMaxWidthSource);
+procedure ThiiColumnSizingOptions.SetMaxWidthSource(AValue: ThiiMaxWidthSource);
 begin
   if FMaxWidthSource = AValue then
     Exit;
@@ -199,7 +198,7 @@ begin
   Changed;
 end;
 
-procedure Th5uColumnSizingOptions.SetAutoWidthRowLimit(AValue: Integer);
+procedure ThiiColumnSizingOptions.SetAutoWidthRowLimit(AValue: Integer);
 begin
   AValue := Max(0, AValue);
   if FAutoWidthRowLimit = AValue then
@@ -208,7 +207,7 @@ begin
   Changed;
 end;
 
-procedure Th5uColumnSizingOptions.SetMinContentWidth(AValue: Single);
+procedure ThiiColumnSizingOptions.SetMinContentWidth(AValue: Single);
 begin
   h5uValidateWidth(AValue);
   AValue := EnsureRange(AValue, 0, h5uUnlimitedWidth);
@@ -218,7 +217,7 @@ begin
   Changed;
 end;
 
-procedure Th5uColumnSizingOptions.SetMaxContentWidth(AValue: Single);
+procedure ThiiColumnSizingOptions.SetMaxContentWidth(AValue: Single);
 begin
   h5uValidateWidth(AValue);
   AValue := EnsureRange(AValue, 0, h5uUnlimitedWidth);
@@ -228,7 +227,7 @@ begin
   Changed;
 end;
 
-procedure Th5uColumnSizingOptions.SetFitMode(AValue: Th5uColumnFitMode);
+procedure ThiiColumnSizingOptions.SetFitMode(AValue: ThiiColumnFitMode);
 begin
   if FFitMode = AValue then
     Exit;

@@ -89,6 +89,7 @@ function Invoke-Dcc {
     $arguments = @(
         '-B',
         '-Q',
+        '-NSSystem;Vcl;Winapi;Data;Datasnap;Xml',
         "-N0$DcuOutput",
         "-E$BinaryOutput",
         "-LE$PackageOutput",
@@ -185,20 +186,21 @@ $searchDirectories = @(
     (Join-Path $root 'Source\FMX'),
     (Join-Path $root 'Source\Design'),
     $dcuOutput,
-    $packageOutput
+    $packageOutput,
+    (Join-Path $resolvedBin "..\lib\$Platform\release")
 )
 $searchPath = ($searchDirectories -join ';')
 
 $runtimePackages = @(
-    (Join-Path $root 'Packages\h5uGridCoreR.dpk'),
-    (Join-Path $root 'Packages\h5uGridVclR.dpk'),
-    (Join-Path $root 'Packages\h5uGridFmxR.dpk')
+    (Join-Path $root 'Packages\h5uGridCore.dpk'),
+    (Join-Path $root 'Packages\h5uGridVcl.dpk'),
+    (Join-Path $root 'Packages\h5uGridFmx.dpk')
 )
 
 $designPackages = @(
-    (Join-Path $root 'Packages\h5uGridCoreD.dpk'),
-    (Join-Path $root 'Packages\h5uGridVclD.dpk'),
-    (Join-Path $root 'Packages\h5uGridFmxD.dpk')
+    (Join-Path $root 'Packages\h5uGridCoreDesign.dpk'),
+    (Join-Path $root 'Packages\h5uGridVclDesign.dpk'),
+    (Join-Path $root 'Packages\h5uGridFmxDesign.dpk')
 )
 
 $demoProjects = @(
@@ -207,7 +209,9 @@ $demoProjects = @(
     (Join-Path $root 'Demos\VCL\VirtualLive\GridVclVirtualLiveDemo.dpr'),
     (Join-Path $root 'Demos\FMX\ClientDataset\GridFmxClientDatasetDemo.dpr'),
     (Join-Path $root 'Demos\FMX\ObjectList\GridFmxObjectListDemo.dpr'),
-    (Join-Path $root 'Demos\FMX\VirtualLive\GridFmxVirtualLiveDemo.dpr')
+    (Join-Path $root 'Demos\FMX\VirtualLive\GridFmxVirtualLiveDemo.dpr'),
+    (Join-Path $root 'Demos\VCL\MegaDemo\GridVclMegaDemo.dpr'),
+    (Join-Path $root 'Demos\FMX\MegaDemo\GridFmxMegaDemo.dpr')
 )
 
 if (-not $SkipRuntimePackages) {

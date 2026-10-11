@@ -25,7 +25,7 @@ uses
   {$ENDIF}
 
 type
-  Th5uSampleClientDataset = class({$IFDEF FPC}TBufDataset{$ELSE}TClientDataset{$ENDIF})
+  ThiiSampleClientDataset = class({$IFDEF FPC}TBufDataset{$ELSE}TClientDataset{$ENDIF})
   private
     FAutoCreateSampleData: Boolean;
     FIncludeImages: Boolean;
@@ -57,9 +57,9 @@ const
   // self-contained and independent of VCL/FMX graphics classes.
   cSamplePngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk' + 'YAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
 
-{ Th5uSampleClientDataset }
+{ ThiiSampleClientDataset }
 
-constructor Th5uSampleClientDataset.Create(AOwner: TComponent);
+constructor ThiiSampleClientDataset.Create(AOwner: TComponent);
 begin
   inherited;
   FAutoCreateSampleData := True;
@@ -72,7 +72,7 @@ begin
     EnsureSampleData;
 end;
 
-procedure Th5uSampleClientDataset.Loaded;
+procedure ThiiSampleClientDataset.Loaded;
 begin
   inherited;
   if FRecreateAfterLoading and FAutoCreateSampleData then
@@ -81,7 +81,7 @@ begin
     EnsureSampleData;
 end;
 
-procedure Th5uSampleClientDataset.SetAutoCreateSampleData(const AValue: Boolean);
+procedure ThiiSampleClientDataset.SetAutoCreateSampleData(const AValue: Boolean);
 begin
   if FAutoCreateSampleData = AValue then
     Exit;
@@ -91,7 +91,7 @@ begin
     EnsureSampleData;
 end;
 
-procedure Th5uSampleClientDataset.SetIncludeImages(const AValue: Boolean);
+procedure ThiiSampleClientDataset.SetIncludeImages(const AValue: Boolean);
 begin
   if FIncludeImages = AValue then
     Exit;
@@ -101,7 +101,7 @@ begin
     RecreateSampleData;
 end;
 
-procedure Th5uSampleClientDataset.SetSampleRowCount(const AValue: Integer);
+procedure ThiiSampleClientDataset.SetSampleRowCount(const AValue: Integer);
 var
   LValue: Integer;
 begin
@@ -119,7 +119,7 @@ begin
     RecreateSampleData;
 end;
 
-procedure Th5uSampleClientDataset.BuildFieldDefs;
+procedure ThiiSampleClientDataset.BuildFieldDefs;
 begin
   FieldDefs.Clear;
 
@@ -204,7 +204,7 @@ begin
   end;
 end;
 
-procedure Th5uSampleClientDataset.WriteSampleImage(AField: TField; AIndex: Integer);
+procedure ThiiSampleClientDataset.WriteSampleImage(AField: TField; AIndex: Integer);
 var
   {$IFDEF FPC}
   LStream: TStringStream;
@@ -233,7 +233,7 @@ begin
   end;
 end;
 
-procedure Th5uSampleClientDataset.AppendSampleRows;
+procedure ThiiSampleClientDataset.AppendSampleRows;
 const
   cCategories: array[0..3] of string = ('Mechanik', 'Elektronik', 'Montage', 'Prüfung');
 var
@@ -293,8 +293,8 @@ begin
       end;
       FieldByName('CATEGORY').{$IFDEF FPC}AsUTF8String{$ELSE}AsString{$ENDIF} := cCategories[(I - 1) mod Length(cCategories)];
 
-      LDescription := Format('Dies ist Datensatz %d. Der Text demonstriert automatische '
-        + 'Zeilenhöhe, Umbruch und ein konfigurierbares Höhenlimit.', [I]);
+      LDescription :=
+        Format('Dies ist Datensatz %d. Der Text demonstriert automatische ' + 'Zeilenhöhe, Umbruch und ein konfigurierbares Höhenlimit.', [I]);
       if (I mod 5) = 0 then
         LDescription := LDescription + sLineBreak + 'Jede fünfte Zeile enthält bewusst eine zweite Zeile und wird '
           + 'zusätzlich über eine periodische Style-Regel hervorgehoben.';
@@ -314,7 +314,7 @@ begin
   end;
 end;
 
-procedure Th5uSampleClientDataset.RecreateSampleData;
+procedure ThiiSampleClientDataset.RecreateSampleData;
 begin
   // During streaming Close only records Active=False. It does not close the cursor.
   // Apply property changes after Loaded has cleared the streaming state.
@@ -348,7 +348,7 @@ begin
   end;
 end;
 
-procedure Th5uSampleClientDataset.EnsureSampleData;
+procedure ThiiSampleClientDataset.EnsureSampleData;
 begin
   if not FAutoCreateSampleData or FUpdatingSampleData or (ComponentState * [csLoading, csReading] <> []) then
     Exit;

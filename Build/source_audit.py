@@ -34,7 +34,7 @@ PACKAGE_RE = re.compile(r"(?im)^\s*package\s+([A-Za-z0-9_]+)\s*;")
 FORM_CLASS_RE = re.compile(
     r"(?is)\b(T\w+)\s*=\s*class\s*\(\s*T(?:Form|CommonCustomForm)\s*\)"
 )
-RESOURCE_RE = re.compile(r"\{\$R\s+\*\.((?:dfm)|(?:fmx))\s*\}", re.I)
+RESOURCE_RE = re.compile(r"\{\$R\s+\*\.((?:dfm)|(?:fmx)|(?:lfm))\s*\}", re.I)
 CONTAINS_PATH_RE = re.compile(
     r"(?im)^\s*([A-Za-z0-9_.]+)\s+in\s+'([^']+)'"
 )
@@ -49,7 +49,8 @@ KNOWN_BAD_PATTERNS = [
     (re.compile(r"\b(?:Max|Min|EnsureRange)\s*<\s*(?:Int64|Integer)\s*>\s*\("),
      "C++-style generic call is not valid for Delphi Math overloads"),
     (re.compile(r"\bAValue\.AsCurrency\b"), "TValue.AsCurrency is not a portable Delphi API"),
-    (re.compile(r"\bTH5u[A-Za-z0-9_]*\b"), "public h5u type uses TH5u instead of canonical Th5u spelling"),
+    (re.compile(r"\bTH5u[A-Za-z0-9_]*\b"), "internal h5u type uses TH5u instead of canonical Th5u spelling"),
+    (re.compile(r"\bTHii[A-Za-z0-9_]*\b"), "public hii type uses THii instead of canonical Thii spelling"),
 ]
 
 
@@ -190,9 +191,9 @@ def check_pascal_file(path: Path, root: Path, findings: list[Finding]) -> None:
             findings.append(Finding("error", rel(path, root), line_number, "tab character in Pascal source"))
     match = UNIT_RE.search(text)
     if path.suffix.lower() == ".pas":
-        if not match:
-            findings.append(Finding("error", rel(path, root), 1, "unit declaration not found"))
-        else:
+        if not match and not re.search(r"(?im)^program\s+\w+\s*;", text):
+            findings.append(Finding("error", rel(path, root), 1, "unit or program declaration not found"))
+        elif match:
             unit_name = match.group(1)
             if unit_name.casefold() != path.stem.casefold():
                 findings.append(
@@ -208,6 +209,8 @@ def check_pascal_file(path: Path, root: Path, findings: list[Finding]) -> None:
 
     for pattern, message in KNOWN_BAD_PATTERNS:
         for bad in pattern.finditer(text):
+            if line_of(text, bad.start()) - 1 in opaque_lines(lines) or lines[line_of(text, bad.start()) - 1].lstrip().startswith("//"):
+                continue
             findings.append(
                 Finding("error", rel(path, root), line_of(text, bad.start()), message)
             )
@@ -250,7 +253,7 @@ def check_demo(main_pas: Path, root: Path, findings: list[Finding]) -> None:
     text = main_pas.read_text(encoding="utf-8-sig")
     resource = RESOURCE_RE.search(text)
     if not resource:
-        findings.append(Finding("error", rel(main_pas, root), 1, "form unit has no {$R *.dfm/fmx} resource"))
+        findings.append(Finding("error", rel(main_pas, root), 1, "form unit has no {$R *.dfm/fmx/lfm} resource"))
         return
 
     form_resource = main_pas.with_suffix("." + resource.group(1).lower())
@@ -310,7 +313,7 @@ def run_tree_sitter(root: Path, findings: list[Finding]) -> str:
     # The grammar does not support every Delphi extension. Only missing top-level
     # structure is an error here; detailed parser ERROR nodes are emitted as
     # warnings so the report remains useful without producing false failures.
-    for path in sorted(root.rglob("*.pas")):
+    for path in sorted(p for p in root.rglob("*.pas") if p.is_file()):
         data = path.read_bytes()
         tree = parser.parse(data)
         if not tree.root_node.has_error:
@@ -341,7 +344,7 @@ def write_report(root: Path, findings: list[Finding], parser_name: str) -> None:
     errors = [item for item in findings if item.severity == "error"]
     warnings = [item for item in findings if item.severity == "warning"]
     lines = [
-        "# h5u.Grid static source audit",
+        "# hiiGrid static source audit",
         "",
         f"- Pascal parser: `{parser_name}`",
         f"- Errors: **{len(errors)}**",
@@ -381,18 +384,18 @@ def main() -> int:
     root = args.root.resolve()
 
     findings: list[Finding] = []
-    for path in sorted(root.rglob("*.pas")):
+    for path in sorted(p for p in root.rglob("*.pas") if p.is_file()):
         check_pascal_file(path, root, findings)
-    for path in sorted(root.rglob("*.dpk")):
+    for path in sorted(p for p in root.rglob("*.dpk") if p.is_file()):
         check_project_paths(path, root, findings)
-    for path in sorted(root.rglob("*.dpr")):
+    for path in sorted(p for p in root.rglob("*.dpr") if p.is_file()):
         check_project_paths(path, root, findings)
-    for main_pas in sorted((root / "Demos").rglob("Main.pas")):
+    for main_pas in sorted((root / "Demos").rglob("*Main.pas")):
         check_demo(main_pas, root, findings)
 
         demo_path = main_pas.as_posix().casefold()
         combined = main_pas.read_text(encoding="utf-8-sig")
-        for extension in (".dfm", ".fmx"):
+        for extension in (".dfm", ".fmx", ".lfm"):
             resource = main_pas.with_suffix(extension)
             if resource.exists():
                 combined += "\n" + resource.read_text(encoding="utf-8-sig")
@@ -400,11 +403,11 @@ def main() -> int:
 
         expected = None
         if "/clientdataset/" in demo_path:
-            expected = "Th5uSampleClientDataset"
+            expected = "ThiiSampleClientDataset"
         elif "/objectlist/" in demo_path:
-            expected = "Th5uObjectListController"
+            expected = "ThiiObjectListController"
         elif "/virtuallive/" in demo_path:
-            expected = "Th5uVirtualController"
+            expected = "ThiiVirtualController"
 
         if expected and expected.casefold() not in combined.casefold():
             findings.append(
@@ -417,6 +420,9 @@ def main() -> int:
             )
 
     expected_files = [
+        "Source/Common/h5u.PropertyEditor.pas",
+        "Source/VCL/Vcl.h5u.PropertyEditor.pas",
+        "Source/FMX/Fmx.h5u.PropertyEditor.pas",
         "Source/Common/h5u.Grid.Types.pas",
         "Source/Common/h5u.Grid.Factory.pas",
         "Source/Common/h5u.Grid.Columns.pas",
@@ -437,13 +443,13 @@ def main() -> int:
             findings.append(Finding("error", expected, 1, "required prototype source is missing"))
 
     demo_projects = sorted((root / "Demos").rglob("*.dpr"))
-    if len(demo_projects) != 6:
+    if len(demo_projects) != 8:
         findings.append(
             Finding(
                 "error",
                 "Demos",
                 1,
-                f"expected six demo projects, found {len(demo_projects)}",
+                f"expected eight demo projects, found {len(demo_projects)}",
             )
         )
 

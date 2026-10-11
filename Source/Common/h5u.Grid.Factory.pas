@@ -26,146 +26,146 @@ uses
   h5u.Grid.Types;
 
 type
-  Th5uFactoryObject = class;
-  Th5uFactoryObjectClass = class of Th5uFactoryObject;
-  Th5uCollectionItemClass = class of TCollectionItem;
-  Th5uAnyObjectClass = class of TObject;
+  ThiiFactoryObject = class;
+  ThiiFactoryObjectClass = class of ThiiFactoryObject;
+  ThiiCollectionItemClass = class of TCollectionItem;
+  ThiiAnyObjectClass = class of TObject;
 
-  Th5uClassRulePredicate = {$IFnDEF FPC}reference to {$ENDIF}function(const AContext: Th5uFactoryContext): Boolean;
-  Th5uGetClassEvent = procedure(Sender: TObject; const AContext: Th5uFactoryContext; var AClass: TClass; var ACacheScope: Th5uFactoryCacheScope) of object;
-  Th5uCreateInstanceEvent = procedure(Sender: TObject; const AContext: Th5uFactoryContext; AInstanceClass: TClass; var AInstance: TObject; var AHandled: Boolean) of object;
-  Th5uConfigureInstanceEvent = procedure(Sender: TObject; const AContext: Th5uFactoryContext; AInstance: TObject) of object;
-  Th5uInstanceEvent = procedure(Sender: TObject; const AContext: Th5uFactoryContext; AInstance: TObject) of object;
+  ThiiClassRulePredicate = {$IFnDEF FPC}reference to {$ENDIF}function(const AContext: ThiiFactoryContext): Boolean;
+  ThiiGetClassEvent = procedure(Sender: TObject; const AContext: ThiiFactoryContext; var AClass: TClass; var ACacheScope: ThiiFactoryCacheScope) of object;
+  ThiiCreateInstanceEvent = procedure(Sender: TObject; const AContext: ThiiFactoryContext; AInstanceClass: TClass; var AInstance: TObject; var AHandled: Boolean) of object;
+  ThiiConfigureInstanceEvent = procedure(Sender: TObject; const AContext: ThiiFactoryContext; AInstance: TObject) of object;
+  ThiiInstanceEvent = procedure(Sender: TObject; const AContext: ThiiFactoryContext; AInstance: TObject) of object;
 
-  Th5uFactoryObject = class(TObject)
+  ThiiFactoryObject = class(TObject)
   public
-    constructor Create(const AContext: Th5uFactoryContext); virtual;
-    procedure Configure(const AContext: Th5uFactoryContext); virtual;
-    procedure Bind(const AContext: Th5uFactoryContext); virtual;
+    constructor Create(const AContext: ThiiFactoryContext); virtual;
+    procedure Configure(const AContext: ThiiFactoryContext); virtual;
+    procedure Bind(const AContext: ThiiFactoryContext); virtual;
     procedure Unbind; virtual;
   end;
 
-  Th5uClassRegistration = class
+  ThiiClassRegistration = class
   private
-    FClassId: Th5uClassId;
+    FClassId: ThiiClassId;
     FExpectedBaseClass: TClass;
     FImplementationClass: TClass;
-    FPredicate: Th5uClassRulePredicate;
+    FPredicate: ThiiClassRulePredicate;
     FPriority: Integer;
     FSequence: Int64;
   public
-    property ClassId: Th5uClassId read FClassId;
+    property ClassId: ThiiClassId read FClassId;
     property ExpectedBaseClass: TClass read FExpectedBaseClass;
     property ImplementationClass: TClass read FImplementationClass;
-    property Predicate: Th5uClassRulePredicate read FPredicate;
+    property Predicate: ThiiClassRulePredicate read FPredicate;
     property Priority: Integer read FPriority;
     property Sequence: Int64 read FSequence;
   end;
 
-  Th5uFactoryScope = class(TPersistent)
+  ThiiFactoryScope = class(TPersistent)
   private
     FOwner: TObject;
-    FParent: Th5uFactoryScope;
-    FRegistrations: {$IFDEF FPC}specialize {$ENDIF}TObjectList<Th5uClassRegistration>;
+    FParent: ThiiFactoryScope;
+    FRegistrations: {$IFDEF FPC}specialize {$ENDIF}TObjectList<ThiiClassRegistration>;
     FLock: TMultiReadExclusiveWriteSynchronizer;
     FSequence: Int64;
-    FOnGetClass: Th5uGetClassEvent;
-    FOnCreateInstance: Th5uCreateInstanceEvent;
-    FOnConfigureInstance: Th5uConfigureInstanceEvent;
-    FOnInstanceCreated: Th5uInstanceEvent;
-    FOnBindInstance: Th5uInstanceEvent;
-    FOnUnbindInstance: Th5uInstanceEvent;
-    function FindLocalClass(const AContext: Th5uFactoryContext; AExpectedBaseClass: TClass): TClass;
-    procedure ValidateClass(const AClassId: Th5uClassId; AClass, AExpectedBaseClass: TClass);
-    procedure SetParent(const AValue: Th5uFactoryScope);
+    FOnGetClass: ThiiGetClassEvent;
+    FOnCreateInstance: ThiiCreateInstanceEvent;
+    FOnConfigureInstance: ThiiConfigureInstanceEvent;
+    FOnInstanceCreated: ThiiInstanceEvent;
+    FOnBindInstance: ThiiInstanceEvent;
+    FOnUnbindInstance: ThiiInstanceEvent;
+    function FindLocalClass(const AContext: ThiiFactoryContext; AExpectedBaseClass: TClass): TClass;
+    procedure ValidateClass(const AClassId: ThiiClassId; AClass, AExpectedBaseClass: TClass);
+    procedure SetParent(const AValue: ThiiFactoryScope);
   public
     constructor Create(AOwner: TObject);
     destructor Destroy; override;
 
-    function RegisterClass(const AClassId: Th5uClassId; AExpectedBaseClass, AImplementationClass: TClass; APriority: Integer = 0;
-      const APredicate: Th5uClassRulePredicate = nil): Th5uClassRegistration;
+    function RegisterClass(const AClassId: ThiiClassId; AExpectedBaseClass, AImplementationClass: TClass; APriority: Integer = 0;
+      const APredicate: ThiiClassRulePredicate = nil): ThiiClassRegistration;
 
-    procedure Unregister(ARegistration: Th5uClassRegistration);
+    procedure Unregister(ARegistration: ThiiClassRegistration);
     procedure Clear;
 
-    function ResolveClass(const AContext: Th5uFactoryContext; AExpectedBaseClass, ADefaultClass: TClass; out ACacheScope: Th5uFactoryCacheScope): TClass;
+    function ResolveClass(const AContext: ThiiFactoryContext; AExpectedBaseClass, ADefaultClass: TClass; out ACacheScope: ThiiFactoryCacheScope): TClass;
 
-    function CreateInstance(const AContext: Th5uFactoryContext; AExpectedBaseClass, ADefaultClass: TClass): TObject;
+    function CreateInstance(const AContext: ThiiFactoryContext; AExpectedBaseClass, ADefaultClass: TClass): TObject;
 
-    procedure ConfigureInstance(const AContext: Th5uFactoryContext; AInstance: TObject);
+    procedure ConfigureInstance(const AContext: ThiiFactoryContext; AInstance: TObject);
 
-    procedure BindInstance(const AContext: Th5uFactoryContext; AInstance: TObject);
+    procedure BindInstance(const AContext: ThiiFactoryContext; AInstance: TObject);
 
-    procedure UnbindInstance(const AContext: Th5uFactoryContext; AInstance: TObject);
+    procedure UnbindInstance(const AContext: ThiiFactoryContext; AInstance: TObject);
 
     property Owner: TObject read FOwner;
-    property Parent: Th5uFactoryScope read FParent write SetParent;
+    property Parent: ThiiFactoryScope read FParent write SetParent;
 
-    property OnGetClass: Th5uGetClassEvent read FOnGetClass write FOnGetClass;
-    property OnCreateInstance: Th5uCreateInstanceEvent read FOnCreateInstance write FOnCreateInstance;
-    property OnConfigureInstance: Th5uConfigureInstanceEvent read FOnConfigureInstance write FOnConfigureInstance;
-    property OnInstanceCreated: Th5uInstanceEvent read FOnInstanceCreated write FOnInstanceCreated;
-    property OnBindInstance: Th5uInstanceEvent read FOnBindInstance write FOnBindInstance;
-    property OnUnbindInstance: Th5uInstanceEvent read FOnUnbindInstance write FOnUnbindInstance;
+    property OnGetClass: ThiiGetClassEvent read FOnGetClass write FOnGetClass;
+    property OnCreateInstance: ThiiCreateInstanceEvent read FOnCreateInstance write FOnCreateInstance;
+    property OnConfigureInstance: ThiiConfigureInstanceEvent read FOnConfigureInstance write FOnConfigureInstance;
+    property OnInstanceCreated: ThiiInstanceEvent read FOnInstanceCreated write FOnInstanceCreated;
+    property OnBindInstance: ThiiInstanceEvent read FOnBindInstance write FOnBindInstance;
+    property OnUnbindInstance: ThiiInstanceEvent read FOnUnbindInstance write FOnUnbindInstance;
   end;
 
-  Th5uClassFactory = class(TComponent)
+  ThiiClassFactory = class(TComponent)
   private
-    FScope: Th5uFactoryScope;
-    function GetOnGetClass: Th5uGetClassEvent;
-    procedure SetOnGetClass(const AValue: Th5uGetClassEvent);
-    function GetOnCreateInstance: Th5uCreateInstanceEvent;
-    procedure SetOnCreateInstance(const AValue: Th5uCreateInstanceEvent);
-    function GetOnConfigureInstance: Th5uConfigureInstanceEvent;
-    procedure SetOnConfigureInstance(const AValue: Th5uConfigureInstanceEvent);
+    FScope: ThiiFactoryScope;
+    function GetOnGetClass: ThiiGetClassEvent;
+    procedure SetOnGetClass(const AValue: ThiiGetClassEvent);
+    function GetOnCreateInstance: ThiiCreateInstanceEvent;
+    procedure SetOnCreateInstance(const AValue: ThiiCreateInstanceEvent);
+    function GetOnConfigureInstance: ThiiConfigureInstanceEvent;
+    procedure SetOnConfigureInstance(const AValue: ThiiConfigureInstanceEvent);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-    property Scope: Th5uFactoryScope read FScope;
+    property Scope: ThiiFactoryScope read FScope;
   published
-    property OnGetClass: Th5uGetClassEvent read GetOnGetClass write SetOnGetClass;
-    property OnCreateInstance: Th5uCreateInstanceEvent read GetOnCreateInstance write SetOnCreateInstance;
-    property OnConfigureInstance: Th5uConfigureInstanceEvent read GetOnConfigureInstance write SetOnConfigureInstance;
+    property OnGetClass: ThiiGetClassEvent read GetOnGetClass write SetOnGetClass;
+    property OnCreateInstance: ThiiCreateInstanceEvent read GetOnCreateInstance write SetOnCreateInstance;
+    property OnConfigureInstance: ThiiConfigureInstanceEvent read GetOnConfigureInstance write SetOnConfigureInstance;
   end;
 
-function h5uGlobalFactoryScope: Th5uFactoryScope;
+function h5uGlobalFactoryScope: ThiiFactoryScope;
 
 implementation
 
 var
-  GGlobalFactoryScope: Th5uFactoryScope;
+  GGlobalFactoryScope: ThiiFactoryScope;
 
-{ Th5uFactoryObject }
+{ ThiiFactoryObject }
 
-procedure Th5uFactoryObject.Bind(const AContext: Th5uFactoryContext);
+procedure ThiiFactoryObject.Bind(const AContext: ThiiFactoryContext);
 begin
 end;
 
-procedure Th5uFactoryObject.Configure(const AContext: Th5uFactoryContext);
+procedure ThiiFactoryObject.Configure(const AContext: ThiiFactoryContext);
 begin
 end;
 
-constructor Th5uFactoryObject.Create(const AContext: Th5uFactoryContext);
+constructor ThiiFactoryObject.Create(const AContext: ThiiFactoryContext);
 begin
   inherited Create;
 end;
 
-procedure Th5uFactoryObject.Unbind;
+procedure ThiiFactoryObject.Unbind;
 begin
 end;
 
-{ Th5uFactoryScope }
+{ ThiiFactoryScope }
 
-procedure Th5uFactoryScope.BindInstance(const AContext: Th5uFactoryContext; AInstance: TObject);
+procedure ThiiFactoryScope.BindInstance(const AContext: ThiiFactoryContext; AInstance: TObject);
 begin
-  if AInstance is Th5uFactoryObject then
-    Th5uFactoryObject(AInstance).Bind(AContext);
+  if AInstance is ThiiFactoryObject then
+    ThiiFactoryObject(AInstance).Bind(AContext);
 
   if Assigned(FOnBindInstance) then
     FOnBindInstance(FOwner, AContext, AInstance);
 end;
 
-procedure Th5uFactoryScope.Clear;
+procedure ThiiFactoryScope.Clear;
 begin
   FLock.BeginWrite;
   try
@@ -175,28 +175,28 @@ begin
   end;
 end;
 
-procedure Th5uFactoryScope.ConfigureInstance(const AContext: Th5uFactoryContext; AInstance: TObject);
+procedure ThiiFactoryScope.ConfigureInstance(const AContext: ThiiFactoryContext; AInstance: TObject);
 begin
-  if AInstance is Th5uFactoryObject then
-    Th5uFactoryObject(AInstance).Configure(AContext);
+  if AInstance is ThiiFactoryObject then
+    ThiiFactoryObject(AInstance).Configure(AContext);
 
   if Assigned(FOnConfigureInstance) then
     FOnConfigureInstance(FOwner, AContext, AInstance);
 end;
 
-constructor Th5uFactoryScope.Create(AOwner: TObject);
+constructor ThiiFactoryScope.Create(AOwner: TObject);
 begin
   inherited Create;
   FOwner := AOwner;
-  FRegistrations := {$IFDEF FPC}specialize {$ENDIF}TObjectList<Th5uClassRegistration>.Create(True);
+  FRegistrations := {$IFDEF FPC}specialize {$ENDIF}TObjectList<ThiiClassRegistration>.Create(True);
   FLock := TMultiReadExclusiveWriteSynchronizer.Create;
   FParent := nil;
 end;
 
-function Th5uFactoryScope.CreateInstance(const AContext: Th5uFactoryContext; AExpectedBaseClass, ADefaultClass: TClass): TObject;
+function ThiiFactoryScope.CreateInstance(const AContext: ThiiFactoryContext; AExpectedBaseClass, ADefaultClass: TClass): TObject;
 var
   LClass: TClass;
-  LCacheScope: Th5uFactoryCacheScope;
+  LCacheScope: ThiiFactoryCacheScope;
   LHandled: Boolean;
 begin
   Result := nil;
@@ -208,28 +208,28 @@ begin
 
   if not LHandled then
   begin
-    if LClass.InheritsFrom(Th5uFactoryObject) then
-      Result := Th5uFactoryObjectClass(LClass).Create(AContext)
+    if LClass.InheritsFrom(ThiiFactoryObject) then
+      Result := ThiiFactoryObjectClass(LClass).Create(AContext)
     else if LClass.InheritsFrom(TComponent) then
       Result := TComponentClass(LClass).Create(AContext.Owner)
     else if LClass.InheritsFrom(TCollectionItem) then
     begin
       if not Assigned(AContext.Collection) then
-        raise Eh5uFactory.CreateFmt('Class "%s" requires a collection in the factory context.', [LClass.ClassName]);
-      Result := Th5uCollectionItemClass(LClass).Create(AContext.Collection);
+        raise EhiiFactory.CreateFmt('Class "%s" requires a collection in the factory context.', [LClass.ClassName]);
+      Result := ThiiCollectionItemClass(LClass).Create(AContext.Collection);
     end
     else
-      Result := Th5uAnyObjectClass(LClass).Create;
+      Result := ThiiAnyObjectClass(LClass).Create;
   end;
 
   if not Assigned(Result) then
-    raise Eh5uFactory.CreateFmt('The factory returned no instance for "%s".', [string(AContext.ClassId)]);
+    raise EhiiFactory.CreateFmt('The factory returned no instance for "%s".', [string(AContext.ClassId)]);
 
   if not Result.InheritsFrom(AExpectedBaseClass) then
   begin
     Result.Free;
     Result := nil;
-    raise Eh5uFactory.CreateFmt('Factory instance for "%s" must inherit from "%s".', [string(AContext.ClassId), AExpectedBaseClass.ClassName]);
+    raise EhiiFactory.CreateFmt('Factory instance for "%s" must inherit from "%s".', [string(AContext.ClassId), AExpectedBaseClass.ClassName]);
   end;
 
   try
@@ -243,18 +243,18 @@ begin
   end;
 end;
 
-destructor Th5uFactoryScope.Destroy;
+destructor ThiiFactoryScope.Destroy;
 begin
   FLock.Free;
   FRegistrations.Free;
   inherited;
 end;
 
-function Th5uFactoryScope.FindLocalClass(const AContext: Th5uFactoryContext; AExpectedBaseClass: TClass): TClass;
+function ThiiFactoryScope.FindLocalClass(const AContext: ThiiFactoryContext; AExpectedBaseClass: TClass): TClass;
 var
   I: Integer;
-  LRegistration: Th5uClassRegistration;
-  LBest: Th5uClassRegistration;
+  LRegistration: ThiiClassRegistration;
+  LBest: ThiiClassRegistration;
 begin
   Result := nil;
   LBest := nil;
@@ -275,8 +275,8 @@ begin
       if Assigned(LRegistration.Predicate) and not LRegistration.Predicate(AContext) then
         Continue;
 
-      if not Assigned(LBest) or (LRegistration.Priority > LBest.Priority) or ((LRegistration.Priority = LBest.Priority) and (LRegistration.Sequence
-        > LBest.Sequence)) then
+      if not Assigned(LBest) or (LRegistration.Priority > LBest.Priority)
+        or ((LRegistration.Priority = LBest.Priority) and (LRegistration.Sequence > LBest.Sequence)) then
         LBest := LRegistration;
     end;
 
@@ -287,15 +287,15 @@ begin
   end;
 end;
 
-function Th5uFactoryScope.RegisterClass(const AClassId: Th5uClassId; AExpectedBaseClass, AImplementationClass: TClass; APriority: Integer;
-  const APredicate: Th5uClassRulePredicate): Th5uClassRegistration;
+function ThiiFactoryScope.RegisterClass(const AClassId: ThiiClassId; AExpectedBaseClass, AImplementationClass: TClass; APriority: Integer;
+  const APredicate: ThiiClassRulePredicate): ThiiClassRegistration;
 begin
   if string(AClassId).Trim = '' then
-    raise Eh5uFactory.Create('A factory class ID must not be empty.');
+    raise EhiiFactory.Create('A factory class ID must not be empty.');
 
   ValidateClass(AClassId, AImplementationClass, AExpectedBaseClass);
 
-  Result := Th5uClassRegistration.Create;
+  Result := ThiiClassRegistration.Create;
   Result.FClassId := AClassId;
   Result.FExpectedBaseClass := AExpectedBaseClass;
   Result.FImplementationClass := AImplementationClass;
@@ -312,11 +312,11 @@ begin
   end;
 end;
 
-function Th5uFactoryScope.ResolveClass(const AContext: Th5uFactoryContext; AExpectedBaseClass, ADefaultClass: TClass; out ACacheScope: Th5uFactoryCacheScope): TClass;
+function ThiiFactoryScope.ResolveClass(const AContext: ThiiFactoryContext; AExpectedBaseClass, ADefaultClass: TClass; out ACacheScope: ThiiFactoryCacheScope): TClass;
 var
   LLocalClass: TClass;
 begin
-  ACacheScope := Th5uFactoryCacheScope.ClassId;
+  ACacheScope := ThiiFactoryCacheScope.ClassId;
 
   if Assigned(FParent) then
     Result := FParent.ResolveClass(AContext, AExpectedBaseClass, ADefaultClass, ACacheScope)
@@ -333,34 +333,34 @@ begin
   ValidateClass(AContext.ClassId, Result, AExpectedBaseClass);
 end;
 
-procedure Th5uFactoryScope.SetParent(const AValue: Th5uFactoryScope);
+procedure ThiiFactoryScope.SetParent(const AValue: ThiiFactoryScope);
 var
-  LScope: Th5uFactoryScope;
+  LScope: ThiiFactoryScope;
 begin
   if AValue = Self then
-    raise Eh5uFactory.Create('A factory scope cannot be its own parent.');
+    raise EhiiFactory.Create('A factory scope cannot be its own parent.');
 
   LScope := AValue;
   while Assigned(LScope) do
   begin
     if LScope = Self then
-      raise Eh5uFactory.Create('Circular factory scope parent chain.');
+      raise EhiiFactory.Create('Circular factory scope parent chain.');
     LScope := LScope.Parent;
   end;
 
   FParent := AValue;
 end;
 
-procedure Th5uFactoryScope.UnbindInstance(const AContext: Th5uFactoryContext; AInstance: TObject);
+procedure ThiiFactoryScope.UnbindInstance(const AContext: ThiiFactoryContext; AInstance: TObject);
 begin
   if Assigned(FOnUnbindInstance) then
     FOnUnbindInstance(FOwner, AContext, AInstance);
 
-  if AInstance is Th5uFactoryObject then
-    Th5uFactoryObject(AInstance).Unbind;
+  if AInstance is ThiiFactoryObject then
+    ThiiFactoryObject(AInstance).Unbind;
 end;
 
-procedure Th5uFactoryScope.Unregister(ARegistration: Th5uClassRegistration);
+procedure ThiiFactoryScope.Unregister(ARegistration: ThiiClassRegistration);
 begin
   if not Assigned(ARegistration) then
     Exit;
@@ -374,70 +374,70 @@ begin
   ARegistration.Free;
 end;
 
-procedure Th5uFactoryScope.ValidateClass(const AClassId: Th5uClassId; AClass, AExpectedBaseClass: TClass);
+procedure ThiiFactoryScope.ValidateClass(const AClassId: ThiiClassId; AClass, AExpectedBaseClass: TClass);
 begin
   if not Assigned(AClass) then
-    raise Eh5uFactory.CreateFmt('No class is registered for "%s".', [string(AClassId)]);
+    raise EhiiFactory.CreateFmt('No class is registered for "%s".', [string(AClassId)]);
 
   if Assigned(AExpectedBaseClass) and not AClass.InheritsFrom(AExpectedBaseClass) then
-    raise Eh5uFactory.CreateFmt('Class "%s" registered for "%s" must inherit from "%s".', [AClass.ClassName, string(AClassId),
-      AExpectedBaseClass.ClassName]);
+    raise EhiiFactory.CreateFmt('Class "%s" registered for "%s" must inherit from "%s".',
+      [AClass.ClassName, string(AClassId), AExpectedBaseClass.ClassName]);
 end;
 
-{ Th5uClassFactory }
+{ ThiiClassFactory }
 
-constructor Th5uClassFactory.Create(AOwner: TComponent);
+constructor ThiiClassFactory.Create(AOwner: TComponent);
 begin
   inherited;
-  FScope := Th5uFactoryScope.Create(Self);
+  FScope := ThiiFactoryScope.Create(Self);
   FScope.Parent := h5uGlobalFactoryScope;
 end;
 
-destructor Th5uClassFactory.Destroy;
+destructor ThiiClassFactory.Destroy;
 begin
   FScope.Free;
   inherited;
 end;
 
-function Th5uClassFactory.GetOnConfigureInstance: Th5uConfigureInstanceEvent;
+function ThiiClassFactory.GetOnConfigureInstance: ThiiConfigureInstanceEvent;
 begin
   Result := FScope.OnConfigureInstance;
 end;
 
-function Th5uClassFactory.GetOnCreateInstance: Th5uCreateInstanceEvent;
+function ThiiClassFactory.GetOnCreateInstance: ThiiCreateInstanceEvent;
 begin
   Result := FScope.OnCreateInstance;
 end;
 
-function Th5uClassFactory.GetOnGetClass: Th5uGetClassEvent;
+function ThiiClassFactory.GetOnGetClass: ThiiGetClassEvent;
 begin
   Result := FScope.OnGetClass;
 end;
 
-procedure Th5uClassFactory.SetOnConfigureInstance(const AValue: Th5uConfigureInstanceEvent);
+procedure ThiiClassFactory.SetOnConfigureInstance(const AValue: ThiiConfigureInstanceEvent);
 begin
   FScope.OnConfigureInstance := AValue;
 end;
 
-procedure Th5uClassFactory.SetOnCreateInstance(const AValue: Th5uCreateInstanceEvent);
+procedure ThiiClassFactory.SetOnCreateInstance(const AValue: ThiiCreateInstanceEvent);
 begin
   FScope.OnCreateInstance := AValue;
 end;
 
-procedure Th5uClassFactory.SetOnGetClass(const AValue: Th5uGetClassEvent);
+procedure ThiiClassFactory.SetOnGetClass(const AValue: ThiiGetClassEvent);
 begin
   FScope.OnGetClass := AValue;
 end;
 
-function h5uGlobalFactoryScope: Th5uFactoryScope;
+function h5uGlobalFactoryScope: ThiiFactoryScope;
 begin
   if not Assigned(GGlobalFactoryScope) then
-    GGlobalFactoryScope := Th5uFactoryScope.Create(nil);
+    GGlobalFactoryScope := ThiiFactoryScope.Create(nil);
   Result := GGlobalFactoryScope;
 end;
 
 initialization
-  GGlobalFactoryScope := Th5uFactoryScope.Create(nil);
+  GGlobalFactoryScope := ThiiFactoryScope.Create(nil);
 
 finalization
   FreeAndNil(GGlobalFactoryScope);

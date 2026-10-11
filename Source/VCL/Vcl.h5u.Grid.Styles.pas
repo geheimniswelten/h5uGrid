@@ -12,7 +12,7 @@ uses
   h5u.Grid.Types;
 
 type
-  Th5uVclPalette = record
+  ThiiVclPalette = record
     GridBackground: TColor;
     EmptyArea: TColor;
     CellBackground: TColor;
@@ -37,7 +37,7 @@ type
     ThumbHintText: TColor;
   end;
 
-function h5uGetVclPalette(ATheme: Th5uGridTheme): Th5uVclPalette;
+function h5uGetVclPalette(ATheme: ThiiGridTheme): ThiiVclPalette;
 function h5uBlendColor(AColor1, AColor2: TColor; AWeight: Byte): TColor;
 
 implementation
@@ -58,7 +58,7 @@ begin
   Result := RGB(LR, LG, LB);
 end;
 
-function h5uGetVclPalette(ATheme: Th5uGridTheme): Th5uVclPalette;
+function h5uGetVclPalette(ATheme: ThiiGridTheme): ThiiVclPalette;
 var
   LWindow: TColor;
   LText: TColor;
@@ -67,7 +67,7 @@ var
   LHighlightText: TColor;
 begin
   case ATheme of
-    Th5uGridTheme.Classic2000:
+    ThiiGridTheme.Classic2000:
       begin
         Result.GridBackground := clBtnFace;
         Result.EmptyArea := clBtnFace;
@@ -93,7 +93,7 @@ begin
         Result.ThumbHintText := clInfoText;
       end;
 
-    Th5uGridTheme.Dark:
+    ThiiGridTheme.Dark:
       begin
         Result.GridBackground := $00242424;
         Result.EmptyArea := $00202020;
@@ -119,7 +119,7 @@ begin
         Result.ThumbHintText := clWhite;
       end;
 
-    Th5uGridTheme.Modern:
+    ThiiGridTheme.Modern:
       begin
         Result.GridBackground := $00F5F5F5;
         Result.EmptyArea := $00F1F1F1;

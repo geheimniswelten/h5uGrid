@@ -11,7 +11,7 @@ uses
   h5u.Grid.Data.Virtual, Fmx.h5u.Grid;
 
 type
-  TTestGrid = class(Th5uFmxGrid)
+  TTestGrid = class(ThiiGrid)
   public
     procedure Pan(const APoint: TPointF; AFlags: TInteractiveGestureFlags);
   end;
@@ -19,7 +19,7 @@ type
   TSource = class
     procedure Count(Sender: TObject; var ACount: Int64);
     procedure Value(Sender: TObject; ARow: Int64; const AField: string; var AValue: TValue);
-    procedure Measure(Sender: TObject; const AContext: Th5uEditorContext; var AWidth: Single);
+    procedure Measure(Sender: TObject; const AContext: ThiiEditorContext; var AWidth: Single);
   end;
 
 procedure TTestGrid.Pan(const APoint: TPointF; AFlags: TInteractiveGestureFlags);
@@ -47,7 +47,7 @@ begin
   AValue := TValue.From<string>('Fractional width');
 end;
 
-procedure TSource.Measure(Sender: TObject; const AContext: Th5uEditorContext; var AWidth: Single);
+procedure TSource.Measure(Sender: TObject; const AContext: ThiiEditorContext; var AWidth: Single);
 begin
   AWidth := 30.25;
 end;
@@ -55,8 +55,7 @@ end;
 procedure CheckNear(AExpected, AActual: Double; const AMessage: string);
 begin
   if Abs(AActual - AExpected) > 0.0001 then
-    raise Exception.Create(AMessage + ': expected ' + FloatToStr(AExpected)
-      + ', actual ' + FloatToStr(AActual));
+    raise Exception.Create(AMessage + ': expected ' + FloatToStr(AExpected) + ', actual ' + FloatToStr(AActual));
   Writeln('PASS: ' + AMessage);
 end;
 
@@ -79,7 +78,7 @@ var
   Form: TForm;
   Grid: TTestGrid;
   Source: TSource;
-  Controller: Th5uVirtualController;
+  Controller: ThiiVirtualController;
   Bitmap: TBitmap;
   Bar: TScrollBar;
   Start: Double;
@@ -87,7 +86,7 @@ begin
   Form := TForm.CreateNew(nil);
   Source := TSource.Create;
   try
-    Controller := Th5uVirtualController.Create(Form);
+    Controller := ThiiVirtualController.Create(Form);
     Controller.OnGetRowCount := Source.Count;
     Controller.OnGetValue := Source.Value;
     Grid := TTestGrid.Create(Form);
@@ -95,10 +94,10 @@ begin
     Grid.SetBounds(0, 0, 640, 320);
     Grid.ScrollHints.Enabled := False;
     Grid.RowIndicator.Visible := False;
-    Grid.RowHeight.Mode := Th5uRowHeightMode.Fixed;
+    Grid.RowHeight.Mode := ThiiRowHeightMode.Fixed;
     Grid.RowHeight.FixedHeight := 32.75;
     Grid.Spacing.RowSpacing := 0.25;
-    Grid.ColumnSizing.FitMode := Th5uColumnFitMode.None;
+    Grid.ColumnSizing.FitMode := ThiiColumnFitMode.None;
     Grid.ColumnSizing.AutoWidthRowLimit := 1;
     Grid.Editors.AddVariant('Fractional', 'TextEditor').OnMeasureWidth := Source.Measure;
     Grid.Columns.Add.Id := 'Value';

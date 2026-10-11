@@ -2,27 +2,27 @@ uses
   System.Classes, System.SysUtils, System.Rtti, System.Types, System.Math,
   System.UITypes, System.UIConsts,
   h5u.Grid.Columns, h5u.Grid.Types, h5u.Grid.Options, h5u.Grid.Sizing,
-  h5u.Grid.Editors, h5u.Grid.Data.Virtual, h5u.FormDesigner.Properties,
+  h5u.Grid.Editors, h5u.Grid.Data.Virtual, h5u.PropertyEditor,
   {$IFDEF TEST_FMX}
   FMX.Forms, FMX.Graphics, FMX.Controls, FMX.Types,
-  Fmx.h5u.Grid, Fmx.h5u.FormDesigner;
+  Fmx.h5u.Grid, Fmx.h5u.PropertyEditor, Fmx.h5u.FormDesigner;
   {$ELSE}
   Vcl.Forms, Vcl.Graphics, Vcl.Controls,
-  Vcl.h5u.Grid, Vcl.h5u.FormDesigner;
+  Vcl.h5u.Grid, Vcl.h5u.PropertyEditor, Vcl.h5u.FormDesigner;
   {$ENDIF}
 
 type
   {$IFDEF TEST_FMX}
-  TTestGrid = Th5uFmxGrid;
-  TPropertyView = Th5uFmxPropertyEditor;
+  TTestGrid = ThiiGrid;
+  TPropertyView = ThiiPropertyEditor;
   TPaintControl = TControl;
-  THeightContext = Th5uFmxGetRowHeightContext;
+  THeightContext = ThiiGetRowHeightContext;
   THeight = Single;
   {$ELSE}
-  TTestGrid = Th5uVclGrid;
-  TPropertyView = Th5uVclPropertyEditor;
+  TTestGrid = ThiiGrid;
+  TPropertyView = ThiiPropertyEditor;
   TPaintControl = TWinControl;
-  THeightContext = Th5uGetRowHeightContext;
+  THeightContext = ThiiGetRowHeightContext;
   THeight = Integer;
   {$ENDIF}
 
@@ -30,11 +30,10 @@ type
     HeightCalls, MeasureCalls, ValueCalls: Integer;
     Count: Int64;
     procedure RowCount(Sender: TObject; var ACount: Int64);
-    procedure RowKey(Sender: TObject; ARow: Int64; var AKey: Th5uRowKey);
+    procedure RowKey(Sender: TObject; ARow: Int64; var AKey: ThiiRowKey);
     procedure Value(Sender: TObject; ARow: Int64; const AField: string; var AValue: TValue);
-    procedure Measure(Sender: TObject; const AContext: Th5uEditorContext; var AWidth: Single);
-    procedure Height(Sender: TObject; const AContext: THeightContext;
-      var AHeight: THeight; var ACacheResult: Boolean);
+    procedure Measure(Sender: TObject; const AContext: ThiiEditorContext; var AWidth: Single);
+    procedure Height(Sender: TObject; const AContext: THeightContext; var AHeight: THeight; var ACacheResult: Boolean);
   end;
 
 procedure Check(ACondition: Boolean; const AMessage: string);
@@ -46,8 +45,7 @@ end;
 
 procedure CheckNear(AExpected, AActual, ATolerance: Double; const AMessage: string);
 begin
-  Check(Abs(AExpected - AActual) <= ATolerance,
-    AMessage + ' (expected ' + FloatToStr(AExpected) + ', actual ' + FloatToStr(AActual) + ')');
+  Check(Abs(AExpected - AActual) <= ATolerance, AMessage + ' (expected ' + FloatToStr(AExpected) + ', actual ' + FloatToStr(AActual) + ')');
 end;
 
 procedure PaintOffscreen(AControl: TPaintControl);
@@ -142,8 +140,8 @@ begin
     LChild.Spacing.RowSpacing := 0;
     LAncestor.Spacing.DefaultColumnRightSpacing := 1.5;
     LChild.Spacing.DefaultColumnRightSpacing := 0;
-    Th5uGridEditorItem(LAncestor.Editors.Add).DefaultMinWidth := 11.5;
-    Th5uGridEditorItem(LChild.Editors.Add).DefaultMinWidth := 0;
+    ThiiGridEditorItem(LAncestor.Editors.Add).DefaultMinWidth := 11.5;
+    ThiiGridEditorItem(LChild.Editors.Add).DefaultMinWidth := 0;
     LText := WriteGridText(LChild, LAncestor);
     Check(Pos('Header.RowHeight = 26', LText) > 0, 'inherited header can reset to its default height');
     Check(Pos('RowIndicator.Width = 34', LText) > 0, 'inherited indicator can reset to its default width');
@@ -152,8 +150,7 @@ begin
     Check(Pos('ColumnSizing.DefaultMinWidth = 0', LText) > 0, 'inherited column sizing can restore Default minimum');
     Check(Pos('Spacing.RowSpacing = 0', LText) > 0, 'inherited row spacing can reset to zero');
     Check(Pos('Spacing.DefaultColumnRightSpacing = 0', LText) > 0, 'inherited column spacing can reset to zero');
-    Check(Pos('DefaultMinWidth = 0', Copy(LText, Pos('Editors = <', LText), MaxInt)) > 0,
-      'inherited editor minimum can reset to zero');
+    Check(Pos('DefaultMinWidth = 0', Copy(LText, Pos('Editors = <', LText), MaxInt)) > 0, 'inherited editor minimum can reset to zero');
   finally
     LForm.Free;
   end;
@@ -163,12 +160,12 @@ procedure TestGroupedOptionsAndStreaming;
 var
   LForm: TForm;
   LGrid, LLoaded: TTestGrid;
-  LModel: Th5uPropertyEditor;
-  LColumn: Th5uGridColumn;
+  LModel: ThiiPropertyModel;
+  LColumn: ThiiGridColumn;
   LText, LName: string;
 begin
   LForm := TForm.CreateNew(nil);
-  LModel := Th5uPropertyEditor.Create(nil);
+  LModel := ThiiPropertyModel.Create(nil);
   try
     LGrid := NewGrid(LForm);
     LGrid.Name := 'ModernGrid';
@@ -181,7 +178,7 @@ begin
     LGrid.ColumnSizing.AutoWidthRowLimit := 777;
     LGrid.ColumnSizing.MinContentWidth := 80;
     LGrid.ColumnSizing.MaxContentWidth := 2000;
-    LGrid.Appearance.Theme := Th5uGridTheme.Dark;
+    LGrid.Appearance.Theme := ThiiGridTheme.Dark;
     LGrid.Appearance.DefaultCellColor := TColorRec.White;
     LGrid.Appearance.RowSpacingColor := TColorRec.Red;
     LGrid.Appearance.ColumnSpacingColor := TColorRec.Blue;
@@ -189,21 +186,20 @@ begin
     Check(not LGrid.ShowHeader and (LGrid.HeaderRowHeight = 41), 'legacy header aliases read grouped values');
     Check(not LGrid.ShowRowIndicator and (LGrid.RowIndicatorWidth = 52), 'legacy indicator aliases read grouped values');
     Check(not LGrid.AllowEditing and LGrid.ImmediateEdit, 'legacy editing aliases read grouped values');
-    Check((LGrid.AutoWidthRowLimit = 777) and (LGrid.MinWidth = 80) and (LGrid.MaxWidth = 2000),
-      'legacy sizing aliases read grouped values');
+    Check((LGrid.AutoWidthRowLimit = 777) and (LGrid.MinWidth = 80) and (LGrid.MaxWidth = 2000), 'legacy sizing aliases read grouped values');
     LGrid.RowIndicatorWidth := 54;
     LGrid.HeaderRowHeight := 43;
     LGrid.AutoWidthRowLimit := 779;
     LGrid.Spacing.RowSpacingColor := TColorRec.Yellow;
-    Check((LGrid.RowIndicator.Width = 54) and (LGrid.Header.RowHeight = 43)
-      and (LGrid.ColumnSizing.AutoWidthRowLimit = 779), 'legacy setters forward to grouped options');
+    Check((LGrid.RowIndicator.Width = 54) and (LGrid.Header.RowHeight = 43) and (LGrid.ColumnSizing.AutoWidthRowLimit = 779),
+      'legacy setters forward to grouped options');
     Check(LGrid.Appearance.RowSpacingColor = TColorRec.Yellow, 'legacy spacing color alias forwards to Appearance');
 
     LModel.DataObject := LGrid;
     for LName in ['ColumnSizing', 'Header', 'RowIndicator', 'Editing', 'Appearance'] do
       Check(Assigned(LModel.FindProperty(LName)), 'published property model contains ' + LName);
-    for LName in ['AutoWidthRowLimit', 'HeaderLayout', 'HeaderRowHeight', 'RowIndicatorWidth',
-      'ShowHeader', 'ShowRowIndicator', 'AllowEditing', 'ImmediateEdit', 'Theme', 'MinWidth', 'MaxWidth'] do
+    for LName in ['AutoWidthRowLimit', 'HeaderLayout', 'HeaderRowHeight', 'RowIndicatorWidth', 'ShowHeader', 'ShowRowIndicator', 'AllowEditing',
+      'ImmediateEdit', 'Theme', 'MinWidth', 'MaxWidth'] do
       Check(not Assigned(LModel.FindProperty(LName)), 'published property model omits legacy alias ' + LName);
 
     LColumn := LGrid.Columns.Add;
@@ -219,58 +215,36 @@ begin
     Check(Pos('SizingVersion = 1', LText) > 0, 'modern stream carries the sizing version');
     Check(Pos('Header.RowHeight', LText) > 0, 'modern stream stores grouped header path');
     Check(Pos('Appearance.RowSpacingColor', LText) > 0, 'modern stream stores grouped appearance path');
-    Check((Pos('  HeaderRowHeight =', LText) = 0)
-      and (Pos('  AutoWidthRowLimit =', LText) = 0)
-      and (Pos('  HeaderLayout.', LText) = 0)
+    Check((Pos('  HeaderRowHeight =', LText) = 0) and (Pos('  AutoWidthRowLimit =', LText) = 0) and (Pos('  HeaderLayout.', LText) = 0)
       and (Pos('  Spacing.RowSpacingColor', LText) = 0), 'legacy paths are not written alongside canonical paths');
     LGrid.Name := '';
     LLoaded := ReadGridText(LForm, LText);
-    Check((LLoaded.Columns[0].Width = 0) and (LLoaded.Columns[0].MaxWidth = 0),
-      'modern default width and maximum remain Default after roundtrip');
-    Check((LLoaded.Columns[1].Width = -25.5) and (LLoaded.Columns[1].MaxWidth = -200),
-      'fractional percent width and 200 percent maximum roundtrip');
-    Check((LLoaded.Header.RowHeight = 43) and (LLoaded.Header.Layout.Cells.Count = 1),
-      'grouped header layout and height roundtrip');
-    Check((LLoaded.Appearance.RowSpacingColor = TColorRec.Yellow)
-      and (LLoaded.Appearance.Theme = Th5uGridTheme.Dark), 'appearance colors and theme roundtrip');
+    Check((LLoaded.Columns[0].Width = 0) and (LLoaded.Columns[0].MaxWidth = 0), 'modern default width and maximum remain Default after roundtrip');
+    Check((LLoaded.Columns[1].Width = -25.5) and (LLoaded.Columns[1].MaxWidth = -200), 'fractional percent width and 200 percent maximum roundtrip');
+    Check((LLoaded.Header.RowHeight = 43) and (LLoaded.Header.Layout.Cells.Count = 1), 'grouped header layout and height roundtrip');
+    Check((LLoaded.Appearance.RowSpacingColor = TColorRec.Yellow) and (LLoaded.Appearance.Theme = ThiiGridTheme.Dark),
+      'appearance colors and theme roundtrip');
 
-    LText := 'object LegacyGrid: ' + TTestGrid.ClassName + sLineBreak
-      + '  ShowHeader = False' + sLineBreak
-      + '  HeaderRowHeight = 45' + sLineBreak
-      + '  ShowRowIndicator = False' + sLineBreak
-      + '  RowIndicatorWidth = 56' + sLineBreak
-      + '  AllowEditing = False' + sLineBreak
-      + '  ImmediateEdit = True' + sLineBreak
-      + '  AutoWidthRowLimit = 901' + sLineBreak
-      + '  MinWidth = 80' + sLineBreak
-      + '  MaxWidth = 4000' + sLineBreak
-      + '  Theme = Dark' + sLineBreak
-      + '  Spacing.RowSpacingColor = clGreen' + sLineBreak
-      + '  Spacing.ColumnSpacingColor = 123' + sLineBreak
-      + '  Spacing.ContentPaddingColor = 456' + sLineBreak
-      + '  Columns = <' + sLineBreak
-      + '    item Id = ''OldDefault'' end' + sLineBreak
-      + '    item Id = ''OldPercent'' WidthInPercent = 25.5 end>' + sLineBreak
-      + '  HeaderLayout.Enabled = True' + sLineBreak
-      + '  HeaderLayout.RowCount = 2' + sLineBreak
-      + '  HeaderLayout.Cells = <' + sLineBreak
-      + '    item Caption = ''Old group'' ColumnSpan = 2 WidthInPercent = 100 end>' + sLineBreak
-      + 'end';
+    LText := 'object LegacyGrid: ' + TTestGrid.ClassName + sLineBreak + '  ShowHeader = False' + sLineBreak + '  HeaderRowHeight = 45' + sLineBreak
+      + '  ShowRowIndicator = False' + sLineBreak + '  RowIndicatorWidth = 56' + sLineBreak + '  AllowEditing = False' + sLineBreak
+      + '  ImmediateEdit = True' + sLineBreak + '  AutoWidthRowLimit = 901' + sLineBreak + '  MinWidth = 80' + sLineBreak + '  MaxWidth = 4000'
+      + sLineBreak + '  Theme = Dark' + sLineBreak + '  Spacing.RowSpacingColor = clGreen' + sLineBreak + '  Spacing.ColumnSpacingColor = 123'
+      + sLineBreak + '  Spacing.ContentPaddingColor = 456' + sLineBreak + '  Columns = <' + sLineBreak + '    item Id = ''OldDefault'' end'
+      + sLineBreak + '    item Id = ''OldPercent'' WidthInPercent = 25.5 end>' + sLineBreak + '  HeaderLayout.Enabled = True' + sLineBreak
+      + '  HeaderLayout.RowCount = 2' + sLineBreak + '  HeaderLayout.Cells = <' + sLineBreak
+      + '    item Caption = ''Old group'' ColumnSpan = 2 WidthInPercent = 100 end>' + sLineBreak + 'end';
     LLoaded := ReadGridText(LForm, LText);
     Check(not LLoaded.Header.Visible and (LLoaded.Header.RowHeight = 45), 'old flat header properties load');
     Check(not LLoaded.RowIndicator.Visible and (LLoaded.RowIndicator.Width = 56), 'old flat indicator properties load');
     Check(not LLoaded.Editing.AllowEditing and LLoaded.Editing.ImmediateEdit, 'old flat editing properties load');
-    Check((LLoaded.ColumnSizing.AutoWidthRowLimit = 901)
-      and (LLoaded.ColumnSizing.MinContentWidth = 80)
+    Check((LLoaded.ColumnSizing.AutoWidthRowLimit = 901) and (LLoaded.ColumnSizing.MinContentWidth = 80)
       and (LLoaded.ColumnSizing.MaxContentWidth = 4000), 'old flat sizing properties load');
-    Check((LLoaded.Appearance.RowSpacingColor = TColorRec.Green)
-      and (LLoaded.Appearance.ColumnSpacingColor = 123)
+    Check((LLoaded.Appearance.RowSpacingColor = TColorRec.Green) and (LLoaded.Appearance.ColumnSpacingColor = 123)
       and (LLoaded.Appearance.ContentPaddingColor = 456), 'old spacing colors load by name and numeric value');
-    Check((LLoaded.Columns[0].Width = 100) and (LLoaded.Columns[0].MaxWidth = 1000),
-      'omitted old width and maximum retain historical defaults');
+    Check((LLoaded.Columns[0].Width = 100) and (LLoaded.Columns[0].MaxWidth = 1000), 'omitted old width and maximum retain historical defaults');
     CheckNear(-25.5, LLoaded.Columns[1].Width, 0.001, 'old WidthInPercent converts to the unified width');
-    Check(LLoaded.Header.Layout.Enabled and (LLoaded.Header.Layout.Cells.Count = 1)
-      and (LLoaded.Header.Layout.Cells[0].Width = -100), 'old nested HeaderLayout and percent width load');
+    Check(LLoaded.Header.Layout.Enabled and (LLoaded.Header.Layout.Cells.Count = 1) and (LLoaded.Header.Layout.Cells[0].Width = -100),
+      'old nested HeaderLayout and percent width load');
   finally
     LModel.Free;
     LForm.Free;
@@ -281,21 +255,21 @@ procedure TestPropertyEditorWidths;
 var
   LForm: TForm;
   LView: TPropertyView;
-  LModel: Th5uPropertyEditor;
-  LColumn: Th5uGridColumn;
-  LItem: Th5uPropertyItem;
+  LModel: ThiiPropertyModel;
+  LColumn: ThiiGridColumn;
+  LItem: ThiiPropertyItem;
   LCombo: TStringList;
   LTotal: Single;
 begin
   LForm := TForm.CreateNew(nil);
-  LModel := Th5uPropertyEditor.Create(nil);
+  LModel := ThiiPropertyModel.Create(nil);
   LCombo := TStringList.Create;
   try
     LView := TPropertyView.Create(LForm);
     LView.Parent := LForm;
     LView.Height := 300;
-    Check((LView.Width = 350) and (LView.Columns[0].Width = -60)
-      and (LView.Columns[1].Width = -40), 'property editor starts at 350 pixels with 60/40 specifications');
+    Check((LView.Width = 350) and (LView.Columns[0].Width = -60) and (LView.Columns[1].Width = -40),
+      'property editor starts at 350 pixels with 60/40 specifications');
     PaintOffscreen(LView);
     LTotal := LView.Columns[0].LayoutWidth + LView.Columns[1].LayoutWidth;
     CheckNear(0.6, LView.Columns[0].LayoutWidth / LTotal, 0.005, 'property editor lays out 60/40 at initial width');
@@ -333,11 +307,11 @@ procedure TestSingleGeometryStreaming;
 var
   LForm: TForm;
   LGrid, LLoaded: TTestGrid;
-  LColumn: Th5uGridColumn;
-  LEditor: Th5uGridEditorItem;
+  LColumn: ThiiGridColumn;
+  LEditor: ThiiGridEditorItem;
   LText: string;
 begin
-  Check(SizeOf(Th5uWidth) = SizeOf(Single), 'shared width specifications use Single storage');
+  Check(SizeOf(ThiiWidth) = SizeOf(Single), 'shared width specifications use Single storage');
   LForm := TForm.CreateNew(nil);
   try
     LGrid := NewGrid(LForm);
@@ -357,7 +331,7 @@ begin
     LColumn.MinWidth := 10.5;
     LColumn.MaxWidth := 400.75;
     LColumn.RightSpacing := 1.75;
-    LEditor := Th5uGridEditorItem(LGrid.Editors.Add);
+    LEditor := ThiiGridEditorItem(LGrid.Editors.Add);
     LEditor.EditorName := 'FractionEditor';
     LEditor.DefaultWidth := 99.25;
     LEditor.DefaultMinWidth := 11.5;
@@ -365,21 +339,16 @@ begin
     LText := WriteGridText(LGrid);
     LGrid.Name := '';
     LLoaded := ReadGridText(LForm, LText);
-    Check((LLoaded.ColumnSizing.DefaultWidth = 123.25)
-      and (LLoaded.ColumnSizing.DefaultMinWidth = 12.5)
+    Check((LLoaded.ColumnSizing.DefaultWidth = 123.25) and (LLoaded.ColumnSizing.DefaultMinWidth = 12.5)
       and (LLoaded.ColumnSizing.DefaultMaxWidth = 500.75), 'fractional column defaults survive native streaming');
-    Check((LLoaded.RowHeight.FixedHeight = 24.25) and (LLoaded.RowHeight.MinHeight = 12.5)
-      and (LLoaded.RowHeight.MaxHeight = 160.75) and (LLoaded.RowHeight.EstimatedHeight = 28.5),
-      'fractional height options survive native streaming');
-    Check((LLoaded.Spacing.RowSpacing = 1.25) and (LLoaded.Spacing.DefaultColumnRightSpacing = 1.5),
-      'fractional spacing survives native streaming');
+    Check((LLoaded.RowHeight.FixedHeight = 24.25) and (LLoaded.RowHeight.MinHeight = 12.5) and (LLoaded.RowHeight.MaxHeight = 160.75)
+      and (LLoaded.RowHeight.EstimatedHeight = 28.5), 'fractional height options survive native streaming');
+    Check((LLoaded.Spacing.RowSpacing = 1.25) and (LLoaded.Spacing.DefaultColumnRightSpacing = 1.5), 'fractional spacing survives native streaming');
     LColumn := LLoaded.Columns[0];
-    Check((LColumn.Width = 101.25) and (LColumn.MinWidth = 10.5)
-      and (LColumn.MaxWidth = 400.75) and (LColumn.RightSpacing = 1.75),
+    Check((LColumn.Width = 101.25) and (LColumn.MinWidth = 10.5) and (LColumn.MaxWidth = 400.75) and (LColumn.RightSpacing = 1.75),
       'fractional column dimensions survive native streaming');
     LEditor := LLoaded.Editors.Find('FractionEditor');
-    Check(Assigned(LEditor) and (LEditor.DefaultWidth = 99.25)
-      and (LEditor.DefaultMinWidth = 11.5) and (LEditor.DefaultMaxWidth = 450.75),
+    Check(Assigned(LEditor) and (LEditor.DefaultWidth = 99.25) and (LEditor.DefaultMinWidth = 11.5) and (LEditor.DefaultMaxWidth = 450.75),
       'fractional editor defaults survive native streaming');
   finally
     LForm.Free;
@@ -391,9 +360,9 @@ begin
   ACount := Count;
 end;
 
-procedure TMeasureSource.RowKey(Sender: TObject; ARow: Int64; var AKey: Th5uRowKey);
+procedure TMeasureSource.RowKey(Sender: TObject; ARow: Int64; var AKey: ThiiRowKey);
 begin
-  AKey := Th5uRowKey.FromInt64(ARow + 1);
+  AKey := ThiiRowKey.FromInt64(ARow + 1);
 end;
 
 procedure TMeasureSource.Value(Sender: TObject; ARow: Int64; const AField: string; var AValue: TValue);
@@ -405,13 +374,12 @@ begin
     AValue := TValue.From<string>('Row ' + IntToStr(ARow));
 end;
 
-procedure TMeasureSource.Measure(Sender: TObject; const AContext: Th5uEditorContext; var AWidth: Single);
+procedure TMeasureSource.Measure(Sender: TObject; const AContext: ThiiEditorContext; var AWidth: Single);
 begin
   Inc(MeasureCalls);
 end;
 
-procedure TMeasureSource.Height(Sender: TObject; const AContext: THeightContext;
-  var AHeight: THeight; var ACacheResult: Boolean);
+procedure TMeasureSource.Height(Sender: TObject; const AContext: THeightContext; var AHeight: THeight; var ACacheResult: Boolean);
 begin
   Inc(HeightCalls);
   AHeight := 24;
@@ -423,9 +391,9 @@ var
   LForm: TForm;
   LGrid: TTestGrid;
   LSource: TMeasureSource;
-  LController: Th5uVirtualController;
-  LColumn: Th5uGridColumn;
-  LEditor: Th5uGridEditorItem;
+  LController: ThiiVirtualController;
+  LColumn: ThiiGridColumn;
+  LEditor: ThiiGridEditorItem;
   LWidth: Single;
 begin
   LForm := TForm.CreateNew(nil);
@@ -433,19 +401,19 @@ begin
   LSource.Count := 100000;
   try
     LGrid := NewGrid(LForm);
-    LGrid.RowHeight.Mode := Th5uRowHeightMode.Automatic;
+    LGrid.RowHeight.Mode := ThiiRowHeightMode.Automatic;
     LGrid.OnGetRowHeight := LSource.Height;
     LGrid.ColumnSizing.AutoWidthRowLimit := 0;
     LColumn := LGrid.Columns.Add;
     LColumn.Id := 'Text';
     LColumn.FieldName := 'Text';
-    LColumn.DataType := Th5uColumnDataType.Text;
+    LColumn.DataType := ThiiColumnDataType.Text;
     LColumn.AutoHeight := True;
     LColumn.AutoWidth := True;
     LColumn.Editor := 'MeasuredText';
     LEditor := LGrid.Editors.AddVariant('MeasuredText', 'TextEditor');
     LEditor.OnMeasureWidth := LSource.Measure;
-    LController := Th5uVirtualController.Create(LForm);
+    LController := ThiiVirtualController.Create(LForm);
     LController.OnGetRowCount := LSource.RowCount;
     LController.OnGetRowKey := LSource.RowKey;
     LController.OnGetValue := LSource.Value;
@@ -454,16 +422,14 @@ begin
     LSource.ValueCalls := 0;
     LWidth := LGrid.MeasureColumnWidth(LColumn);
     Check(LWidth = 3000, 'default text maximum stops extreme text at 3000 pixels');
-    Check((LSource.MeasureCalls = 1) and (LSource.ValueCalls < 10),
-      '100000-row width scan stops after its first maximum-width value');
+    Check((LSource.MeasureCalls = 1) and (LSource.ValueCalls < 10), '100000-row width scan stops after its first maximum-width value');
     LColumn.MaxWidth := 125;
     LSource.MeasureCalls := 0;
     LWidth := LGrid.MeasureColumnWidth(LColumn);
     Check((LWidth = 125) and (LSource.MeasureCalls = 1), 'explicit pixel cap stops measurement immediately');
     LSource.MeasureCalls := 0;
     PaintOffscreen(LGrid);
-    Check((LColumn.MeasuredWidth = 125) and (LSource.MeasureCalls < 10),
-      'automatic sizing uses the same bounded measurement');
+    Check((LColumn.MeasuredWidth = 125) and (LSource.MeasureCalls < 10), 'automatic sizing uses the same bounded measurement');
     PaintOffscreen(LGrid);
     LSource.HeightCalls := 0;
     LSource.MeasureCalls := 0;
@@ -472,12 +438,10 @@ begin
     LGrid.Appearance.ColumnSpacingColor := TColorRec.Blue;
     LGrid.Appearance.ContentPaddingColor := TColorRec.Green;
     PaintOffscreen(LGrid);
-    Check((LSource.HeightCalls = 0) and (LSource.MeasureCalls = 0),
-      'appearance colors repaint without remeasuring heights or automatic widths');
+    Check((LSource.HeightCalls = 0) and (LSource.MeasureCalls = 0), 'appearance colors repaint without remeasuring heights or automatic widths');
     LGrid.Spacing.RowSpacingColor := TColorRec.Yellow;
     PaintOffscreen(LGrid);
-    Check((LSource.HeightCalls = 0) and (LSource.MeasureCalls = 0),
-      'legacy color alias also preserves geometry caches');
+    Check((LSource.HeightCalls = 0) and (LSource.MeasureCalls = 0), 'legacy color alias also preserves geometry caches');
     LColumn.MaxWidth := 0;
     LEditor.DefaultMaxWidth := 200;
     PaintOffscreen(LGrid);
@@ -485,8 +449,7 @@ begin
     LEditor.DefaultMaxWidth := 80;
     LSource.MeasureCalls := 0;
     PaintOffscreen(LGrid);
-    Check((LColumn.MeasuredWidth = 80) and (LSource.MeasureCalls > 0),
-      'changing editor template defaults invalidates cached automatic width');
+    Check((LColumn.MeasuredWidth = 80) and (LSource.MeasureCalls > 0), 'changing editor template defaults invalidates cached automatic width');
     LGrid.ColumnSizing.DefaultMaxWidth := 50;
     LColumn.Visible := False;
     LWidth := LGrid.MeasureColumnWidth(LColumn);
@@ -501,8 +464,8 @@ procedure TestWidthDistribution;
 var
   LForm: TForm;
   LGrid: TTestGrid;
-  LCheck, LText: Th5uGridColumn;
-  LGroup: Th5uHeaderLayoutCell;
+  LCheck, LText: ThiiGridColumn;
+  LGroup: ThiiHeaderLayoutCell;
   LBefore, LMonitorWidth: Double;
 begin
   LForm := TForm.CreateNew(nil);
@@ -512,47 +475,42 @@ begin
     LGrid.RowIndicator.Visible := False;
     LGrid.Header.Visible := False;
     LGrid.Width := 600;
-    LGrid.ColumnSizing.FitMode := Th5uColumnFitMode.AllColumns;
+    LGrid.ColumnSizing.FitMode := ThiiColumnFitMode.AllColumns;
     LCheck := LGrid.Columns.Add;
     LCheck.Id := 'Check';
-    LCheck.DataType := Th5uColumnDataType.Boolean;
+    LCheck.DataType := ThiiColumnDataType.Boolean;
     LText := LGrid.Columns.Add;
     LText.Id := 'Text';
-    LText.DataType := Th5uColumnDataType.Text;
+    LText.DataType := ThiiColumnDataType.Text;
     LText.Width := 200;
     PaintOffscreen(LGrid);
-    Check((LCheck.LayoutWidth = 28) and (LCheck.ResolvedMinWidth = 28)
-      and (LCheck.ResolvedMaxWidth = 28), 'checkbox defaults remain fixed pixel constraints during fitting');
+    Check((LCheck.LayoutWidth = 28) and (LCheck.ResolvedMinWidth = 28) and (LCheck.ResolvedMaxWidth = 28),
+      'checkbox defaults remain fixed pixel constraints during fitting');
     LGrid.DefaultEditors.CheckBox := 'TextEditor';
     PaintOffscreen(LGrid);
-    Check((LCheck.ResolvedMaxWidth = 3000) and (LCheck.ResolvedWidth = 100),
-      'boolean data rendered by a text editor uses text sizing defaults');
+    Check((LCheck.ResolvedMaxWidth = 3000) and (LCheck.ResolvedWidth = 100), 'boolean data rendered by a text editor uses text sizing defaults');
     LGrid.DefaultEditors.CheckBox := 'CheckBoxEditor';
     PaintOffscreen(LGrid);
     LBefore := LText.LayoutWidth;
     LGrid.Width := 900;
     PaintOffscreen(LGrid);
-    Check((LCheck.LayoutWidth = 28) and (LText.LayoutWidth > LBefore + 290),
-      'larger viewport grows the text column while retaining checkbox width');
+    Check((LCheck.LayoutWidth = 28) and (LText.LayoutWidth > LBefore + 290), 'larger viewport grows the text column while retaining checkbox width');
     LText.MaxWidth := 500;
     PaintOffscreen(LGrid);
-    Check(LText.LayoutWidth = 500,
-      'pixel maximum is not scaled to fill unused space (actual ' + FloatToStr(LText.LayoutWidth) + ')');
+    Check(LText.LayoutWidth = 500, 'pixel maximum is not scaled to fill unused space (actual ' + FloatToStr(LText.LayoutWidth) + ')');
     LText.MaxWidth := 0;
     LText.MinWidth := 120;
     LGrid.Width := 80;
     PaintOffscreen(LGrid);
-    Check((LCheck.LayoutWidth = 28) and (LText.LayoutWidth = 120),
-      'pixel minima remain intact when viewport cannot contain them');
+    Check((LCheck.LayoutWidth = 28) and (LText.LayoutWidth = 120), 'pixel minima remain intact when viewport cannot contain them');
 
     LGrid.Width := 600;
-    LCheck.DataType := Th5uColumnDataType.Text;
+    LCheck.DataType := ThiiColumnDataType.Text;
     LCheck.Width := 100;
     LText.Width := -50;
     LText.MinWidth := 0;
     PaintOffscreen(LGrid);
-    CheckNear(3, LText.LayoutWidth / LCheck.LayoutWidth, 0.03,
-      'all-column fitting combines pixels and percent-derived starting widths');
+    CheckNear(3, LText.LayoutWidth / LCheck.LayoutWidth, 0.03, 'all-column fitting combines pixels and percent-derived starting widths');
     LCheck.Width := -20;
     LText.Width := -20;
     PaintOffscreen(LGrid);
@@ -581,8 +539,8 @@ begin
     CheckNear(300, LText.LayoutWidth, 1, 'resized group distributes remaining space');
 
     LGrid.Header.Layout.Enabled := False;
-    LGrid.ColumnSizing.FitMode := Th5uColumnFitMode.None;
-    LGrid.ColumnSizing.MaxWidthSource := Th5uMaxWidthSource.Monitor;
+    LGrid.ColumnSizing.FitMode := ThiiColumnFitMode.None;
+    LGrid.ColumnSizing.MaxWidthSource := ThiiMaxWidthSource.Monitor;
     LCheck.MaxWidth := 0;
     LText.MaxWidth := 0;
     PaintOffscreen(LGrid);

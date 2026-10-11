@@ -14,8 +14,6 @@ uses
   FMX.Forms,
   FMX.StdCtrls,
   FMX.Types,
-  h5u.Grid.Types,
-  h5u.Grid.Data.Core,
   h5u.Grid.Data.Objects,
   Fmx.h5u.Grid;
 
@@ -47,8 +45,8 @@ type
     CacheCheck: TCheckBox;
     LiveCheck: TCheckBox;
     DarkCheck: TCheckBox;
-    Grid: Th5uFmxGrid;
-    ObjectController: Th5uObjectListController;
+    Grid: ThiiGrid;
+    ObjectController: ThiiObjectListController;
     UpdateTimer: TTimer;
     procedure FormCreate(Sender: TObject);
     procedure AddButtonClick(Sender: TObject);
@@ -95,16 +93,16 @@ end;
 procedure TFmxObjectDemoForm.ApplyOptions;
 begin
   if CacheCheck.IsChecked then
-    ObjectController.Cache.Mode := Th5uCacheMode.Viewport
+    ObjectController.Cache.Mode := ThiiCacheMode.Viewport
   else
-    ObjectController.Cache.Mode := Th5uCacheMode.None;
+    ObjectController.Cache.Mode := ThiiCacheMode.None;
 
   UpdateTimer.Enabled := LiveCheck.IsChecked;
 
   if DarkCheck.IsChecked then
-    Grid.Theme := Th5uGridTheme.Dark
+    Grid.Theme := ThiiGridTheme.Dark
   else
-    Grid.Theme := Th5uGridTheme.ApplicationStyle;
+    Grid.Theme := ThiiGridTheme.ApplicationStyle;
 end;
 
 procedure TFmxObjectDemoForm.FormCreate(Sender: TObject);

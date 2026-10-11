@@ -20,23 +20,23 @@ uses
 type
   TColorStreamFixture = class(TComponent)
   private
-    FColumns: Th5uGridColumns;
-    FAppearance: Th5uGridAppearanceOptions;
-    procedure SetColumns(const AValue: Th5uGridColumns);
-    procedure SetAppearance(const AValue: Th5uGridAppearanceOptions);
+    FColumns: ThiiGridColumns;
+    FAppearance: ThiiGridAppearanceOptions;
+    procedure SetColumns(const AValue: ThiiGridColumns);
+    procedure SetAppearance(const AValue: ThiiGridAppearanceOptions);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
   published
-    property Columns: Th5uGridColumns read FColumns write SetColumns;
-    property Appearance: Th5uGridAppearanceOptions read FAppearance write SetAppearance;
+    property Columns: ThiiGridColumns read FColumns write SetColumns;
+    property Appearance: ThiiGridAppearanceOptions read FAppearance write SetAppearance;
   end;
 
 constructor TColorStreamFixture.Create(AOwner: TComponent);
 begin
   inherited;
-  FColumns := Th5uGridColumns.Create(Self);
-  FAppearance := Th5uGridAppearanceOptions.Create;
+  FColumns := ThiiGridColumns.Create(Self);
+  FAppearance := ThiiGridAppearanceOptions.Create;
 end;
 
 destructor TColorStreamFixture.Destroy;
@@ -46,12 +46,12 @@ begin
   inherited;
 end;
 
-procedure TColorStreamFixture.SetColumns(const AValue: Th5uGridColumns);
+procedure TColorStreamFixture.SetColumns(const AValue: ThiiGridColumns);
 begin
   FColumns.Assign(AValue);
 end;
 
-procedure TColorStreamFixture.SetAppearance(const AValue: Th5uGridAppearanceOptions);
+procedure TColorStreamFixture.SetAppearance(const AValue: ThiiGridAppearanceOptions);
 begin
   FAppearance.Assign(AValue);
 end;
@@ -74,27 +74,27 @@ end;
 
 procedure TestProperties;
 var
-  LColumns: Th5uGridColumns;
-  LColumn: Th5uGridColumn;
-  LSpacing: Th5uGridSpacingOptions;
-  LAppearance: Th5uGridAppearanceOptions;
-  LTree: Th5uTreeBranchEndBandOptions;
-  LAdjacent: Th5uAdjacentGroupEndBandOptions;
+  LColumns: ThiiGridColumns;
+  LColumn: ThiiGridColumn;
+  LSpacing: ThiiGridSpacingOptions;
+  LAppearance: ThiiGridAppearanceOptions;
+  LTree: ThiiTreeBranchEndBandOptions;
+  LAdjacent: ThiiAdjacentGroupEndBandOptions;
 begin
-  CheckProperty(Th5uGridColumn, 'Color', clDefault);
-  CheckProperty(Th5uGridSpacingOptions, 'RowSpacingColor', TColorRec.Lightgray);
-  CheckProperty(Th5uGridSpacingOptions, 'ColumnSpacingColor', TColorRec.Lightgray);
-  CheckProperty(Th5uGridSpacingOptions, 'ContentPaddingColor', TColorRec.Lightgray);
-  CheckProperty(Th5uGridAppearanceOptions, 'DefaultCellColor', clDefault);
-  CheckProperty(Th5uTreeBranchEndBandOptions, 'Color', clDefault);
-  CheckProperty(Th5uAdjacentGroupEndBandOptions, 'Color', clDefault);
+  CheckProperty(ThiiGridColumn, 'Color', clDefault);
+  CheckProperty(ThiiGridSpacingOptions, 'RowSpacingColor', TColorRec.Lightgray);
+  CheckProperty(ThiiGridSpacingOptions, 'ColumnSpacingColor', TColorRec.Lightgray);
+  CheckProperty(ThiiGridSpacingOptions, 'ContentPaddingColor', TColorRec.Lightgray);
+  CheckProperty(ThiiGridAppearanceOptions, 'DefaultCellColor', clDefault);
+  CheckProperty(ThiiTreeBranchEndBandOptions, 'Color', clDefault);
+  CheckProperty(ThiiAdjacentGroupEndBandOptions, 'Color', clDefault);
   Check(TColorRec.SysDefault = clDefault, 'Default constant');
   Check(TColorRec.SysNone = clNone, 'None constant');
-  LColumns := Th5uGridColumns.Create(nil);
-  LSpacing := Th5uGridSpacingOptions.Create;
-  LAppearance := Th5uGridAppearanceOptions.Create;
-  LTree := Th5uTreeBranchEndBandOptions.Create;
-  LAdjacent := Th5uAdjacentGroupEndBandOptions.Create;
+  LColumns := ThiiGridColumns.Create(nil);
+  LSpacing := ThiiGridSpacingOptions.Create;
+  LAppearance := ThiiGridAppearanceOptions.Create;
+  LTree := ThiiTreeBranchEndBandOptions.Create;
+  LAdjacent := ThiiAdjacentGroupEndBandOptions.Create;
   try
     LColumn := LColumns.Add;
     Check(LColumn.Color = clDefault, 'Column constructor default');

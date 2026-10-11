@@ -18,14 +18,14 @@
 
 type
 {$IFDEF TEST_FMX}
-  TTestGrid = Th5uFmxGrid;
+  TTestGrid = ThiiGrid;
   TDemoForm = TFmxVirtualDemoForm;
 {$ELSE}
-  TTestGrid = Th5uVclGrid;
+  TTestGrid = ThiiGrid;
   TDemoForm = TVclVirtualDemoForm;
 {$ENDIF}
 
-  TProbeController = class(Th5uVirtualController)
+  TProbeController = class(ThiiVirtualController)
   private
     procedure RowCount(Sender: TObject; var ACount: Int64);
   public
@@ -66,13 +66,9 @@ var
 begin
   LRoot := TForm.CreateNew(nil);
   try
-    LText := TStringStream.Create('object Root: TForm' + sLineBreak
-      + '  object Controller: TProbeController' + sLineBreak + '  end' + sLineBreak
-      + '  object Grid: ' + TTestGrid.ClassName + sLineBreak
-      + '    DataController = Controller' + sLineBreak
-      + '    RowHeight.Mode = Automatic' + sLineBreak
-      + '    Width = 720' + sLineBreak + '    Height = 360' + sLineBreak
-      + '  end' + sLineBreak + 'end');
+    LText := TStringStream.Create('object Root: TForm' + sLineBreak + '  object Controller: TProbeController' + sLineBreak + '  end' + sLineBreak
+      + '  object Grid: ' + TTestGrid.ClassName + sLineBreak + '    DataController = Controller' + sLineBreak + '    RowHeight.Mode = Automatic'
+      + sLineBreak + '    Width = 720' + sLineBreak + '    Height = 360' + sLineBreak + '  end' + sLineBreak + 'end');
     try
       LBinary := TMemoryStream.Create;
       try
@@ -139,7 +135,7 @@ procedure TestEarlyCallbacks;
 var
   LForm: TDemoForm;
   LCount: Int64;
-  LKey: Th5uRowKey;
+  LKey: ThiiRowKey;
   LValue: TValue;
   LHandled: Boolean;
 begin
@@ -147,7 +143,7 @@ begin
   try
     LCount := -1;
     LValue := TValue.Empty;
-    LKey := Default(Th5uRowKey);
+    LKey := Default(ThiiRowKey);
     LHandled := True;
 {$IFDEF TEST_FMX}
     LForm.VirtualGetRowCount(nil, LCount);

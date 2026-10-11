@@ -94,7 +94,7 @@ object VclVirtualDemoForm: TVclVirtualDemoForm
       OnClick = NextPageButtonClick
     end
   end
-  object Grid: Th5uVclGrid
+  object Grid: ThiiGrid
     Left = 0
     Top = 66
     Width = 1080
@@ -181,7 +181,7 @@ object VclVirtualDemoForm: TVclVirtualDemoForm
         StyleName = 'Error'
       end>
   end
-  object VirtualController: Th5uVirtualController
+  object VirtualController: ThiiVirtualController
     Cache.MaxMemoryBytes = 67108864
     Pagination.PageSize = 20
     OnGetRowCount = VirtualControllerGetRowCount

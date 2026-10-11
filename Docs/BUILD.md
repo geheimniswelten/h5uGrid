@@ -68,7 +68,7 @@ Design-Time-Packages werden bei `Win64` bewusst übersprungen. Sie werden für d
 3. Die Demo-DPRs öffnen und bauen.
 4. Für den Formulardesigner zuerst das passende VCL- beziehungsweise FMX-Design-Package installieren.
 
-Die Komponente `Th5uSampleClientDataset` erzeugt ihr Schema und ihre Musterdatensätze selbst. Die ClientDataset-Demos benötigen daher weder eine Datenbank noch eine externe `.cds`-Datei.
+Die Komponente `ThiiSampleClientDataset` erzeugt ihr Schema und ihre Musterdatensätze selbst. Die ClientDataset-Demos benötigen daher weder eine Datenbank noch eine externe `.cds`-Datei.
 
 ## Lazarus / Free Pascal
 

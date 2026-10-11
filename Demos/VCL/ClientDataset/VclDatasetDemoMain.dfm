@@ -198,7 +198,7 @@ object VclDatasetDemoForm: TVclDatasetDemoForm
       OnClick = MoveNameButtonClick
     end
   end
-  object Grid: Th5uVclGrid
+  object Grid: ThiiGrid
     Left = 0
     Top = 104
     Width = 1120
@@ -437,7 +437,7 @@ object VclDatasetDemoForm: TVclDatasetDemoForm
     OnGetRowHeight = GridGetRowHeight
     OnGetThumbHint = GridGetThumbHint
   end
-  object SampleData: Th5uSampleClientDataset
+  object SampleData: ThiiSampleClientDataset
     PersistDataPacket.Data = {
       DA3E00009619E0BD01000000180000000C0028000000030000003C0102494404
       000100040000000A545245455F4C4556454C04000100040000000A464F4C445F
@@ -1010,7 +1010,7 @@ object VclDatasetDemoForm: TVclDatasetDemoForm
     Left = 176
     Top = 200
   end
-  object DataController: Th5uDatasetController
+  object DataController: ThiiDatasetController
     Cache.Mode = Paged
     Cache.PageSize = 100
     Cache.MaxMemoryBytes = 67108864

@@ -62,7 +62,7 @@ object FmxVirtualDemoForm: TFmxVirtualDemoForm
       OnClick = ClearButtonClick
     end
   end
-  object Grid: Th5uFmxGrid
+  object Grid: ThiiGrid
     Align = Client
     CanFocus = True
     ClipChildren = True
@@ -157,7 +157,7 @@ object FmxVirtualDemoForm: TFmxVirtualDemoForm
     Left = 152
     Top = 96
   end
-  object VirtualController: Th5uVirtualController
+  object VirtualController: ThiiVirtualController
     Cache.MaxMemoryBytes = 67108864
     OnGetRowCount = VirtualGetRowCount
     OnGetRowKey = VirtualGetRowKey

@@ -17,7 +17,7 @@ uses
 procedure Register;
 begin
   {$I Lcl.h5u.Grid.Design_icon.lrs}
-  RegisterComponents('h5u Grid', [Th5uLclGrid]);
+  RegisterComponents('hiiGrid', [ThiiGrid]);
 end;
 
 end.

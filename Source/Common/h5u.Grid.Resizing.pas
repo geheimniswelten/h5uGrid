@@ -22,21 +22,21 @@ uses
 
 type
   Th5uResizeCandidate = record
-    Column: Th5uGridColumn;
+    Column: ThiiGridColumn;
     VisibleIndex: Integer;
     Right, ViewLeft, ViewRight: Single;
   end;
 
   Th5uResizeHeaderEdgeTest = function(AX, AY: Single): Boolean of object;
 
-function h5uColumnResizeAt(AOptions: Th5uCustomizationOptions; const ACandidates: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uResizeCandidate>;
-  ALastVisibleIndex: Integer; X, Y: Single; ATouch: Boolean; AHeaderEdge: Th5uResizeHeaderEdgeTest): Th5uGridColumn;
-function h5uTryResizeColumn(AColumns: Th5uGridColumns; AColumn: Th5uGridColumn; AOriginalWidth, ADelta: Single): Boolean;
+function h5uColumnResizeAt(AOptions: ThiiCustomizationOptions; const ACandidates: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uResizeCandidate>;
+  ALastVisibleIndex: Integer; X, Y: Single; ATouch: Boolean; AHeaderEdge: Th5uResizeHeaderEdgeTest): ThiiGridColumn;
+function h5uTryResizeColumn(AColumns: ThiiGridColumns; AColumn: ThiiGridColumn; AOriginalWidth, ADelta: Single): Boolean;
 
 implementation
 
-function h5uColumnResizeAt(AOptions: Th5uCustomizationOptions; const ACandidates: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uResizeCandidate>;
-  ALastVisibleIndex: Integer; X, Y: Single; ATouch: Boolean; AHeaderEdge: Th5uResizeHeaderEdgeTest): Th5uGridColumn;
+function h5uColumnResizeAt(AOptions: ThiiCustomizationOptions; const ACandidates: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uResizeCandidate>;
+  ALastVisibleIndex: Integer; X, Y: Single; ATouch: Boolean; AHeaderEdge: Th5uResizeHeaderEdgeTest): ThiiGridColumn;
 var
   LInfo: Th5uResizeCandidate;
   LLeft, LRight, LLastLeft, LEffectiveLeft, LDelta, LDistance, LBest: Single;
@@ -81,7 +81,7 @@ begin
   end;
 end;
 
-function h5uTryResizeColumn(AColumns: Th5uGridColumns; AColumn: Th5uGridColumn; AOriginalWidth, ADelta: Single): Boolean;
+function h5uTryResizeColumn(AColumns: ThiiGridColumns; AColumn: ThiiGridColumn; AOriginalWidth, ADelta: Single): Boolean;
 var
   I: Integer;
 begin

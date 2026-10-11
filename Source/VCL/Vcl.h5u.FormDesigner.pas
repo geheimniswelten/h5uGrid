@@ -5,85 +5,35 @@ interface
 uses
   System.SysUtils, System.Classes, System.Rtti, System.Masks, System.Generics.Collections,
   Vcl.Controls, Vcl.StdCtrls,
-  h5u.FormDesigner, h5u.FormDesigner.Properties,
-  h5u.Grid.Columns, h5u.Grid.Types, h5u.Grid.Sizing, h5u.Grid.Data.Objects,
-  Vcl.h5u.Grid, Vcl.h5u.Grid.Editors;
+  h5u.FormDesigner,
+  h5u.Grid.Data.Objects,
+  Vcl.h5u.Grid;
 
 type
-  Th5uVclStructureModel = class(Th5uStructureView)
+  ThiiVclStructureModel = class(ThiiStructureModel)
   protected
-    procedure CollectChildren(AComponent: TComponent; AChildren: Th5uComponentList); override;
+    procedure CollectChildren(AComponent: TComponent; AChildren: ThiiComponentList); override;
   end;
 
-  // The grid borrows the model's items. The model owns their lifetime and values.
-  Th5uVclPropertyEditor = class(Th5uVclCustomGrid)
+  ThiiStructureSelectEvent = procedure(Sender: TObject; AComponent: TComponent) of object;
+
+  ThiiStructureView = class(TCustomControl)
   private
-    FPropertyEditor: Th5uPropertyEditor;
-    FObjectListController: Th5uPropertyListController;
-    FNeedsRebind: Boolean;
-    FShowGroups: Boolean;
-    FGroupStates: TDictionary<Integer, Boolean>;
-    procedure GroupStateChanged(Sender: TObject; const AContext: Th5uAdjacentGroupStateChangedContext);
-    procedure RestoreGroupStates;
-    procedure SetShowGroups(AValue: Boolean);
-    procedure ModelChanging(Sender: TObject);
-    procedure ModelChanged(Sender: TObject);
-    procedure ModelItemChanged(Sender: TObject; AItem: Th5uPropertyItem);
-    procedure CanEditProperty(Sender: TObject; AColumn: Th5uGridColumn; ARowIndex: Int64; var AAllow: Boolean);
-    procedure ShowValueEditor(Sender: TObject);
-    function ItemAtRow(ARowIndex: Int64): Th5uPropertyItem;
-    function GetDataObject: TObject;
-    procedure SetDataObject(AValue: TObject);
-    function GetGrid: Th5uVclPropertyEditor;
-  public
-    constructor Create(AOwner: TComponent); override;
-    destructor Destroy; override;
-    procedure Reload;
-    procedure ResetAdjacentGroupStates; reintroduce;
-    property DataObject: TObject read GetDataObject write SetDataObject;
-
-    property ObjectListController: Th5uPropertyListController read FObjectListController;
-    property Grid: Th5uVclPropertyEditor read GetGrid;
-  published
-    property ColumnSizing;
-    property Header;
-    property RowIndicator;
-    property Editing;
-    property PropertyEditor: Th5uPropertyEditor read FPropertyEditor;
-    property ShowGroups: Boolean read FShowGroups write SetShowGroups default True;
-    property Align;
-    property Anchors;
-    property Enabled;
-    property Visible;
-    property TabOrder;
-    property TabStop;
-    property Columns;
-    property Appearance;
-    property RowHeight;
-    [Th5uLegacyOption]
-    property ShowHeader;
-    property GridLines;
-  end;
-
-  Th5uVclStructureSelectEvent = procedure(Sender: TObject; AComponent: TComponent) of object;
-
-  Th5uVclStructureView = class(TCustomControl)
-  private
-    FStructureView: Th5uVclStructureModel;
-    FObjectListController: Th5uObjectListController;
-    FGrid: Th5uVclGrid;
+    FStructureView: ThiiVclStructureModel;
+    FObjectListController: ThiiObjectListController;
+    FGrid: ThiiGrid;
     FFilterEdit: TEdit;
     FUpdating: Boolean;
     FFilterError: string;
     FLoadingRoot: TComponent;
     FLoadingRootAssigned: Boolean;
-    FOnSelect: Th5uVclStructureSelectEvent;
+    FOnSelect: ThiiStructureSelectEvent;
     procedure ModelChanging(Sender: TObject);
     procedure ModelChanged(Sender: TObject);
     procedure FilterChanged(Sender: TObject);
     procedure SelectionChanged(Sender: TObject);
-    procedure GetNameValue(Sender: TObject; AColumn: Th5uGridColumn; ARowIndex: Int64; var AValue: TValue; ADisplayValue: Boolean);
-    function ItemAtRow(ARowIndex: Int64): Th5uStructureItem;
+    procedure GetNameValue(Sender: TObject; AColumn: ThiiGridColumn; ARowIndex: Int64; var AValue: TValue; ADisplayValue: Boolean);
+    function ItemAtRow(ARowIndex: Int64): ThiiStructureItem;
     function GetRootComponent: TComponent;
     procedure SetRootComponent(AValue: TComponent);
     function GetFilterText: string;
@@ -102,9 +52,9 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure Reload;
-    property StructureView: Th5uVclStructureModel read FStructureView;
-    property ObjectListController: Th5uObjectListController read FObjectListController;
-    property Grid: Th5uVclGrid read FGrid;
+    property StructureView: ThiiVclStructureModel read FStructureView;
+    property ObjectListController: ThiiObjectListController read FObjectListController;
+    property Grid: ThiiGrid read FGrid;
     property FilterEdit: TEdit read FFilterEdit;
     property SelectedComponent: TComponent read GetSelectedComponent;
     property FilterError: string read FFilterError;
@@ -120,17 +70,17 @@ type
     property ResolveByParent: Boolean read GetResolveByParent write SetResolveByParent default True;
     property FilterText: string read GetFilterText write SetFilterText;
     property OnLoaded: TNotifyEvent read GetOnLoaded write SetOnLoaded;
-    property OnSelect: Th5uVclStructureSelectEvent read FOnSelect write FOnSelect;
+    property OnSelect: ThiiStructureSelectEvent read FOnSelect write FOnSelect;
   end;
 
 implementation
 
-procedure Th5uVclStructureModel.CollectChildren(AComponent: TComponent; AChildren: Th5uComponentList);
+procedure ThiiVclStructureModel.CollectChildren(AComponent: TComponent; AChildren: ThiiComponentList);
 var
   I: Integer;
 begin
   // Inspector implementation components are not part of the inspected form.
-  if (AComponent is Th5uVclStructureView) or (AComponent is Th5uVclPropertyEditor) then
+  if (AComponent is ThiiStructureView) or (AComponent is ThiiCustomGrid) then
     Exit;
   if ResolveByParent and (AComponent is TWinControl) then
     for I := 0 to TWinControl(AComponent).ControlCount - 1 do
@@ -138,199 +88,19 @@ begin
   inherited;
 end;
 
-constructor Th5uVclPropertyEditor.Create(AOwner: TComponent);
+constructor ThiiStructureView.Create(AOwner: TComponent);
 var
-  LColumn: Th5uGridColumn;
-  LEditor: Th5uVclCustomEditor;
-begin
-  inherited;
-  Width := 350;
-  ColumnSizing.FitMode := Th5uColumnFitMode.AllColumns;
-  FGroupStates := TDictionary<Integer, Boolean>.Create;
-  FObjectListController := Th5uPropertyListController.Create(Self);
-  FPropertyEditor := FObjectListController.PropertyEditor;
-  FPropertyEditor.AddChangeListener(ModelChanging, ModelChanged, ModelItemChanged);
-  FNeedsRebind := True;
-  FShowGroups := True;
-  AdjacentGroupFolding.IdColumnId := 'GroupName';
-  AdjacentGroupFolding.GroupEmptyValues := False;
-  OnAdjacentGroupStateChanged := GroupStateChanged;
-  RowIndicator.Visible := False;
-  Customization.AllowRowMoving := False;
-  Customization.AllowColumnHiding := False;
-  Customization.ShowColumnChooser := False;
-  LColumn := Columns.Add;
-  LColumn.Id := 'Name';
-  LColumn.FieldName := 'Caption';
-  LColumn.Caption := 'Property';
-  LColumn.Width := -60;
-  LColumn.ReadOnly := True;
-  LColumn := Columns.Add;
-  LColumn.Id := 'Value';
-  LColumn.FieldName := 'DisplayValue';
-  LColumn.Caption := 'Value';
-  LColumn.Width := -40;
-  LColumn.DataType := Th5uColumnDataType.Text;
-  LColumn.Editor := 'PropertyValue';
-  OnCanEdit := CanEditProperty;
-  LEditor := Editors.AddVariant('PropertyValue', 'TextEditor');
-  LEditor.ControlClass := TComboBox;
-  LEditor.OnShow := ShowValueEditor;
-  ModelChanged(FPropertyEditor);
-end;
-
-destructor Th5uVclPropertyEditor.Destroy;
-begin
-  if Assigned(FPropertyEditor) then
-    FPropertyEditor.RemoveChangeListener(ModelChanging, ModelChanged, ModelItemChanged);
-  DataController := nil;
-  FPropertyEditor := nil;
-  FreeAndNil(FObjectListController);
-  FreeAndNil(FGroupStates);
-  inherited;
-end;
-
-procedure Th5uVclPropertyEditor.ModelChanging(Sender: TObject);
-begin
-  // Detach before a Reload frees any item, including an item being edited.
-  FNeedsRebind := True;
-  DataController := nil;
-  FObjectListController.Clear;
-end;
-
-procedure Th5uVclPropertyEditor.ModelChanged(Sender: TObject);
-begin
-  if not FNeedsRebind then
-    Exit;
-  FObjectListController.RebuildItems(FShowGroups);
-  AdjacentGroupFolding.Enabled := FShowGroups and FObjectListController.HasGroups;
-  FNeedsRebind := False;
-  DataController := FObjectListController;
-  RestoreGroupStates;
-end;
-
-procedure Th5uVclPropertyEditor.SetShowGroups(AValue: Boolean);
-begin
-  if FShowGroups = AValue then
-    Exit;
-  FShowGroups := AValue;
-  ModelChanging(Self);
-  ModelChanged(Self);
-end;
-
-procedure Th5uVclPropertyEditor.GroupStateChanged(Sender: TObject;
-  const AContext: Th5uAdjacentGroupStateChangedContext);
-var
-  LID: Integer;
-begin
-  if TryStrToInt(AContext.AnchorRowKey.ToString, LID) and (LID < 0) then
-    FGroupStates.AddOrSetValue(LID, AContext.Collapsed);
-end;
-
-procedure Th5uVclPropertyEditor.ResetAdjacentGroupStates;
-begin
-  FGroupStates.Clear;
-  inherited;
-end;
-
-procedure Th5uVclPropertyEditor.RestoreGroupStates;
-var
-  LRow, LIndex: Int64;
-  LItem: TObject;
-  LCollapsed: Boolean;
-begin
-  if not FObjectListController.HasGroups or (FGroupStates.Count = 0) then
-    Exit;
-  LRow := 0;
-  while LRow < FObjectListController.Count do
-  begin
-    LIndex := GetViewSourceRowIndex(LRow);
-    if (LIndex < 0) or (LIndex >= FObjectListController.Count) then
-      Break;
-    LItem := FObjectListController.Item(LIndex);
-    if (LItem is Th5uPropertyGroupRow)
-      and FGroupStates.TryGetValue(Th5uPropertyGroupRow(LItem).ID, LCollapsed) and LCollapsed then
-      SetAdjacentGroupCollapsed(LRow, True);
-    Inc(LRow);
-  end;
-end;
-
-procedure Th5uVclPropertyEditor.ModelItemChanged(Sender: TObject; AItem: Th5uPropertyItem);
-begin
-  if not FNeedsRebind then
-    FObjectListController.NotifyObjectChanged(AItem);
-end;
-
-function Th5uVclPropertyEditor.ItemAtRow(ARowIndex: Int64): Th5uPropertyItem;
-var
-  LIndex: Int64;
-begin
-  Result := nil;
-  LIndex := GetViewSourceRowIndex(ARowIndex);
-  if (LIndex >= 0) and (LIndex < FObjectListController.Count)
-    and (FObjectListController.Item(LIndex) is Th5uPropertyItem) then
-    Result := Th5uPropertyItem(FObjectListController.Item(LIndex));
-end;
-
-procedure Th5uVclPropertyEditor.CanEditProperty(Sender: TObject; AColumn: Th5uGridColumn; ARowIndex: Int64; var AAllow: Boolean);
-var
-  LItem: Th5uPropertyItem;
-begin
-  LItem := ItemAtRow(ARowIndex);
-  AAllow := AAllow and Assigned(LItem);
-  if AAllow then
-    AAllow := LItem.CanEdit;
-end;
-
-procedure Th5uVclPropertyEditor.ShowValueEditor(Sender: TObject);
-var
-  LEditor: Th5uVclCustomEditor;
-  LItem: Th5uPropertyItem;
-  LText: string;
-begin
-  LEditor := Th5uVclCustomEditor(Sender);
-  LItem := ItemAtRow(LEditor.Context.RowIndex);
-  if Assigned(LItem) and (LEditor.Control is TComboBox) then
-  begin
-    LText := LEditor.GetText;
-    LItem.GetComboList(TComboBox(LEditor.Control).Items);
-    LEditor.SetText(LText);
-  end;
-end;
-
-function Th5uVclPropertyEditor.GetDataObject: TObject;
-begin
-  Result := FPropertyEditor.DataObject;
-end;
-
-procedure Th5uVclPropertyEditor.SetDataObject(AValue: TObject);
-begin
-  FPropertyEditor.DataObject := AValue;
-end;
-
-function Th5uVclPropertyEditor.GetGrid: Th5uVclPropertyEditor;
-begin
-  Result := Self;
-end;
-
-procedure Th5uVclPropertyEditor.Reload;
-begin
-  FPropertyEditor.Reload;
-end;
-
-constructor Th5uVclStructureView.Create(AOwner: TComponent);
-var
-  LColumn: Th5uGridColumn;
+  LColumn: ThiiGridColumn;
 begin
   inherited;
   Width := 360;
   Height := 280;
-  FObjectListController := Th5uObjectListController.Create(Self);
+  FObjectListController := ThiiObjectListController.Create(Self);
   FObjectListController.KeyPropertyName := 'ID';
   FObjectListController.OwnsObjects := False;
-  FStructureView := Th5uVclStructureModel.Create(Self);
+  FStructureView := ThiiVclStructureModel.Create(Self);
   FStructureView.AddChangeListener(ModelChanging, ModelChanged);
-  FGrid := Th5uVclGrid.Create(Self);
+  FGrid := ThiiGrid.Create(Self);
   FGrid.Align := alClient;
   FGrid.AllowEditing := False;
   FGrid.ShowRowIndicator := False;
@@ -356,7 +126,7 @@ begin
   ModelChanged(FStructureView);
 end;
 
-destructor Th5uVclStructureView.Destroy;
+destructor ThiiStructureView.Destroy;
 begin
   if Assigned(FStructureView) then
     FStructureView.RemoveChangeListener(ModelChanging, ModelChanged);
@@ -372,7 +142,7 @@ begin
   inherited;
 end;
 
-procedure Th5uVclStructureView.ModelChanging(Sender: TObject);
+procedure ThiiStructureView.ModelChanging(Sender: TObject);
 begin
   FUpdating := True;
   FGrid.DataController := nil;
@@ -380,10 +150,10 @@ begin
   FObjectListController.Clear;
 end;
 
-procedure Th5uVclStructureView.ModelChanged(Sender: TObject);
+procedure ThiiStructureView.ModelChanged(Sender: TObject);
 var
-  LItem: Th5uStructureItem;
-  LAddress: Th5uCellAddress;
+  LItem: ThiiStructureItem;
+  LAddress: ThiiCellAddress;
   I: Integer;
 begin
   FUpdating := True;
@@ -402,9 +172,9 @@ begin
     FFilterEdit.Hint := '';
     FFilterEdit.ShowHint := False;
     for I := 0 to FObjectListController.Count - 1 do
-      if Th5uStructureItem(FObjectListController.Item(I)).Component = FStructureView.SelectedComponent then
+      if ThiiStructureItem(FObjectListController.Item(I)).Component = FStructureView.SelectedComponent then
       begin
-        LAddress := Th5uCellAddress.Empty;
+        LAddress := ThiiCellAddress.Empty;
         LAddress.RowIndex := I;
         LAddress.ColumnIndex := 0;
         LAddress.ColumnId := 'Name';
@@ -417,7 +187,7 @@ begin
   end;
 end;
 
-procedure Th5uVclStructureView.FilterChanged(Sender: TObject);
+procedure ThiiStructureView.FilterChanged(Sender: TObject);
 begin
   if FUpdating then
     Exit;
@@ -438,28 +208,28 @@ begin
   end;
 end;
 
-function Th5uVclStructureView.ItemAtRow(ARowIndex: Int64): Th5uStructureItem;
+function ThiiStructureView.ItemAtRow(ARowIndex: Int64): ThiiStructureItem;
 var
   LIndex: Int64;
 begin
   Result := nil;
   LIndex := FObjectListController.GetSourceRowIndex(ARowIndex);
   if (LIndex >= 0) and (LIndex < FObjectListController.Count) then
-    Result := Th5uStructureItem(FObjectListController.Item(LIndex));
+    Result := ThiiStructureItem(FObjectListController.Item(LIndex));
 end;
 
-procedure Th5uVclStructureView.GetNameValue(Sender: TObject; AColumn: Th5uGridColumn; ARowIndex: Int64; var AValue: TValue; ADisplayValue: Boolean);
+procedure ThiiStructureView.GetNameValue(Sender: TObject; AColumn: ThiiGridColumn; ARowIndex: Int64; var AValue: TValue; ADisplayValue: Boolean);
 var
-  LItem: Th5uStructureItem;
+  LItem: ThiiStructureItem;
 begin
   LItem := ItemAtRow(ARowIndex);
   if ADisplayValue and Assigned(LItem) then
     AValue := StringOfChar(' ', LItem.Level * 3) + LItem.Name;
 end;
 
-function Th5uVclStructureView.GetSelectedComponent: TComponent;
+function ThiiStructureView.GetSelectedComponent: TComponent;
 var
-  LItem: Th5uStructureItem;
+  LItem: ThiiStructureItem;
 begin
   Result := nil;
   LItem := ItemAtRow(FGrid.Selection.FocusedCell.RowIndex);
@@ -467,7 +237,7 @@ begin
     Result := LItem.Component;
 end;
 
-procedure Th5uVclStructureView.SelectionChanged(Sender: TObject);
+procedure ThiiStructureView.SelectionChanged(Sender: TObject);
 begin
   if FUpdating then
     Exit;
@@ -476,7 +246,7 @@ begin
     FOnSelect(Self, SelectedComponent);
 end;
 
-function Th5uVclStructureView.GetRootComponent: TComponent;
+function ThiiStructureView.GetRootComponent: TComponent;
 begin
   if FLoadingRootAssigned then
     Result := FLoadingRoot
@@ -484,7 +254,7 @@ begin
     Result := FStructureView.RootComponent;
 end;
 
-procedure Th5uVclStructureView.SetRootComponent(AValue: TComponent);
+procedure ThiiStructureView.SetRootComponent(AValue: TComponent);
 begin
   if csLoading in ComponentState then
   begin
@@ -495,47 +265,47 @@ begin
     FStructureView.RootComponent := AValue;
 end;
 
-function Th5uVclStructureView.GetFilterText: string;
+function ThiiStructureView.GetFilterText: string;
 begin
   Result := FStructureView.FilterText;
 end;
 
-procedure Th5uVclStructureView.SetFilterText(const AValue: string);
+procedure ThiiStructureView.SetFilterText(const AValue: string);
 begin
   FStructureView.FilterText := AValue;
 end;
 
-function Th5uVclStructureView.GetResolveByOwner: Boolean;
+function ThiiStructureView.GetResolveByOwner: Boolean;
 begin
   Result := FStructureView.ResolveByOwner;
 end;
 
-procedure Th5uVclStructureView.SetResolveByOwner(AValue: Boolean);
+procedure ThiiStructureView.SetResolveByOwner(AValue: Boolean);
 begin
   FStructureView.ResolveByOwner := AValue;
 end;
 
-function Th5uVclStructureView.GetResolveByParent: Boolean;
+function ThiiStructureView.GetResolveByParent: Boolean;
 begin
   Result := FStructureView.ResolveByParent;
 end;
 
-procedure Th5uVclStructureView.SetResolveByParent(AValue: Boolean);
+procedure ThiiStructureView.SetResolveByParent(AValue: Boolean);
 begin
   FStructureView.ResolveByParent := AValue;
 end;
 
-function Th5uVclStructureView.GetOnLoaded: TNotifyEvent;
+function ThiiStructureView.GetOnLoaded: TNotifyEvent;
 begin
   Result := FStructureView.OnLoaded;
 end;
 
-procedure Th5uVclStructureView.SetOnLoaded(AValue: TNotifyEvent);
+procedure ThiiStructureView.SetOnLoaded(AValue: TNotifyEvent);
 begin
   FStructureView.OnLoaded := AValue;
 end;
 
-procedure Th5uVclStructureView.Loaded;
+procedure ThiiStructureView.Loaded;
 begin
   inherited;
   if FLoadingRootAssigned then
@@ -548,7 +318,7 @@ begin
     FStructureView.Reload;
 end;
 
-procedure Th5uVclStructureView.SetParent(AParent: TWinControl);
+procedure ThiiStructureView.SetParent(AParent: TWinControl);
 begin
   // The grid can need its native handle while applying layout options. Attach
   // its children only once this composite has a usable parent window chain.
@@ -569,7 +339,7 @@ begin
   end;
 end;
 
-procedure Th5uVclStructureView.Reload;
+procedure ThiiStructureView.Reload;
 begin
   FStructureView.Reload;
 end;

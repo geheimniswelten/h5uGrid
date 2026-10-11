@@ -20,9 +20,9 @@ end;
 
 procedure TestConstructor;
 var
-  LData: Th5uSampleClientDataset;
+  LData: ThiiSampleClientDataset;
 begin
-  LData := Th5uSampleClientDataset.Create(nil);
+  LData := ThiiSampleClientDataset.Create(nil);
   try
     Check(LData.Active, 'New sample dataset must be active');
     Check(LData.RecordCount = 25, 'Default sample row count');
@@ -39,13 +39,13 @@ end;
 
 procedure TestStreaming(ADesigning: Boolean; AAutoCreate: Boolean = True; AIncludeImages: Boolean = True);
 const
-  CFormText = 'object Root: TComponent' + sLineBreak + '  object SampleData: Th5uSampleClientDataset' + sLineBreak + '    IncludeImages = True'
+  CFormText = 'object Root: TComponent' + sLineBreak + '  object SampleData: ThiiSampleClientDataset' + sLineBreak + '    IncludeImages = True'
     + sLineBreak + '    AutoCreateSampleData = True' + sLineBreak + '    SampleRowCount = 40' + sLineBreak + '  end' + sLineBreak + 'end';
 var
   LRoot: TComponent;
   LText: TStringStream;
   LBinary: TMemoryStream;
-  LData: Th5uSampleClientDataset;
+  LData: ThiiSampleClientDataset;
   LFormText: string;
 begin
   LRoot := TComponent.Create(nil);
@@ -69,7 +69,7 @@ begin
     finally
       LText.Free;
     end;
-    LData := LRoot.FindComponent('SampleData') as Th5uSampleClientDataset;
+    LData := LRoot.FindComponent('SampleData') as ThiiSampleClientDataset;
     Check(Assigned(LData), 'Streamed sample component missing');
     Check((csDesigning in LData.ComponentState) = ADesigning, 'Design mode propagation');
     Check(LData.Active = AAutoCreate, 'Streamed automatic creation setting');
@@ -86,7 +86,7 @@ end;
 
 begin
   try
-    RegisterClass(Th5uSampleClientDataset);
+    RegisterClass(ThiiSampleClientDataset);
     TestConstructor;
     TestStreaming(False);
     TestStreaming(True);

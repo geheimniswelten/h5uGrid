@@ -28,7 +28,7 @@ def branch_end(
     include_end_of_data: bool = True,
     next_source_level: int | None = None,
 ) -> BranchEndResult:
-    """Reference semantics mirrored by Th5uVclGrid/Th5uFmxGrid.
+    """Reference semantics mirrored by ThiiGrid/ThiiGrid.
 
     ``next_source_level`` models look-ahead across a numbered-page boundary:
     the next row need not belong to the current visible page.

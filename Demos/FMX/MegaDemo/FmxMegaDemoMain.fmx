@@ -9,7 +9,7 @@ object FmxMegaDemoForm: TFmxMegaDemoForm
   FormFactor.Devices = [Desktop]
   OnCreate = FormCreate
   DesignerMasterStyle = 0
-  object Grid: Th5uFmxGrid
+  object Grid: ThiiGrid
     Align = Client
     CanFocus = True
     ClipChildren = True
@@ -1245,7 +1245,7 @@ object FmxMegaDemoForm: TFmxMegaDemoForm
       end
     end
   end
-  object SampleData: Th5uSampleClientDataset
+  object SampleData: ThiiSampleClientDataset
     PersistDataPacket.Data = {
       DA3E00009619E0BD01000000180000000C0028000000030000003C0102494404
       000100040000000A545245455F4C4556454C04000100040000000A464F4C445F
@@ -1818,7 +1818,7 @@ object FmxMegaDemoForm: TFmxMegaDemoForm
     Left = 424
     Top = 224
   end
-  object DataController: Th5uDatasetController
+  object DataController: ThiiDatasetController
     Cache.Mode = Paged
     Cache.PageSize = 100
     Cache.MaxMemoryBytes = 67108864
@@ -1828,7 +1828,7 @@ object FmxMegaDemoForm: TFmxMegaDemoForm
     Left = 512
     Top = 224
   end
-  object ObjectController: Th5uObjectListController
+  object ObjectController: ThiiObjectListController
     Cache.Mode = None
     Cache.MaxMemoryBytes = 67108864
     OwnsObjects = True
@@ -1836,7 +1836,7 @@ object FmxMegaDemoForm: TFmxMegaDemoForm
     Left = 360
     Top = 304
   end
-  object VirtualController: Th5uVirtualController
+  object VirtualController: ThiiVirtualController
     Cache.MaxMemoryBytes = 67108864
     OnGetRowCount = VirtualControllerGetRowCount
     OnGetRowKey = VirtualControllerGetRowKey

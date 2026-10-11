@@ -1,25 +1,31 @@
 # Property-Editor und Strukturansicht
 
 Die gemeinsamen Modelle arbeiten ohne VCL oder FMX. Die visuellen Adapter
-verwenden das vorhandene h5uGrid und dessen ObjectList-Controller.
+verwenden das vorhandene hiiGrid und dessen ObjectList-Controller.
 
 | Aufgabe | Gemeinsame Klasse | VCL / FMX |
 | --- | --- | --- |
-| Eigenschaften eines Objekts | `Th5uPropertyEditor` | `Th5uVclPropertyEditor` / `Th5uFmxPropertyEditor` |
-| Cache und Grid-Anbindung | `Th5uPropertyListController` | gemeinsamer ObjectList-Controller |
-| Komponentenstruktur | `Th5uStructureView` | `Th5uVclStructureView` / `Th5uFmxStructureView` |
-| Einzelner registrierter Werteditor | `Th5uValueEditor` | gemeinsame Registrierung |
+| Eigenschaften eines Objekts | `ThiiPropertyModel` | `ThiiPropertyEditor` je Framework |
+| Cache und Grid-Anbindung | `ThiiPropertyListController` | gemeinsamer ObjectList-Controller |
+| Komponentenstruktur | `ThiiStructureModel` | `ThiiStructureView` je Framework |
+| Einzelner registrierter Werteditor | `ThiiValueEditor` | gemeinsame Registrierung |
 
-Die Modelle stehen in `h5u.FormDesigner.Properties` und `h5u.FormDesigner`;
-die Adapter in `Vcl.h5u.FormDesigner` beziehungsweise `Fmx.h5u.FormDesigner`.
-`h5u.FormDesigner` stellt auch die ursprünglichen Namen des Property-Modells
-als Aliase bereit. `Th5uEventEditor`, `Th5uComponentPalette` und
-`Th5uFormDesigner` bleiben Erweiterungspunkte ohne Designer-Oberfläche.
+Die Modelle stehen in `h5u.PropertyEditor` und `h5u.FormDesigner`.
+Der PropertyEditor ist eine eigenständige Runtime-Komponente aus
+`Vcl.h5u.PropertyEditor` beziehungsweise `Fmx.h5u.PropertyEditor`.
+Diese Units bieten die öffentlichen Typen des gemeinsamen Property-Modells
+als Aliase an. Eine Framework-Unit genügt daher für die normale Verwendung.
+Die Strukturansicht bleibt in `Vcl.h5u.FormDesigner` beziehungsweise
+`Fmx.h5u.FormDesigner`; sie hängt nicht vom PropertyEditor ab.
+Die Registrierung beider Komponenten bleibt im bestehenden DesignTime-Package. `ThiiEventEditor`, `ThiiComponentPalette` und
+`ThiiFormDesigner` bleiben Erweiterungspunkte ohne Designer-Oberfläche.
 
 ## Eigenschaften auswählen
 
 ```pascal
-Inspector := Th5uVclPropertyEditor.Create(Self);
+uses Vcl.h5u.PropertyEditor;
+
+Inspector := ThiiPropertyEditor.Create(Self);
 Inspector.Parent := Self;
 Inspector.Align := alClient;
 Inspector.PropertyEditor.LimitClass := TControl;
@@ -28,8 +34,8 @@ Inspector.PropertyEditor.PublicProperties := True;
 Inspector.DataObject := Button1;
 ```
 
-Für FMX entsprechend `Th5uFmxPropertyEditor` und `TAlignLayout.Client`
-verwenden. `ObjectListController` ist ein `Th5uPropertyListController` und besitzt
+Für FMX entsprechend `ThiiPropertyEditor` und `TAlignLayout.Client`
+verwenden. `ObjectListController` ist ein `ThiiPropertyListController` und besitzt
 das Modell `PropertyEditor`; `Grid` ist das Grid selbst.
 `PropertyEditor` ist als `published`-Subkomponente verfügbar; dessen
 RTTI-Auswahl, Masken, Sortierung und Ereignisse lassen sich im IDE-Inspector
@@ -42,7 +48,7 @@ konfigurieren und im Formular speichern.
   deklarierte Mitglieder und die der abgeleiteten Klassen aufgenommen.
   `nil` erlaubt die gesamte Vererbungskette; eine nicht passende Klasse
   ergibt eine leere Liste.
-- `psoName` sortiert alphabetisch. `psoDeclaration` gruppiert von der
+- `ThiiPropertySortOrder.psoName` sortiert alphabetisch. `ThiiPropertySortOrder.psoDeclaration` gruppiert von der
   Basisklasse zu den Nachfahren und erhält die RTTI-Deklarationsreihenfolge.
   Delphi liefert Felder und Properties getrennt; innerhalb jeder Klasse
   stehen deshalb zunächst die Felder, danach die Properties.
@@ -101,7 +107,7 @@ tatsächlichen Schreiben geprüft, einschließlich des RTTI-Zugriffs über
 
 ## Werte, Cache und manuelle Properties
 
-Jeder `Th5uPropertyItem` enthält seine eigene `Instance: Pointer`, die
+Jeder `ThiiPropertyItem` enthält seine eigene `Instance: Pointer`, die
 zugehörige `RttiProperty` oder `RttiField` und einen `TValue`-Cache.
 Dadurch können verschiedene Instanzen mit gleichnamigen Mitgliedern in
 derselben Liste stehen. RTTI-Zugriffe, Filter und Editor-Registrierung
@@ -192,7 +198,7 @@ dieselben Erweiterungspunkte für abgeleitete Modelle.
 
 ## Eigene Gruppen und angezeigte Namen
 
-`Th5uPropertyItem.Caption` bestimmt den angezeigten Namen und beginnt mit
+`ThiiPropertyItem.Caption` bestimmt den angezeigten Namen und beginnt mit
 `Name`. `GroupName` ist frei wählbar und zunächst leer. Die technische
 Identität (`Name`, `Instance`, `RttiProperty`/`RttiField`) bleibt unabhängig
 von beiden Angaben. So können Properties des Grids in einer Gruppe
@@ -204,7 +210,7 @@ Die Liste lässt sich in `OnLoaded` vollständig selbst aufbauen:
 ```pascal
 procedure TMyForm.PropertiesLoaded(Sender: TObject);
 var
-  Model: Th5uPropertyEditor;
+  Model: ThiiPropertyModel;
   Context: TRttiContext;
 
   procedure AddGroup(AObject: TObject; const AGroup: string;
@@ -212,7 +218,7 @@ var
   var
     RttiType: TRttiType;
     PropertyName: string;
-    Item: Th5uPropertyItem;
+    Item: ThiiPropertyItem;
   begin
     RttiType := Context.GetType(AObject.ClassType);
     for PropertyName in ANames do
@@ -223,7 +229,7 @@ var
   end;
 
 begin
-  Model := Th5uPropertyEditor(Sender);
+  Model := ThiiPropertyModel(Sender);
   Model.Items.Clear;
   Context := TRttiContext.Create;
   try
@@ -275,13 +281,13 @@ Die Spalten verwenden `Width=-60` für Bezeichnungen und `Width=-40` für Werte
 sowie `ColumnSizing.FitMode=AllColumns`. Damit bleibt die Aufteilung bei einer
 Größenänderung auf 60/40 der verfügbaren Spaltenfläche.
 
-Für `Th5uWidth` ist bereits ein Werteditor registriert. Er zeigt negative
+Für `ThiiWidth` ist bereits ein Werteditor registriert. Er zeigt negative
 Vorgaben als positive Prozentangaben und 0 als `Default`; dieselben Texte
 können eingegeben werden. Die bisherigen flachen Grid-Aliase sind mit
-`Th5uLegacyOptionAttribute` markiert und werden beim automatischen Aufbau
+`ThiiLegacyOptionAttribute` markiert und werden beim automatischen Aufbau
 ausgelassen. Manuell über `AddProperty` bleiben sie verfügbar.
 
-Von `Th5uValueEditor` ableiten und `GetValue`, `SetValue` sowie
+Von `ThiiValueEditor` ableiten und `GetValue`, `SetValue` sowie
 `GetComboList(AList: TStrings)` nach Bedarf überschreiben. Über die
 geschützte Property `Item` stehen Name, Typ, Modell und Wert bereit.
 Die Standardimplementierung behandelt skalare Werte, Enums und Sets;
@@ -308,7 +314,7 @@ Werteditors ab.
 ## Strukturansicht
 
 ```pascal
-Structure := Th5uVclStructureView.Create(Self);
+Structure := ThiiStructureView.Create(Self);
 Structure.Parent := Self;
 Structure.Align := alLeft;
 Structure.Width := 280;
@@ -335,10 +341,10 @@ DataSource unter einem Controller und deren DataSet darunter:
 ```pascal
 procedure TMyForm.StructureLoaded(Sender: TObject);
 var
-  Model: Th5uStructureView;
-  ParentItem, SourceItem: Th5uStructureItem;
+  Model: ThiiStructureModel;
+  ParentItem, SourceItem: ThiiStructureItem;
 begin
-  Model := Th5uStructureView(Sender);
+  Model := ThiiStructureModel(Sender);
   ParentItem := Model.FindComponent(MyController);
   if (ParentItem <> nil) and (MyController.DataSource <> nil) then
   begin

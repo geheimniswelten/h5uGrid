@@ -18,7 +18,7 @@ Die erste nicht leere Angabe gewinnt:
 Die beiden Ereignisse haben dieselbe Signatur:
 
 ```pascal
-procedure GetEditor(Sender: TObject; AColumn: Th5uGridColumn;
+procedure GetEditor(Sender: TObject; AColumn: ThiiGridColumn;
   ARowIndex: Int64; var AEditorName: string);
 ```
 
@@ -65,7 +65,7 @@ Beim Start der Bearbeitung übernimmt die Instanz den aktuellen Zellkontext. Ers
 
 ```pascal
 var
-  E: Th5uVclCustomEditor; // FMX: Th5uFmxCustomEditor
+  E: ThiiVclCustomEditor; // FMX: ThiiFmxCustomEditor
 begin
   E := Grid.Editors.AddVariant('Lieferdatum', 'DateEditor');
   Grid.Columns.FindById('delivery').Editor := E.EditorName;
@@ -84,7 +84,7 @@ end;
 
 ## CustomEditor
 
-`Th5uVclCustomEditor` und `Th5uFmxCustomEditor` stellen folgende Erweiterungen bereit:
+`ThiiVclCustomEditor` und `ThiiFmxCustomEditor` stellen folgende Erweiterungen bereit:
 
 - `BuildEditor` / `OnBuildEditor`: einmal je Control-Version. Das Ereignis erhält zunächst `nil` und kann ein Control erzeugen. Bleibt es `nil`, wird die konfigurierte oder voreingestellte Klasse verwendet. Das erzeugte Control geht in die Verantwortung des Editor-Items über.
 - `GetText`, `SetText`, `GetValue`, `SetValue` sowie `OnGetText`, `OnSetText`, `OnGetValue`, `OnSetValue`.
@@ -98,7 +98,7 @@ procedure TMainForm.BuildShortText(Sender: TObject; var AControl: TControl);
 var
   E: TEdit;
 begin
-  E := TEdit.Create(Th5uGridEditorItem(Sender).Context.Grid);
+  E := TEdit.Create(ThiiGridEditorItem(Sender).Context.Grid);
   E.MaxLength := 40;
   AControl := E;
 end;
@@ -106,7 +106,7 @@ end;
 
 Die Verwaltung setzt Parent, Bounds, Sichtbarkeit und die Verbindung zum Grid. Sie leitet native Ereignisse an die Item-Ereignisse weiter. Für eigene Änderungen sollte deshalb das Ereignis am Item verwendet werden. In VCL werden Fenster-Ereignisse nur bei `TWinControl` angeschlossen; Textzugriff funktioniert auch mit einem nicht fensterbasierten `TControl`. Geschütztes `OnChange` von `TCustomEdit` und veröffentlichte `TNotifyEvent`-Properties anderer Controls werden unterstützt.
 
-`Mode = Th5uEditorMode.Text` erlaubt automatisches Bearbeiten bei entsprechend eingestelltem Grid. `Mode = Graphic` erzeugt ohne explizite Control-Klasse kein Control. Ein solcher Editor kann vollständig über Zeichen-, Maus- und Tastaturereignisse arbeiten. `ActivateOnClick` erlaubt Aktivierung durch einen einfachen Klick; beim Standard-CheckboxEditor ist es eingeschaltet. `HitTest` lässt sich für eigene Trefferflächen überschreiben. Enter und Escape werden an Commit/Cancel weitergeleitet.
+`Mode = ThiiEditorMode.Text` erlaubt automatisches Bearbeiten bei entsprechend eingestelltem Grid. `Mode = Graphic` erzeugt ohne explizite Control-Klasse kein Control. Ein solcher Editor kann vollständig über Zeichen-, Maus- und Tastaturereignisse arbeiten. `ActivateOnClick` erlaubt Aktivierung durch einen einfachen Klick; beim Standard-CheckboxEditor ist es eingeschaltet. `HitTest` lässt sich für eigene Trefferflächen überschreiben. Enter und Escape werden an Commit/Cancel weitergeleitet.
 
 Der Zeichenkontext enthält Grid, Spalte, sichtbaren Zeilenindex, RowKey, Bounds, Zellwert, Text, nativen Canvas, native Farben und gegebenenfalls das bereits pro Zelle gecachte Bild. `PreparePaint` bindet die bestehenden Stilereignisse ein. Eigene gemeinsame Zeichenereignisse müssen den Canvas passend zu VCL/FMX behandeln.
 
@@ -115,8 +115,8 @@ Bei einer Textbearbeitung mit vorhandenem `OnSetValue` an Grid oder Spalte erhä
 ## Eigene Klassen registrieren
 
 ```pascal
-h5uRegisterEditor(Th5uEditorPlatform.VCL, 'MeinEditor', TMeinVclEditor);
-h5uRegisterEditor(Th5uEditorPlatform.FMX, 'MeinEditor', TMeinFmxEditor);
+h5uRegisterEditor(ThiiEditorPlatform.VCL, 'MeinEditor', TMeinVclEditor);
+h5uRegisterEditor(ThiiEditorPlatform.FMX, 'MeinEditor', TMeinFmxEditor);
 ```
 
 Eigene Klassen können von einem nativen Standardeditor oder CustomEditor ableiten. `ReadText`, `WriteText`, `ReadValue`, `WriteValue`, `State`, `BuildEditor`, Darstellung und Lebenszyklus sind überschreibbar. `State`/`Modified` können bei komplexen Werten angepasst werden; `Change` meldet eine Änderung an die Verwaltung.
@@ -134,6 +134,6 @@ Die gemeinsamen VCL-/FMX-Regressionstests in `Build/TestGridEditing.inc` prüfen
 `MeasureWidth` berechnet die benötigte Zellbreite ohne Aktivierung oder Änderung
 des Editors. Native Text-, Checkbox- und Bildeditoren implementieren
 `MeasureContentWidth`; eigene Editoren können diese virtuelle Methode oder
-`OnMeasureWidth` verwenden. `Th5uEditorContext` enthält dabei Anzeigetext, Wert,
+`OnMeasureWidth` verwenden. `ThiiEditorContext` enthält dabei Anzeigetext, Wert,
 Zeile, Spalte und Canvas. Details und Grid-Beispiele:
 [Spaltenbreiten](COLUMN-WIDTHS.md).

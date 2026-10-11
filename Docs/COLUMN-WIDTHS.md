@@ -1,6 +1,6 @@
 # Spaltenbreiten und Optionsgruppen in VCL und FMX
 
-Beide Grids verwenden dieselbe Berechnung. Breitenvorgaben verwenden `Th5uWidth`
+Beide Grids verwenden dieselbe Berechnung. Breitenvorgaben verwenden `ThiiWidth`
 aus `h5u.Grid.Sizing`, einen eigenen Single-Typ:
 
 | Wert | Bedeutung | Anzeige im PropertyEditor |
@@ -63,7 +63,7 @@ die verbleibenden flexiblen Spalten. Reicht der Platz für die Minima nicht,
 entsteht horizontaler Überlauf. Erreichen alle Spalten ihr Maximum, bleibt Platz frei.
 
 ```pascal
-Grid.ColumnSizing.FitMode := Th5uColumnFitMode.AllColumns;
+Grid.ColumnSizing.FitMode := ThiiColumnFitMode.AllColumns;
 Grid.ColumnSizing.DefaultMaxWidth := 3000;
 CheckColumn.MinWidth := 28;
 CheckColumn.MaxWidth := 28;
@@ -72,7 +72,7 @@ TextColumn.MinWidth := 80;
 TextColumn.MaxWidth := -200;
 ```
 
-`ColumnSizing.MaxWidthSource := Th5uMaxWidthSource.Monitor` verwendet die nutzbare
+`ColumnSizing.MaxWidthSource := ThiiMaxWidthSource.Monitor` verwendet die nutzbare
 Monitorbreite als allgemeine Default-Obergrenze. Explizite Spalten-, Grid- und
 Editor-Maxima haben Vorrang. Die Checkbox-Vorgabe bleibt schmal. Ein geänderter
 Bezugsbereich wird beim nächsten Layout berücksichtigt.

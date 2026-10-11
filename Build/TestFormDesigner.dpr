@@ -8,7 +8,7 @@
 uses
   System.SysUtils, System.Classes, System.Rtti, System.TypInfo, System.Masks,
   h5u.FormDesigner,
-  h5u.FormDesigner.Properties,
+  h5u.PropertyEditor,
   h5u.Grid.Data.Objects;
 
 type
@@ -62,35 +62,35 @@ type
     AlphaText: string;
     OverrideAlpha: Boolean;
     procedure Loaded(Sender: TObject);
-    procedure GetValue(Sender: TObject; Item: Th5uPropertyItem; var Value: TValue; var Handled: Boolean);
-    procedure SetValue(Sender: TObject; Item: Th5uPropertyItem; const Value: TValue; var Handled: Boolean);
+    procedure GetValue(Sender: TObject; Item: ThiiPropertyItem; var Value: TValue; var Handled: Boolean);
+    procedure SetValue(Sender: TObject; Item: ThiiPropertyItem; const Value: TValue; var Handled: Boolean);
   end;
 
-  TTypeEditor = class(Th5uValueEditor)
+  TTypeEditor = class(ThiiValueEditor)
   public
     function GetValue: string; override;
   end;
 
-  TNamedEditor = class(Th5uValueEditor)
+  TNamedEditor = class(ThiiValueEditor)
   public
     function GetValue: string; override;
     procedure SetValue(const AText: string); override;
     procedure GetComboList(AItems: TStrings); override;
   end;
 
-  TLatestEditor = class(Th5uValueEditor)
+  TLatestEditor = class(ThiiValueEditor)
   public
     function GetValue: string; override;
   end;
 
-  TCycleStructureView = class(Th5uStructureView)
+  TCycleStructureView = class(ThiiStructureModel)
   protected
-    procedure CollectChildren(AComponent: TComponent; AChildren: Th5uComponentList); override;
+    procedure CollectChildren(AComponent: TComponent; AChildren: ThiiComponentList); override;
   end;
 
   TStructureHooks = class
   public
-    Model: Th5uStructureView;
+    Model: ThiiStructureModel;
     Extra: TComponent;
     LoadedCount, ChangedCount: Integer;
     procedure Loaded(Sender: TObject);
@@ -99,8 +99,8 @@ type
 
   TRemovingListener = class
   public
-    Properties: Th5uPropertyEditor;
-    Structure: Th5uStructureView;
+    Properties: ThiiPropertyModel;
+    Structure: ThiiStructureModel;
     Other: TRemovingListener;
     Calls: Integer;
     procedure Changed(Sender: TObject);
@@ -109,13 +109,13 @@ type
   TPropertyNotifications = class
   public
     ChangingCount, ChangedCount, ItemChangedCount: Integer;
-    LastItem: Th5uPropertyItem;
+    LastItem: ThiiPropertyItem;
     LastInstance: Pointer;
     LastID: Integer;
     procedure Reset;
     procedure Changing(Sender: TObject);
     procedure Changed(Sender: TObject);
-    procedure ItemChanged(Sender: TObject; Item: Th5uPropertyItem);
+    procedure ItemChanged(Sender: TObject; Item: ThiiPropertyItem);
   end;
 
 procedure Check(ACondition: Boolean; const AMessage: string);
@@ -134,13 +134,13 @@ begin
   Result := TValue.From<string>(AValue);
 end;
 
-function Need(AEditor: Th5uPropertyEditor; const AName: string): Th5uPropertyItem;
+function Need(AEditor: ThiiPropertyModel; const AName: string): ThiiPropertyItem;
 begin
   Result := AEditor.FindProperty(AName);
   Check(Assigned(Result), 'Missing property: ' + AName);
 end;
 
-function IndexOf(AEditor: Th5uPropertyEditor; const AName: string): Integer;
+function IndexOf(AEditor: ThiiPropertyModel; const AName: string): Integer;
 var
   I: Integer;
 begin
@@ -150,9 +150,9 @@ begin
       Exit(I);
 end;
 
-function VisibleCount(AEditor: Th5uPropertyEditor): Integer;
+function VisibleCount(AEditor: ThiiPropertyModel): Integer;
 var
-  Item: Th5uPropertyItem;
+  Item: ThiiPropertyItem;
 begin
   Result := 0;
   for Item in AEditor.Items do
@@ -198,7 +198,7 @@ begin
   Inc(LoadedCount);
 end;
 
-procedure THooks.GetValue(Sender: TObject; Item: Th5uPropertyItem; var Value: TValue; var Handled: Boolean);
+procedure THooks.GetValue(Sender: TObject; Item: ThiiPropertyItem; var Value: TValue; var Handled: Boolean);
 begin
   if Item.Name = 'ManualComputed' then
   begin
@@ -213,7 +213,7 @@ begin
   end;
 end;
 
-procedure THooks.SetValue(Sender: TObject; Item: Th5uPropertyItem; const Value: TValue; var Handled: Boolean);
+procedure THooks.SetValue(Sender: TObject; Item: ThiiPropertyItem; const Value: TValue; var Handled: Boolean);
 begin
   if Item.Name = 'ManualComputed' then
   begin
@@ -254,7 +254,7 @@ begin
   Result := 'latest editor';
 end;
 
-procedure TCycleStructureView.CollectChildren(AComponent: TComponent; AChildren: Th5uComponentList);
+procedure TCycleStructureView.CollectChildren(AComponent: TComponent; AChildren: ThiiComponentList);
 begin
   inherited;
   if AComponent.Name = 'Branch' then
@@ -263,7 +263,7 @@ end;
 
 procedure TStructureHooks.Loaded(Sender: TObject);
 var
-  ParentItem: Th5uStructureItem;
+  ParentItem: ThiiStructureItem;
 begin
   Inc(LoadedCount);
   ParentItem := Model.FindComponent(Model.RootComponent.FindComponent('Branch'));
@@ -313,7 +313,7 @@ begin
   Inc(ChangedCount);
 end;
 
-procedure TPropertyNotifications.ItemChanged(Sender: TObject; Item: Th5uPropertyItem);
+procedure TPropertyNotifications.ItemChanged(Sender: TObject; Item: ThiiPropertyItem);
 begin
   Inc(ItemChangedCount);
   LastItem := Item;
@@ -355,12 +355,12 @@ end;
 
 procedure TestPublishedAndFiltering;
 var
-  E: Th5uPropertyEditor;
+  E: ThiiPropertyModel;
   Source: TDerivedFixture;
   I: Integer;
   Failed: Boolean;
 begin
-  E := Th5uPropertyEditor.Create(nil);
+  E := ThiiPropertyModel.Create(nil);
   Source := TDerivedFixture.Create(nil);
   try
     Source.Alpha := 'a';
@@ -423,10 +423,10 @@ end;
 
 procedure TestExtendedRtti;
 var
-  E: Th5uPropertyEditor;
+  E: ThiiPropertyModel;
   Source: TDerivedFixture;
 begin
-  E := Th5uPropertyEditor.Create(nil);
+  E := ThiiPropertyModel.Create(nil);
   Source := TDerivedFixture.Create(nil);
   try
     E.LimitClass := TBaseFixture;
@@ -448,7 +448,7 @@ begin
     Check(E.GetValue(Need(E, 'FPrivateSecret')).AsInteger = 47, 'unqualified field lookup selects derived private slot');
     E.PrivateFields := False;
     E.PublishedProperties := True;
-    E.SortOrder := Th5uPropertySortOrder.psoDeclaration;
+    E.SortOrder := ThiiPropertySortOrder.psoDeclaration;
     Check(IndexOf(E, 'Zulu') < IndexOf(E, 'Alpha'), 'declaration order retained within class');
     Check(IndexOf(E, 'OnAction') < IndexOf(E, 'Middle'), 'base class precedes descendant');
     Writeln('PASS: extended public/private RTTI fields, property selection and declaration/class order');
@@ -460,12 +460,12 @@ end;
 
 procedure TestEventValues;
 var
-  E: Th5uPropertyEditor;
+  E: ThiiPropertyModel;
   Source: TBaseFixture;
   H: THooks;
   Event, ReadEvent: TNotifyEvent;
 begin
-  E := Th5uPropertyEditor.Create(nil);
+  E := ThiiPropertyModel.Create(nil);
   Source := TBaseFixture.Create(nil);
   H := THooks.Create;
   try
@@ -489,15 +489,15 @@ end;
 
 procedure TestInstanceRttiRows;
 var
-  E: Th5uPropertyEditor;
+  E: ThiiPropertyModel;
   A, B: TBaseFixture;
   Context: TRttiContext;
   AlphaProperty: TRttiProperty;
   NumberField: TRttiField;
-  AItem, BItem, FieldItem, ManualItem, CacheItem: Th5uPropertyItem;
+  AItem, BItem, FieldItem, ManualItem, CacheItem: ThiiPropertyItem;
   BeforeCount: Integer;
 begin
-  E := Th5uPropertyEditor.Create(nil);
+  E := ThiiPropertyModel.Create(nil);
   A := TBaseFixture.Create(nil);
   B := TBaseFixture.Create(nil);
   Context := TRttiContext.Create;
@@ -510,21 +510,19 @@ begin
     AItem := Need(E, 'Alpha');
     AlphaProperty := Context.GetType(TBaseFixture).GetProperty('Alpha');
     NumberField := Context.GetType(TBaseFixture).GetField('PublicNumber');
-    Check((AItem.Instance = Pointer(A)) and (AItem.RttiProperty = AlphaProperty)
-      and (AItem.RttiField = nil), 'discovered row retains its instance and extended RTTI property');
+    Check((AItem.Instance = Pointer(A)) and (AItem.RttiProperty = AlphaProperty) and (AItem.RttiField = nil),
+      'discovered row retains its instance and extended RTTI property');
     BItem := E.AddProperty(Pointer(B), AlphaProperty);
     FieldItem := E.AddField(Pointer(B), NumberField);
     ManualItem := E.AddManualProperty(Pointer(B), 'RuntimeNote', TextValue('cached note'));
-    Check((BItem.Instance = Pointer(B)) and (BItem.RttiProperty = AlphaProperty)
-      and (BItem.Value.AsString = 'second'), 'added RTTI property reads the row instance immediately');
-    Check((FieldItem.Instance = Pointer(B)) and (FieldItem.RttiField = NumberField)
-      and (FieldItem.RttiProperty = nil) and (FieldItem.Value.AsInteger = 19),
-      'added RTTI field retains its descriptor, instance and typed value');
-    Check((ManualItem.Instance = Pointer(B)) and (ManualItem.RttiProperty = nil)
-      and (ManualItem.RttiField = nil) and ManualItem.IsManual,
+    Check((BItem.Instance = Pointer(B)) and (BItem.RttiProperty = AlphaProperty) and (BItem.Value.AsString = 'second'),
+      'added RTTI property reads the row instance immediately');
+    Check((FieldItem.Instance = Pointer(B)) and (FieldItem.RttiField = NumberField) and (FieldItem.RttiProperty = nil)
+      and (FieldItem.Value.AsInteger = 19), 'added RTTI field retains its descriptor, instance and typed value');
+    Check((ManualItem.Instance = Pointer(B)) and (ManualItem.RttiProperty = nil) and (ManualItem.RttiField = nil) and ManualItem.IsManual,
       'manual row without RTTI still retains its instance');
-    Check((E.FindProperty(Pointer(A), 'Alpha') = AItem)
-      and (E.FindProperty(Pointer(B), 'Alpha') = BItem), 'same member names resolve by row instance');
+    Check((E.FindProperty(Pointer(A), 'Alpha') = AItem) and (E.FindProperty(Pointer(B), 'Alpha') = BItem),
+      'same member names resolve by row instance');
     BItem.Value := TextValue('second edited');
     FieldItem.Value := IntValue(23);
     ManualItem.Value := TextValue('manual edited');
@@ -540,8 +538,7 @@ begin
     Check(ManualItem.Value.AsString = 'manual edited', 'manual row without RTTI keeps its cached value on refresh');
     BeforeCount := E.Items.Count;
     FreeAndNil(B);
-    Check((E.DataObject = A) and (E.Items.Count = BeforeCount - 3)
-      and (E.FindProperty(Pointer(A), 'Alpha') = AItem),
+    Check((E.DataObject = A) and (E.Items.Count = BeforeCount - 3) and (E.FindProperty(Pointer(A), 'Alpha') = AItem),
       'nonselected component destruction removes only its mapped and manual rows');
     B := TBaseFixture.Create(nil);
     B.Alpha := 'retained';
@@ -551,19 +548,14 @@ begin
     ManualItem := E.AddManualProperty(Pointer(B), 'RuntimeNote', TextValue('retained manual'));
     CacheItem := E.AddManualProperty(nil, 'LocalNote', TextValue('independent cache'));
     FreeAndNil(A);
-    Check((E.DataObject = nil) and (E.Items.Count = 4)
-      and (E.FindProperty(Pointer(B), 'Alpha') = BItem)
-      and (E.FindProperty(nil, 'LocalNote') = CacheItem),
-      'selected component destruction retains rows belonging to other instances and nil');
+    Check((E.DataObject = nil) and (E.Items.Count = 4) and (E.FindProperty(Pointer(B), 'Alpha') = BItem)
+      and (E.FindProperty(nil, 'LocalNote') = CacheItem), 'selected component destruction retains rows belonging to other instances and nil');
     BItem.Value := TextValue('edited after selected destruction');
     E.Refresh;
-    Check((B.Alpha = 'edited after selected destruction') and (FieldItem.Value.AsInteger = 37)
-      and (ManualItem.Value.AsString = 'retained manual')
-      and (CacheItem.Value.AsString = 'independent cache'),
-      'remaining rows stay readable, writable and refreshable without a selected object');
+    Check((B.Alpha = 'edited after selected destruction') and (FieldItem.Value.AsInteger = 37) and (ManualItem.Value.AsString = 'retained manual')
+      and (CacheItem.Value.AsString = 'independent cache'), 'remaining rows stay readable, writable and refreshable without a selected object');
     FreeAndNil(B);
-    Check((E.Items.Count = 1) and (E.Items[0] = CacheItem),
-      'last component destruction leaves independent cache-only rows intact');
+    Check((E.Items.Count = 1) and (E.Items[0] = CacheItem), 'last component destruction leaves independent cache-only rows intact');
     Writeln('PASS: per-row instance, RTTI descriptors, mixed-object cache/write and component lifetime');
   finally
     E.Free;
@@ -575,15 +567,15 @@ end;
 
 procedure TestRefreshNotificationsAndReorder;
 var
-  E: Th5uPropertyEditor;
+  E: ThiiPropertyModel;
   A, B: TBaseFixture;
   Context: TRttiContext;
   AlphaProperty: TRttiProperty;
-  AItem, BItem: Th5uPropertyItem;
+  AItem, BItem: ThiiPropertyItem;
   AID, BID: Integer;
   Events: TPropertyNotifications;
 begin
-  E := Th5uPropertyEditor.Create(nil);
+  E := ThiiPropertyModel.Create(nil);
   A := TBaseFixture.Create(nil);
   B := TBaseFixture.Create(nil);
   Events := TPropertyNotifications.Create;
@@ -601,29 +593,25 @@ begin
     Check(AID <> BID, 'same-name rows receive different IDs');
     E.AddChangeListener(Events.Changing, Events.Changed, Events.ItemChanged);
     E.Refresh;
-    Check((Events.ChangingCount = 0) and (Events.ChangedCount = 0)
-      and (Events.ItemChangedCount = 0), 'unchanged refresh does not notify any consumer');
+    Check((Events.ChangingCount = 0) and (Events.ChangedCount = 0) and (Events.ItemChangedCount = 0),
+      'unchanged refresh does not notify any consumer');
     B.Alpha := 'changed';
     E.Refresh;
-    Check((Events.ItemChangedCount = 1) and (Events.LastItem = BItem)
-      and (Events.LastInstance = Pointer(B)) and (Events.LastID = BID),
+    Check((Events.ItemChangedCount = 1) and (Events.LastItem = BItem) and (Events.LastInstance = Pointer(B)) and (Events.LastID = BID),
       'refresh identifies only the changed row by instance and stable ID');
-    Check((Events.ChangingCount = 0) and (Events.ChangedCount = 0),
-      'value refresh does not rebuild the object list');
+    Check((Events.ChangingCount = 0) and (Events.ChangedCount = 0), 'value refresh does not rebuild the object list');
     Events.Reset;
     E.Refresh;
     Check(Events.ItemChangedCount = 0, 'new cache value prevents duplicate refresh notification');
     E.Items.Exchange(0, 1);
     E.NotifyItemsChanged;
-    Check((AItem.ID = AID) and (BItem.ID = BID) and (E.Items[0] = BItem),
-      'manual list reordering preserves the chosen order and existing row IDs');
-    Check((E.FindProperty(Pointer(A), 'Alpha') = AItem)
-      and (E.FindProperty(Pointer(B), 'Alpha') = BItem), 'instance lookup is independent of list order');
+    Check((AItem.ID = AID) and (BItem.ID = BID) and (E.Items[0] = BItem), 'manual list reordering preserves the chosen order and existing row IDs');
+    Check((E.FindProperty(Pointer(A), 'Alpha') = AItem) and (E.FindProperty(Pointer(B), 'Alpha') = BItem),
+      'instance lookup is independent of list order');
     Events.Reset;
     A.Alpha := 'first changed';
     E.Refresh;
-    Check((Events.ItemChangedCount = 1) and (Events.LastItem = AItem)
-      and (Events.LastInstance = Pointer(A)) and (Events.LastID = AID),
+    Check((Events.ItemChangedCount = 1) and (Events.LastItem = AItem) and (Events.LastInstance = Pointer(A)) and (Events.LastID = AID),
       'refresh after reordering still reports the correct row identity');
     E.RemoveChangeListener(Events.Changing, Events.Changed, Events.ItemChanged);
     Events.Reset;
@@ -642,15 +630,15 @@ end;
 
 procedure TestArrayCacheSnapshot;
 var
-  E: Th5uPropertyEditor;
+  E: ThiiPropertyModel;
   Source: TBaseFixture;
   Context: TRttiContext;
-  Item, RecordItem: Th5uPropertyItem;
+  Item, RecordItem: ThiiPropertyItem;
   Events: TPropertyNotifications;
   RecordValue, CachedRecord: TManagedFixtureValue;
   FreshCaption: string;
 begin
-  E := Th5uPropertyEditor.Create(nil);
+  E := ThiiPropertyModel.Create(nil);
   Source := TBaseFixture.Create(nil);
   Events := TPropertyNotifications.Create;
   Context := TRttiContext.Create;
@@ -660,11 +648,9 @@ begin
     E.AddChangeListener(nil, nil, Events.ItemChanged);
     Check(Item.Value.GetArrayElement(0).AsInteger = 3, 'array initial value enters the row cache');
     Source.SetNumberAt(0, 8);
-    Check(Item.Value.GetArrayElement(0).AsInteger = 3,
-      'in-place dynamic array edits do not mutate the previous cached value');
+    Check(Item.Value.GetArrayElement(0).AsInteger = 3, 'in-place dynamic array edits do not mutate the previous cached value');
     E.Refresh;
-    Check((Events.ItemChangedCount = 1) and (Events.LastItem = Item)
-      and (Item.Value.GetArrayElement(0).AsInteger = 8),
+    Check((Events.ItemChangedCount = 1) and (Events.LastItem = Item) and (Item.Value.GetArrayElement(0).AsInteger = 8),
       'array content changes notify the correct row and replace its cached snapshot');
     Events.Reset;
     E.Refresh;
@@ -678,16 +664,14 @@ begin
     Check(CachedRecord.Numbers[0] = 11, 'nested dynamic array edits do not mutate the cached record');
     E.Refresh;
     CachedRecord := RecordItem.Value.AsType<TManagedFixtureValue>;
-    Check((Events.ItemChangedCount = 1) and (Events.LastItem = RecordItem)
-      and (CachedRecord.Numbers[0] = 17), 'managed record content change updates only its row');
+    Check((Events.ItemChangedCount = 1) and (Events.LastItem = RecordItem) and (CachedRecord.Numbers[0] = 17),
+      'managed record content change updates only its row');
     FreshCaption := StringOfChar('x', 64);
-    Check(Pointer(FreshCaption) <> Pointer(CachedRecord.Caption),
-      'equal record caption fixture uses a different string allocation');
+    Check(Pointer(FreshCaption) <> Pointer(CachedRecord.Caption), 'equal record caption fixture uses a different string allocation');
     Source.SetManagedCaption(FreshCaption);
     Events.Reset;
     E.Refresh;
-    Check(Events.ItemChangedCount = 0,
-      'fresh string allocation with equal content does not change the cached record value');
+    Check(Events.ItemChangedCount = 0, 'fresh string allocation with equal content does not change the cached record value');
     E.Refresh;
     Check(Events.ItemChangedCount = 0, 'unchanged managed record contents keep refresh silent');
     Writeln('PASS: array/managed-record cache snapshots and content-based change detection');
@@ -701,13 +685,13 @@ end;
 
 procedure TestCacheAndWrites;
 var
-  E: Th5uPropertyEditor;
+  E: ThiiPropertyModel;
   Source: TBaseFixture;
-  Item: Th5uPropertyItem;
+  Item: ThiiPropertyItem;
   Before: Integer;
   Failed: Boolean;
 begin
-  E := Th5uPropertyEditor.Create(nil);
+  E := ThiiPropertyModel.Create(nil);
   Source := TBaseFixture.Create(nil);
   try
     Source.Limited := 3;
@@ -754,11 +738,11 @@ end;
 
 procedure TestManualDefinitionChanges;
 var
-  E: Th5uPropertyEditor;
+  E: ThiiPropertyModel;
   Source: TDerivedFixture;
-  M: Th5uManualProperty;
+  M: ThiiManualProperty;
 begin
-  E := Th5uPropertyEditor.Create(nil);
+  E := ThiiPropertyModel.Create(nil);
   Source := TDerivedFixture.Create(nil);
   try
     M := E.ManualProperties.Add;
@@ -787,12 +771,12 @@ end;
 
 procedure TestRemovingListeners;
 var
-  P: Th5uPropertyEditor;
-  S: Th5uStructureView;
+  P: ThiiPropertyModel;
+  S: ThiiStructureModel;
   A, B: TRemovingListener;
 begin
-  P := Th5uPropertyEditor.Create(nil);
-  S := Th5uStructureView.Create(nil);
+  P := ThiiPropertyModel.Create(nil);
+  S := ThiiStructureModel.Create(nil);
   A := TRemovingListener.Create;
   B := TRemovingListener.Create;
   try
@@ -822,12 +806,12 @@ end;
 
 procedure TestManualAndHooks;
 var
-  E: Th5uPropertyEditor;
+  E: ThiiPropertyModel;
   A, B: TBaseFixture;
-  M: Th5uManualProperty;
+  M: ThiiManualProperty;
   H: THooks;
 begin
-  E := Th5uPropertyEditor.Create(nil);
+  E := ThiiPropertyModel.Create(nil);
   A := TBaseFixture.Create(nil);
   B := TBaseFixture.Create(nil);
   H := THooks.Create;
@@ -882,15 +866,15 @@ end;
 
 procedure TestProtectionAndLifetime;
 var
-  E: Th5uPropertyEditor;
+  E: ThiiPropertyModel;
   Source: TBaseFixture;
-  F: Th5uPropertyFilter;
-  C: Th5uObjectListController;
-  Item: Th5uPropertyItem;
+  F: ThiiPropertyFilter;
+  C: ThiiObjectListController;
+  Item: ThiiPropertyItem;
   Failed: Boolean;
 begin
-  E := Th5uPropertyEditor.Create(nil);
-  C := Th5uObjectListController.Create(nil);
+  E := ThiiPropertyModel.Create(nil);
+  C := ThiiObjectListController.Create(nil);
   Source := TBaseFixture.Create(nil);
   try
     Source.Alpha := 'original';
@@ -936,12 +920,12 @@ end;
 
 procedure TestRegistry;
 var
-  E: Th5uPropertyEditor;
+  E: ThiiPropertyModel;
   Source: TDerivedFixture;
   List: TStringList;
   TypeToken, NamedToken, LatestToken: Integer;
 begin
-  E := Th5uPropertyEditor.Create(nil);
+  E := ThiiPropertyModel.Create(nil);
   Source := TDerivedFixture.Create(nil);
   List := TStringList.Create;
   TypeToken := 0;
@@ -984,7 +968,7 @@ var
   E: TCycleStructureView;
   Root, Branch, Leaf, Sibling, Extra, ExtraChild: TComponent;
   H: TStructureHooks;
-  RootItem, BranchItem, LeafItem: Th5uStructureItem;
+  RootItem, BranchItem, LeafItem: ThiiStructureItem;
   Failed: Boolean;
 begin
   E := TCycleStructureView.Create(nil);
@@ -1014,8 +998,8 @@ begin
     LeafItem := E.FindComponent(Leaf);
     Check((RootItem.Level = 0) and (RootItem.ParentID = 0), 'root row metadata');
     Check((LeafItem.Parent = BranchItem) and (LeafItem.ParentID = BranchItem.ID) and (LeafItem.Level = 2), 'tree parent/level metadata');
-    Check((E.ComponentList[3].Component = Extra)
-      and (E.ComponentList[5].Component = Sibling), 'OnLoaded descendants appear in parent preorder before following siblings');
+    Check((E.ComponentList[3].Component = Extra) and (E.ComponentList[5].Component = Sibling),
+      'OnLoaded descendants appear in parent preorder before following siblings');
     Check(E.FindItemByID(LeafItem.ID) = LeafItem, 'stable ID lookup');
     Check(E.AddComponent(Root, LeafItem, True) = RootItem, 're-adding root reuses item without creating a cycle');
     Check(RootItem.Parent = nil, 'duplicate insertion preserves canonical parent');
@@ -1035,8 +1019,8 @@ begin
       on EMaskException do
         Failed := True;
     end;
-    Check(Failed and (E.FilterText = '[L]eaf') and (E.ComponentList.Count = 3)
-      and LeafItem.Visible, 'invalid structure mask preserves current filter and visible ancestors');
+    Check(Failed and (E.FilterText = '[L]eaf') and (E.ComponentList.Count = 3) and LeafItem.Visible,
+      'invalid structure mask preserves current filter and visible ancestors');
 
     E.FilterText := 'does-not-exist';
     Check(E.ComponentList.Count = 0, 'unmatched filter yields empty view');

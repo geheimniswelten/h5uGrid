@@ -34,20 +34,20 @@ uses
   h5u.Grid.Values;
 
 type
-  Th5uEditorMode = (Text, Graphic);
-  Th5uEditorPlatform = (VCL, FMX, LCL);
+  ThiiEditorMode = (Text, Graphic);
+  ThiiEditorPlatform = (VCL, FMX, LCL);
 
   {$IFDEF FPC}
-    Th5uEditorPreparePaint = procedure(APart: Th5uElementPaintPart) of object;
+    Th5uEditorPreparePaint = procedure(APart: ThiiElementPaintPart) of object;
   {$ELSE}
-    Th5uEditorPreparePaint = TProc<Th5uElementPaintPart>;
+    Th5uEditorPreparePaint = TProc<ThiiElementPaintPart>;
   {$ENDIF}
 
-  Th5uEditorContext = record
+  ThiiEditorContext = record
     Grid: TComponent;
-    Column: Th5uGridColumn;
+    Column: ThiiGridColumn;
     RowIndex: Int64;
-    RowKey: Th5uRowKey;
+    RowKey: ThiiRowKey;
     Bounds: TRectF;
     Value: TValue;
     Text: string;
@@ -59,41 +59,41 @@ type
     PreparePaint: Th5uEditorPreparePaint;
   end;
 
-  Th5uEditorMeasureWidthEvent = procedure(Sender: TObject; const AContext: Th5uEditorContext; var AWidth: Single) of object;
-  Th5uEditorTextEvent = procedure(Sender: TObject; var AText: string) of object;
-  Th5uEditorValueEvent = procedure(Sender: TObject; var AValue: TValue) of object;
-  Th5uEditorDrawEvent = procedure(Sender: TObject; const AContext: Th5uEditorContext; var AHandled: Boolean) of object;
-  Th5uEditorKeyEvent = procedure(Sender: TObject; var AKey: Word; var AKeyChar: Char; AShift: TShiftState) of object;
-  Th5uEditorPointerEvent = procedure(Sender: TObject; AButton: TMouseButton; AShift: TShiftState; const APoint: TPointF) of object;
+  ThiiEditorMeasureWidthEvent = procedure(Sender: TObject; const AContext: ThiiEditorContext; var AWidth: Single) of object;
+  ThiiEditorTextEvent = procedure(Sender: TObject; var AText: string) of object;
+  ThiiEditorValueEvent = procedure(Sender: TObject; var AValue: TValue) of object;
+  ThiiEditorDrawEvent = procedure(Sender: TObject; const AContext: ThiiEditorContext; var AHandled: Boolean) of object;
+  ThiiEditorKeyEvent = procedure(Sender: TObject; var AKey: Word; var AKeyChar: Char; AShift: TShiftState) of object;
+  ThiiEditorPointerEvent = procedure(Sender: TObject; AButton: TMouseButton; AShift: TShiftState; const APoint: TPointF) of object;
 
-  Th5uGridEditorItem = class(TCollectionItem)
+  ThiiGridEditorItem = class(TCollectionItem)
   private
     FEditorName: string;
     FEditorType: string;
     FEditorVersion: Integer;
-    FDefaultWidth, FDefaultMaxWidth: Th5uWidth;
+    FDefaultWidth, FDefaultMaxWidth: ThiiWidth;
     FDefaultMinWidth: Single;
-    FMode: Th5uEditorMode;
+    FMode: ThiiEditorMode;
     FActivateOnClick: Boolean;
-    FContext: Th5uEditorContext;
+    FContext: ThiiEditorContext;
     FValue: TValue;
     FText: string;
     FOriginalState: string;
     FActive: Boolean;
     FChangedSinceBegin: Boolean;
     FOnShow, FOnHide, FOnCancel, FOnCommit, FOnChange, FOnEnter, FOnExit: TNotifyEvent;
-    FOnGetText, FOnSetText: Th5uEditorTextEvent;
-    FOnGetValue, FOnSetValue: Th5uEditorValueEvent;
-    FOnDrawDisplay, FOnDrawEditor: Th5uEditorDrawEvent;
-    FOnMeasureWidth: Th5uEditorMeasureWidthEvent;
-    FOnKeyDown: Th5uEditorKeyEvent;
-    FOnMouseDown, FOnMouseMove, FOnMouseUp: Th5uEditorPointerEvent;
+    FOnGetText, FOnSetText: ThiiEditorTextEvent;
+    FOnGetValue, FOnSetValue: ThiiEditorValueEvent;
+    FOnDrawDisplay, FOnDrawEditor: ThiiEditorDrawEvent;
+    FOnMeasureWidth: ThiiEditorMeasureWidthEvent;
+    FOnKeyDown: ThiiEditorKeyEvent;
+    FOnMouseDown, FOnMouseMove, FOnMouseUp: ThiiEditorPointerEvent;
     FRequestCommit, FRequestCancel, FChanged, FExited: TNotifyEvent;
-    FKeyDown: Th5uEditorKeyEvent;
+    FKeyDown: ThiiEditorKeyEvent;
     procedure SetEditorName(const AValue: string);
-    procedure SetDefaultWidth(const AValue: Th5uWidth);
+    procedure SetDefaultWidth(const AValue: ThiiWidth);
     procedure SetDefaultMinWidth(const AValue: Single);
-    procedure SetDefaultMaxWidth(const AValue: Th5uWidth);
+    procedure SetDefaultMaxWidth(const AValue: ThiiWidth);
   protected
     procedure SetEditorType(const AValue: string); virtual;
     function GetDisplayName: string; override;
@@ -102,12 +102,12 @@ type
     function ReadValue: TValue; virtual;
     procedure WriteValue(const AValue: TValue); virtual;
     function State: string; virtual;
-    function MeasureContentWidth(const AContext: Th5uEditorContext): Single; virtual;
+    function MeasureContentWidth(const AContext: ThiiEditorContext): Single; virtual;
   public
     procedure Assign(Source: TPersistent); override;
     procedure BuildEditor; virtual;
     procedure ReleaseEditor; virtual;
-    procedure BeginEdit(const AContext: Th5uEditorContext); virtual;
+    procedure BeginEdit(const AContext: ThiiEditorContext); virtual;
     procedure UpdateBounds(const ABounds: TRectF); virtual;
     procedure Activate; virtual;
     procedure Show; virtual;
@@ -125,9 +125,9 @@ type
     procedure SetValue(const AValue: TValue); virtual;
     function Modified: Boolean; virtual;
     // Measurement does not activate an editor or change its current value.
-    function MeasureWidth(const AContext: Th5uEditorContext): Single; virtual;
-    function DrawDisplay(const AContext: Th5uEditorContext): Boolean; virtual;
-    function DrawEditor(const AContext: Th5uEditorContext): Boolean; virtual;
+    function MeasureWidth(const AContext: ThiiEditorContext): Single; virtual;
+    function DrawDisplay(const AContext: ThiiEditorContext): Boolean; virtual;
+    function DrawEditor(const AContext: ThiiEditorContext): Boolean; virtual;
     function HitTest(const ABounds: TRectF; const APoint: TPointF): Boolean; virtual;
     procedure Change; virtual;
     procedure Enter; virtual;
@@ -138,22 +138,22 @@ type
     procedure MouseUp(AButton: TMouseButton; AShift: TShiftState; const APoint: TPointF); virtual;
     procedure RequestCommit;
     procedure RequestCancel;
-    property Context: Th5uEditorContext read FContext;
+    property Context: ThiiEditorContext read FContext;
     property Active: Boolean read FActive;
     property OnRequestCommit: TNotifyEvent read FRequestCommit write FRequestCommit;
     property OnRequestCancel: TNotifyEvent read FRequestCancel write FRequestCancel;
     property OnChanged: TNotifyEvent read FChanged write FChanged;
     property OnExited: TNotifyEvent read FExited write FExited;
-    property OnProcessKey: Th5uEditorKeyEvent read FKeyDown write FKeyDown;
+    property OnProcessKey: ThiiEditorKeyEvent read FKeyDown write FKeyDown;
   published
     property EditorType: string read FEditorType write SetEditorType;
     property EditorName: string read FEditorName write SetEditorName;
     property ActivateOnClick: Boolean read FActivateOnClick write FActivateOnClick default False;
     property EditorVersion: Integer read FEditorVersion write FEditorVersion default 0;
-    property DefaultWidth: Th5uWidth read FDefaultWidth write SetDefaultWidth nodefault;
+    property DefaultWidth: ThiiWidth read FDefaultWidth write SetDefaultWidth nodefault;
     property DefaultMinWidth: Single read FDefaultMinWidth write SetDefaultMinWidth nodefault;
-    property DefaultMaxWidth: Th5uWidth read FDefaultMaxWidth write SetDefaultMaxWidth nodefault;
-    property Mode: Th5uEditorMode read FMode write FMode default Th5uEditorMode.Text;
+    property DefaultMaxWidth: ThiiWidth read FDefaultMaxWidth write SetDefaultMaxWidth nodefault;
+    property Mode: ThiiEditorMode read FMode write FMode default ThiiEditorMode.Text;
     property OnShow: TNotifyEvent read FOnShow write FOnShow;
     property OnHide: TNotifyEvent read FOnHide write FOnHide;
     property OnCancel: TNotifyEvent read FOnCancel write FOnCancel;
@@ -161,35 +161,35 @@ type
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
     property OnEnter: TNotifyEvent read FOnEnter write FOnEnter;
     property OnExit: TNotifyEvent read FOnExit write FOnExit;
-    property OnGetText: Th5uEditorTextEvent read FOnGetText write FOnGetText;
-    property OnSetText: Th5uEditorTextEvent read FOnSetText write FOnSetText;
-    property OnGetValue: Th5uEditorValueEvent read FOnGetValue write FOnGetValue;
-    property OnSetValue: Th5uEditorValueEvent read FOnSetValue write FOnSetValue;
-    property OnMeasureWidth: Th5uEditorMeasureWidthEvent read FOnMeasureWidth write FOnMeasureWidth;
-    property OnDrawDisplay: Th5uEditorDrawEvent read FOnDrawDisplay write FOnDrawDisplay;
-    property OnDrawEditor: Th5uEditorDrawEvent read FOnDrawEditor write FOnDrawEditor;
-    property OnKeyDown: Th5uEditorKeyEvent read FOnKeyDown write FOnKeyDown;
-    property OnMouseDown: Th5uEditorPointerEvent read FOnMouseDown write FOnMouseDown;
-    property OnMouseMove: Th5uEditorPointerEvent read FOnMouseMove write FOnMouseMove;
-    property OnMouseUp: Th5uEditorPointerEvent read FOnMouseUp write FOnMouseUp;
+    property OnGetText: ThiiEditorTextEvent read FOnGetText write FOnGetText;
+    property OnSetText: ThiiEditorTextEvent read FOnSetText write FOnSetText;
+    property OnGetValue: ThiiEditorValueEvent read FOnGetValue write FOnGetValue;
+    property OnSetValue: ThiiEditorValueEvent read FOnSetValue write FOnSetValue;
+    property OnMeasureWidth: ThiiEditorMeasureWidthEvent read FOnMeasureWidth write FOnMeasureWidth;
+    property OnDrawDisplay: ThiiEditorDrawEvent read FOnDrawDisplay write FOnDrawDisplay;
+    property OnDrawEditor: ThiiEditorDrawEvent read FOnDrawEditor write FOnDrawEditor;
+    property OnKeyDown: ThiiEditorKeyEvent read FOnKeyDown write FOnKeyDown;
+    property OnMouseDown: ThiiEditorPointerEvent read FOnMouseDown write FOnMouseDown;
+    property OnMouseMove: ThiiEditorPointerEvent read FOnMouseMove write FOnMouseMove;
+    property OnMouseUp: ThiiEditorPointerEvent read FOnMouseUp write FOnMouseUp;
   end;
-  Th5uGridEditorItemClass = class of Th5uGridEditorItem;
+  ThiiGridEditorItemClass = class of ThiiGridEditorItem;
 
-  Th5uGridEditors = class(TOwnedCollection)
+  ThiiGridEditors = class(TOwnedCollection)
   private
     FOnChanged: TNotifyEvent;
   protected
     procedure Update(Item: TCollectionItem); override;
   public
-    function Find(const AName: string): Th5uGridEditorItem;
+    function Find(const AName: string): ThiiGridEditorItem;
     property OnChanged: TNotifyEvent read FOnChanged write FOnChanged;
   end;
 
   Th5uGridEditorCache = class
   private type
     TEntry = record
-      Editor: Th5uGridEditorItem;
-      Template: Th5uGridEditorItem;
+      Editor: ThiiGridEditorItem;
+      Template: ThiiGridEditorItem;
       Version: Integer;
     end;
   private
@@ -199,10 +199,10 @@ type
     constructor Create;
     destructor Destroy; override;
     procedure Clear;
-    function Get(APlatform: Th5uEditorPlatform; const AName, AColumnId: string; ATemplate: Th5uGridEditorItem): Th5uGridEditorItem;
+    function Get(APlatform: ThiiEditorPlatform; const AName, AColumnId: string; ATemplate: ThiiGridEditorItem): ThiiGridEditorItem;
   end;
 
-  Th5uDefaultEditors = class(TPersistent)
+  ThiiDefaultEditors = class(TPersistent)
   private
     FEdit, FInteger, FFloat, FCurrency, FDate, FTime, FDateTime, FCheckBox, FImage: string;
     FOnChanged: TNotifyEvent;
@@ -211,8 +211,8 @@ type
   public
     constructor Create;
     procedure Assign(Source: TPersistent); override;
-    function DataTypeEditor(AType: Th5uColumnDataType): string;
-    function EditorFor(AColumn: Th5uGridColumn): string;
+    function DataTypeEditor(AType: ThiiColumnDataType): string;
+    function EditorFor(AColumn: ThiiGridColumn): string;
     property OnChanged: TNotifyEvent read FOnChanged write FOnChanged;
   published
     {$IFnDEF FPC} [Default('TextEditor')] {$ENDIF}
@@ -236,25 +236,23 @@ type
   end;
 
 // Registry updates belong on the UI thread. Each platform has its own namespace.
-procedure h5uRegisterEditor(APlatform: Th5uEditorPlatform; const AEditorName: string; AClass: Th5uGridEditorItemClass);
-function h5uEditorClass(APlatform: Th5uEditorPlatform; const AEditorName: string): Th5uGridEditorItemClass;
-procedure h5uUnregisterEditor(APlatform: Th5uEditorPlatform; const AEditorName: string);
-function h5uCreateEditor(APlatform: Th5uEditorPlatform; const AEditorName: string; ACollection: TCollection): Th5uGridEditorItem;
-function h5uResolveEditorName(AGrid: TObject; AColumns: Th5uGridColumns; AColumn: Th5uGridColumn; ARow: Int64;
-  ADefaults: Th5uDefaultEditors; AGetValue: Th5uGetCellValueMethod; out AColumnScoped: Boolean): string;
+procedure h5uRegisterEditor(APlatform: ThiiEditorPlatform; const AEditorName: string; AClass: ThiiGridEditorItemClass);
+function h5uEditorClass(APlatform: ThiiEditorPlatform; const AEditorName: string): ThiiGridEditorItemClass;
+procedure h5uUnregisterEditor(APlatform: ThiiEditorPlatform; const AEditorName: string);
+function h5uCreateEditor(APlatform: ThiiEditorPlatform; const AEditorName: string; ACollection: TCollection): ThiiGridEditorItem;
+function h5uResolveEditorName(AGrid: TObject; AColumns: ThiiGridColumns; AColumn: ThiiGridColumn; ARow: Int64; ADefaults: ThiiDefaultEditors; AGetValue: Th5uGetCellValueMethod;
+  out AColumnScoped: Boolean): string;
 function h5uEditorCheckBounds(const ABounds: TRectF): TRectF;
 
-procedure h5uResolveColumnWidthDefaults(AColumn: Th5uGridColumn;
-  AOptions: Th5uColumnSizingOptions; AEditors: Th5uGridEditors;
-  ADefaultEditors: Th5uDefaultEditors; AReferenceWidth, AMonitorWidth: Single);
+procedure h5uResolveColumnWidthDefaults(AColumn: ThiiGridColumn; AOptions: ThiiColumnSizingOptions; AEditors: ThiiGridEditors; ADefaultEditors: ThiiDefaultEditors;
+  AReferenceWidth, AMonitorWidth: Single);
 
 implementation
 
-procedure h5uResolveColumnWidthDefaults(AColumn: Th5uGridColumn;
-  AOptions: Th5uColumnSizingOptions; AEditors: Th5uGridEditors;
-  ADefaultEditors: Th5uDefaultEditors; AReferenceWidth, AMonitorWidth: Single);
+procedure h5uResolveColumnWidthDefaults(AColumn: ThiiGridColumn; AOptions: ThiiColumnSizingOptions; AEditors: ThiiGridEditors; ADefaultEditors: ThiiDefaultEditors;
+  AReferenceWidth, AMonitorWidth: Single);
 var
-  Editor: Th5uGridEditorItem;
+  Editor: ThiiGridEditorItem;
   EditorName, EditorType: string;
   Width, MaxWidth: Single;
   MinWidth: Single;
@@ -277,7 +275,7 @@ begin
     MinWidth := 28;
     MaxWidth := 28;
   end
-  else if AOptions.MaxWidthSource = Th5uMaxWidthSource.Monitor then
+  else if AOptions.MaxWidthSource = ThiiMaxWidthSource.Monitor then
     MaxWidth := Max(1.0, AMonitorWidth);
   if Assigned(Editor) then
   begin
@@ -297,7 +295,7 @@ begin
   AColumn.SetWidthDefaults(Width, MinWidth, MaxWidth, AReferenceWidth);
 end;
 
-procedure Th5uGridEditorItem.SetDefaultWidth(const AValue: Th5uWidth);
+procedure ThiiGridEditorItem.SetDefaultWidth(const AValue: ThiiWidth);
 begin
   h5uValidateWidth(AValue);
   if FDefaultWidth = AValue then
@@ -307,14 +305,14 @@ begin
   Changed(False);
 end;
 
-procedure Th5uGridEditors.Update(Item: TCollectionItem);
+procedure ThiiGridEditors.Update(Item: TCollectionItem);
 begin
   inherited;
   if Assigned(FOnChanged) then
     FOnChanged(Self);
 end;
 
-procedure Th5uGridEditorItem.SetDefaultMinWidth(const AValue: Single);
+procedure ThiiGridEditorItem.SetDefaultMinWidth(const AValue: Single);
 begin
   h5uValidateWidth(AValue);
   if FDefaultMinWidth = Max(0, AValue) then
@@ -324,7 +322,7 @@ begin
   Changed(False);
 end;
 
-procedure Th5uGridEditorItem.SetDefaultMaxWidth(const AValue: Th5uWidth);
+procedure ThiiGridEditorItem.SetDefaultMaxWidth(const AValue: ThiiWidth);
 begin
   h5uValidateWidth(AValue);
   if FDefaultMaxWidth = AValue then
@@ -335,43 +333,44 @@ begin
 end;
 
 var
-  GEditors: array[Th5uEditorPlatform] of {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, Th5uGridEditorItemClass>;
+  GEditors: array[ThiiEditorPlatform] of {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, ThiiGridEditorItemClass>;
 
-procedure h5uRegisterEditor(APlatform: Th5uEditorPlatform; const AEditorName: string; AClass: Th5uGridEditorItemClass);
+procedure h5uRegisterEditor(APlatform: ThiiEditorPlatform; const AEditorName: string; AClass: ThiiGridEditorItemClass);
 begin
   if (Trim(AEditorName) = '') or not Assigned(AClass) then
     raise EArgumentException.Create('EditorName und Editor-Klasse sind erforderlich.');
   if not Assigned(GEditors[APlatform]) then
-    GEditors[APlatform] := {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, Th5uGridEditorItemClass>.Create;
+    GEditors[APlatform] := {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, ThiiGridEditorItemClass>.Create;
   GEditors[APlatform].AddOrSetValue(LowerCase(AEditorName), AClass);
 end;
 
-function h5uEditorClass(APlatform: Th5uEditorPlatform; const AEditorName: string): Th5uGridEditorItemClass;
+function h5uEditorClass(APlatform: ThiiEditorPlatform; const AEditorName: string): ThiiGridEditorItemClass;
 begin
   if not Assigned(GEditors[APlatform]) or not GEditors[APlatform].TryGetValue(LowerCase(AEditorName), Result) then
-    raise Eh5uGrid.CreateFmt('Editor "%s" ist nicht registriert.', [AEditorName]);
+    raise EhiiGrid.CreateFmt('Editor "%s" ist nicht registriert.', [AEditorName]);
 end;
 
-procedure h5uUnregisterEditor(APlatform: Th5uEditorPlatform; const AEditorName: string);
+procedure h5uUnregisterEditor(APlatform: ThiiEditorPlatform; const AEditorName: string);
 begin
   if Assigned(GEditors[APlatform]) then
     GEditors[APlatform].Remove(LowerCase(AEditorName));
 end;
 
-function h5uCreateEditor(APlatform: Th5uEditorPlatform; const AEditorName: string; ACollection: TCollection): Th5uGridEditorItem;
+function h5uCreateEditor(APlatform: ThiiEditorPlatform; const AEditorName: string; ACollection: TCollection): ThiiGridEditorItem;
 var
-  LClass: Th5uGridEditorItemClass;
+  LClass: ThiiGridEditorItemClass;
 begin
   if not Assigned(GEditors[APlatform]) or not GEditors[APlatform].TryGetValue(LowerCase(AEditorName), LClass) then
-    raise Eh5uGrid.CreateFmt('Editor "%s" ist nicht registriert.', [AEditorName]);
+    raise EhiiGrid.CreateFmt('Editor "%s" ist nicht registriert.', [AEditorName]);
   Result := LClass.Create(ACollection);
   Result.EditorName := AEditorName;
 end;
 
-function h5uResolveEditorName(AGrid: TObject; AColumns: Th5uGridColumns; AColumn: Th5uGridColumn; ARow: Int64; ADefaults: Th5uDefaultEditors; AGetValue: Th5uGetCellValueMethod; out AColumnScoped: Boolean): string;
+function h5uResolveEditorName(AGrid: TObject; AColumns: ThiiGridColumns; AColumn: ThiiGridColumn; ARow: Int64; ADefaults: ThiiDefaultEditors; AGetValue: Th5uGetCellValueMethod;
+  out AColumnScoped: Boolean): string;
   function FromColumn(const AId: string): string;
   var
-    LColumn: Th5uGridColumn;
+    LColumn: ThiiGridColumn;
     LValue: TValue;
   begin
     Result := '';
@@ -379,7 +378,7 @@ function h5uResolveEditorName(AGrid: TObject; AColumns: Th5uGridColumns; AColumn
       Exit;
     LColumn := AColumns.FindById(AId);
     if not Assigned(LColumn) then
-      raise Eh5uGrid.CreateFmt('Editor-Spalte "%s" wurde nicht gefunden.', [AId]);
+      raise EhiiGrid.CreateFmt('Editor-Spalte "%s" wurde nicht gefunden.', [AId]);
     LValue := AGetValue(LColumn, ARow, False);
     if not LValue.IsEmpty then
       Result := Trim({$IFDEF FPC}h5uValueAsText(LValue){$ELSE}LValue.ToString{$ENDIF});
@@ -419,31 +418,31 @@ begin
   {$ENDIF}
 end;
 
-function Th5uGridEditors.Find(const AName: string): Th5uGridEditorItem;
+function ThiiGridEditors.Find(const AName: string): ThiiGridEditorItem;
 var
   I: Integer;
 begin
   for I := 0 to Count - 1 do
-    if SameText(Th5uGridEditorItem(Items[I]).EditorName, AName) then
-      Exit(Th5uGridEditorItem(Items[I]));
+    if SameText(ThiiGridEditorItem(Items[I]).EditorName, AName) then
+      Exit(ThiiGridEditorItem(Items[I]));
   Result := nil;
 end;
 
-procedure Th5uGridEditorItem.SetEditorName(const AValue: string);
+procedure ThiiGridEditorItem.SetEditorName(const AValue: string);
 var
-  LItem: Th5uGridEditorItem;
+  LItem: ThiiGridEditorItem;
 begin
-  if Collection is Th5uGridEditors then
+  if Collection is ThiiGridEditors then
   begin
-    LItem := Th5uGridEditors(Collection).Find(AValue);
+    LItem := ThiiGridEditors(Collection).Find(AValue);
     if (AValue <> '') and Assigned(LItem) and (LItem <> Self) then
-      raise Eh5uGrid.CreateFmt('EditorName "%s" ist bereits vorhanden.', [AValue]);
+      raise EhiiGrid.CreateFmt('EditorName "%s" ist bereits vorhanden.', [AValue]);
   end;
   FEditorName := AValue;
   Changed(False);
 end;
 
-procedure Th5uGridEditorItem.SetEditorType(const AValue: string);
+procedure ThiiGridEditorItem.SetEditorType(const AValue: string);
 begin
   if FEditorType = AValue then
     Exit;
@@ -452,23 +451,23 @@ begin
   Changed(False);
 end;
 
-function Th5uGridEditorItem.GetDisplayName: string;
+function ThiiGridEditorItem.GetDisplayName: string;
 begin
   Result := EditorName;
   if Result = '' then
     Result := inherited;
 end;
 
-procedure Th5uGridEditorItem.Assign(Source: TPersistent);
+procedure ThiiGridEditorItem.Assign(Source: TPersistent);
 var
-  S: Th5uGridEditorItem;
+  S: ThiiGridEditorItem;
 begin
-  if not (Source is Th5uGridEditorItem) then
+  if not (Source is ThiiGridEditorItem) then
   begin
     inherited;
     Exit;
   end;
-  S := Th5uGridEditorItem(Source);
+  S := ThiiGridEditorItem(Source);
   EditorName := S.EditorName;
   FEditorType := S.FEditorType;
   FDefaultWidth := S.FDefaultWidth;
@@ -497,15 +496,15 @@ begin
   FOnMouseUp := S.FOnMouseUp;
 end;
 
-procedure Th5uGridEditorItem.BuildEditor;
+procedure ThiiGridEditorItem.BuildEditor;
 begin
 end;
 
-procedure Th5uGridEditorItem.ReleaseEditor;
+procedure ThiiGridEditorItem.ReleaseEditor;
 begin
 end;
 
-procedure Th5uGridEditorItem.BeginEdit(const AContext: Th5uEditorContext);
+procedure ThiiGridEditorItem.BeginEdit(const AContext: ThiiEditorContext);
 begin
   if Assigned(AContext.Grid) and (csDesigning in AContext.Grid.ComponentState) then
     Exit;
@@ -518,78 +517,78 @@ begin
   FChangedSinceBegin := False;
 end;
 
-procedure Th5uGridEditorItem.UpdateBounds(const ABounds: TRectF);
+procedure ThiiGridEditorItem.UpdateBounds(const ABounds: TRectF);
 begin
   FContext.Bounds := ABounds;
 end;
 
-procedure Th5uGridEditorItem.Activate;
+procedure ThiiGridEditorItem.Activate;
 begin
   Show;
 end;
 
-procedure Th5uGridEditorItem.Show;
+procedure ThiiGridEditorItem.Show;
 begin
   FActive := True;
   if Assigned(FOnShow) then
     FOnShow(Self);
 end;
 
-procedure Th5uGridEditorItem.Hide;
+procedure ThiiGridEditorItem.Hide;
 begin
   FActive := False;
   if Assigned(FOnHide) then
     FOnHide(Self);
 end;
 
-procedure Th5uGridEditorItem.Cancel;
+procedure ThiiGridEditorItem.Cancel;
 begin
   Hide;
   if Assigned(FOnCancel) then
     FOnCancel(Self);
 end;
 
-procedure Th5uGridEditorItem.Committed;
+procedure ThiiGridEditorItem.Committed;
 begin
   Hide;
   if Assigned(FOnCommit) then
     FOnCommit(Self);
 end;
 
-procedure Th5uGridEditorItem.Focus;
+procedure ThiiGridEditorItem.Focus;
 begin
 end;
 
-procedure Th5uGridEditorItem.BringToFront;
+procedure ThiiGridEditorItem.BringToFront;
 begin
 end;
 
-function Th5uGridEditorItem.UsesTextValue: Boolean;
+function ThiiGridEditorItem.UsesTextValue: Boolean;
 begin
-  Result := Mode = Th5uEditorMode.Text;
+  Result := Mode = ThiiEditorMode.Text;
 end;
 
-function Th5uGridEditorItem.CanAutoEdit: Boolean;
+function ThiiGridEditorItem.CanAutoEdit: Boolean;
 begin
-  Result := Mode = Th5uEditorMode.Text;
+  Result := Mode = ThiiEditorMode.Text;
 end;
 
-function Th5uGridEditorItem.DeferExit: Boolean;
+function ThiiGridEditorItem.DeferExit: Boolean;
 begin
   Result := False;
 end;
 
-function Th5uGridEditorItem.ReadText: string;
+function ThiiGridEditorItem.ReadText: string;
 begin
   Result := FText;
 end;
 
-procedure Th5uGridEditorItem.WriteText(const AText: string);
+procedure ThiiGridEditorItem.WriteText(const AText: string);
 begin
   FText := AText;
 end;
 
-function Th5uGridEditorItem.ReadValue: TValue;
+function ThiiGridEditorItem.ReadValue: TValue;
 begin
   if UsesTextValue and Assigned(Context.Column) then
     Result := h5uParseEditorValue(Context.Column.DataType, GetText)
@@ -597,20 +596,20 @@ begin
     Result := FValue;
 end;
 
-procedure Th5uGridEditorItem.WriteValue(const AValue: TValue);
+procedure ThiiGridEditorItem.WriteValue(const AValue: TValue);
 begin
   FValue := AValue;
   WriteText({$IFDEF FPC}h5uValueAsText(AValue){$ELSE}AValue.ToString{$ENDIF});
 end;
 
-function Th5uGridEditorItem.GetText: string;
+function ThiiGridEditorItem.GetText: string;
 begin
   Result := ReadText;
   if Assigned(FOnGetText) then
     FOnGetText(Self, Result);
 end;
 
-procedure Th5uGridEditorItem.SetText(const AText: string);
+procedure ThiiGridEditorItem.SetText(const AText: string);
 var
   LText: string;
 begin
@@ -620,7 +619,7 @@ begin
   WriteText(LText);
 end;
 
-function Th5uGridEditorItem.GetValue: TValue;
+function ThiiGridEditorItem.GetValue: TValue;
 begin
   // A custom value provider can handle values that the standard parser cannot.
   if Assigned(FOnGetValue) then
@@ -632,7 +631,7 @@ begin
     Result := ReadValue;
 end;
 
-procedure Th5uGridEditorItem.SetValue(const AValue: TValue);
+procedure ThiiGridEditorItem.SetValue(const AValue: TValue);
 var
   LValue: TValue;
 begin
@@ -642,7 +641,7 @@ begin
   WriteValue(LValue);
 end;
 
-function Th5uGridEditorItem.State: string;
+function ThiiGridEditorItem.State: string;
 begin
   if UsesTextValue and not Assigned(FOnGetValue) then
     Result := GetText
@@ -650,31 +649,31 @@ begin
     Result := {$IFDEF FPC}h5uValueAsText(GetValue){$ELSE}GetValue.ToString{$ENDIF};
 end;
 
-function Th5uGridEditorItem.Modified: Boolean;
+function ThiiGridEditorItem.Modified: Boolean;
 begin
   Result := (State <> FOriginalState) or (FChangedSinceBegin and (not UsesTextValue or Assigned(FOnGetValue)));
 end;
 
-function Th5uGridEditorItem.MeasureContentWidth(const AContext: Th5uEditorContext): Single;
+function ThiiGridEditorItem.MeasureContentWidth(const AContext: ThiiEditorContext): Single;
 begin
   Result := -1;
 end;
 
-function Th5uGridEditorItem.MeasureWidth(const AContext: Th5uEditorContext): Single;
+function ThiiGridEditorItem.MeasureWidth(const AContext: ThiiEditorContext): Single;
 begin
   Result := MeasureContentWidth(AContext);
   if Assigned(FOnMeasureWidth) then
     FOnMeasureWidth(Self, AContext, Result);
 end;
 
-function Th5uGridEditorItem.DrawDisplay(const AContext: Th5uEditorContext): Boolean;
+function ThiiGridEditorItem.DrawDisplay(const AContext: ThiiEditorContext): Boolean;
 begin
   Result := False;
   if Assigned(FOnDrawDisplay) then
     FOnDrawDisplay(Self, AContext, Result);
 end;
 
-function Th5uGridEditorItem.DrawEditor(const AContext: Th5uEditorContext): Boolean;
+function ThiiGridEditorItem.DrawEditor(const AContext: ThiiEditorContext): Boolean;
 begin
   Result := False;
   if Assigned(FOnDrawEditor) then
@@ -683,7 +682,7 @@ begin
     Result := DrawDisplay(AContext);
 end;
 
-function Th5uGridEditorItem.HitTest(const ABounds: TRectF; const APoint: TPointF): Boolean;
+function ThiiGridEditorItem.HitTest(const ABounds: TRectF; const APoint: TPointF): Boolean;
 begin
   {$IFDEF FPC}
     Result := (APoint.X >= ABounds.Left) and (APoint.X < ABounds.Right) and (APoint.Y >= ABounds.Top) and (APoint.Y < ABounds.Bottom);
@@ -692,7 +691,7 @@ begin
   {$ENDIF};
 end;
 
-procedure Th5uGridEditorItem.Change;
+procedure ThiiGridEditorItem.Change;
 begin
   FChangedSinceBegin := True;
   if Assigned(FOnChange) then
@@ -701,13 +700,13 @@ begin
     FChanged(Self);
 end;
 
-procedure Th5uGridEditorItem.Enter;
+procedure ThiiGridEditorItem.Enter;
 begin
   if Assigned(FOnEnter) then
     FOnEnter(Self);
 end;
 
-procedure Th5uGridEditorItem.ExitEditor;
+procedure ThiiGridEditorItem.ExitEditor;
 begin
   if Assigned(FOnExit) then
     FOnExit(Self);
@@ -715,7 +714,7 @@ begin
     FExited(Self);
 end;
 
-procedure Th5uGridEditorItem.KeyDown(var AKey: Word; var AKeyChar: Char; AShift: TShiftState);
+procedure ThiiGridEditorItem.KeyDown(var AKey: Word; var AKeyChar: Char; AShift: TShiftState);
 begin
   if Assigned(FOnKeyDown) then
     FOnKeyDown(Self, AKey, AKeyChar, AShift);
@@ -723,37 +722,37 @@ begin
     FKeyDown(Self, AKey, AKeyChar, AShift);
 end;
 
-procedure Th5uGridEditorItem.MouseDown(AButton: TMouseButton; AShift: TShiftState; const APoint: TPointF);
+procedure ThiiGridEditorItem.MouseDown(AButton: TMouseButton; AShift: TShiftState; const APoint: TPointF);
 begin
   if Assigned(FOnMouseDown) then
     FOnMouseDown(Self, AButton, AShift, APoint);
 end;
 
-procedure Th5uGridEditorItem.MouseMove(AShift: TShiftState; const APoint: TPointF);
+procedure ThiiGridEditorItem.MouseMove(AShift: TShiftState; const APoint: TPointF);
 begin
   if Assigned(FOnMouseMove) then
     FOnMouseMove(Self, TMouseButton.mbLeft, AShift, APoint);
 end;
 
-procedure Th5uGridEditorItem.MouseUp(AButton: TMouseButton; AShift: TShiftState; const APoint: TPointF);
+procedure ThiiGridEditorItem.MouseUp(AButton: TMouseButton; AShift: TShiftState; const APoint: TPointF);
 begin
   if Assigned(FOnMouseUp) then
     FOnMouseUp(Self, AButton, AShift, APoint);
 end;
 
-procedure Th5uGridEditorItem.RequestCommit;
+procedure ThiiGridEditorItem.RequestCommit;
 begin
   if Assigned(FRequestCommit) then
     FRequestCommit(Self);
 end;
 
-procedure Th5uGridEditorItem.RequestCancel;
+procedure ThiiGridEditorItem.RequestCancel;
 begin
   if Assigned(FRequestCancel) then
     FRequestCancel(Self);
 end;
 
-function Th5uDefaultEditors.GetEditor(AIndex: Integer): string;
+function ThiiDefaultEditors.GetEditor(AIndex: Integer): string;
 begin
   case AIndex of
     0: Result := FEdit;
@@ -768,7 +767,7 @@ begin
   end;
 end;
 
-procedure Th5uDefaultEditors.SetEditor(AIndex: Integer; const AValue: string);
+procedure ThiiDefaultEditors.SetEditor(AIndex: Integer; const AValue: string);
 begin
   if GetEditor(AIndex) = AValue then
     Exit;
@@ -787,7 +786,7 @@ begin
     FOnChanged(Self);
 end;
 
-constructor Th5uDefaultEditors.Create;
+constructor ThiiDefaultEditors.Create;
 begin
   inherited;
   FEdit := 'TextEditor';
@@ -801,16 +800,16 @@ begin
   FImage := 'ImageEditor';
 end;
 
-procedure Th5uDefaultEditors.Assign(Source: TPersistent);
+procedure ThiiDefaultEditors.Assign(Source: TPersistent);
 var
-  S: Th5uDefaultEditors;
+  S: ThiiDefaultEditors;
 begin
-  if not (Source is Th5uDefaultEditors) then
+  if not (Source is ThiiDefaultEditors) then
   begin
     inherited;
     Exit;
   end;
-  S := Th5uDefaultEditors(Source);
+  S := ThiiDefaultEditors(Source);
   FEdit := S.FEdit;
   FInteger := S.FInteger;
   FFloat := S.FFloat;
@@ -824,31 +823,31 @@ begin
     FOnChanged(Self);
 end;
 
-function Th5uDefaultEditors.EditorFor(AColumn: Th5uGridColumn): string;
+function ThiiDefaultEditors.EditorFor(AColumn: ThiiGridColumn): string;
 begin
   case AColumn.EditorKind of
-    Th5uColumnEditorKind.None: Exit('None');
-    Th5uColumnEditorKind.Text: Exit(FEdit);
-    Th5uColumnEditorKind.Date: Exit(FDate);
-    Th5uColumnEditorKind.Time: Exit(FTime);
-    Th5uColumnEditorKind.DateTime: Exit(FDateTime);
-    Th5uColumnEditorKind.Boolean: Exit(FCheckBox);
-    Th5uColumnEditorKind.Image: Exit(FImage);
+    ThiiColumnEditorKind.None: Exit('None');
+    ThiiColumnEditorKind.Text: Exit(FEdit);
+    ThiiColumnEditorKind.Date: Exit(FDate);
+    ThiiColumnEditorKind.Time: Exit(FTime);
+    ThiiColumnEditorKind.DateTime: Exit(FDateTime);
+    ThiiColumnEditorKind.Boolean: Exit(FCheckBox);
+    ThiiColumnEditorKind.Image: Exit(FImage);
   end;
   Result := DataTypeEditor(AColumn.DataType);
 end;
 
-function Th5uDefaultEditors.DataTypeEditor(AType: Th5uColumnDataType): string;
+function ThiiDefaultEditors.DataTypeEditor(AType: ThiiColumnDataType): string;
 begin
   case AType of
-    Th5uColumnDataType.Integer: Result := FInteger;
-    Th5uColumnDataType.Float: Result := FFloat;
-    Th5uColumnDataType.Currency: Result := FCurrency;
-    Th5uColumnDataType.Date: Result := FDate;
-    Th5uColumnDataType.Time: Result := FTime;
-    Th5uColumnDataType.DateTime: Result := FDateTime;
-    Th5uColumnDataType.Boolean: Result := FCheckBox;
-    Th5uColumnDataType.Image: Result := FImage;
+    ThiiColumnDataType.Integer: Result := FInteger;
+    ThiiColumnDataType.Float: Result := FFloat;
+    ThiiColumnDataType.Currency: Result := FCurrency;
+    ThiiColumnDataType.Date: Result := FDate;
+    ThiiColumnDataType.Time: Result := FTime;
+    ThiiColumnDataType.DateTime: Result := FDateTime;
+    ThiiColumnDataType.Boolean: Result := FCheckBox;
+    ThiiColumnDataType.Image: Result := FImage;
     else Result := FEdit;
   end;
 end;
@@ -856,7 +855,7 @@ end;
 constructor Th5uGridEditorCache.Create;
 begin
   inherited;
-  FItems := TCollection.Create(Th5uGridEditorItem);
+  FItems := TCollection.Create(ThiiGridEditorItem);
   FEntries := {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, TEntry>.Create;
 end;
 
@@ -873,11 +872,11 @@ begin
   FItems.Clear;
 end;
 
-function Th5uGridEditorCache.Get(APlatform: Th5uEditorPlatform; const AName, AColumnId: string; ATemplate: Th5uGridEditorItem): Th5uGridEditorItem;
+function Th5uGridEditorCache.Get(APlatform: ThiiEditorPlatform; const AName, AColumnId: string; ATemplate: ThiiGridEditorItem): ThiiGridEditorItem;
 var
   K: string;
   E: TEntry;
-  C: Th5uGridEditorItemClass;
+  C: ThiiGridEditorItemClass;
 begin
   if (AColumnId = '') and Assigned(ATemplate) and (ATemplate.EditorType = '') then
     Exit(ATemplate);
@@ -885,7 +884,7 @@ begin
     if ATemplate.EditorType <> '' then
       C := h5uEditorClass(APlatform, ATemplate.EditorType)
     else
-      C := Th5uGridEditorItemClass(ATemplate.ClassType)
+      C := ThiiGridEditorItemClass(ATemplate.ClassType)
   else
     C := h5uEditorClass(APlatform, AName);
   // Length prefix prevents collisions between editor and column IDs.
@@ -931,8 +930,8 @@ end;
 initialization
 
 finalization
-  GEditors[Th5uEditorPlatform.VCL].Free;
-  GEditors[Th5uEditorPlatform.FMX].Free;
+  GEditors[ThiiEditorPlatform.VCL].Free;
+  GEditors[ThiiEditorPlatform.FMX].Free;
 
 end.
 

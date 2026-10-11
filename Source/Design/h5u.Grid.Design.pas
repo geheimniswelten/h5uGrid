@@ -62,7 +62,7 @@ end;
 
 procedure Th5uWidthProperty.SetValue(const Value: string);
 var
-  Width: Th5uWidth;
+  Width: ThiiWidth;
 begin
   if not h5uTryTextToWidth(Value, Width) then
     raise EConvertError.Create('Breite als Zahl, Prozentangabe oder Default erwartet.');
@@ -80,18 +80,18 @@ var
 {$ENDIF}
 begin
   {$IFnDEF FPC}
-    RegisterPropertyEditor(TypeInfo(Th5uWidth), nil, '', Th5uWidthProperty);
+    RegisterPropertyEditor(TypeInfo(ThiiWidth), nil, '', Th5uWidthProperty);
     {$I h5u.Grid.Design_icon.lrs}
   {$ENDIF}
-  RegisterComponents('h5u Grid', [Th5uClassFactory, Th5uDatasetController, Th5uMemoryController, Th5uObjectListController, Th5uVirtualController,
-    Th5uSampleClientDataset]);
-  RegisterComponents('h5u FormDesign', [Th5uFormDesigner]);
+  RegisterComponents('hiiGrid',
+    [ThiiClassFactory, ThiiDatasetController, ThiiMemoryController, ThiiObjectListController, ThiiVirtualController, ThiiSampleClientDataset]);
+  RegisterComponents('hii FormDesign', [ThiiFormDesigner]);
 
   {$IFnDEF FPC}
     Icon := TPngImage.Create;
     try
       Icon.LoadFromResourceName(HInstance, 'h5uGridComponent_32x32');
-      SplashScreenServices.AddPluginBitmap('h5uGrid', [Icon], False, '', '');
+      SplashScreenServices.AddPluginBitmap('hiiGrid', [Icon], False, '', '');
     finally
       Icon.Free
     end;

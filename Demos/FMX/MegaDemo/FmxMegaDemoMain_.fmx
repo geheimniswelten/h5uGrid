@@ -162,7 +162,7 @@ object FmxDatasetDemoForm: TFmxDatasetDemoForm
       OnClick = ToggleGroupsButtonClick
     end
   end
-  object Grid: Th5uFmxGrid
+  object Grid: ThiiGrid
     Align = Client
     CanFocus = True
     ClipChildren = True
@@ -464,7 +464,7 @@ object FmxDatasetDemoForm: TFmxDatasetDemoForm
       ContentSize = '78'
     end
   end
-  object SampleData: Th5uSampleClientDataset
+  object SampleData: ThiiSampleClientDataset
     PersistDataPacket.Data = {
       DA3E00009619E0BD01000000180000000C0028000000030000003C0102494404
       000100040000000A545245455F4C4556454C04000100040000000A464F4C445F
@@ -1037,7 +1037,7 @@ object FmxDatasetDemoForm: TFmxDatasetDemoForm
     Left = 304
     Top = 184
   end
-  object DataController: Th5uDatasetController
+  object DataController: ThiiDatasetController
     Cache.Mode = Paged
     Cache.PageSize = 100
     Cache.MaxMemoryBytes = 67108864

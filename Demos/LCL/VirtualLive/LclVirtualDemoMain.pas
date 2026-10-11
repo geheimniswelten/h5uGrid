@@ -17,9 +17,7 @@ uses
   ExtCtrls,
   Forms,
   StdCtrls,
-  h5u.Grid.Data.Core,
   h5u.Grid.Data.Virtual,
-  h5u.Grid.Types,
   Lcl.h5u.Grid;
 
 type
@@ -44,8 +42,8 @@ type
     NextPageButton: TButton;
     StatusLabel: TLabel;
     LiveTimer: TTimer;
-    VirtualController: Th5uVirtualController;
-    Grid: Th5uLclGrid;
+    VirtualController: ThiiVirtualController;
+    Grid: ThiiGrid;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure LiveTimerTimer(Sender: TObject);
@@ -54,7 +52,7 @@ type
     procedure OptionClick(Sender: TObject);
     procedure NextPageButtonClick(Sender: TObject);
     procedure VirtualControllerGetRowCount(Sender: TObject; var ARowCount: Int64);
-    procedure VirtualControllerGetRowKey(Sender: TObject; ASourceRowIndex: Int64; var ARowKey: Th5uRowKey);
+    procedure VirtualControllerGetRowKey(Sender: TObject; ASourceRowIndex: Int64; var ARowKey: ThiiRowKey);
     procedure VirtualControllerGetValue(Sender: TObject; ASourceRowIndex: Int64; const AFieldName: string; var AValue: TValue);
     procedure VirtualControllerSetValue(Sender: TObject; ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue; var AHandled: Boolean);
     procedure VirtualControllerPrepareRange(Sender: TObject; AFirstSourceRow, ACount: Int64; AQueryGeneration: Int64);
@@ -95,8 +93,8 @@ begin
   LRow.Severity := FNextId mod 4;
   LRow.Acknowledged := False;
   if (FNextId mod 8) = 0 then
-    LRow.MessageText := 'Längerer Live-Text für AutoHeight: Der Wert stammt direkt ' + 'aus dem OnGetValue-Ereignis und existiert nicht als '
-      + 'Grid-Datensatzobjekt.'
+    LRow.MessageText :=
+      'Längerer Live-Text für AutoHeight: Der Wert stammt direkt ' + 'aus dem OnGetValue-Ereignis und existiert nicht als ' + 'Grid-Datensatzobjekt.'
   else
     LRow.MessageText := Format('Live-Ereignis Nummer %d wurde empfangen.', [FNextId]);
 
@@ -111,25 +109,25 @@ begin
   LiveTimer.Enabled := not PauseCheck.Checked;
 
   if CacheCheck.Checked then
-    VirtualController.Cache.Mode := Th5uCacheMode.Viewport
+    VirtualController.Cache.Mode := ThiiCacheMode.Viewport
   else
-    VirtualController.Cache.Mode := Th5uCacheMode.None;
+    VirtualController.Cache.Mode := ThiiCacheMode.None;
 
   if PagedCheck.Checked then
   begin
-    VirtualController.Pagination.Mode := Th5uPaginationMode.NumberedPages;
+    VirtualController.Pagination.Mode := ThiiPaginationMode.NumberedPages;
     VirtualController.Pagination.PageSize := 20;
   end
   else
   begin
-    VirtualController.Pagination.Mode := Th5uPaginationMode.Continuous;
+    VirtualController.Pagination.Mode := ThiiPaginationMode.Continuous;
     VirtualController.Pagination.PageIndex := 0;
   end;
 
   if DarkCheck.Checked then
-    Grid.Theme := Th5uGridTheme.Dark
+    Grid.Theme := ThiiGridTheme.Dark
   else
-    Grid.Theme := Th5uGridTheme.ApplicationStyle;
+    Grid.Theme := ThiiGridTheme.ApplicationStyle;
 end;
 
 procedure TLclVirtualDemoForm.ClearButtonClick(Sender: TObject);
@@ -180,7 +178,7 @@ procedure TLclVirtualDemoForm.NextPageButtonClick(Sender: TObject);
 var
   LPageCount: Integer;
 begin
-  if VirtualController.Pagination.Mode <> Th5uPaginationMode.NumberedPages then
+  if VirtualController.Pagination.Mode <> ThiiPaginationMode.NumberedPages then
     Exit;
 
   LPageCount := (FRows.Count + VirtualController.Pagination.PageSize - 1) div VirtualController.Pagination.PageSize;
@@ -201,12 +199,12 @@ begin
     ARowCount := FRows.Count;
 end;
 
-procedure TLclVirtualDemoForm.VirtualControllerGetRowKey(Sender: TObject; ASourceRowIndex: Int64; var ARowKey: Th5uRowKey);
+procedure TLclVirtualDemoForm.VirtualControllerGetRowKey(Sender: TObject; ASourceRowIndex: Int64; var ARowKey: ThiiRowKey);
 begin
   if not Assigned(FRows) then
     Exit;
   if (ASourceRowIndex >= 0) and (ASourceRowIndex < FRows.Count) then
-    ARowKey := Th5uRowKey.FromInt64(FRows[ASourceRowIndex].Id);
+    ARowKey := ThiiRowKey.FromInt64(FRows[ASourceRowIndex].Id);
 end;
 
 procedure TLclVirtualDemoForm.VirtualControllerGetValue(Sender: TObject; ASourceRowIndex: Int64; const AFieldName: string; var AValue: TValue);
@@ -237,8 +235,8 @@ procedure TLclVirtualDemoForm.VirtualControllerPrepareRange(Sender: TObject; AFi
 begin
   if not Assigned(FRows) or not Assigned(StatusLabel) then
     Exit;
-  StatusLabel.Caption := Format('Viewport-Anfrage: %d..%d, QueryGeneration %d, Gesamt %d', [AFirstSourceRow, AFirstSourceRow + ACount
-    - 1, AQueryGeneration, FRows.Count]);
+  StatusLabel.Caption := Format('Viewport-Anfrage: %d..%d, QueryGeneration %d, Gesamt %d',
+    [AFirstSourceRow, AFirstSourceRow + ACount - 1, AQueryGeneration, FRows.Count]);
 end;
 
 procedure TLclVirtualDemoForm.VirtualControllerSetValue(Sender: TObject; ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue; var AHandled: Boolean);

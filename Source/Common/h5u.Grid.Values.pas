@@ -27,24 +27,24 @@ uses
 
 // Value conversion and cell-event precedence shared by all control adapters.
 type
-  Th5uGetCellValueMethod = function(AColumn: Th5uGridColumn; ARow: Int64; ADisplay: Boolean): TValue of object;
+  Th5uGetCellValueMethod = function(AColumn: ThiiGridColumn; ARow: Int64; ADisplay: Boolean): TValue of object;
   Th5uGetViewValueMethod = function(ARow: Int64; const AFieldName: string): TValue of object;
   Th5uGetViewTextMethod = function(ARow: Int64; const AFieldName, ADisplayFormat: string): string of object;
 
-function h5uParseEditorValue(ADataType: Th5uColumnDataType; const AText: string): TValue;
-function h5uColumnMode(AColumn: Th5uGridColumn; AController: TObject; const ATreeColumnId, AGroupColumnId, AStyleColumnId, AHintColumnId: string): string;
+function h5uParseEditorValue(ADataType: ThiiColumnDataType; const AText: string): TValue;
+function h5uColumnMode(AColumn: ThiiGridColumn; AController: TObject; const ATreeColumnId, AGroupColumnId, AStyleColumnId, AHintColumnId: string): string;
 function h5uColumnModeSymbols(const AMode: string): string;
-function h5uCellPermission(AGrid: TObject; AColumn: Th5uGridColumn; ARow: Int64; AAllow: Boolean; AColumnEvent, AGridEvent: Th5uCellPermissionEvent): Boolean;
-procedure h5uOverrideCellValue(AGrid: TObject; AColumn: Th5uGridColumn; ARow: Int64; ADisplay: Boolean; AGridEvent: Th5uCellGetValueEvent; var AValue: TValue);
-function h5uCellText(AColumn: Th5uGridColumn; ARow: Int64; ADisplay, AHasValueEvent: Boolean; AGetCellValue: Th5uGetCellValueMethod; AGetViewValue: Th5uGetViewValueMethod;
+function h5uCellPermission(AGrid: TObject; AColumn: ThiiGridColumn; ARow: Int64; AAllow: Boolean; AColumnEvent, AGridEvent: ThiiCellPermissionEvent): Boolean;
+procedure h5uOverrideCellValue(AGrid: TObject; AColumn: ThiiGridColumn; ARow: Int64; ADisplay: Boolean; AGridEvent: ThiiCellGetValueEvent; var AValue: TValue);
+function h5uCellText(AColumn: ThiiGridColumn; ARow: Int64; ADisplay, AHasValueEvent: Boolean; AGetCellValue: Th5uGetCellValueMethod; AGetViewValue: Th5uGetViewValueMethod;
   AGetViewText: Th5uGetViewTextMethod): string;
-function h5uPrepareCellValue(AGrid: TObject; AColumn: Th5uGridColumn; ARow: Int64; const AValue: TValue; AValidate: Th5uCellValidateEvent;
-  ASetValue: Th5uCellSetValueEvent): TValue;
-procedure h5uNotifyCellClick(AGrid: TObject; AColumn: Th5uGridColumn; ARow: Int64; AHeader, AIndicator: Boolean; ACellClick, AHeaderClick, AIndicatorClick: Th5uCellEvent);
+function h5uPrepareCellValue(AGrid: TObject; AColumn: ThiiGridColumn; ARow: Int64; const AValue: TValue; AValidate: ThiiCellValidateEvent;
+  ASetValue: ThiiCellSetValueEvent): TValue;
+procedure h5uNotifyCellClick(AGrid: TObject; AColumn: ThiiGridColumn; ARow: Int64; AHeader, AIndicator: Boolean; ACellClick, AHeaderClick, AIndicatorClick: ThiiCellEvent);
 
 implementation
 
-function h5uParseEditorValue(ADataType: Th5uColumnDataType; const AText: string): TValue;
+function h5uParseEditorValue(ADataType: ThiiColumnDataType; const AText: string): TValue;
 var
   LInteger: Int64;
   LFloat: Double;
@@ -52,36 +52,36 @@ var
   LDateTime: TDateTime;
 begin
   case ADataType of
-    Th5uColumnDataType.Integer:
+    ThiiColumnDataType.Integer:
       begin
         if not TryStrToInt64(AText, LInteger) then
           raise EConvertError.CreateFmt('"%s" ist keine ganze Zahl.', [AText]);
         Result := TValue.{$IFDEF FPC}specialize {$ENDIF}From<Int64>(LInteger);
       end;
 
-    Th5uColumnDataType.Float:
+    ThiiColumnDataType.Float:
       begin
         if not TryStrToFloat(AText, LFloat) then
           raise EConvertError.CreateFmt('"%s" ist keine Zahl.', [AText]);
         Result := TValue.{$IFDEF FPC}specialize {$ENDIF}From<Double>(LFloat);
       end;
 
-    Th5uColumnDataType.Currency:
+    ThiiColumnDataType.Currency:
       begin
         if not TryStrToCurr(AText, LCurrency) then
           raise EConvertError.CreateFmt('"%s" ist kein gültiger Betrag.', [AText]);
         Result := TValue.{$IFDEF FPC}specialize {$ENDIF}From<Currency>(LCurrency);
       end;
 
-    Th5uColumnDataType.Time:
+    ThiiColumnDataType.Time:
       begin
         if not TryStrToTime(AText, LDateTime) then
           raise EConvertError.CreateFmt('"%s" ist keine gültige Uhrzeit.', [AText]);
         Result := TValue.{$IFDEF FPC}specialize {$ENDIF}From<TDateTime>(LDateTime);
       end;
 
-    Th5uColumnDataType.Date,
-    Th5uColumnDataType.DateTime:
+    ThiiColumnDataType.Date,
+    ThiiColumnDataType.DateTime:
       begin
         if not TryStrToDateTime(AText, LDateTime) then
           raise EConvertError.CreateFmt('"%s" ist kein gültiges Datum.', [AText]);
@@ -93,7 +93,7 @@ begin
   end;
 end;
 
-function h5uColumnMode(AColumn: Th5uGridColumn; AController: TObject; const ATreeColumnId, AGroupColumnId, AStyleColumnId, AHintColumnId: string): string;
+function h5uColumnMode(AColumn: ThiiGridColumn; AController: TObject; const ATreeColumnId, AGroupColumnId, AStyleColumnId, AHintColumnId: string): string;
 var
   LKey: string;
   procedure Add(const AToken: string);
@@ -137,7 +137,7 @@ begin
   if Pos(' ScrollHint ', LMode) > 0 then Result := Result + #$2195;
 end;
 
-function h5uCellPermission(AGrid: TObject; AColumn: Th5uGridColumn; ARow: Int64; AAllow: Boolean; AColumnEvent, AGridEvent: Th5uCellPermissionEvent): Boolean;
+function h5uCellPermission(AGrid: TObject; AColumn: ThiiGridColumn; ARow: Int64; AAllow: Boolean; AColumnEvent, AGridEvent: ThiiCellPermissionEvent): Boolean;
 begin
   Result := AAllow;
   if Assigned(AColumnEvent) then
@@ -146,7 +146,7 @@ begin
     AGridEvent(AGrid, AColumn, ARow, Result);
 end;
 
-procedure h5uOverrideCellValue(AGrid: TObject; AColumn: Th5uGridColumn; ARow: Int64; ADisplay: Boolean; AGridEvent: Th5uCellGetValueEvent; var AValue: TValue);
+procedure h5uOverrideCellValue(AGrid: TObject; AColumn: ThiiGridColumn; ARow: Int64; ADisplay: Boolean; AGridEvent: ThiiCellGetValueEvent; var AValue: TValue);
 begin
   if Assigned(AColumn.OnGetValue) then
     AColumn.OnGetValue(AColumn, AColumn, ARow, AValue, ADisplay)
@@ -154,7 +154,8 @@ begin
     AGridEvent(AGrid, AColumn, ARow, AValue, ADisplay);
 end;
 
-function h5uCellText(AColumn: Th5uGridColumn; ARow: Int64; ADisplay, AHasValueEvent: Boolean; AGetCellValue: Th5uGetCellValueMethod; AGetViewValue: Th5uGetViewValueMethod; AGetViewText: Th5uGetViewTextMethod): string;
+function h5uCellText(AColumn: ThiiGridColumn; ARow: Int64; ADisplay, AHasValueEvent: Boolean; AGetCellValue: Th5uGetCellValueMethod; AGetViewValue: Th5uGetViewValueMethod;
+  AGetViewText: Th5uGetViewTextMethod): string;
 begin
   if AHasValueEvent then
   begin
@@ -169,7 +170,8 @@ begin
     Result := h5uValueToDisplayText(AGetViewValue(ARow, AColumn.FieldName));
 end;
 
-function h5uPrepareCellValue(AGrid: TObject; AColumn: Th5uGridColumn; ARow: Int64; const AValue: TValue; AValidate: Th5uCellValidateEvent; ASetValue: Th5uCellSetValueEvent): TValue;
+function h5uPrepareCellValue(AGrid: TObject; AColumn: ThiiGridColumn; ARow: Int64; const AValue: TValue; AValidate: ThiiCellValidateEvent;
+  ASetValue: ThiiCellSetValueEvent): TValue;
 var
   LValue: TValue;
   LValid: Boolean;
@@ -195,7 +197,7 @@ begin
   Result := LValue;
 end;
 
-procedure h5uNotifyCellClick(AGrid: TObject; AColumn: Th5uGridColumn; ARow: Int64; AHeader, AIndicator: Boolean; ACellClick, AHeaderClick, AIndicatorClick: Th5uCellEvent);
+procedure h5uNotifyCellClick(AGrid: TObject; AColumn: ThiiGridColumn; ARow: Int64; AHeader, AIndicator: Boolean; ACellClick, AHeaderClick, AIndicatorClick: ThiiCellEvent);
 begin
   if AIndicator then
   begin

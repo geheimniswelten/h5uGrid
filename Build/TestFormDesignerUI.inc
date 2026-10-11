@@ -1,13 +1,13 @@
 ﻿uses
   System.SysUtils, System.Classes, System.Rtti, System.Types,
-  h5u.FormDesigner, h5u.FormDesigner.Properties, h5u.Grid.Types,
+  h5u.FormDesigner, h5u.PropertyEditor, h5u.Grid.Types,
   h5u.Grid.Editors, h5u.Grid.Columns, h5u.Grid.Data.Core,
   {$IFDEF TEST_FMX}
   Fmx.Forms, Fmx.StdCtrls, Fmx.Controls, Fmx.Layouts, Fmx.ComboEdit,
-  Fmx.h5u.FormDesigner, Fmx.h5u.Grid.Editors;
+  Fmx.h5u.PropertyEditor, Fmx.h5u.FormDesigner, Fmx.h5u.Grid.Editors;
   {$ELSE}
   Vcl.Forms, Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls,
-  Vcl.h5u.FormDesigner, Vcl.h5u.Grid.Editors;
+  Vcl.h5u.PropertyEditor, Vcl.h5u.FormDesigner, Vcl.h5u.Grid.Editors;
   {$ENDIF}
 
 type
@@ -25,14 +25,14 @@ type
     property Broken: string read GetBroken;
   end;
   {$IFDEF TEST_FMX}
-  TPropertyView = Th5uFmxPropertyEditor;
-  TStructureView = Th5uFmxStructureView;
-  TNativeEditor = Th5uFmxCustomEditor;
+  TPropertyView = ThiiPropertyEditor;
+  TStructureView = ThiiStructureView;
+  TNativeEditor = ThiiFmxCustomEditor;
   TNativeCombo = TComboEdit;
   {$ELSE}
-  TPropertyView = Th5uVclPropertyEditor;
-  TStructureView = Th5uVclStructureView;
-  TNativeEditor = Th5uVclCustomEditor;
+  TPropertyView = ThiiPropertyEditor;
+  TStructureView = ThiiStructureView;
+  TNativeEditor = ThiiVclCustomEditor;
   TNativeCombo = TComboBox;
   {$ENDIF}
   TPropertyViewAccess = class(TPropertyView);
@@ -44,13 +44,13 @@ type
     Selected: TComponent;
     GroupA, GroupB: TSample;
     LastInstance: Pointer;
-    LastChange: Th5uDataChange;
+    LastChange: ThiiDataChange;
     procedure LoadedGroups(Sender: TObject);
     procedure Changed(Sender: TObject);
     procedure Select(Sender: TObject; AComponent: TComponent);
-    procedure DataChanged(Sender: TObject; const AChange: Th5uDataChange);
-    procedure GetValue(Sender: TObject; Item: Th5uPropertyItem; var Value: TValue; var Handled: Boolean);
-    procedure SetValue(Sender: TObject; Item: Th5uPropertyItem; const Value: TValue; var Handled: Boolean);
+    procedure DataChanged(Sender: TObject; const AChange: ThiiDataChange);
+    procedure GetValue(Sender: TObject; Item: ThiiPropertyItem; var Value: TValue; var Handled: Boolean);
+    procedure SetValue(Sender: TObject; Item: ThiiPropertyItem; const Value: TValue; var Handled: Boolean);
   end;
 
 procedure Check(ACondition: Boolean; const AMessage: string);
@@ -71,13 +71,13 @@ begin
   Selected := AComponent;
 end;
 
-procedure TEvents.DataChanged(Sender: TObject; const AChange: Th5uDataChange);
+procedure TEvents.DataChanged(Sender: TObject; const AChange: ThiiDataChange);
 begin
   Inc(DataChanges);
   LastChange := AChange;
 end;
 
-procedure TEvents.GetValue(Sender: TObject; Item: Th5uPropertyItem; var Value: TValue; var Handled: Boolean);
+procedure TEvents.GetValue(Sender: TObject; Item: ThiiPropertyItem; var Value: TValue; var Handled: Boolean);
 begin
   if Item.Name <> 'ManualComputed' then
     Exit;
@@ -87,7 +87,7 @@ begin
   Handled := True;
 end;
 
-procedure TEvents.SetValue(Sender: TObject; Item: Th5uPropertyItem; const Value: TValue; var Handled: Boolean);
+procedure TEvents.SetValue(Sender: TObject; Item: ThiiPropertyItem; const Value: TValue; var Handled: Boolean);
 begin
   if Item.Name <> 'ManualComputed' then
     Exit;
@@ -99,12 +99,12 @@ end;
 
 procedure TEvents.LoadedGroups(Sender: TObject);
 var
-  LModel: Th5uPropertyEditor;
+  LModel: ThiiPropertyModel;
   LContext: TRttiContext;
   LType: TRttiType;
-  LItem: Th5uPropertyItem;
+  LItem: ThiiPropertyItem;
 begin
-  LModel := Th5uPropertyEditor(Sender);
+  LModel := ThiiPropertyModel(Sender);
   LModel.Items.Clear;
   LContext := TRttiContext.Create;
   try
@@ -136,22 +136,21 @@ var
 begin
   Result := -1;
   for I := 0 to AView.ObjectListController.Count - 1 do
-    if (AView.ObjectListController.Item(I) is Th5uPropertyItem)
-      and (Th5uPropertyItem(AView.ObjectListController.Item(I)).Name = AName) then
+    if (AView.ObjectListController.Item(I) is ThiiPropertyItem) and (ThiiPropertyItem(AView.ObjectListController.Item(I)).Name = AName) then
       Exit(I);
 end;
 
 function InstanceRowOf(AView: TPropertyView; AInstance: Pointer; const AName: string): Integer;
 var
   I: Integer;
-  Item: Th5uPropertyItem;
+  Item: ThiiPropertyItem;
 begin
   Result := -1;
   for I := 0 to AView.ObjectListController.Count - 1 do
   begin
-    if not (AView.ObjectListController.Item(I) is Th5uPropertyItem) then
+    if not (AView.ObjectListController.Item(I) is ThiiPropertyItem) then
       Continue;
-    Item := Th5uPropertyItem(AView.ObjectListController.Item(I));
+    Item := ThiiPropertyItem(AView.ObjectListController.Item(I));
     if (Item.Instance = AInstance) and (Item.Name = AName) then
       Exit(I);
   end;
@@ -166,8 +165,8 @@ var
   LRow: Integer;
   LAllow, LFailed: Boolean;
   LEditor: TNativeEditor;
-  LContext: Th5uEditorContext;
-  LFilter: Th5uPropertyFilter;
+  LContext: ThiiEditorContext;
+  LFilter: ThiiPropertyFilter;
 begin
   LForm := TForm.CreateNew(nil);
   LView := TPropertyView.Create(nil);
@@ -201,7 +200,7 @@ begin
     Check(not LAllow, 'Readonly row cannot activate editor');
     LRow := RowOf(LView, 'Toggle');
     LEditor := TNativeEditor(LView.GetCellEditor(LView.Columns[1], LRow));
-    LContext := Default(Th5uEditorContext);
+    LContext := Default(ThiiEditorContext);
     LContext.Grid := LView;
     LContext.Column := LView.Columns[1];
     LContext.RowIndex := LRow;
@@ -242,7 +241,7 @@ var
   LFirstHeaderID: Integer;
   LAllow, LFailed: Boolean;
   LEditor: TNativeEditor;
-  LContext: Th5uEditorContext;
+  LContext: ThiiEditorContext;
 begin
   LForm := TForm.CreateNew(nil);
   LView := TPropertyView.Create(nil);
@@ -259,25 +258,19 @@ begin
     LView.DataObject := A;
     Check((LView.PropertyEditor.Items.Count = 5) and (LView.ObjectListController.Count = 8),
       'OnLoaded builds a custom list with separate controller group headings');
-    Check((LView.PropertyEditor.Items[0].Name = 'Title')
-      and (LView.PropertyEditor.Items[0].Caption = 'Grid title')
-      and (LView.PropertyEditor.Items[0].GroupName = 'Options')
-      and (LView.PropertyEditor.Items[0].Instance = Pointer(A)),
+    Check((LView.PropertyEditor.Items[0].Name = 'Title') and (LView.PropertyEditor.Items[0].Caption = 'Grid title')
+      and (LView.PropertyEditor.Items[0].GroupName = 'Options') and (LView.PropertyEditor.Items[0].Instance = Pointer(A)),
       'Group and display caption preserve property identity and instance');
     Check((LView.ObjectListController.GetValue(0, 'GroupName').AsString = 'Options')
       and (LView.ObjectListController.GetValue(2, 'GroupName').AsString = 'Customization')
-      and (LView.ObjectListController.GetValue(6, 'GroupName').AsString = 'Options')
-      and (InstanceRowOf(LView, Pointer(B), 'Number') = 3),
+      and (LView.ObjectListController.GetValue(6, 'GroupName').AsString = 'Options') and (InstanceRowOf(LView, Pointer(B), 'Number') = 3),
       'Group headings preserve consecutive runs and manual property order');
-    Check((LView.Columns[0].FieldName = 'Caption')
-      and (LView.ObjectListController.GetValue(1, 'Caption').AsString = 'Grid title')
+    Check((LView.Columns[0].FieldName = 'Caption') and (LView.ObjectListController.GetValue(1, 'Caption').AsString = 'Grid title')
       and (LView.ObjectListController.GetValue(0, 'DisplayValue').AsString = ''),
       'Property captions and empty heading value bind to the existing grid columns');
     LFirstHeaderID := Th5uPropertyGroupRow(LView.ObjectListController.Item(0)).ID;
-    Check((LFirstHeaderID < 0)
-      and (Th5uPropertyGroupRow(LView.ObjectListController.Item(6)).ID <> LFirstHeaderID)
-      and (LView.ObjectListController.Item(5) is Th5uPropertyItem),
-      'Repeated groups receive distinct stable keys and empty groups stay ungrouped');
+    Check((LFirstHeaderID < 0) and (Th5uPropertyGroupRow(LView.ObjectListController.Item(6)).ID <> LFirstHeaderID)
+      and (LView.ObjectListController.Item(5) is ThiiPropertyItem), 'Repeated groups receive distinct stable keys and empty groups stay ungrouped');
     LFailed := False;
     try
       LView.ObjectListController.SetValue(0, 'DisplayValue', TValue.From<string>('changed'));
@@ -287,8 +280,7 @@ begin
     end;
     Check(LFailed, 'Controller rejects edits to a group heading');
     LView.SetAdjacentGroupCollapsed(0, True);
-    Check(LView.IsAdjacentGroupCollapsed(0)
-      and (TPropertyViewAccess(LView).GetViewSourceRowIndex(1) = 2),
+    Check(LView.IsAdjacentGroupCollapsed(0) and (TPropertyViewAccess(LView).GetViewSourceRowIndex(1) = 2),
       'Folding keeps the heading and hides its property rows');
     LAllow := True;
     TPropertyViewAccess(LView).OnCanEdit(LView, LView.Columns[1], 1, LAllow);
@@ -297,7 +289,7 @@ begin
     TPropertyViewAccess(LView).OnCanEdit(LView, LView.Columns[1], 2, LAllow);
     Check(LAllow, 'A property after a folded group keeps its correct edit permission');
     LEditor := TNativeEditor(LView.GetCellEditor(LView.Columns[1], 3));
-    LContext := Default(Th5uEditorContext);
+    LContext := Default(ThiiEditorContext);
     LContext.Grid := LView;
     LContext.Column := LView.Columns[1];
     LContext.RowIndex := 3;
@@ -307,23 +299,18 @@ begin
     LContext.Bounds := RectF(0, 0, 200, 24);
     LEditor.BeginEdit(LContext);
     LEditor.OnShow(LEditor);
-    Check(TNativeCombo(LEditor.Control).Items.Count = 2,
-      'A property after a folded group uses the correct RTTI value editor');
+    Check(TNativeCombo(LEditor.Control).Items.Count = 2, 'A property after a folded group uses the correct RTTI value editor');
     LView.PropertyEditor.Items[0].Caption := 'Updated caption';
     LView.PropertyEditor.NotifyItemsChanged;
-    Check(LView.IsAdjacentGroupCollapsed(0)
-      and (Th5uPropertyGroupRow(LView.ObjectListController.Item(0)).ID = LFirstHeaderID)
+    Check(LView.IsAdjacentGroupCollapsed(0) and (Th5uPropertyGroupRow(LView.ObjectListController.Item(0)).ID = LFirstHeaderID)
       and (LView.ObjectListController.GetValue(1, 'Caption').AsString = 'Updated caption'),
       'Metadata rebind preserves stable group keys and collapsed state');
     LView.ShowGroups := False;
-    Check((LView.ObjectListController.Count = 5) and not LView.ObjectListController.HasGroups,
-      'ShowGroups false binds only property rows');
+    Check((LView.ObjectListController.Count = 5) and not LView.ObjectListController.HasGroups, 'ShowGroups false binds only property rows');
     LView.ShowGroups := True;
-    Check((LView.ObjectListController.Count = 8) and LView.IsAdjacentGroupCollapsed(0),
-      'Reenabling groups restores their collapsed state');
+    Check((LView.ObjectListController.Count = 8) and LView.IsAdjacentGroupCollapsed(0), 'Reenabling groups restores their collapsed state');
     LView.Reload;
-    Check((LView.PropertyEditor.Items[0].Caption = 'Grid title')
-      and (LView.ObjectListController.Count = 8) and LView.IsAdjacentGroupCollapsed(0),
+    Check((LView.PropertyEditor.Items[0].Caption = 'Grid title') and (LView.ObjectListController.Count = 8) and LView.IsAdjacentGroupCollapsed(0),
       'Reload rebuilds custom groups through OnLoaded and retains their state');
     LView.ResetAdjacentGroupStates;
     LView.PropertyEditor.NotifyItemsChanged;
@@ -345,10 +332,10 @@ var
   LForm: TForm;
   A, B: TSample;
   LEvents: TEvents;
-  LLink: Th5uDataControllerLink;
+  LLink: ThiiDataControllerLink;
   LContext: TRttiContext;
   LTitleProperty, LNumberProperty: TRttiProperty;
-  LTitleItem, LManualItem: Th5uPropertyItem;
+  LTitleItem, LManualItem: ThiiPropertyItem;
   LRow, LReads: Integer;
   LKey: string;
 begin
@@ -358,7 +345,7 @@ begin
   A := TSample.Create(nil);
   B := TSample.Create(nil);
   LEvents := TEvents.Create;
-  LLink := Th5uDataControllerLink.Create;
+  LLink := ThiiDataControllerLink.Create;
   LContext := TRttiContext.Create;
   try
     A.Title := 'first';
@@ -379,25 +366,21 @@ begin
     Check(LView.ObjectListController.Count = 5, 'Added mixed-instance and cache-only rows bind immediately');
     LRow := InstanceRowOf(LView, Pointer(B), 'Title');
     LKey := LView.ObjectListController.GetRowKey(LRow).ToString;
-    Check(LView.ObjectListController.GetValue(LRow, 'Value').AsString = 'second',
-      'Controller raw value uses the row instance');
+    Check(LView.ObjectListController.GetValue(LRow, 'Value').AsString = 'second', 'Controller raw value uses the row instance');
     LView.ObjectListController.SetValue(LRow, 'Value', TValue.From<string>('second edited'));
-    Check((A.Title = 'first') and (B.Title = 'second edited'),
-      'Same-name row edit affects only its own instance');
+    Check((A.Title = 'first') and (B.Title = 'second edited'), 'Same-name row edit affects only its own instance');
     LRow := InstanceRowOf(LView, Pointer(B), 'Number');
-    Check(LView.ObjectListController.GetValue(LRow, 'Value').AsInteger = 7,
-      'Controller supplies typed TValue without text conversion');
+    Check(LView.ObjectListController.GetValue(LRow, 'Value').AsInteger = 7, 'Controller supplies typed TValue without text conversion');
     LRow := InstanceRowOf(LView, Pointer(B), 'ManualComputed');
-    Check((LManualItem.RttiProperty = nil) and (LManualItem.RttiField = nil)
-      and (LView.ObjectListController.GetValue(LRow, 'Value').AsInteger = 41)
+    Check((LManualItem.RttiProperty = nil) and (LManualItem.RttiField = nil) and (LView.ObjectListController.GetValue(LRow, 'Value').AsInteger = 41)
       and (LEvents.LastInstance = Pointer(B)), 'Controller getter supplies a manual row without RTTI');
     LReads := LEvents.ReadCount;
     LView.ObjectListController.GetValue(LRow, 'Value');
     LView.ObjectListController.GetValue(LRow, 'DisplayValue');
     Check(LEvents.ReadCount = LReads, 'Grid reads manual raw and display values from the TValue cache');
     LView.ObjectListController.SetValue(LRow, 'Value', TValue.From<Integer>(49));
-    Check((LEvents.StoredValue = 49) and (LEvents.WriteCount = 1)
-      and (LManualItem.Value.AsInteger = 49), 'Controller setter handles a manual row without RTTI');
+    Check((LEvents.StoredValue = 49) and (LEvents.WriteCount = 1) and (LManualItem.Value.AsInteger = 49),
+      'Controller setter handles a manual row without RTTI');
     LLink.OnChanged := LEvents.DataChanged;
     LLink.Controller := LView.ObjectListController;
     LEvents.DataChanges := 0;
@@ -412,33 +395,26 @@ begin
     LView.PropertyEditor.Items.Exchange(LView.PropertyEditor.Items.IndexOf(LTitleItem), 0);
     LView.PropertyEditor.NotifyItemsChanged;
     LRow := InstanceRowOf(LView, Pointer(B), 'Title');
-    Check((LRow = 0) and (LView.ObjectListController.GetRowKey(LRow).ToString = LKey),
-      'Reordered mixed-instance rows preserve their grid row keys');
+    Check((LRow = 0) and (LView.ObjectListController.GetRowKey(LRow).ToString = LKey), 'Reordered mixed-instance rows preserve their grid row keys');
     LEvents.DataChanges := 0;
     B.Title := 'after reorder';
     LView.PropertyEditor.Refresh;
-    Check((LEvents.DataChanges = 1)
-      and (LView.ObjectListController.GetValue(LRow, 'Value').AsString = 'after reorder')
-      and (LView.ObjectListController.GetRowKey(LRow).ToString = LKey),
-      'Refresh after reordering updates the matching row and keeps its identity');
+    Check((LEvents.DataChanges = 1) and (LView.ObjectListController.GetValue(LRow, 'Value').AsString = 'after reorder')
+      and (LView.ObjectListController.GetRowKey(LRow).ToString = LKey), 'Refresh after reordering updates the matching row and keeps its identity');
     Check(LView.ObjectListController.GetValue(InstanceRowOf(LView, nil, 'LocalNote'), 'Value').AsString = 'memo',
       'Cache-only row without an instance keeps its value');
     FreeAndNil(B);
-    Check((LView.DataObject = A) and (LView.ObjectListController.Count = 2)
-      and (InstanceRowOf(LView, Pointer(A), 'Title') >= 0),
+    Check((LView.DataObject = A) and (LView.ObjectListController.Count = 2) and (InstanceRowOf(LView, Pointer(A), 'Title') >= 0),
       'Freed nonselected instance removes its grid rows and retains unrelated rows');
     B := TSample.Create(nil);
     B.Title := 'retained';
     LView.PropertyEditor.AddProperty(Pointer(B), LTitleProperty);
     FreeAndNil(A);
-    Check((LView.DataObject = nil) and (LView.ObjectListController.Count = 2)
-      and (InstanceRowOf(LView, Pointer(B), 'Title') >= 0)
-      and (InstanceRowOf(LView, nil, 'LocalNote') >= 0),
-      'Freed selected instance retains other-instance and cache-only grid rows');
+    Check((LView.DataObject = nil) and (LView.ObjectListController.Count = 2) and (InstanceRowOf(LView, Pointer(B), 'Title') >= 0)
+      and (InstanceRowOf(LView, nil, 'LocalNote') >= 0), 'Freed selected instance retains other-instance and cache-only grid rows');
     LRow := InstanceRowOf(LView, Pointer(B), 'Title');
     LView.ObjectListController.SetValue(LRow, 'Value', TValue.From<string>('still editable'));
-    Check((B.Title = 'still editable')
-      and (LView.ObjectListController.GetValue(LRow, 'Value').AsString = 'still editable'),
+    Check((B.Title = 'still editable') and (LView.ObjectListController.GetValue(LRow, 'Value').AsString = 'still editable'),
       'Retained grid row remains editable without a selected object');
   finally
     LLink.Free;
@@ -458,8 +434,8 @@ var
   LPanel: TPanel;
   LButton: TButton;
   LEvents: TEvents;
-  LItem: Th5uStructureItem;
-  LAddress: Th5uCellAddress;
+  LItem: ThiiStructureItem;
+  LAddress: ThiiCellAddress;
   I, LRow: Integer;
   LPropertyView: TPropertyView;
 begin
@@ -482,9 +458,9 @@ begin
     LView.OnSelect := LEvents.Select;
     LRow := -1;
     for I := 0 to LView.ObjectListController.Count - 1 do
-      if Th5uStructureItem(LView.ObjectListController.Item(I)).Component = LButton then
+      if ThiiStructureItem(LView.ObjectListController.Item(I)).Component = LButton then
         LRow := I;
-    LAddress := Default(Th5uCellAddress);
+    LAddress := Default(ThiiCellAddress);
     LAddress.RowIndex := LRow;
     LAddress.ColumnIndex := 0;
     LAddress.ColumnId := 'Name';
@@ -504,8 +480,8 @@ begin
     {$IFDEF TEST_FMX}
     LView.FilterEdit.OnChangeTracking(LView.FilterEdit);
     {$ENDIF}
-    Check((LView.FilterError <> '') and (LView.ObjectListController.Count = 2)
-      and (LView.FilterEdit.Text = '['), 'Incomplete mask keeps the last valid list and exposes error');
+    Check((LView.FilterError <> '') and (LView.ObjectListController.Count = 2) and (LView.FilterEdit.Text = '['),
+      'Incomplete mask keeps the last valid list and exposes error');
     LView.FilterEdit.Text := 'Nested*';
     {$IFDEF TEST_FMX}
     LView.FilterEdit.OnChangeTracking(LView.FilterEdit);

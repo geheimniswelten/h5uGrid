@@ -30,40 +30,40 @@ uses
 
 type
   Th5uColumnLayoutInfo = record
-    Column: Th5uGridColumn;
+    Column: ThiiGridColumn;
     VisibleIndex: Integer;
     Left, Right: Single;
     Visible: Boolean;
   end;
 
   Th5uRowSeparatorInfo = record
-    Kind: Th5uElementKind;
+    Kind: ThiiElementKind;
     Height: Single;
     StyleName: string;
     TreeLevel, ClosedTreeLevels: Integer;
   end;
 
-  Th5uRowSpacingMethod = function(ARow: Int64; const AKey: Th5uRowKey): Single of object;
+  Th5uRowSpacingMethod = function(ARow: Int64; const AKey: ThiiRowKey): Single of object;
 
 // The content budget excludes the row indicator and includes column spacing.
 // The fitting mode controls whether percentages or all desired widths are relative weights.
-function h5uResolveColumnWidths(AColumns: Th5uGridColumns; AHeader: Th5uHeaderLayout; ADefaultSpacing: Single; AAvailableWidth: Single; AMinWidth: Single = 0;
-  AMaxWidth: Single = 0; AFitMode: Th5uColumnFitMode = Th5uColumnFitMode.PercentColumns): Boolean;
-function h5uColumnRightSpacing(AColumn: Th5uGridColumn; ADefault: Single): Single;
-function h5uBuildColumnLayout(AColumns: Th5uGridColumns; ADefaultSpacing: Single; AViewLeft, AViewRight, AIndicatorExtent, AHorizontalOffset: Single;
+function h5uResolveColumnWidths(AColumns: ThiiGridColumns; AHeader: ThiiHeaderLayout; ADefaultSpacing: Single; AAvailableWidth: Single; AMinWidth: Single = 0;
+  AMaxWidth: Single = 0; AFitMode: ThiiColumnFitMode = ThiiColumnFitMode.PercentColumns): Boolean;
+function h5uColumnRightSpacing(AColumn: ThiiGridColumn; ADefault: Single): Single;
+function h5uBuildColumnLayout(AColumns: ThiiGridColumns; ADefaultSpacing: Single; AViewLeft, AViewRight, AIndicatorExtent, AHorizontalOffset: Single;
   AViewHasHeight: Boolean): {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uColumnLayoutInfo>;
-procedure h5uColumnViewport(AColumns: Th5uGridColumns; AColumn: Th5uGridColumn; ADefaultSpacing: Single; AIndicatorExtent: Single; var ALeft, ARight: Single);
-function h5uHeaderHeight(ALayout: Th5uHeaderLayout; AShowHeader: Boolean; ARowHeight, ASpacing: Single): Single;
+procedure h5uColumnViewport(AColumns: ThiiGridColumns; AColumn: ThiiGridColumn; ADefaultSpacing: Single; AIndicatorExtent: Single; var ALeft, ARight: Single);
+function h5uHeaderHeight(ALayout: ThiiHeaderLayout; AShowHeader: Boolean; ARowHeight, ASpacing: Single): Single;
 function h5uRevealOffset(AOffset, AStart, ASize, AViewportSize: Double): Double;
-function h5uRowSeparator(AView: Th5uGridView; ATree: Th5uTreeOptions; AGroups: Th5uAdjacentGroupFoldingOptions; ARow: Int64; const AKey: Th5uRowKey;
+function h5uRowSeparator(AView: Th5uGridView; ATree: ThiiTreeOptions; AGroups: ThiiAdjacentGroupFoldingOptions; ARow: Int64; const AKey: ThiiRowKey;
   AGetSpacing: Th5uRowSpacingMethod): Th5uRowSeparatorInfo;
 
 implementation
 
 type
   Th5uWidthNode = record
-    Column: Th5uGridColumn;
-    Header: Th5uHeaderLayoutCell;
+    Column: ThiiGridColumn;
+    Header: ThiiHeaderLayoutCell;
     Parent, First, Last, Row: Integer;
     Spacing: Single;
     Children: {$IFDEF FPC}specialize {$ENDIF}TList<Integer>;
@@ -71,10 +71,10 @@ type
     AtMaximum: Boolean;
   end;
 
-function h5uResolveColumnWidths(AColumns: Th5uGridColumns; AHeader: Th5uHeaderLayout; ADefaultSpacing: Single; AAvailableWidth: Single; AMinWidth: Single;
-  AMaxWidth: Single; AFitMode: Th5uColumnFitMode): Boolean;
+function h5uResolveColumnWidths(AColumns: ThiiGridColumns; AHeader: ThiiHeaderLayout; ADefaultSpacing: Single; AAvailableWidth: Single; AMinWidth: Single; AMaxWidth: Single;
+  AFitMode: ThiiColumnFitMode): Boolean;
 var
-  LColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>;
+  LColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<ThiiGridColumn>;
   LNodes: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uWidthNode>;
   I, J, K, N, LGroups, LParent, LFirst, LLast: Integer;
   LWidth, LBudget: Single;
@@ -169,10 +169,10 @@ var
         if Column.AutoWidth then
           Preferred := Column.ConstrainWidth(Column.MeasuredWidth);
         case AFitMode of
-          Th5uColumnFitMode.PercentColumns:
+          ThiiColumnFitMode.PercentColumns:
             if not Column.AutoWidth and (LSpecification < 0) then
               Weight := -LSpecification;
-          Th5uColumnFitMode.AllColumns:
+          ThiiColumnFitMode.AllColumns:
             if Column.AutoWidth then
               Weight := Preferred
             else
@@ -215,7 +215,7 @@ var
         Exit;
       end;
       Minimum := Max(0.0, LMin - Spacing);
-      if AFitMode = Th5uColumnFitMode.None then
+      if AFitMode = ThiiColumnFitMode.None then
         IntrinsicMaximum := Max(Minimum, LMax - Spacing)
       else
         IntrinsicMaximum := Max(Minimum, IntrinsicGroupMaximum(AIndex));
@@ -231,14 +231,14 @@ var
         if Header.Width <> 0 then
           Preferred := h5uResolveWidth(Header.Width, AReferenceWidth);
         case AFitMode of
-          Th5uColumnFitMode.PercentColumns:
+          ThiiColumnFitMode.PercentColumns:
             begin
               Weight := Header.WidthInPercent;
               if Header.Width = 0 then
                 for K in Children do
                   Weight := Weight + LNodes[K].Weight;
             end;
-          Th5uColumnFitMode.AllColumns:
+          ThiiColumnFitMode.AllColumns:
             Weight := Preferred;
         end;
       end;
@@ -257,8 +257,7 @@ var
 
     function WidthAtScale(AChild: Integer; AScale: Single): Single;
     begin
-      Result := EnsureRange(AScale * (LNodes[AChild].Weight / LMaxWeight),
-        LNodes[AChild].Minimum, LNodes[AChild].Maximum);
+      Result := EnsureRange(AScale * (LNodes[AChild].Weight / LMaxWeight), LNodes[AChild].Minimum, LNodes[AChild].Maximum);
     end;
 
   begin
@@ -314,9 +313,7 @@ var
         // Normalizing against the largest remaining weight avoids overflowing
         // scale factors. Saturated columns can be removed before renormalizing.
         for K in LNodes[AIndex].Children do
-          if (LNodes[K].Weight > 0) and not LNodes[K].AtMaximum
-            and (WidthAtScale(K, LRemaining) >= LNodes[K].Maximum)
-          then
+          if (LNodes[K].Weight > 0) and not LNodes[K].AtMaximum and (WidthAtScale(K, LRemaining) >= LNodes[K].Maximum) then
           begin
             LNodes[K].Width := LNodes[K].Maximum;
             LNodes[K].AtMaximum := True;
@@ -364,9 +361,7 @@ var
       for LPass := 0 to 1 do
         for K in LNodes[AIndex].Children do
           if (LNodes[K].Weight > 0) and not LNodes[K].AtMaximum and (LResidual <> 0)
-            and ((LPass = 1) or ((LNodes[K].Width > LNodes[K].Minimum)
-              and (LNodes[K].Width < LNodes[K].Maximum)))
-          then
+            and ((LPass = 1) or ((LNodes[K].Width > LNodes[K].Minimum) and (LNodes[K].Width < LNodes[K].Maximum))) then
           begin
             LBefore := LNodes[K].Width;
             LNodes[K].Width := EnsureRange(LBefore + LResidual, LNodes[K].Minimum, LNodes[K].Maximum);
@@ -417,9 +412,8 @@ begin
     begin
       LParent := 0;
       for J := 1 to LGroups do
-        if (LNodes[J].Row < LNodes[I].Row) and (LNodes[J].First <= LNodes[I].First)
-          and (LNodes[J].Last >= LNodes[I].Last) and (LNodes[J].Row > LNodes[LParent].Row)
-        then
+        if (LNodes[J].Row < LNodes[I].Row) and (LNodes[J].First <= LNodes[I].First) and (LNodes[J].Last >= LNodes[I].Last)
+          and (LNodes[J].Row > LNodes[LParent].Row) then
           LParent := J;
       LNodes[I].Parent := LParent;
       LNodes[LParent].Children.Add(I);
@@ -452,7 +446,7 @@ begin
   end;
 end;
 
-function h5uColumnRightSpacing(AColumn: Th5uGridColumn; ADefault: Single): Single;
+function h5uColumnRightSpacing(AColumn: ThiiGridColumn; ADefault: Single): Single;
 begin
   if Assigned(AColumn) and (AColumn.RightSpacing >= 0) then
     Result := AColumn.RightSpacing
@@ -460,10 +454,10 @@ begin
     Result := ADefault;
 end;
 
-function h5uBuildColumnLayout(AColumns: Th5uGridColumns; ADefaultSpacing: Single; AViewLeft, AViewRight, AIndicatorExtent, AHorizontalOffset: Single;
+function h5uBuildColumnLayout(AColumns: ThiiGridColumns; ADefaultSpacing: Single; AViewLeft, AViewRight, AIndicatorExtent, AHorizontalOffset: Single;
   AViewHasHeight: Boolean): {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uColumnLayoutInfo>;
 var
-  LColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>;
+  LColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<ThiiGridColumn>;
   LDataLeft, LLeft, LRight, LNormal, LStart: Single;
   LSpacing: Single;
   I: Integer;
@@ -474,10 +468,10 @@ begin
   LLeft := LDataLeft;
   LRight := AViewRight;
   for I := 0 to High(LColumns) do
-    if LColumns[I].FixedKind = Th5uFixedKind.Left then
+    if LColumns[I].FixedKind = ThiiFixedKind.Left then
       LLeft := LLeft + LColumns[I].LayoutWidth + h5uColumnRightSpacing(LColumns[I], ADefaultSpacing);
   for I := High(LColumns) downto 0 do
-    if LColumns[I].FixedKind = Th5uFixedKind.Right then
+    if LColumns[I].FixedKind = ThiiFixedKind.Right then
       LRight := LRight - LColumns[I].LayoutWidth - h5uColumnRightSpacing(LColumns[I], ADefaultSpacing);
   LNormal := LLeft - AHorizontalOffset;
   LLeft := LDataLeft;
@@ -485,12 +479,12 @@ begin
   begin
     LSpacing := h5uColumnRightSpacing(LColumns[I], ADefaultSpacing);
     case LColumns[I].FixedKind of
-      Th5uFixedKind.Left:
+      ThiiFixedKind.Left:
         begin
           LStart := LLeft;
           LLeft := LLeft + LColumns[I].LayoutWidth + LSpacing;
         end;
-      Th5uFixedKind.Right:
+      ThiiFixedKind.Right:
         begin
           LStart := LRight;
           LRight := LRight + LColumns[I].LayoutWidth + LSpacing;
@@ -509,23 +503,23 @@ begin
   end;
 end;
 
-procedure h5uColumnViewport(AColumns: Th5uGridColumns; AColumn: Th5uGridColumn; ADefaultSpacing: Single; AIndicatorExtent: Single; var ALeft, ARight: Single);
+procedure h5uColumnViewport(AColumns: ThiiGridColumns; AColumn: ThiiGridColumn; ADefaultSpacing: Single; AIndicatorExtent: Single; var ALeft, ARight: Single);
 var
-  LColumn: Th5uGridColumn;
+  LColumn: ThiiGridColumn;
 begin
   ALeft := ALeft + AIndicatorExtent;
-  if AColumn.FixedKind = Th5uFixedKind.None then
+  if AColumn.FixedKind = ThiiFixedKind.None then
     for LColumn in AColumns.VisibleColumns do
       case LColumn.FixedKind of
-        Th5uFixedKind.Left:
+        ThiiFixedKind.Left:
           ALeft := ALeft + LColumn.LayoutWidth + h5uColumnRightSpacing(LColumn, ADefaultSpacing);
-        Th5uFixedKind.Right:
+        ThiiFixedKind.Right:
           ARight := ARight - LColumn.LayoutWidth - h5uColumnRightSpacing(LColumn, ADefaultSpacing);
       end;
   ALeft := Min(ALeft, ARight);
 end;
 
-function h5uHeaderHeight(ALayout: Th5uHeaderLayout; AShowHeader: Boolean; ARowHeight, ASpacing: Single): Single;
+function h5uHeaderHeight(ALayout: ThiiHeaderLayout; AShowHeader: Boolean; ARowHeight, ASpacing: Single): Single;
 var
   LRows: Integer;
 begin
@@ -546,25 +540,25 @@ begin
     Result := Max(0.0, AStart + ASize - AViewportSize);
 end;
 
-function h5uRowSeparator(AView: Th5uGridView; ATree: Th5uTreeOptions; AGroups: Th5uAdjacentGroupFoldingOptions; ARow: Int64;
-  const AKey: Th5uRowKey; AGetSpacing: Th5uRowSpacingMethod): Th5uRowSeparatorInfo;
+function h5uRowSeparator(AView: Th5uGridView; ATree: ThiiTreeOptions; AGroups: ThiiAdjacentGroupFoldingOptions; ARow: Int64; const AKey: ThiiRowKey;
+  AGetSpacing: Th5uRowSpacingMethod): Th5uRowSeparatorInfo;
 var
   LGroup: Th5uAdjacentGroupRowInfo;
 begin
   Result := Default(Th5uRowSeparatorInfo);
-  Result.Kind := Th5uElementKind.RowSpacing;
+  Result.Kind := ThiiElementKind.RowSpacing;
   Result.TreeLevel := -1;
   // Both bands replace ordinary spacing. The adjacent-group band takes precedence.
   if AGroups.Enabled and AView.GetAdjacentGroupEndBandInfo(ARow, LGroup) then
   begin
-    Result.Kind := Th5uElementKind.AdjacentGroupEndBand;
+    Result.Kind := ThiiElementKind.AdjacentGroupEndBand;
     Result.Height := AGroups.EndBand.Height;
     Result.StyleName := AGroups.EndBand.StyleName;
   end
   else
   if ATree.Enabled and ATree.BranchEndBand.Enabled and AView.GetTreeBranchEndInfo(ARow, AKey, Result.TreeLevel, Result.ClosedTreeLevels) then
   begin
-    Result.Kind := Th5uElementKind.TreeBranchEndBand;
+    Result.Kind := ThiiElementKind.TreeBranchEndBand;
     Result.Height := ATree.BranchEndBand.Height;
     Result.StyleName := ATree.BranchEndBand.StyleName;
   end

@@ -51,7 +51,7 @@ type
     procedure RowCount(Sender: TObject; var ACount: Int64);
     procedure GetValue(Sender: TObject; ARow: Int64; const AField: string; var AValue: TValue);
     procedure SetValue(Sender: TObject; ARow: Int64; const AField: string; const AValue: TValue; var AHandled: Boolean);
-    procedure Changed(Sender: TObject; const AChange: Th5uDataChange);
+    procedure Changed(Sender: TObject; const AChange: ThiiDataChange);
   end;
 
 procedure TVirtualEvents.RowCount(Sender: TObject; var ACount: Int64);
@@ -71,7 +71,7 @@ begin
   AHandled := True;
 end;
 
-procedure TVirtualEvents.Changed(Sender: TObject; const AChange: Th5uDataChange);
+procedure TVirtualEvents.Changed(Sender: TObject; const AChange: ThiiDataChange);
 begin
   Inc(Changes);
 end;
@@ -106,11 +106,11 @@ end;
 
 procedure TestObjects;
 var
-  C: Th5uObjectListController;
+  C: ThiiObjectListController;
   R, Child: TRow;
   V: TValue;
 begin
-  C := Th5uObjectListController.Create(nil);
+  C := ThiiObjectListController.Create(nil);
   R := TRow.Create;
   Child := TRow.Create;
   try
@@ -133,14 +133,14 @@ begin
     Check(C.GetValue(0, 'VariantValue').AsString = 'Grüße 東京', 'Variant property Unicode roundtrip');
     C.SetValue(0, 'VariantValue', TValue.Empty);
     Check(C.GetValue(0, 'VariantValue').IsEmpty, 'Variant property NULL roundtrip');
-    C.SetValue(0, 'Id', h5uParseEditorValue(Th5uColumnDataType.Integer, '42'));
+    C.SetValue(0, 'Id', h5uParseEditorValue(ThiiColumnDataType.Integer, '42'));
     C.SetValue(0, 'Active', TValue.specialize From<Boolean>(True));
     C.SetValue(0, 'Price', TValue.specialize From<Currency>(12.25));
     C.SetValue(0, 'Date', TValue.specialize From<TDateTime>(EncodeDate(2026, 9, 11)));
     Check((R.Id = 42) and R.Active and (R.Price = 12.25), 'numeric RTTI write');
     V := C.GetValue(0, 'Date');
     Check(V.TypeInfo = TypeInfo(TDateTime), 'date RTTI identity');
-    C.Cache.Mode := Th5uCacheMode.Viewport;
+    C.Cache.Mode := ThiiCacheMode.Viewport;
     V := C.GetValue(0, 'Text');
     R.Text := 'neu';
     Check(C.GetValue(0, 'Text').AsString <> R.Text, 'object cache is used');
@@ -159,16 +159,16 @@ end;
 
 procedure TestDatasets;
 var
-  D: Th5uSampleClientDataset;
+  D: ThiiSampleClientDataset;
   S: TDataSource;
-  C: Th5uDatasetController;
+  C: ThiiDatasetController;
   V: TValue;
   B: TBytes;
   Bookmark: TBookmark;
 begin
-  D := Th5uSampleClientDataset.Create(nil);
+  D := ThiiSampleClientDataset.Create(nil);
   S := TDataSource.Create(nil);
-  C := Th5uDatasetController.Create(nil);
+  C := ThiiDatasetController.Create(nil);
   try
     S.DataSet := D;
     C.DataSource := S;
@@ -188,8 +188,8 @@ begin
     end;
     C.SetValue(0, 'NAME', TValue.specialize From<string>('Grüße 東京'));
     Check(C.GetValue(0, 'NAME').AsString = 'Grüße 東京', 'wide dataset UTF-8 roundtrip');
-    C.SetValue(0, 'QUANTITY', h5uParseEditorValue(Th5uColumnDataType.Integer, '37'));
-    C.SetValue(0, 'UNIT_PRICE', h5uParseEditorValue(Th5uColumnDataType.Currency, CurrToStr(19.75)));
+    C.SetValue(0, 'QUANTITY', h5uParseEditorValue(ThiiColumnDataType.Integer, '37'));
+    C.SetValue(0, 'UNIT_PRICE', h5uParseEditorValue(ThiiColumnDataType.Currency, CurrToStr(19.75)));
     C.SetValue(0, 'ACTIVE', TValue.specialize From<Boolean>(False));
     Check(C.GetValue(0, 'QUANTITY').AsInteger = 37, 'dataset integer write');
     Check(C.GetValue(0, 'UNIT_PRICE').specialize AsType<Currency> = 19.75, 'dataset currency write');
@@ -214,14 +214,14 @@ end;
 
 procedure TestVirtual;
 var
-  C: Th5uVirtualController;
+  C: ThiiVirtualController;
   E: TVirtualEvents;
-  L: Th5uDataControllerLink;
+  L: ThiiDataControllerLink;
   V: TValue;
 begin
-  C := Th5uVirtualController.Create(nil);
+  C := ThiiVirtualController.Create(nil);
   E := TVirtualEvents.Create;
-  L := Th5uDataControllerLink.Create;
+  L := ThiiDataControllerLink.Create;
   try
     E.Stored := 'Grüße';
     C.OnGetRowCount := @E.RowCount;
@@ -246,24 +246,24 @@ begin
   end;
 end;
 
-function MatchFactory(const AContext: Th5uFactoryContext): Boolean;
+function MatchFactory(const AContext: ThiiFactoryContext): Boolean;
 begin
   Result := AContext.SourceRowIndex = 2;
 end;
 
 procedure TestFactoryAndEditors;
 var
-  F: Th5uFactoryScope;
-  C: Th5uFactoryContext;
-  Scope: Th5uFactoryCacheScope;
-  E: Th5uGridEditorItem;
+  F: ThiiFactoryScope;
+  C: ThiiFactoryContext;
+  Scope: ThiiFactoryCacheScope;
+  E: ThiiGridEditorItem;
   Bounds: TRectF;
   P: TPointF;
 begin
-  F := Th5uFactoryScope.Create(nil);
+  F := ThiiFactoryScope.Create(nil);
   try
     F.RegisterClass('test', TPersistent, TStringList, 0, @MatchFactory);
-    C := Th5uFactoryContext.Create(nil, nil, nil, 'test', Th5uElementKind.Grid);
+    C := ThiiFactoryContext.Create(nil, nil, nil, 'test', ThiiElementKind.Grid);
     C.SourceRowIndex := 2;
     Check(F.ResolveClass(C, TPersistent, TPersistent, Scope) = TStringList, 'factory predicate match');
     C.SourceRowIndex := 1;
@@ -271,7 +271,7 @@ begin
   finally
     F.Free;
   end;
-  E := Th5uGridEditorItem.Create(nil);
+  E := ThiiGridEditorItem.Create(nil);
   try
     Bounds.Left := 10; Bounds.Top := 20; Bounds.Right := 50; Bounds.Bottom := 80;
     Bounds := h5uEditorCheckBounds(Bounds);

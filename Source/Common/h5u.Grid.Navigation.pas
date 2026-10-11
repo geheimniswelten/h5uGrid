@@ -32,54 +32,54 @@ uses
   h5u.Grid.Types;
 
 type
-  Th5uNavigationGetRowKey = function(ARow: Int64): Th5uRowKey of object;
+  Th5uNavigationGetRowKey = function(ARow: Int64): ThiiRowKey of object;
   Th5uNavigationRowExtent = function(ARow: Int64): Single of object;
   Th5uNavigationPrepareRange = procedure(AFirst, ACount: Int64) of object;
-  Th5uNavigationGetText = function(AColumn: Th5uGridColumn; ARow: Int64; ADisplay: Boolean): string of object;
-  Th5uNavigationTryFocus = function(const ACell: Th5uCellAddress; AUpdateAnchor: Boolean): Boolean of object;
+  Th5uNavigationGetText = function(AColumn: ThiiGridColumn; ARow: Int64; ADisplay: Boolean): string of object;
+  Th5uNavigationTryFocus = function(const ACell: ThiiCellAddress; AUpdateAnchor: Boolean): Boolean of object;
 
   Th5uNavigationActionKind = (None, Focus, Edit, Header);
   Th5uNavigationAction = record
     Kind: Th5uNavigationActionKind;
-    Cell: Th5uCellAddress;
+    Cell: ThiiCellAddress;
     Extend, Add, AutomaticEdit, EditAfterFocus: Boolean;
   end;
 
   // This state belongs to one grid view, independently of its shared data controller.
   Th5uGridNavigation = record
     HeaderSelectionActive: Boolean;
-    HeaderSelectionKind: Th5uSelectionKind;
-    HeaderAnchor, HeaderFocus: Th5uCellAddress;
+    HeaderSelectionKind: ThiiSelectionKind;
+    HeaderAnchor, HeaderFocus: ThiiCellAddress;
     SearchText: string;
     SearchTime: TDateTime;
-    procedure Cancel(ASelection: Th5uGridSelection);
-    procedure SelectHeaderRange(AColumns: Th5uGridColumns; ASelection: Th5uGridSelection; ARowCount: Int64; AGetRowKey: Th5uNavigationGetRowKey; AKind: Th5uSelectionKind;
+    procedure Cancel(ASelection: ThiiGridSelection);
+    procedure SelectHeaderRange(AColumns: ThiiGridColumns; ASelection: ThiiGridSelection; ARowCount: Int64; AGetRowKey: Th5uNavigationGetRowKey; AKind: ThiiSelectionKind;
       ARow: Int64; AColumn: Integer; AShift: TShiftState);
-    function Navigate(AColumns: Th5uGridColumns; ASelection: Th5uGridSelection; ARowCount: Int64; AGetRowKey: Th5uNavigationGetRowKey; ARowExtent: Th5uNavigationRowExtent;
+    function Navigate(AColumns: ThiiGridColumns; ASelection: ThiiGridSelection; ARowCount: Int64; AGetRowKey: Th5uNavigationGetRowKey; ARowExtent: Th5uNavigationRowExtent;
       APageHeight: Single; AKey: Word; AShift: TShiftState; out AAction: Th5uNavigationAction): Boolean;
-    function SearchCharacter(AColumns: Th5uGridColumns; ASelection: Th5uGridSelection; ARowCount: Int64; APrepareRange: Th5uNavigationPrepareRange; AGetText: Th5uNavigationGetText;
+    function SearchCharacter(AColumns: ThiiGridColumns; ASelection: ThiiGridSelection; ARowCount: Int64; APrepareRange: Th5uNavigationPrepareRange; AGetText: Th5uNavigationGetText;
       const AText: string; ANow: TDateTime; out ARow: Int64; out AColumn: Integer): Boolean;
   end;
 
-function h5uPlanCellFocus(AColumns: Th5uGridColumns; ASelection: Th5uGridSelection; ARowCount: Int64; AGetRowKey: Th5uNavigationGetRowKey; ARow: Int64; AColumn: Integer;
-  AExtend: Boolean; out ACell: Th5uCellAddress; out ARange: Th5uCellRange): Boolean;
-procedure h5uSelectRightClick(ASelection: Th5uGridSelection; const ACell: Th5uCellAddress; ACanSelect: Boolean; ATryFocus: Th5uNavigationTryFocus);
-procedure h5uNotifyFocusChange(AGrid: TObject; AColumns: Th5uGridColumns; const AOld, ANew: Th5uCellAddress; AExit, AEnter: Th5uCellEvent; AChanged: TNotifyEvent);
+function h5uPlanCellFocus(AColumns: ThiiGridColumns; ASelection: ThiiGridSelection; ARowCount: Int64; AGetRowKey: Th5uNavigationGetRowKey; ARow: Int64; AColumn: Integer;
+  AExtend: Boolean; out ACell: ThiiCellAddress; out ARange: ThiiCellRange): Boolean;
+procedure h5uSelectRightClick(ASelection: ThiiGridSelection; const ACell: ThiiCellAddress; ACanSelect: Boolean; ATryFocus: Th5uNavigationTryFocus);
+procedure h5uNotifyFocusChange(AGrid: TObject; AColumns: ThiiGridColumns; const AOld, ANew: ThiiCellAddress; AExit, AEnter: ThiiCellEvent; AChanged: TNotifyEvent);
 
 implementation
 
-procedure Th5uGridNavigation.Cancel(ASelection: Th5uGridSelection);
+procedure Th5uGridNavigation.Cancel(ASelection: ThiiGridSelection);
 begin
   SearchText := '';
   HeaderSelectionActive := False;
   ASelection.ClearExtendedSelection;
 end;
 
-procedure Th5uGridNavigation.SelectHeaderRange(AColumns: Th5uGridColumns; ASelection: Th5uGridSelection; ARowCount: Int64;
-  AGetRowKey: Th5uNavigationGetRowKey; AKind: Th5uSelectionKind; ARow: Int64; AColumn: Integer; AShift: TShiftState);
+procedure Th5uGridNavigation.SelectHeaderRange(AColumns: ThiiGridColumns; ASelection: ThiiGridSelection; ARowCount: Int64; AGetRowKey: Th5uNavigationGetRowKey;
+  AKind: ThiiSelectionKind; ARow: Int64; AColumn: Integer; AShift: TShiftState);
 var
-  LColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>;
-  LKeys: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uRowKey>;
+  LColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<ThiiGridColumn>;
+  LKeys: {$IFDEF FPC}specialize {$ENDIF}TArray<ThiiRowKey>;
   LIds: {$IFDEF FPC}specialize {$ENDIF}TList<string>;
   LRow, LFirstRow, LLastRow: Int64;
   I, LAnchorColumn: Integer;
@@ -88,7 +88,7 @@ begin
   if not (AKind in ASelection.AllowedKinds) then
     Exit;
   LColumns := AColumns.VisibleColumns;
-  if AKind = Th5uSelectionKind.Rows then
+  if AKind = ThiiSelectionKind.Rows then
   begin
     if (ARow < 0) or (ARow >= ARowCount) then
       Exit;
@@ -100,11 +100,11 @@ begin
 
   LExtend := (ssShift in AShift) and HeaderSelectionActive and (HeaderSelectionKind = AKind);
   if not LExtend then
-    HeaderAnchor := Th5uCellAddress.Empty;
+    HeaderAnchor := ThiiCellAddress.Empty;
   HeaderSelectionActive := True;
   HeaderSelectionKind := AKind;
-  HeaderFocus := Th5uCellAddress.Empty;
-  if AKind = Th5uSelectionKind.Rows then
+  HeaderFocus := ThiiCellAddress.Empty;
+  if AKind = ThiiSelectionKind.Rows then
   begin
     HeaderFocus.RowIndex := ARow;
     HeaderFocus.RowKey := AGetRowKey(ARow);
@@ -165,11 +165,11 @@ begin
   end;
 end;
 
-function Th5uGridNavigation.Navigate(AColumns: Th5uGridColumns; ASelection: Th5uGridSelection; ARowCount: Int64; AGetRowKey: Th5uNavigationGetRowKey;
+function Th5uGridNavigation.Navigate(AColumns: ThiiGridColumns; ASelection: ThiiGridSelection; ARowCount: Int64; AGetRowKey: Th5uNavigationGetRowKey;
   ARowExtent: Th5uNavigationRowExtent; APageHeight: Single; AKey: Word; AShift: TShiftState; out AAction: Th5uNavigationAction): Boolean;
 var
-  LCell: Th5uCellAddress;
-  LColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>;
+  LCell: ThiiCellAddress;
+  LColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<ThiiGridColumn>;
   LRow, LCount: Int64;
   LColumn: Integer;
   LDistance: Single;
@@ -194,7 +194,7 @@ begin
       LCell.RowIndex := 0;
       LCell.ColumnIndex := 0;
     end;
-    if HeaderSelectionKind = Th5uSelectionKind.Rows then
+    if HeaderSelectionKind = ThiiSelectionKind.Rows then
       LCell.RowIndex := HeaderFocus.RowIndex
     else
       LCell.ColumnIndex := HeaderFocus.ColumnIndex;
@@ -266,11 +266,11 @@ begin
   end;
 end;
 
-function Th5uGridNavigation.SearchCharacter(AColumns: Th5uGridColumns; ASelection: Th5uGridSelection; ARowCount: Int64; APrepareRange: Th5uNavigationPrepareRange;
+function Th5uGridNavigation.SearchCharacter(AColumns: ThiiGridColumns; ASelection: ThiiGridSelection; ARowCount: Int64; APrepareRange: Th5uNavigationPrepareRange;
   AGetText: Th5uNavigationGetText; const AText: string; ANow: TDateTime; out ARow: Int64; out AColumn: Integer): Boolean;
 var
-  LColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>;
-  LCell: Th5uCellAddress;
+  LColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<ThiiGridColumn>;
+  LCell: ThiiCellAddress;
   LCount, LRow, LStart, I: Int64;
   LColumn: Integer;
   LText: string;
@@ -338,10 +338,10 @@ begin
   end;
 end;
 
-function h5uPlanCellFocus(AColumns: Th5uGridColumns; ASelection: Th5uGridSelection; ARowCount: Int64; AGetRowKey: Th5uNavigationGetRowKey;
-  ARow: Int64; AColumn: Integer; AExtend: Boolean; out ACell: Th5uCellAddress; out ARange: Th5uCellRange): Boolean;
+function h5uPlanCellFocus(AColumns: ThiiGridColumns; ASelection: ThiiGridSelection; ARowCount: Int64; AGetRowKey: Th5uNavigationGetRowKey; ARow: Int64; AColumn: Integer;
+  AExtend: Boolean; out ACell: ThiiCellAddress; out ARange: ThiiCellRange): Boolean;
 var
-  LColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>;
+  LColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<ThiiGridColumn>;
 begin
   Result := False;
   if (ARowCount = 0) then
@@ -354,29 +354,29 @@ begin
   ACell.RowKey := AGetRowKey(ACell.RowIndex);
   ACell.ColumnId := LColumns[ACell.ColumnIndex].Id;
   if AExtend and ASelection.AnchorCell.IsValid then
-    ARange := Th5uCellRange.Create(ASelection.AnchorCell.RowIndex, ACell.RowIndex, ASelection.AnchorCell.ColumnIndex, ACell.ColumnIndex)
+    ARange := ThiiCellRange.Create(ASelection.AnchorCell.RowIndex, ACell.RowIndex, ASelection.AnchorCell.ColumnIndex, ACell.ColumnIndex)
   else
-    ARange := Th5uCellRange.Create(ACell.RowIndex, ACell.RowIndex, ACell.ColumnIndex, ACell.ColumnIndex);
+    ARange := ThiiCellRange.Create(ACell.RowIndex, ACell.RowIndex, ACell.ColumnIndex, ACell.ColumnIndex);
   Result := True;
 end;
 
-procedure h5uSelectRightClick(ASelection: Th5uGridSelection; const ACell: Th5uCellAddress; ACanSelect: Boolean; ATryFocus: Th5uNavigationTryFocus);
+procedure h5uSelectRightClick(ASelection: ThiiGridSelection; const ACell: ThiiCellAddress; ACanSelect: Boolean; ATryFocus: Th5uNavigationTryFocus);
 var
   LSelected: Boolean;
 begin
   if not ASelection.RightClickSelect then
     Exit;
-  LSelected := ASelection.IsCellSelected(ACell.RowIndex, ACell.ColumnIndex)
-    or ASelection.IsRowSelected(ACell.RowKey) or ASelection.IsColumnSelected(ACell.ColumnId);
+  LSelected := ASelection.IsCellSelected(ACell.RowIndex, ACell.ColumnIndex) or ASelection.IsRowSelected(ACell.RowKey)
+    or ASelection.IsColumnSelected(ACell.ColumnId);
   if not ATryFocus(ACell, not LSelected) then
     Exit;
   if not LSelected and ACanSelect then
-    ASelection.AddCellRange(Th5uCellRange.Create(ACell.RowIndex, ACell.RowIndex, ACell.ColumnIndex, ACell.ColumnIndex));
+    ASelection.AddCellRange(ThiiCellRange.Create(ACell.RowIndex, ACell.RowIndex, ACell.ColumnIndex, ACell.ColumnIndex));
 end;
 
-procedure h5uNotifyFocusChange(AGrid: TObject; AColumns: Th5uGridColumns; const AOld, ANew: Th5uCellAddress; AExit, AEnter: Th5uCellEvent; AChanged: TNotifyEvent);
+procedure h5uNotifyFocusChange(AGrid: TObject; AColumns: ThiiGridColumns; const AOld, ANew: ThiiCellAddress; AExit, AEnter: ThiiCellEvent; AChanged: TNotifyEvent);
 var
-  LColumn: Th5uGridColumn;
+  LColumn: ThiiGridColumn;
 begin
   if (AOld.RowIndex <> ANew.RowIndex) or (AOld.ColumnId <> ANew.ColumnId) or (AOld.RowKey <> ANew.RowKey) then
   begin

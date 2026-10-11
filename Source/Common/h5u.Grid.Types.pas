@@ -26,43 +26,43 @@ uses
   {$ENDIF}
 
 type
-  Th5uClassId = type string;
+  ThiiClassId = type string;
 
 const
-  h5uClassIdGridVisibleRow = Th5uClassId('h5u.grid.visual.row');
-  h5uClassIdGridColumn = Th5uClassId('h5u.grid.column.default');
-  h5uClassIdGridDataCell = Th5uClassId('h5u.grid.visual.cell.data');
-  h5uClassIdGridHeaderCell = Th5uClassId('h5u.grid.visual.cell.header');
-  h5uClassIdGridHeaderGroupCell = Th5uClassId('h5u.grid.visual.cell.header-group');
-  h5uClassIdGridFixedCell = Th5uClassId('h5u.grid.visual.cell.fixed');
-  h5uClassIdGridFooterCell = Th5uClassId('h5u.grid.visual.cell.footer');
-  h5uClassIdGridCornerCell = Th5uClassId('h5u.grid.visual.cell.corner');
-  h5uClassIdGridTextEditor = Th5uClassId('h5u.grid.editor.text');
-  h5uClassIdGridBooleanEditor = Th5uClassId('h5u.grid.editor.boolean');
-  h5uClassIdGridImageEditor = Th5uClassId('h5u.grid.editor.image');
-  h5uClassIdGridRowMetrics = Th5uClassId('h5u.grid.row-metrics');
-  h5uClassIdGridThumbHint = Th5uClassId('h5u.grid.thumb-hint');
-  h5uClassIdGridRowSpacing = Th5uClassId('h5u.grid.spacing.row');
-  h5uClassIdGridColumnSpacing = Th5uClassId('h5u.grid.spacing.column');
-  h5uClassIdGridContentPadding = Th5uClassId('h5u.grid.spacing.content-padding');
-  h5uClassIdGridTreeBranchEndBand = Th5uClassId('h5u.grid.spacing.tree-branch-end');
-  h5uClassIdGridAdjacentGroupFoldGlyph = Th5uClassId('h5u.grid.visual.adjacent-group-fold-glyph');
-  h5uClassIdGridAdjacentGroupEndBand = Th5uClassId('h5u.grid.spacing.adjacent-group-end');
-  h5uClassIdDataSession = Th5uClassId('h5u.grid.data.session');
-  h5uClassIdDataCache = Th5uClassId('h5u.grid.data.cache');
-  h5uClassIdDataPage = Th5uClassId('h5u.grid.data.page');
+  h5uClassIdGridVisibleRow = ThiiClassId('h5u.grid.visual.row');
+  h5uClassIdGridColumn = ThiiClassId('h5u.grid.column.default');
+  h5uClassIdGridDataCell = ThiiClassId('h5u.grid.visual.cell.data');
+  h5uClassIdGridHeaderCell = ThiiClassId('h5u.grid.visual.cell.header');
+  h5uClassIdGridHeaderGroupCell = ThiiClassId('h5u.grid.visual.cell.header-group');
+  h5uClassIdGridFixedCell = ThiiClassId('h5u.grid.visual.cell.fixed');
+  h5uClassIdGridFooterCell = ThiiClassId('h5u.grid.visual.cell.footer');
+  h5uClassIdGridCornerCell = ThiiClassId('h5u.grid.visual.cell.corner');
+  h5uClassIdGridTextEditor = ThiiClassId('h5u.grid.editor.text');
+  h5uClassIdGridBooleanEditor = ThiiClassId('h5u.grid.editor.boolean');
+  h5uClassIdGridImageEditor = ThiiClassId('h5u.grid.editor.image');
+  h5uClassIdGridRowMetrics = ThiiClassId('h5u.grid.row-metrics');
+  h5uClassIdGridThumbHint = ThiiClassId('h5u.grid.thumb-hint');
+  h5uClassIdGridRowSpacing = ThiiClassId('h5u.grid.spacing.row');
+  h5uClassIdGridColumnSpacing = ThiiClassId('h5u.grid.spacing.column');
+  h5uClassIdGridContentPadding = ThiiClassId('h5u.grid.spacing.content-padding');
+  h5uClassIdGridTreeBranchEndBand = ThiiClassId('h5u.grid.spacing.tree-branch-end');
+  h5uClassIdGridAdjacentGroupFoldGlyph = ThiiClassId('h5u.grid.visual.adjacent-group-fold-glyph');
+  h5uClassIdGridAdjacentGroupEndBand = ThiiClassId('h5u.grid.spacing.adjacent-group-end');
+  h5uClassIdDataSession = ThiiClassId('h5u.grid.data.session');
+  h5uClassIdDataCache = ThiiClassId('h5u.grid.data.cache');
+  h5uClassIdDataPage = ThiiClassId('h5u.grid.data.page');
 
 type
-  Eh5uGrid = class(Exception);
+  EhiiGrid = class(Exception);
   {$IFNDEF FPC}
-  Th5uLegacyOptionAttribute = class(TCustomAttribute);
+  ThiiLegacyOptionAttribute = class(TCustomAttribute);
   {$ENDIF}
-  Eh5uFactory = class(Eh5uGrid);
-  Eh5uDataController = class(Eh5uGrid);
+  EhiiFactory = class(EhiiGrid);
+  EhiiDataController = class(EhiiGrid);
 
-  Th5uGridPerformanceStage = (Paint, Layout, ColumnLayout, HeightMeasurement, DataUpdate);
+  ThiiGridPerformanceStage = (Paint, Layout, ColumnLayout, HeightMeasurement, DataUpdate);
 
-  Th5uGridTiming = record
+  ThiiGridTiming = record
     Count: Int64;
     LastMilliseconds: Double;
     TotalMilliseconds: Double;
@@ -71,44 +71,44 @@ type
 
   // Durations measure completed CPU-side work. Nested stages overlap and must
   // not be added together; Paint does not include GPU/display presentation.
-  Th5uGridPerformance = class
+  ThiiGridPerformance = class
   private
     FEnabled: Boolean;
-    FTimings: array[Th5uGridPerformanceStage] of Th5uGridTiming;
-    function GetStage(AIndex: Integer): Th5uGridTiming; inline;
+    FTimings: array[ThiiGridPerformanceStage] of ThiiGridTiming;
+    function GetStage(AIndex: Integer): ThiiGridTiming; inline;
   public
     constructor Create;
     procedure Reset;
-    procedure RecordElapsed(AStage: Th5uGridPerformanceStage; AElapsedMilliseconds: Double);
+    procedure RecordElapsed(AStage: ThiiGridPerformanceStage; AElapsedMilliseconds: Double);
     property Enabled: Boolean read FEnabled write FEnabled;
-    property Paint: Th5uGridTiming index 0 read GetStage;
-    property Layout: Th5uGridTiming index 1 read GetStage;
-    property ColumnLayout: Th5uGridTiming index 2 read GetStage;
-    property HeightMeasurement: Th5uGridTiming index 3 read GetStage;
-    property DataUpdate: Th5uGridTiming index 4 read GetStage;
+    property Paint: ThiiGridTiming index 0 read GetStage;
+    property Layout: ThiiGridTiming index 1 read GetStage;
+    property ColumnLayout: ThiiGridTiming index 2 read GetStage;
+    property HeightMeasurement: ThiiGridTiming index 3 read GetStage;
+    property DataUpdate: ThiiGridTiming index 4 read GetStage;
   end;
 
-  Th5uRowKey = record
+  ThiiRowKey = record
   private
     FValue: string;
   public
-    class function Empty: Th5uRowKey; static;
-    class function FromString(const AValue: string): Th5uRowKey; static;
-    class function FromInt64(const AValue: Int64): Th5uRowKey; static;
+    class function Empty: ThiiRowKey; static;
+    class function FromString(const AValue: string): ThiiRowKey; static;
+    class function FromInt64(const AValue: Int64): ThiiRowKey; static;
     function IsEmpty: Boolean;
     function ToString: string;
-    class operator {$IFDEF FPC}={$ELSE}Equal{$ENDIF}(const ALeft, ARight: Th5uRowKey): Boolean;
-    class operator {$IFDEF FPC}<>{$ELSE}NotEqual{$ENDIF}(const ALeft, ARight: Th5uRowKey): Boolean;
+    class operator {$IFDEF FPC}={$ELSE}Equal{$ENDIF}(const ALeft, ARight: ThiiRowKey): Boolean;
+    class operator {$IFDEF FPC}<>{$ELSE}NotEqual{$ENDIF}(const ALeft, ARight: ThiiRowKey): Boolean;
   end;
 
-  Th5uRowsMovedContext = record
+  ThiiRowsMovedContext = record
     // All indexes are zero-based. Source indexes address the controller data.
     FirstRowIndex: Int64;
-    RowKeys: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uRowKey>;
+    RowKeys: {$IFDEF FPC}specialize {$ENDIF}TArray<ThiiRowKey>;
     SourceRowIndexes: {$IFDEF FPC}specialize {$ENDIF}TArray<Int64>;
     // Target indexes/key refer to the view BEFORE the requested move.
     TargetRowIndex: Int64;
-    TargetRowKey: Th5uRowKey;
+    TargetRowKey: ThiiRowKey;
     TargetSourceRowIndex: Int64;
     InsertAfter: Boolean;
     // First view index of the block after removal and insertion.
@@ -116,23 +116,23 @@ type
   end;
 
   // Notification of a requested drop: the handler must update the data/order.
-  Th5uRowsMovedEvent = procedure(Sender: TObject; const AContext: Th5uRowsMovedContext) of object;
+  ThiiRowsMovedEvent = procedure(Sender: TObject; const AContext: ThiiRowsMovedContext) of object;
 
-  Th5uElementKind = (Grid, View, VisibleRow, VisibleColumn, DataCell, ColumnHeaderCell, ColumnHeaderGroupCell, RowHeaderCell, DataGroupHeaderCell,
+  ThiiElementKind = (Grid, View, VisibleRow, VisibleColumn, DataCell, ColumnHeaderCell, ColumnHeaderGroupCell, RowHeaderCell, DataGroupHeaderCell,
     FixedCell, CornerCell, FilterCell, FooterCell, Editor, ThumbHint, RowSpacing, ColumnSpacing, ContentPadding, TreeBranchEndBand,
     AdjacentGroupFoldGlyph, AdjacentGroupEndBand, DetailView, DataSession, DataCache, DataPage);
 
-  Th5uElementPaintPart = (Background, Text, Glyph, Border, ColumnMode);
+  ThiiElementPaintPart = (Background, Text, Glyph, Border, ColumnMode);
 
-  Th5uElementFlag = (FixedRow, FixedColumn, Frozen, Header, Footer, Corner, Selected, Focused, Hot, Editing, Disabled, ReadOnly, OddRow, EvenRow,
+  ThiiElementFlag = (FixedRow, FixedColumn, Frozen, Header, Footer, Corner, Selected, Focused, Hot, Editing, Disabled, ReadOnly, OddRow, EvenRow,
     PatternRow, TreeBranchEnd, AdjacentGroupFirst, AdjacentGroupLast, AdjacentGroupCollapsed, AdjacentGroupExpanded, AdjacentGroupEnd);
-  Th5uElementFlags = set of Th5uElementFlag;
+  ThiiElementFlags = set of ThiiElementFlag;
 
-  Th5uCreationReason = (Runtime, Designer, Streaming, AutoGenerate, Clone, LayoutRestore, DetailView, ControllerInternal, ViewportMaterialization);
+  ThiiCreationReason = (Runtime, Designer, Streaming, AutoGenerate, Clone, LayoutRestore, DetailView, ControllerInternal, ViewportMaterialization);
 
-  Th5uFactoryCacheScope = (None, ClassId, Grid, View, ElementKind, Column, HeaderCell, RowStyleKey);
+  ThiiFactoryCacheScope = (None, ClassId, Grid, View, ElementKind, Column, HeaderCell, RowStyleKey);
 
-  Th5uFactoryContext = record
+  ThiiFactoryContext = record
     Grid: TObject;
     View: TObject;
     Level: TObject;
@@ -144,14 +144,14 @@ type
     Owner: TComponent;
     Collection: TCollection;
 
-    RowKey: Th5uRowKey;
+    RowKey: ThiiRowKey;
     SourceRowIndex: Int64;
     ViewRowIndex: Int64;
     RowStyleKey: TValue;
     Value: TValue;
 
-    ElementKind: Th5uElementKind;
-    ElementFlags: Th5uElementFlags;
+    ElementKind: ThiiElementKind;
+    ElementFlags: ThiiElementFlags;
     LayoutRow: Integer;
     LayoutColumn: Integer;
     RowSpan: Integer;
@@ -161,33 +161,33 @@ type
 
     AdjacentGroupIndex: Integer;
     AdjacentGroupId: TValue;
-    AdjacentGroupAnchorRowKey: Th5uRowKey;
+    AdjacentGroupAnchorRowKey: ThiiRowKey;
     AdjacentGroupRowCount: Int64;
     AdjacentGroupCollapsed: Boolean;
     AdjacentGroupFirstRow: Boolean;
     AdjacentGroupLastVisibleRow: Boolean;
 
-    ClassId: Th5uClassId;
-    CreationReason: Th5uCreationReason;
+    ClassId: ThiiClassId;
+    CreationReason: ThiiCreationReason;
 
-    class function Create(AGrid, AView, AController: TObject; const AClassId: Th5uClassId; AElementKind: Th5uElementKind): Th5uFactoryContext; static;
+    class function Create(AGrid, AView, AController: TObject; const AClassId: ThiiClassId; AElementKind: ThiiElementKind): ThiiFactoryContext; static;
   end;
 
-  Th5uTreeLevelContext = record
+  ThiiTreeLevelContext = record
     Grid: TObject;
     DataController: TObject;
-    RowKey: Th5uRowKey;
+    RowKey: ThiiRowKey;
     ViewRowIndex: Int64;
     SourceRowIndex: Int64;
   end;
 
-  Th5uGetTreeLevelEvent = procedure(Sender: TObject; const AContext: Th5uTreeLevelContext; var ALevel: Integer; var AAvailable: Boolean) of object;
+  ThiiGetTreeLevelEvent = procedure(Sender: TObject; const AContext: ThiiTreeLevelContext; var ALevel: Integer; var AAvailable: Boolean) of object;
 
-  Th5uTreeBranchEndContext = record
+  ThiiTreeBranchEndContext = record
     Grid: TObject;
     DataController: TObject;
-    RowKey: Th5uRowKey;
-    NextRowKey: Th5uRowKey;
+    RowKey: ThiiRowKey;
+    NextRowKey: ThiiRowKey;
     ViewRowIndex: Int64;
     SourceRowIndex: Int64;
     CurrentLevel: Integer;
@@ -195,99 +195,99 @@ type
     IsEndOfData: Boolean;
   end;
 
-  Th5uGetTreeBranchEndEvent = procedure(Sender: TObject; const AContext: Th5uTreeBranchEndContext; var AIsBranchEnd: Boolean; var AClosedLevels: Integer) of object;
+  ThiiGetTreeBranchEndEvent = procedure(Sender: TObject; const AContext: ThiiTreeBranchEndContext; var AIsBranchEnd: Boolean; var AClosedLevels: Integer) of object;
 
-  Th5uAdjacentGroupInitialState = (Expanded, Collapsed);
-  Th5uAdjacentGroupEndBandVisibility = (Never, CollapsedOnly, ExpandedOnly, Always);
+  ThiiAdjacentGroupInitialState = (Expanded, Collapsed);
+  ThiiAdjacentGroupEndBandVisibility = (Never, CollapsedOnly, ExpandedOnly, Always);
 
-  Th5uAdjacentGroupIdContext = record
+  ThiiAdjacentGroupIdContext = record
     Grid: TObject;
     DataController: TObject;
-    RowKey: Th5uRowKey;
+    RowKey: ThiiRowKey;
     ControllerRowIndex: Int64;
     SourceRowIndex: Int64;
   end;
 
-  Th5uGetAdjacentGroupIdEvent = procedure(Sender: TObject; const AContext: Th5uAdjacentGroupIdContext; var AGroupId: TValue; var AAvailable: Boolean) of object;
+  ThiiGetAdjacentGroupIdEvent = procedure(Sender: TObject; const AContext: ThiiAdjacentGroupIdContext; var AGroupId: TValue; var AAvailable: Boolean) of object;
 
-  Th5uAdjacentGroupStateChangedContext = record
+  ThiiAdjacentGroupStateChangedContext = record
     Grid: TObject;
     DataController: TObject;
     GroupId: TValue;
-    AnchorRowKey: Th5uRowKey;
+    AnchorRowKey: ThiiRowKey;
     FirstControllerRowIndex: Int64;
     RowCount: Int64;
     Collapsed: Boolean;
   end;
 
-  Th5uAdjacentGroupStateChangedEvent = procedure(Sender: TObject; const AContext: Th5uAdjacentGroupStateChangedContext) of object;
+  ThiiAdjacentGroupStateChangedEvent = procedure(Sender: TObject; const AContext: ThiiAdjacentGroupStateChangedContext) of object;
 
-  Th5uColumnRowMovingGesture = (AltDrag, Drag);
-  Th5uColumnMovePermission = (Default, Allow, Deny);
+  ThiiColumnRowMovingGesture = (AltDrag, Drag);
+  ThiiColumnMovePermission = (Default, Allow, Deny);
 
-  Th5uGridTheme = (ApplicationStyle, Classic2000, Modern, Dark);
+  ThiiGridTheme = (ApplicationStyle, Classic2000, Modern, Dark);
 
-  Th5uColumnDataType = (Auto, Text, Integer, Float, Currency, Date, DateTime, Boolean, Image, Time);
+  ThiiColumnDataType = (Auto, Text, Integer, Float, Currency, Date, DateTime, Boolean, Image, Time);
 
-  Th5uColumnEditorKind = (Automatic, None, Text, Boolean, Image, Time, Date, DateTime);
+  ThiiColumnEditorKind = (Automatic, None, Text, Boolean, Image, Time, Date, DateTime);
 
-  Th5uFixedKind = (None, Left, Right);
+  ThiiFixedKind = (None, Left, Right);
 
-  Th5uRowHeightMode = (Fixed, Automatic);
+  ThiiRowHeightMode = (Fixed, Automatic);
 
-  Th5uAutoHeightMeasureScope = (VisibleViewportColumns, AllVisibleColumns, ExplicitContributorColumns);
+  ThiiAutoHeightMeasureScope = (VisibleViewportColumns, AllVisibleColumns, ExplicitContributorColumns);
 
-  Th5uVerticalScrollMode = (Pixel, WholeRows, PixelSnap);
+  ThiiVerticalScrollMode = (Pixel, WholeRows, PixelSnap);
 
-  Th5uHorizontalScrollMode = (Pixel, WholeColumns, PixelSnap);
+  ThiiHorizontalScrollMode = (Pixel, WholeColumns, PixelSnap);
 
-  Th5uScrollAxis = (Horizontal, Vertical);
+  ThiiScrollAxis = (Horizontal, Vertical);
 
-  Th5uScrollHintTrigger = (ThumbTracking, MouseWheel, Keyboard, Touch, Kinetic);
-  Th5uScrollHintTriggers = set of Th5uScrollHintTrigger;
+  ThiiScrollHintTrigger = (ThumbTracking, MouseWheel, Keyboard, Touch, Kinetic);
+  ThiiScrollHintTriggers = set of ThiiScrollHintTrigger;
 
-  Th5uCacheMode = (None, Viewport, Paged, All, Adaptive);
+  ThiiCacheMode = (None, Viewport, Paged, All, Adaptive);
 
-  Th5uPaginationMode = (Continuous, NumberedPages, Cursor);
+  ThiiPaginationMode = (Continuous, NumberedPages, Cursor);
 
-  Th5uSelectionKind = (Rows, Columns, CellRanges);
-  Th5uSelectionKinds = set of Th5uSelectionKind;
+  ThiiSelectionKind = (Rows, Columns, CellRanges);
+  ThiiSelectionKinds = set of ThiiSelectionKind;
 
-  Th5uSelectionCombinationMode = (Exclusive, Mixed);
+  ThiiSelectionCombinationMode = (Exclusive, Mixed);
 
-  Th5uSelectionScope = (CurrentPage, VisibleRows, CurrentQuery, EntireSource);
+  ThiiSelectionScope = (CurrentPage, VisibleRows, CurrentQuery, EntireSource);
 
-  Th5uDataChangeKind = (Reset, LayoutChanged, RowsInserted, RowsDeleted, RowsChanged, CellChanged, PageChanged);
+  ThiiDataChangeKind = (Reset, LayoutChanged, RowsInserted, RowsDeleted, RowsChanged, CellChanged, PageChanged);
 
-  Th5uDataChange = record
-    Kind: Th5uDataChangeKind;
+  ThiiDataChange = record
+    Kind: ThiiDataChangeKind;
     FirstIndex: Int64;
     Count: Int64;
-    RowKey: Th5uRowKey;
+    RowKey: ThiiRowKey;
     ColumnId: string;
-    class function ResetAll: Th5uDataChange; static;
+    class function ResetAll: ThiiDataChange; static;
   end;
 
-  Th5uCellRange = record
+  ThiiCellRange = record
     StartRowIndex: Int64;
     EndRowIndex: Int64;
     StartColumnIndex: Integer;
     EndColumnIndex: Integer;
-    class function Create(AStartRow, AEndRow: Int64; AStartColumn, AEndColumn: Integer): Th5uCellRange; static;
+    class function Create(AStartRow, AEndRow: Int64; AStartColumn, AEndColumn: Integer): ThiiCellRange; static;
     procedure Normalize;
     function Contains(ARowIndex: Int64; AColumnIndex: Integer): Boolean;
   end;
 
-  Th5uCellAddress = record
+  ThiiCellAddress = record
     RowIndex: Int64;
     ColumnIndex: Integer;
-    RowKey: Th5uRowKey;
+    RowKey: ThiiRowKey;
     ColumnId: string;
-    class function Empty: Th5uCellAddress; static;
+    class function Empty: ThiiCellAddress; static;
     function IsValid: Boolean;
   end;
 
-  Th5uResolvedAppearance = record
+  ThiiResolvedAppearance = record
     Background: TColor;
     Foreground: TColor;
     Border: TColor;
@@ -303,28 +303,28 @@ type
 
 implementation
 
-{ Th5uGridPerformance }
+{ ThiiGridPerformance }
 
-constructor Th5uGridPerformance.Create;
+constructor ThiiGridPerformance.Create;
 begin
   inherited Create;
   FEnabled := True;
 end;
 
-function Th5uGridPerformance.GetStage(AIndex: Integer): Th5uGridTiming;
+function ThiiGridPerformance.GetStage(AIndex: Integer): ThiiGridTiming;
 begin
-  Result := FTimings[Th5uGridPerformanceStage(AIndex)];
+  Result := FTimings[ThiiGridPerformanceStage(AIndex)];
 end;
 
-procedure Th5uGridPerformance.Reset;
+procedure ThiiGridPerformance.Reset;
 var
-  LStage: Th5uGridPerformanceStage;
+  LStage: ThiiGridPerformanceStage;
 begin
-  for LStage := Low(Th5uGridPerformanceStage) to High(Th5uGridPerformanceStage) do
-    FTimings[LStage] := Default(Th5uGridTiming);
+  for LStage := Low(ThiiGridPerformanceStage) to High(ThiiGridPerformanceStage) do
+    FTimings[LStage] := Default(ThiiGridTiming);
 end;
 
-procedure Th5uGridPerformance.RecordElapsed(AStage: Th5uGridPerformanceStage; AElapsedMilliseconds: Double);
+procedure ThiiGridPerformance.RecordElapsed(AStage: ThiiGridPerformanceStage; AElapsedMilliseconds: Double);
 begin
   if not FEnabled or not (AElapsedMilliseconds >= 0) then
     Exit;
@@ -335,54 +335,54 @@ begin
     FTimings[AStage].MaxMilliseconds := AElapsedMilliseconds;
 end;
 
-{ Th5uRowKey }
+{ ThiiRowKey }
 
-class operator Th5uRowKey.{$IFDEF FPC}={$ELSE}Equal{$ENDIF}(const ALeft, ARight: Th5uRowKey): Boolean;
+class operator ThiiRowKey.{$IFDEF FPC}={$ELSE}Equal{$ENDIF}(const ALeft, ARight: ThiiRowKey): Boolean;
 begin
   Result := ALeft.FValue = ARight.FValue;
 end;
 
-class operator Th5uRowKey.{$IFDEF FPC}<>{$ELSE}NotEqual{$ENDIF}(const ALeft, ARight: Th5uRowKey): Boolean;
+class operator ThiiRowKey.{$IFDEF FPC}<>{$ELSE}NotEqual{$ENDIF}(const ALeft, ARight: ThiiRowKey): Boolean;
 begin
   Result := not (ALeft = ARight);
 end;
 
-class function Th5uRowKey.Empty: Th5uRowKey;
+class function ThiiRowKey.Empty: ThiiRowKey;
 begin
   Result.FValue := '';
 end;
 
-class function Th5uRowKey.FromInt64(const AValue: Int64): Th5uRowKey;
+class function ThiiRowKey.FromInt64(const AValue: Int64): ThiiRowKey;
 begin
   Result.FValue := IntToStr(AValue);
 end;
 
-class function Th5uRowKey.FromString(const AValue: string): Th5uRowKey;
+class function ThiiRowKey.FromString(const AValue: string): ThiiRowKey;
 begin
   Result.FValue := AValue;
 end;
 
-function Th5uRowKey.IsEmpty: Boolean;
+function ThiiRowKey.IsEmpty: Boolean;
 begin
   Result := FValue = '';
 end;
 
-function Th5uRowKey.ToString: string;
+function ThiiRowKey.ToString: string;
 begin
   Result := FValue;
 end;
 
-{ Th5uFactoryContext }
+{ ThiiFactoryContext }
 
-class function Th5uFactoryContext.Create(AGrid, AView, AController: TObject; const AClassId: Th5uClassId; AElementKind: Th5uElementKind): Th5uFactoryContext;
+class function ThiiFactoryContext.Create(AGrid, AView, AController: TObject; const AClassId: ThiiClassId; AElementKind: ThiiElementKind): ThiiFactoryContext;
 begin
-  Result := Default(Th5uFactoryContext);
+  Result := Default(ThiiFactoryContext);
   Result.Grid := AGrid;
   Result.View := AView;
   Result.DataController := AController;
   Result.ClassId := AClassId;
   Result.ElementKind := AElementKind;
-  Result.RowKey := Th5uRowKey.Empty;
+  Result.RowKey := ThiiRowKey.Empty;
   Result.SourceRowIndex := -1;
   Result.ViewRowIndex := -1;
   Result.LayoutRow := -1;
@@ -392,35 +392,35 @@ begin
   Result.TreeLevel := -1;
   Result.ClosedTreeLevels := 0;
   Result.AdjacentGroupIndex := -1;
-  Result.AdjacentGroupAnchorRowKey := Th5uRowKey.Empty;
+  Result.AdjacentGroupAnchorRowKey := ThiiRowKey.Empty;
   Result.AdjacentGroupRowCount := 0;
-  Result.CreationReason := Th5uCreationReason.Runtime;
+  Result.CreationReason := ThiiCreationReason.Runtime;
 end;
 
-{ Th5uDataChange }
+{ ThiiDataChange }
 
-class function Th5uDataChange.ResetAll: Th5uDataChange;
+class function ThiiDataChange.ResetAll: ThiiDataChange;
 begin
-  Result := Default(Th5uDataChange);
-  Result.Kind := Th5uDataChangeKind.Reset;
+  Result := Default(ThiiDataChange);
+  Result.Kind := ThiiDataChangeKind.Reset;
   Result.FirstIndex := 0;
   Result.Count := -1;
-  Result.RowKey := Th5uRowKey.Empty;
+  Result.RowKey := ThiiRowKey.Empty;
 end;
 
-{ Th5uCellRange }
+{ ThiiCellRange }
 
-function Th5uCellRange.Contains(ARowIndex: Int64; AColumnIndex: Integer): Boolean;
+function ThiiCellRange.Contains(ARowIndex: Int64; AColumnIndex: Integer): Boolean;
 var
-  LRange: Th5uCellRange;
+  LRange: ThiiCellRange;
 begin
   LRange := Self;
   LRange.Normalize;
-  Result := (ARowIndex >= LRange.StartRowIndex) and (ARowIndex <= LRange.EndRowIndex)
-    and (AColumnIndex >= LRange.StartColumnIndex) and (AColumnIndex <= LRange.EndColumnIndex);
+  Result := (ARowIndex >= LRange.StartRowIndex) and (ARowIndex <= LRange.EndRowIndex) and (AColumnIndex >= LRange.StartColumnIndex)
+    and (AColumnIndex <= LRange.EndColumnIndex);
 end;
 
-class function Th5uCellRange.Create(AStartRow, AEndRow: Int64; AStartColumn, AEndColumn: Integer): Th5uCellRange;
+class function ThiiCellRange.Create(AStartRow, AEndRow: Int64; AStartColumn, AEndColumn: Integer): ThiiCellRange;
 begin
   Result.StartRowIndex := AStartRow;
   Result.EndRowIndex := AEndRow;
@@ -429,7 +429,7 @@ begin
   Result.Normalize;
 end;
 
-procedure Th5uCellRange.Normalize;
+procedure ThiiCellRange.Normalize;
 var
   LInt64: Int64;
   LInteger: Integer;
@@ -449,26 +449,26 @@ begin
   end;
 end;
 
-{ Th5uCellAddress }
+{ ThiiCellAddress }
 
-class function Th5uCellAddress.Empty: Th5uCellAddress;
+class function ThiiCellAddress.Empty: ThiiCellAddress;
 begin
-  Result := Default(Th5uCellAddress);
+  Result := Default(ThiiCellAddress);
   Result.RowIndex := -1;
   Result.ColumnIndex := -1;
-  Result.RowKey := Th5uRowKey.Empty;
+  Result.RowKey := ThiiRowKey.Empty;
 end;
 
-function Th5uCellAddress.IsValid: Boolean;
+function ThiiCellAddress.IsValid: Boolean;
 begin
   Result := (RowIndex >= 0) and (ColumnIndex >= 0);
 end;
 
-{ Th5uResolvedAppearance }
+{ ThiiResolvedAppearance }
 
-procedure Th5uResolvedAppearance.Clear;
+procedure ThiiResolvedAppearance.Clear;
 begin
-  Self := Default(Th5uResolvedAppearance);
+  Self := Default(ThiiResolvedAppearance);
 end;
 
 end.

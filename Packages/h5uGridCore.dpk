@@ -25,7 +25,7 @@
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'h5u Grid common runtime'}
+{$DESCRIPTION 'hiiGrid common runtime'}
 {$LIBSUFFIX AUTO}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
@@ -56,7 +56,7 @@ contains
   h5u.Grid.Data.Memory in '..\Source\Common\h5u.Grid.Data.Memory.pas',
   h5u.Grid.Data.Objects in '..\Source\Common\h5u.Grid.Data.Objects.pas',
   h5u.Grid.Data.Virtual in '..\Source\Common\h5u.Grid.Data.Virtual.pas',
-  h5u.FormDesigner.Properties in '..\Source\Common\h5u.FormDesigner.Properties.pas',
+  h5u.PropertyEditor in '..\Source\Common\h5u.PropertyEditor.pas',
   h5u.FormDesigner in '..\Source\Common\h5u.FormDesigner.pas';
 
 end.

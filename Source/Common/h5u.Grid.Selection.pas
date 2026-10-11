@@ -24,33 +24,33 @@ uses
   h5u.Grid.Types;
 
 type
-  Th5uSelectionChangedEvent = procedure(Sender: TObject) of object;
+  ThiiSelectionChangedEvent = procedure(Sender: TObject) of object;
 
-  Th5uGridSelection = class(TPersistent)
+  ThiiGridSelection = class(TPersistent)
   private
-    FAllowedKinds: Th5uSelectionKinds;
-    FCombinationMode: Th5uSelectionCombinationMode;
-    FScope: Th5uSelectionScope;
+    FAllowedKinds: ThiiSelectionKinds;
+    FCombinationMode: ThiiSelectionCombinationMode;
+    FScope: ThiiSelectionScope;
     FMultiRange: Boolean;
     FRightClickSelect: Boolean;
     FKeepAcrossPages: Boolean;
     FSelectedRows: {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, Byte>;
     FSelectedColumns: {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, Byte>;
-    FCellRanges: {$IFDEF FPC}specialize {$ENDIF}TList<Th5uCellRange>;
+    FCellRanges: {$IFDEF FPC}specialize {$ENDIF}TList<ThiiCellRange>;
     FAllRowsSelected: Boolean;
     FExcludedRows: {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, Byte>;
-    FFocusedCell: Th5uCellAddress;
-    FAnchorCell: Th5uCellAddress;
-    FExtensionBase: Th5uGridSelection;
-    FExtensionKind: Th5uSelectionKind;
+    FFocusedCell: ThiiCellAddress;
+    FAnchorCell: ThiiCellAddress;
+    FExtensionBase: ThiiGridSelection;
+    FExtensionKind: ThiiSelectionKind;
     FExtensionAdd: Boolean;
-    FOnChanged: Th5uSelectionChangedEvent;
+    FOnChanged: ThiiSelectionChangedEvent;
     function GetSelectedColumnCount: Integer;
     procedure ResetExtension;
-    procedure CopySelection(ASource: Th5uGridSelection);
-    procedure PrepareSelection(AKind: Th5uSelectionKind; AAdd, AExtend: Boolean);
+    procedure CopySelection(ASource: ThiiGridSelection);
+    procedure PrepareSelection(AKind: ThiiSelectionKind; AAdd, AExtend: Boolean);
     procedure Changed;
-    procedure SetAllowedKinds(const AValue: Th5uSelectionKinds);
+    procedure SetAllowedKinds(const AValue: ThiiSelectionKinds);
   public
     procedure Assign(Source: TPersistent); override;
     constructor Create;
@@ -64,32 +64,32 @@ type
     procedure ClearColumns;
     procedure ClearCellRanges;
 
-    procedure SelectRow(const ARowKey: Th5uRowKey; AAdd: Boolean = False);
-    procedure SelectRows(const ARowKeys: array of Th5uRowKey; AAdd: Boolean = False; AExtend: Boolean = False);
-    procedure ToggleRow(const ARowKey: Th5uRowKey);
+    procedure SelectRow(const ARowKey: ThiiRowKey; AAdd: Boolean = False);
+    procedure SelectRows(const ARowKeys: array of ThiiRowKey; AAdd: Boolean = False; AExtend: Boolean = False);
+    procedure ToggleRow(const ARowKey: ThiiRowKey);
     procedure SelectAllRows;
-    procedure ExcludeRow(const ARowKey: Th5uRowKey);
-    function IsRowSelected(const ARowKey: Th5uRowKey): Boolean;
+    procedure ExcludeRow(const ARowKey: ThiiRowKey);
+    function IsRowSelected(const ARowKey: ThiiRowKey): Boolean;
 
     procedure SelectColumn(const AColumnId: string; AAdd: Boolean = False);
     procedure SelectColumns(const AColumnIds: array of string; AAdd: Boolean = False; AExtend: Boolean = False);
     procedure ToggleColumn(const AColumnId: string);
     function IsColumnSelected(const AColumnId: string): Boolean;
 
-    procedure AddCellRange(const ARange: Th5uCellRange; AAdd: Boolean = False; AExtend: Boolean = False);
+    procedure AddCellRange(const ARange: ThiiCellRange; AAdd: Boolean = False; AExtend: Boolean = False);
     function IsCellSelected(ARowIndex: Int64; AColumnIndex: Integer): Boolean;
 
-    procedure SetFocus(const ACell: Th5uCellAddress; AUpdateAnchor: Boolean);
+    procedure SetFocus(const ACell: ThiiCellAddress; AUpdateAnchor: Boolean);
 
-    property CellRanges: {$IFDEF FPC}specialize {$ENDIF}TList<Th5uCellRange> read FCellRanges;
-    property FocusedCell: Th5uCellAddress read FFocusedCell;
-    property AnchorCell: Th5uCellAddress read FAnchorCell;
+    property CellRanges: {$IFDEF FPC}specialize {$ENDIF}TList<ThiiCellRange> read FCellRanges;
+    property FocusedCell: ThiiCellAddress read FFocusedCell;
+    property AnchorCell: ThiiCellAddress read FAnchorCell;
     property AllRowsSelected: Boolean read FAllRowsSelected;
-    property OnChanged: Th5uSelectionChangedEvent read FOnChanged write FOnChanged;
+    property OnChanged: ThiiSelectionChangedEvent read FOnChanged write FOnChanged;
   published
-    property AllowedKinds: Th5uSelectionKinds read FAllowedKinds write SetAllowedKinds;
-    property CombinationMode: Th5uSelectionCombinationMode read FCombinationMode write FCombinationMode default Th5uSelectionCombinationMode.Mixed;
-    property Scope: Th5uSelectionScope read FScope write FScope default Th5uSelectionScope.CurrentQuery;
+    property AllowedKinds: ThiiSelectionKinds read FAllowedKinds write SetAllowedKinds;
+    property CombinationMode: ThiiSelectionCombinationMode read FCombinationMode write FCombinationMode default ThiiSelectionCombinationMode.Mixed;
+    property Scope: ThiiSelectionScope read FScope write FScope default ThiiSelectionScope.CurrentQuery;
     property RightClickSelect: Boolean read FRightClickSelect write FRightClickSelect default False;
     property MultiRange: Boolean read FMultiRange write FMultiRange default True;
     property KeepAcrossPages: Boolean read FKeepAcrossPages write FKeepAcrossPages default True;
@@ -97,14 +97,14 @@ type
 
 implementation
 
-{ Th5uGridSelection }
+{ ThiiGridSelection }
 
-function Th5uGridSelection.GetSelectedColumnCount: Integer;
+function ThiiGridSelection.GetSelectedColumnCount: Integer;
 begin
   Result := FSelectedColumns.Count;
 end;
 
-function Th5uGridSelection.SelectedRowCount(ATotalRowCount: Int64): Int64;
+function ThiiGridSelection.SelectedRowCount(ATotalRowCount: Int64): Int64;
 begin
   if FAllRowsSelected then
   begin
@@ -116,15 +116,15 @@ begin
     Result := FSelectedRows.Count;
 end;
 
-procedure Th5uGridSelection.ResetExtension;
+procedure ThiiGridSelection.ResetExtension;
 begin
   FreeAndNil(FExtensionBase);
 end;
 
-procedure Th5uGridSelection.CopySelection(ASource: Th5uGridSelection);
+procedure ThiiGridSelection.CopySelection(ASource: ThiiGridSelection);
 var
   LPair: {$IFDEF FPC}specialize {$ENDIF}TPair<string, Byte>;
-  LRange: Th5uCellRange;
+  LRange: ThiiCellRange;
 begin
   FAllRowsSelected := ASource.FAllRowsSelected;
   FSelectedRows.Clear;
@@ -141,14 +141,14 @@ begin
     FCellRanges.Add(LRange);
 end;
 
-procedure Th5uGridSelection.PrepareSelection(AKind: Th5uSelectionKind; AAdd, AExtend: Boolean);
+procedure ThiiGridSelection.PrepareSelection(AKind: ThiiSelectionKind; AAdd, AExtend: Boolean);
 begin
   if AExtend then
   begin
     if not Assigned(FExtensionBase) or (FExtensionKind <> AKind) or (FExtensionAdd <> AAdd) then
     begin
       ResetExtension;
-      FExtensionBase := Th5uGridSelection.Create;
+      FExtensionBase := ThiiGridSelection.Create;
       FExtensionBase.CopySelection(Self);
       FExtensionKind := AKind;
       FExtensionAdd := AAdd;
@@ -160,26 +160,26 @@ begin
   else
     ResetExtension;
 
-  if not AAdd or ((FCombinationMode = Th5uSelectionCombinationMode.Exclusive) and (AKind <> Th5uSelectionKind.Rows)) then
+  if not AAdd or ((FCombinationMode = ThiiSelectionCombinationMode.Exclusive) and (AKind <> ThiiSelectionKind.Rows)) then
   begin
     FSelectedRows.Clear;
     FExcludedRows.Clear;
     FAllRowsSelected := False;
   end;
-  if not AAdd or ((FCombinationMode = Th5uSelectionCombinationMode.Exclusive) and (AKind <> Th5uSelectionKind.Columns)) then
+  if not AAdd or ((FCombinationMode = ThiiSelectionCombinationMode.Exclusive) and (AKind <> ThiiSelectionKind.Columns)) then
     FSelectedColumns.Clear;
-  if not AAdd or ((FCombinationMode = Th5uSelectionCombinationMode.Exclusive) and (AKind <> Th5uSelectionKind.CellRanges)) then
+  if not AAdd or ((FCombinationMode = ThiiSelectionCombinationMode.Exclusive) and (AKind <> ThiiSelectionKind.CellRanges)) then
     FCellRanges.Clear;
 end;
 
 
-procedure Th5uGridSelection.AddCellRange(const ARange: Th5uCellRange; AAdd, AExtend: Boolean);
+procedure ThiiGridSelection.AddCellRange(const ARange: ThiiCellRange; AAdd, AExtend: Boolean);
 var
-  LRange: Th5uCellRange;
+  LRange: ThiiCellRange;
 begin
-  if not (Th5uSelectionKind.CellRanges in FAllowedKinds) then
+  if not (ThiiSelectionKind.CellRanges in FAllowedKinds) then
     Exit;
-  PrepareSelection(Th5uSelectionKind.CellRanges, AAdd, AExtend);
+  PrepareSelection(ThiiSelectionKind.CellRanges, AAdd, AExtend);
   if not FMultiRange then
     FCellRanges.Clear;
   LRange := ARange;
@@ -188,13 +188,13 @@ begin
   Changed;
 end;
 
-procedure Th5uGridSelection.Changed;
+procedure ThiiGridSelection.Changed;
 begin
   if Assigned(FOnChanged) then
     FOnChanged(Self);
 end;
 
-procedure Th5uGridSelection.Clear;
+procedure ThiiGridSelection.Clear;
 begin
   ResetExtension;
   FSelectedRows.Clear;
@@ -202,12 +202,12 @@ begin
   FCellRanges.Clear;
   FExcludedRows.Clear;
   FAllRowsSelected := False;
-  FFocusedCell := Th5uCellAddress.Empty;
-  FAnchorCell := Th5uCellAddress.Empty;
+  FFocusedCell := ThiiCellAddress.Empty;
+  FAnchorCell := ThiiCellAddress.Empty;
   Changed;
 end;
 
-procedure Th5uGridSelection.ClearExtendedSelection;
+procedure ThiiGridSelection.ClearExtendedSelection;
 var
   LKeepSingleCell: Boolean;
 begin
@@ -223,19 +223,19 @@ begin
   Changed;
 end;
 
-procedure Th5uGridSelection.ClearCellRanges;
+procedure ThiiGridSelection.ClearCellRanges;
 begin
   ResetExtension;
   FCellRanges.Clear;
 end;
 
-procedure Th5uGridSelection.ClearColumns;
+procedure ThiiGridSelection.ClearColumns;
 begin
   ResetExtension;
   FSelectedColumns.Clear;
 end;
 
-procedure Th5uGridSelection.ClearRows;
+procedure ThiiGridSelection.ClearRows;
 begin
   ResetExtension;
   FSelectedRows.Clear;
@@ -243,23 +243,23 @@ begin
   FAllRowsSelected := False;
 end;
 
-constructor Th5uGridSelection.Create;
+constructor ThiiGridSelection.Create;
 begin
   inherited;
-  FAllowedKinds := [Th5uSelectionKind.Rows, Th5uSelectionKind.Columns, Th5uSelectionKind.CellRanges];
-  FCombinationMode := Th5uSelectionCombinationMode.Mixed;
-  FScope := Th5uSelectionScope.CurrentQuery;
+  FAllowedKinds := [ThiiSelectionKind.Rows, ThiiSelectionKind.Columns, ThiiSelectionKind.CellRanges];
+  FCombinationMode := ThiiSelectionCombinationMode.Mixed;
+  FScope := ThiiSelectionScope.CurrentQuery;
   FMultiRange := True;
   FKeepAcrossPages := True;
   FSelectedRows := {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, Byte>.Create;
   FSelectedColumns := {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, Byte>.Create;
-  FCellRanges := {$IFDEF FPC}specialize {$ENDIF}TList<Th5uCellRange>.Create;
+  FCellRanges := {$IFDEF FPC}specialize {$ENDIF}TList<ThiiCellRange>.Create;
   FExcludedRows := {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, Byte>.Create;
-  FFocusedCell := Th5uCellAddress.Empty;
-  FAnchorCell := Th5uCellAddress.Empty;
+  FFocusedCell := ThiiCellAddress.Empty;
+  FAnchorCell := ThiiCellAddress.Empty;
 end;
 
-destructor Th5uGridSelection.Destroy;
+destructor ThiiGridSelection.Destroy;
 begin
   FExtensionBase.Free;
   FExcludedRows.Free;
@@ -269,7 +269,7 @@ begin
   inherited;
 end;
 
-procedure Th5uGridSelection.ExcludeRow(const ARowKey: Th5uRowKey);
+procedure ThiiGridSelection.ExcludeRow(const ARowKey: ThiiRowKey);
 begin
   if not FAllRowsSelected then
     Exit;
@@ -278,9 +278,9 @@ begin
   Changed;
 end;
 
-function Th5uGridSelection.IsCellSelected(ARowIndex: Int64; AColumnIndex: Integer): Boolean;
+function ThiiGridSelection.IsCellSelected(ARowIndex: Int64; AColumnIndex: Integer): Boolean;
 var
-  LRange: Th5uCellRange;
+  LRange: ThiiCellRange;
 begin
   Result := False;
   for LRange in FCellRanges do
@@ -288,12 +288,12 @@ begin
       Exit(True);
 end;
 
-function Th5uGridSelection.IsColumnSelected(const AColumnId: string): Boolean;
+function ThiiGridSelection.IsColumnSelected(const AColumnId: string): Boolean;
 begin
   Result := FSelectedColumns.ContainsKey(AColumnId);
 end;
 
-function Th5uGridSelection.IsRowSelected(const ARowKey: Th5uRowKey): Boolean;
+function ThiiGridSelection.IsRowSelected(const ARowKey: ThiiRowKey): Boolean;
 begin
   if FAllRowsSelected then
     Exit(not FExcludedRows.ContainsKey(ARowKey.ToString));
@@ -301,12 +301,12 @@ begin
   Result := FSelectedRows.ContainsKey(ARowKey.ToString);
 end;
 
-procedure Th5uGridSelection.SelectAllRows;
+procedure ThiiGridSelection.SelectAllRows;
 begin
-  if not (Th5uSelectionKind.Rows in FAllowedKinds) then
+  if not (ThiiSelectionKind.Rows in FAllowedKinds) then
     Exit;
 
-  if FCombinationMode = Th5uSelectionCombinationMode.Exclusive then
+  if FCombinationMode = ThiiSelectionCombinationMode.Exclusive then
   begin
     ClearColumns;
     ClearCellRanges;
@@ -319,35 +319,35 @@ begin
   Changed;
 end;
 
-procedure Th5uGridSelection.SelectColumn(const AColumnId: string; AAdd: Boolean);
+procedure ThiiGridSelection.SelectColumn(const AColumnId: string; AAdd: Boolean);
 begin
   SelectColumns([AColumnId], AAdd);
 end;
 
-procedure Th5uGridSelection.SelectColumns(const AColumnIds: array of string; AAdd, AExtend: Boolean);
+procedure ThiiGridSelection.SelectColumns(const AColumnIds: array of string; AAdd, AExtend: Boolean);
 var
   LId: string;
 begin
-  if not (Th5uSelectionKind.Columns in FAllowedKinds) then
+  if not (ThiiSelectionKind.Columns in FAllowedKinds) then
     Exit;
-  PrepareSelection(Th5uSelectionKind.Columns, AAdd, AExtend);
+  PrepareSelection(ThiiSelectionKind.Columns, AAdd, AExtend);
   for LId in AColumnIds do
     FSelectedColumns.AddOrSetValue(LId, 0);
   Changed;
 end;
 
-procedure Th5uGridSelection.SelectRow(const ARowKey: Th5uRowKey; AAdd: Boolean);
+procedure ThiiGridSelection.SelectRow(const ARowKey: ThiiRowKey; AAdd: Boolean);
 begin
   SelectRows([ARowKey], AAdd);
 end;
 
-procedure Th5uGridSelection.SelectRows(const ARowKeys: array of Th5uRowKey; AAdd, AExtend: Boolean);
+procedure ThiiGridSelection.SelectRows(const ARowKeys: array of ThiiRowKey; AAdd, AExtend: Boolean);
 var
-  LKey: Th5uRowKey;
+  LKey: ThiiRowKey;
 begin
-  if not (Th5uSelectionKind.Rows in FAllowedKinds) then
+  if not (ThiiSelectionKind.Rows in FAllowedKinds) then
     Exit;
-  PrepareSelection(Th5uSelectionKind.Rows, AAdd, AExtend);
+  PrepareSelection(ThiiSelectionKind.Rows, AAdd, AExtend);
   for LKey in ARowKeys do
     if FAllRowsSelected then
       FExcludedRows.Remove(LKey.ToString)
@@ -356,24 +356,24 @@ begin
   Changed;
 end;
 
-procedure Th5uGridSelection.SetAllowedKinds(const AValue: Th5uSelectionKinds);
+procedure ThiiGridSelection.SetAllowedKinds(const AValue: ThiiSelectionKinds);
 begin
   if FAllowedKinds = AValue then
     Exit;
   ResetExtension;
   FAllowedKinds := AValue;
 
-  if not (Th5uSelectionKind.Rows in FAllowedKinds) then
+  if not (ThiiSelectionKind.Rows in FAllowedKinds) then
     ClearRows;
-  if not (Th5uSelectionKind.Columns in FAllowedKinds) then
+  if not (ThiiSelectionKind.Columns in FAllowedKinds) then
     ClearColumns;
-  if not (Th5uSelectionKind.CellRanges in FAllowedKinds) then
+  if not (ThiiSelectionKind.CellRanges in FAllowedKinds) then
     ClearCellRanges;
 
   Changed;
 end;
 
-procedure Th5uGridSelection.SetFocus(const ACell: Th5uCellAddress; AUpdateAnchor: Boolean);
+procedure ThiiGridSelection.SetFocus(const ACell: ThiiCellAddress; AUpdateAnchor: Boolean);
 begin
   FFocusedCell := ACell;
   if AUpdateAnchor then
@@ -384,11 +384,11 @@ begin
   Changed;
 end;
 
-procedure Th5uGridSelection.ToggleColumn(const AColumnId: string);
+procedure ThiiGridSelection.ToggleColumn(const AColumnId: string);
 begin
-  if not (Th5uSelectionKind.Columns in FAllowedKinds) then
+  if not (ThiiSelectionKind.Columns in FAllowedKinds) then
     Exit;
-  PrepareSelection(Th5uSelectionKind.Columns, True, False);
+  PrepareSelection(ThiiSelectionKind.Columns, True, False);
   if IsColumnSelected(AColumnId) then
     FSelectedColumns.Remove(AColumnId)
   else
@@ -396,11 +396,11 @@ begin
   Changed;
 end;
 
-procedure Th5uGridSelection.ToggleRow(const ARowKey: Th5uRowKey);
+procedure ThiiGridSelection.ToggleRow(const ARowKey: ThiiRowKey);
 begin
-  if not (Th5uSelectionKind.Rows in FAllowedKinds) then
+  if not (ThiiSelectionKind.Rows in FAllowedKinds) then
     Exit;
-  PrepareSelection(Th5uSelectionKind.Rows, True, False);
+  PrepareSelection(ThiiSelectionKind.Rows, True, False);
   if FAllRowsSelected then
   begin
     if FExcludedRows.ContainsKey(ARowKey.ToString) then
@@ -416,19 +416,19 @@ begin
 end;
 
 
-procedure Th5uGridSelection.Assign(Source: TPersistent);
+procedure ThiiGridSelection.Assign(Source: TPersistent);
 var
-  LSource: Th5uGridSelection;
+  LSource: ThiiGridSelection;
   LPair: {$IFDEF FPC}specialize {$ENDIF}TPair<string, Byte>;
-  LRange: Th5uCellRange;
+  LRange: ThiiCellRange;
 begin
   if Source = Self then
     Exit;
 
-  if Source is Th5uGridSelection then
+  if Source is ThiiGridSelection then
   begin
     ResetExtension;
-    LSource := Th5uGridSelection(Source);
+    LSource := ThiiGridSelection(Source);
 
     FAllowedKinds := LSource.FAllowedKinds;
     FCombinationMode := LSource.FCombinationMode;

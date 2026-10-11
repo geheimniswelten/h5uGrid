@@ -1,19 +1,43 @@
-﻿# h5u.Grid – VCL-/FMX-/LCL-Grid-Prototyp
+﻿# hiiGrid – VCL-/FMX-/LCL-Grid-Prototyp
 
-`h5u.Grid` ist ein quelloffener Teststand für ein erweiterbares Delphi-/Lazarus-Grid mit gemeinsamem Daten-/Controllerkern und getrennten VCL-/FMX-/LCL-Präsentationen.
+`hiiGrid` ist ein quelloffener Teststand für ein erweiterbares Delphi-/Lazarus-Grid mit gemeinsamem Daten-/Controllerkern und getrennten VCL-/FMX-/LCL-Präsentationen.
 
 Das Paket dient dazu, Architektur, API, Design-Time-Verhalten und die wichtigsten Interaktionspfade früh in einer realen Delphi-Umgebung zu erproben. Es ist ausdrücklich ein **Prototyp 0.1.4** und noch keine vollständige Grid-Suite.
 
-Der Common-Kern und die LCL-Fassade `Th5uLclGrid` unterstützen FreePascal/Lazarus
+Der Common-Kern und die LCL-Fassade `ThiiGrid` unterstützen FreePascal/Lazarus
 mit `{$MODE OBJFPC}{$H+}`. Die Packages heißen `h5uGridLcl.lpk` und
 `h5uGridLclDesign.lpk`; drei Lazarus-Demos liegen unter `Demos/LCL`.
 Installation, Verwendung und Tests: [FreePascal / Lazarus](Docs/FREEPASCAL.md).
+
+## Namen und öffentliche Units
+
+Die Grid-Komponente heißt in VCL, FMX und LCL jeweils `ThiiGrid`, ihre
+Basisklasse `ThiiCustomGrid`. Öffentliche Anwender- und Erweiterungstypen
+tragen das Präfix `Thii`; interne Hilfstypen behalten `Th5u`.
+Unit- und Packagenamen bleiben bei `h5u`.
+
+Die Framework-Grid-Units bieten gezielte Typ-Aliase für ihre Spalten,
+Konfigurationsobjekte und Ereignissignaturen. Für eine Dataset-Anwendung
+genügen in der Formular-Unit beispielsweise `Vcl.h5u.Grid` und
+`h5u.Grid.Data.Dataset`; eigene Factory-/Style-/Editor-Erweiterungen benötigen
+gegebenenfalls zusätzliche Units. Siehe [Kurzhilfe](Docs/QUICKHELP.md).
+
+Der PropertyEditor ist eine eigene Runtime-Komponente in
+`Vcl.h5u.PropertyEditor` beziehungsweise `Fmx.h5u.PropertyEditor`.
+Sein gemeinsames Modell, der Listencontroller und die Werteditoren liegen
+zusammen in `h5u.PropertyEditor`. Die Grid-Units binden ihn nicht ein.
+Siehe [PropertyEditor und Strukturansicht](Docs/FormDesigner.md).
+
+Die Umbenennung ändert die öffentliche Quell- und Formular-API. Bestehende
+Anwendungen müssen die Typnamen und DFM-/FMX-/LFM-Klassennamen anpassen;
+die mitgelieferten Demos und Tests sind bereits umgestellt. Es werden keine
+alten öffentlichen Typ-Aliase zur Kompatibilität hinzugefügt.
 
 ## Enthaltene Testschwerpunkte
 
 - gemeinsame Daten- und Spaltenklassen für VCL und FMX,
 - getrennte DataController für `TDataSource`, RTTI-Objektlisten, Memory-Daten und Event-/VirtualSource,
-- `Th5uSampleClientDataset` mit selbst erzeugtem Schema und Designer-Musterdaten,
+- `ThiiSampleClientDataset` mit selbst erzeugtem Schema und Designer-Musterdaten,
 - per Gridinstanz isolierter Factory-/Registry-Scope,
 - `GetClass`-, `OnGetClass`-, `OnCreateInstance`- und `OnConfigureInstance`-Erweiterungspunkte,
 - mehrzeilige Header mit `RowSpan` und `ColumnSpan`,
@@ -80,7 +104,7 @@ Es liegen neun eigenständige Anwendungen bei:
 | LCL | ObjectList | published-RTTI, UTF-8-Bearbeitung und Liveänderungen |
 | LCL | VirtualLive | virtuelle Datenereignisse, Paging und Live-Updates |
 
-Die ClientDataset-Demos benötigen keine Datenbank und keine externe `.cds`-Datei. `Th5uSampleClientDataset` legt Felder und Datensätze beim Laden selbst an; nach Installation des Design-Packages können dadurch bereits im Formulardesigner Inhalte erscheinen. Das Feld `TREE_LEVEL` enthält eine kleine, vorab sortierte Beispielhierarchie für die Tree-Abschlussleiste. Das ausgeblendete Feld `FOLD_GROUP` enthält zusammenhängende gleiche IDs; dieselbe ID erscheint später erneut, damit unabhängige Faltzustände direkt getestet werden können.
+Die ClientDataset-Demos benötigen keine Datenbank und keine externe `.cds`-Datei. `ThiiSampleClientDataset` legt Felder und Datensätze beim Laden selbst an; nach Installation des Design-Packages können dadurch bereits im Formulardesigner Inhalte erscheinen. Das Feld `TREE_LEVEL` enthält eine kleine, vorab sortierte Beispielhierarchie für die Tree-Abschlussleiste. Das ausgeblendete Feld `FOLD_GROUP` enthält zusammenhängende gleiche IDs; dieselbe ID erscheint später erneut, damit unabhängige Faltzustände direkt getestet werden können.
 
 Weitere Hinweise: [Demoübersicht](Docs/DEMOS.md).
 
@@ -110,8 +134,8 @@ Build-Reihenfolge und Skriptparameter: [BUILD.md](Docs/BUILD.md).
 Die Marke bleibt in Delphi-Bezeichnern kleingeschrieben:
 
 ```pascal
-Th5uVclGrid
-Th5uDatasetController
+ThiiGrid
+ThiiDatasetController
 Ih5uDataController
 Eh5uFactoryError
 ```

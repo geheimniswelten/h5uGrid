@@ -27,18 +27,18 @@ type
 
   TFixture = class
   private
-    procedure Changed(Sender: TObject; const AChange: Th5uDataChange);
+    procedure Changed(Sender: TObject; const AChange: ThiiDataChange);
     procedure SourceChanged(Sender: TObject; Field: TField);
   public
     Data: TClientDataSet;
     Source: TDataSource;
-    Controller: Th5uDatasetController;
-    Link: Th5uDataControllerLink;
+    Controller: ThiiDatasetController;
+    Link: ThiiDataControllerLink;
     TextField: TTestStringField;
     ChangeCount: Integer;
     ReadOnChange: Boolean;
     FailSourceChange: Boolean;
-    constructor Create(AMode: Th5uCacheMode);
+    constructor Create(AMode: ThiiCacheMode);
     destructor Destroy; override;
   end;
 
@@ -59,7 +59,7 @@ begin
     raise Exception.Create(AMessage);
 end;
 
-constructor TFixture.Create(AMode: Th5uCacheMode);
+constructor TFixture.Create(AMode: ThiiCacheMode);
 var
   LID: TIntegerField;
   LIndex: Integer;
@@ -80,11 +80,11 @@ begin
   Source := TDataSource.Create(nil);
   Source.DataSet := Data;
   Source.OnDataChange := SourceChanged;
-  Controller := Th5uDatasetController.Create(nil);
+  Controller := ThiiDatasetController.Create(nil);
   Controller.KeyFieldName := 'ID';
   Controller.Cache.Mode := AMode;
   Controller.DataSource := Source;
-  Link := Th5uDataControllerLink.Create;
+  Link := ThiiDataControllerLink.Create;
   Link.OnChanged := Changed;
   Link.Controller := Controller;
   ChangeCount := 0;
@@ -100,7 +100,7 @@ begin
   inherited;
 end;
 
-procedure TFixture.Changed(Sender: TObject; const AChange: Th5uDataChange);
+procedure TFixture.Changed(Sender: TObject; const AChange: ThiiDataChange);
 begin
   Inc(ChangeCount);
   // Fail deterministically instead of overflowing the stack on the old code.
@@ -120,7 +120,7 @@ begin
   end;
 end;
 
-procedure TestReads(AMode: Th5uCacheMode);
+procedure TestReads(AMode: ThiiCacheMode);
 var
   LTest: TFixture;
   LIndex: Integer;
@@ -133,7 +133,7 @@ begin
     begin
       Check(LTest.Controller.GetValue(LIndex, 'TEXT').AsString = 'Row ' + IntToStr(LIndex + 1), 'Wrong row value');
       Check(LTest.Controller.GetDisplayText(LIndex, 'ID') = IntToStr(LIndex + 1), 'Wrong display text');
-      if AMode <> Th5uCacheMode.None then
+      if AMode <> ThiiCacheMode.None then
         Check(LTest.Controller.GetRowKey(LIndex).ToString = IntToStr(LIndex + 1), 'Wrong row key');
     end;
     Check(LTest.ChangeCount = 0, 'Read-only access emitted ' + IntToStr(LTest.ChangeCount) + ' data changes');
@@ -141,7 +141,7 @@ begin
     Check(not LTest.Data.ControlsDisabled, 'Read left dataset controls disabled');
     LReads := LTest.TextField.ReadCount;
     LTest.Controller.GetValue(20, 'TEXT');
-    if AMode <> Th5uCacheMode.None then
+    if AMode <> ThiiCacheMode.None then
       Check(LTest.TextField.ReadCount = LReads, 'Read invalidated populated snapshot cache');
 
     LTest.Data.DisableControls;
@@ -156,7 +156,7 @@ begin
   end;
 end;
 
-procedure TestRealChanges(AMode: Th5uCacheMode);
+procedure TestRealChanges(AMode: ThiiCacheMode);
 var
   LTest: TFixture;
 begin
@@ -189,7 +189,7 @@ begin
   end;
 end;
 
-procedure TestReadFailure(AMode: Th5uCacheMode; AFailEnableControls: Boolean);
+procedure TestReadFailure(AMode: ThiiCacheMode; AFailEnableControls: Boolean);
 var
   LTest: TFixture;
   LFailed: Boolean;
@@ -218,11 +218,11 @@ begin
 end;
 
 var
-  LMode: Th5uCacheMode;
+  LMode: ThiiCacheMode;
   LFailures: Integer;
 begin
   LFailures := 0;
-  for LMode := Low(Th5uCacheMode) to High(Th5uCacheMode) do
+  for LMode := Low(ThiiCacheMode) to High(ThiiCacheMode) do
   begin
     try
       TestReads(LMode);

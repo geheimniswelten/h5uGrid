@@ -27,25 +27,25 @@ uses
   h5u.Grid.Types;
 
 type
-  Th5uMemoryRow = class
+  ThiiMemoryRow = class
   private
-    FKey: Th5uRowKey;
+    FKey: ThiiRowKey;
     FValues: {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, TValue>;
   public
-    constructor Create(const AKey: Th5uRowKey);
+    constructor Create(const AKey: ThiiRowKey);
     destructor Destroy; override;
     function GetValue(const AFieldName: string): TValue;
     procedure SetValue(const AFieldName: string; const AValue: TValue);
-    property Key: Th5uRowKey read FKey write FKey;
+    property Key: ThiiRowKey read FKey write FKey;
   end;
 
-  Th5uMemoryController = class(Th5uCustomDataController)
+  ThiiMemoryController = class(ThiiCustomDataController)
   private
-    FRows: {$IFDEF FPC}specialize {$ENDIF}TObjectList<Th5uMemoryRow>;
+    FRows: {$IFDEF FPC}specialize {$ENDIF}TObjectList<ThiiMemoryRow>;
     FNextKey: Int64;
   protected
     function GetSourceRowCount: Int64; override;
-    function GetSourceRowKey(ASourceRowIndex: Int64): Th5uRowKey; override;
+    function GetSourceRowKey(ASourceRowIndex: Int64): ThiiRowKey; override;
     function GetSourceValue(ASourceRowIndex: Int64; const AFieldName: string): TValue; override;
     procedure SetSourceValue(ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue); override;
     function GetSourceCanEdit(ASourceRowIndex: Int64; const AFieldName: string): Boolean; override;
@@ -53,64 +53,64 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
-    function AppendRow: Th5uMemoryRow;
-    function AppendValues(const AFieldNames: array of string; const AValues: array of TValue): Th5uMemoryRow;
+    function AppendRow: ThiiMemoryRow;
+    function AppendValues(const AFieldNames: array of string; const AValues: array of TValue): ThiiMemoryRow;
     procedure DeleteRow(AIndex: Integer);
     procedure Clear;
-    function Row(AIndex: Integer): Th5uMemoryRow;
+    function Row(AIndex: Integer): ThiiMemoryRow;
   end;
 
 implementation
 
-{ Th5uMemoryRow }
+{ ThiiMemoryRow }
 
-constructor Th5uMemoryRow.Create(const AKey: Th5uRowKey);
+constructor ThiiMemoryRow.Create(const AKey: ThiiRowKey);
 begin
   inherited Create;
   FKey := AKey;
   FValues := {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, TValue>.Create;
 end;
 
-destructor Th5uMemoryRow.Destroy;
+destructor ThiiMemoryRow.Destroy;
 begin
   FValues.Free;
   inherited;
 end;
 
-function Th5uMemoryRow.GetValue(const AFieldName: string): TValue;
+function ThiiMemoryRow.GetValue(const AFieldName: string): TValue;
 begin
   if not FValues.TryGetValue(AFieldName.ToUpperInvariant, Result) then
     Result := TValue.Empty;
 end;
 
-procedure Th5uMemoryRow.SetValue(const AFieldName: string; const AValue: TValue);
+procedure ThiiMemoryRow.SetValue(const AFieldName: string; const AValue: TValue);
 begin
   FValues.AddOrSetValue(AFieldName.ToUpperInvariant, AValue);
 end;
 
-{ Th5uMemoryController }
+{ ThiiMemoryController }
 
-function Th5uMemoryController.AppendRow: Th5uMemoryRow;
+function ThiiMemoryController.AppendRow: ThiiMemoryRow;
 var
-  LChange: Th5uDataChange;
+  LChange: ThiiDataChange;
 begin
   Inc(FNextKey);
-  Result := Th5uMemoryRow.Create(Th5uRowKey.FromInt64(FNextKey));
+  Result := ThiiMemoryRow.Create(ThiiRowKey.FromInt64(FNextKey));
   FRows.Add(Result);
 
-  LChange := Default(Th5uDataChange);
-  LChange.Kind := Th5uDataChangeKind.RowsInserted;
+  LChange := Default(ThiiDataChange);
+  LChange.Kind := ThiiDataChangeKind.RowsInserted;
   LChange.FirstIndex := FRows.Count - 1;
   LChange.Count := 1;
   NotifyDataChanged(LChange);
 end;
 
-function Th5uMemoryController.AppendValues(const AFieldNames: array of string; const AValues: array of TValue): Th5uMemoryRow;
+function ThiiMemoryController.AppendValues(const AFieldNames: array of string; const AValues: array of TValue): ThiiMemoryRow;
 var
   I: Integer;
 begin
   if Length(AFieldNames) <> Length(AValues) then
-    raise Eh5uDataController.Create('Field name and value array lengths differ.');
+    raise EhiiDataController.Create('Field name and value array lengths differ.');
 
   BeginUpdate;
   try
@@ -122,82 +122,82 @@ begin
   end;
 end;
 
-procedure Th5uMemoryController.Clear;
+procedure ThiiMemoryController.Clear;
 begin
   FRows.Clear;
   Invalidate;
 end;
 
-constructor Th5uMemoryController.Create(AOwner: TComponent);
+constructor ThiiMemoryController.Create(AOwner: TComponent);
 begin
   inherited;
-  FRows := {$IFDEF FPC}specialize {$ENDIF}TObjectList<Th5uMemoryRow>.Create(True);
+  FRows := {$IFDEF FPC}specialize {$ENDIF}TObjectList<ThiiMemoryRow>.Create(True);
   FNextKey := 0;
-  Cache.Mode := Th5uCacheMode.None;
+  Cache.Mode := ThiiCacheMode.None;
 end;
 
-procedure Th5uMemoryController.DeleteRow(AIndex: Integer);
+procedure ThiiMemoryController.DeleteRow(AIndex: Integer);
 var
-  LChange: Th5uDataChange;
+  LChange: ThiiDataChange;
 begin
   if (AIndex < 0) or (AIndex >= FRows.Count) then
     Exit;
   FRows.Delete(AIndex);
 
-  LChange := Default(Th5uDataChange);
-  LChange.Kind := Th5uDataChangeKind.RowsDeleted;
+  LChange := Default(ThiiDataChange);
+  LChange.Kind := ThiiDataChangeKind.RowsDeleted;
   LChange.FirstIndex := AIndex;
   LChange.Count := 1;
   NotifyDataChanged(LChange);
 end;
 
-destructor Th5uMemoryController.Destroy;
+destructor ThiiMemoryController.Destroy;
 begin
   FRows.Free;
   inherited;
 end;
 
-function Th5uMemoryController.GetSourceCanEdit(ASourceRowIndex: Int64; const AFieldName: string): Boolean;
+function ThiiMemoryController.GetSourceCanEdit(ASourceRowIndex: Int64; const AFieldName: string): Boolean;
 begin
   Result := (ASourceRowIndex >= 0) and (ASourceRowIndex < FRows.Count);
 end;
 
-function Th5uMemoryController.GetSourceRowCount: Int64;
+function ThiiMemoryController.GetSourceRowCount: Int64;
 begin
   Result := FRows.Count;
 end;
 
-function Th5uMemoryController.GetSourceRowKey(ASourceRowIndex: Int64): Th5uRowKey;
+function ThiiMemoryController.GetSourceRowKey(ASourceRowIndex: Int64): ThiiRowKey;
 begin
   if (ASourceRowIndex >= 0) and (ASourceRowIndex < FRows.Count) then
     Result := FRows[ASourceRowIndex].Key
   else
-    Result := Th5uRowKey.Empty;
+    Result := ThiiRowKey.Empty;
 end;
 
-function Th5uMemoryController.GetSourceValue(ASourceRowIndex: Int64; const AFieldName: string): TValue;
+function ThiiMemoryController.GetSourceValue(ASourceRowIndex: Int64; const AFieldName: string): TValue;
 begin
   if (ASourceRowIndex < 0) or (ASourceRowIndex >= FRows.Count) then
     Exit(TValue.Empty);
   Result := FRows[ASourceRowIndex].GetValue(AFieldName);
 end;
 
-function Th5uMemoryController.Row(AIndex: Integer): Th5uMemoryRow;
+function ThiiMemoryController.Row(AIndex: Integer): ThiiMemoryRow;
 begin
   Result := FRows[AIndex];
 end;
 
-procedure Th5uMemoryController.SetSourceValue(ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue);
+procedure ThiiMemoryController.SetSourceValue(ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue);
 var
-  LChange: Th5uDataChange;
+  LChange: ThiiDataChange;
 begin
   if (ASourceRowIndex < 0) or (ASourceRowIndex >= FRows.Count) then
     Exit;
 
   FRows[ASourceRowIndex].SetValue(AFieldName, AValue);
 
-  LChange := Default(Th5uDataChange);
-  LChange.Kind := Th5uDataChangeKind.CellChanged;
+  LChange := Default(ThiiDataChange);
+  LChange.Kind := ThiiDataChangeKind.CellChanged;
   LChange.FirstIndex := ASourceRowIndex;
   LChange.Count := 1;
   LChange.RowKey := FRows[ASourceRowIndex].Key;

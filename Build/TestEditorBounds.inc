@@ -11,9 +11,9 @@
 
 type
   {$IFDEF TEST_FMX}
-  TNativeEditor = Th5uFmxTextEditor;
+  TNativeEditor = ThiiFmxTextEditor;
   {$ELSE}
-  TNativeEditor = Th5uVclTextEditor;
+  TNativeEditor = ThiiVclTextEditor;
   {$ENDIF}
 
   TEventCounter = class
@@ -60,7 +60,7 @@ var
   Editor: TNativeEditor;
   Control: TControl;
   Events: TEventCounter;
-  Context: Th5uEditorContext;
+  Context: ThiiEditorContext;
   Changes: Integer;
   NewBounds: TRectF;
 begin
@@ -68,7 +68,7 @@ begin
   Editor := TNativeEditor.Create(nil);
   Events := TEventCounter.Create;
   try
-    Context := Default(Th5uEditorContext);
+    Context := Default(ThiiEditorContext);
     {$IFDEF TEST_FMX}
     Control := TControl.Create(Form);
     Control.Parent := Form;
@@ -103,7 +103,7 @@ begin
     CheckBounds(Editor, NewBounds);
     Check(Editor.GetText = 'unsaved draft', 'Leaving the viewport lost the draft');
     // Graphic editors can place their own popup outside the edited cell.
-    Editor.Mode := Th5uEditorMode.Graphic;
+    Editor.Mode := ThiiEditorMode.Graphic;
     Editor.UpdateBounds(RectF(1, 2, 3, 4));
     Check(Editor.Context.Bounds = RectF(1, 2, 3, 4), 'Graphic editor context remained stale');
     Check(SameValue(Editor.Control.Width, NewBounds.Width), 'Graphic popup width was changed');

@@ -31,7 +31,7 @@ uses
   h5u.Grid.Types;
 
 type
-  Th5uViewGetController = function: Th5uCustomDataController of object;
+  Th5uViewGetController = function: ThiiCustomDataController of object;
 
   // Nonvisual, per-grid row mapping. The data controller can be shared by other views.
   // Columns and options remain owned by the native component for streaming and factories.
@@ -39,20 +39,20 @@ type
   private
     FGrid: TObject;
     FGetController: Th5uViewGetController;
-    FColumns: Th5uGridColumns;
-    FTree: Th5uTreeOptions;
-    FAdjacentGroupFolding: Th5uAdjacentGroupFoldingOptions;
+    FColumns: ThiiGridColumns;
+    FTree: ThiiTreeOptions;
+    FAdjacentGroupFolding: ThiiAdjacentGroupFoldingOptions;
     FAdjacentGroupMap: Th5uAdjacentGroupMap;
     FAdjacentGroupMapDirty: Boolean;
-    FOnGetAdjacentGroupId: Th5uGetAdjacentGroupIdEvent;
-    FOnGetTreeLevel: Th5uGetTreeLevelEvent;
-    FOnGetTreeBranchEnd: Th5uGetTreeBranchEndEvent;
-    FOnAdjacentGroupStateChanged: Th5uAdjacentGroupStateChangedEvent;
-    function GetDataController: Th5uCustomDataController;
+    FOnGetAdjacentGroupId: ThiiGetAdjacentGroupIdEvent;
+    FOnGetTreeLevel: ThiiGetTreeLevelEvent;
+    FOnGetTreeBranchEnd: ThiiGetTreeBranchEndEvent;
+    FOnAdjacentGroupStateChanged: ThiiAdjacentGroupStateChangedEvent;
+    function GetDataController: ThiiCustomDataController;
   public
-    constructor Create(AGrid: TObject; AColumns: Th5uGridColumns; ATree: Th5uTreeOptions; AAdjacentGroups: Th5uAdjacentGroupFoldingOptions; AGetController: Th5uViewGetController);
+    constructor Create(AGrid: TObject; AColumns: ThiiGridColumns; ATree: ThiiTreeOptions; AAdjacentGroups: ThiiAdjacentGroupFoldingOptions; AGetController: Th5uViewGetController);
     destructor Destroy; override;
-    property DataController: Th5uCustomDataController read GetDataController;
+    property DataController: ThiiCustomDataController read GetDataController;
     procedure InvalidateAdjacentGroupMap(AClearStates: Boolean);
     procedure EnsureAdjacentGroupMap;
     function ResolveAdjacentGroupFieldName: string;
@@ -60,7 +60,7 @@ type
     function GetViewRowCount: Int64;
     function MapViewToControllerRowIndex(AViewRowIndex: Int64; AAllowLookAhead: Boolean = False): Int64;
     function GetViewSourceRowIndex(AViewRowIndex: Int64): Int64;
-    function GetViewRowKey(AViewRowIndex: Int64): Th5uRowKey;
+    function GetViewRowKey(AViewRowIndex: Int64): ThiiRowKey;
     function GetViewValue(AViewRowIndex: Int64; const AFieldName: string): TValue;
     procedure SetViewValue(AViewRowIndex: Int64; const AFieldName: string; const AValue: TValue);
     function CanEditViewValue(AViewRowIndex: Int64; const AFieldName: string): Boolean;
@@ -68,24 +68,25 @@ type
     function IsViewRowAvailable(AViewRowIndex: Int64): Boolean;
     procedure PrepareViewRange(AFirstViewRow, ACount: Int64);
     function TryGetAdjacentGroupRowInfo(AViewRowIndex: Int64; out AInfo: Th5uAdjacentGroupRowInfo): Boolean;
-    procedure PopulateAdjacentGroupContext(var AContext: Th5uFactoryContext; AViewRowIndex: Int64);
+    procedure PopulateAdjacentGroupContext(var AContext: ThiiFactoryContext; AViewRowIndex: Int64);
     function GetAdjacentGroupEndBandInfo(AViewRowIndex: Int64; out AInfo: Th5uAdjacentGroupRowInfo): Boolean;
     procedure DoAdjacentGroupStateChanged(const AInfo: Th5uAdjacentGroupRowInfo);
-    function TryGetTreeLevelFor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey; out ALevel: Integer): Boolean;
-    function GetTreeBranchEndInfo(AViewRowIndex: Int64; const ARowKey: Th5uRowKey; out ATreeLevel: Integer; out AClosedTreeLevels: Integer): Boolean;
+    function TryGetTreeLevelFor(AViewRowIndex: Int64; const ARowKey: ThiiRowKey; out ALevel: Integer): Boolean;
+    function GetTreeBranchEndInfo(AViewRowIndex: Int64; const ARowKey: ThiiRowKey; out ATreeLevel: Integer; out AClosedTreeLevels: Integer): Boolean;
     function IsAdjacentGroupCollapsed(AViewRowIndex: Int64): Boolean;
     function ChangeAdjacentGroup(AViewRowIndex: Int64; AToggle, ACollapsed: Boolean; out AInfo: Th5uAdjacentGroupRowInfo): Boolean;
     function ChangeAllAdjacentGroups(ACollapsed: Boolean): {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uAdjacentGroupRowInfo>;
     procedure ResetAdjacentGroupStates;
-    property OnGetAdjacentGroupId: Th5uGetAdjacentGroupIdEvent read FOnGetAdjacentGroupId write FOnGetAdjacentGroupId;
-    property OnGetTreeLevel: Th5uGetTreeLevelEvent read FOnGetTreeLevel write FOnGetTreeLevel;
-    property OnGetTreeBranchEnd: Th5uGetTreeBranchEndEvent read FOnGetTreeBranchEnd write FOnGetTreeBranchEnd;
-    property OnAdjacentGroupStateChanged: Th5uAdjacentGroupStateChangedEvent read FOnAdjacentGroupStateChanged write FOnAdjacentGroupStateChanged;
+    property OnGetAdjacentGroupId: ThiiGetAdjacentGroupIdEvent read FOnGetAdjacentGroupId write FOnGetAdjacentGroupId;
+    property OnGetTreeLevel: ThiiGetTreeLevelEvent read FOnGetTreeLevel write FOnGetTreeLevel;
+    property OnGetTreeBranchEnd: ThiiGetTreeBranchEndEvent read FOnGetTreeBranchEnd write FOnGetTreeBranchEnd;
+    property OnAdjacentGroupStateChanged: ThiiAdjacentGroupStateChangedEvent read FOnAdjacentGroupStateChanged write FOnAdjacentGroupStateChanged;
   end;
 
 implementation
 
-constructor Th5uGridView.Create(AGrid: TObject; AColumns: Th5uGridColumns; ATree: Th5uTreeOptions; AAdjacentGroups: Th5uAdjacentGroupFoldingOptions; AGetController: Th5uViewGetController);
+constructor Th5uGridView.Create(AGrid: TObject; AColumns: ThiiGridColumns; ATree: ThiiTreeOptions; AAdjacentGroups: ThiiAdjacentGroupFoldingOptions;
+  AGetController: Th5uViewGetController);
 begin
   inherited Create;
   FGrid := AGrid;
@@ -103,7 +104,7 @@ begin
   inherited;
 end;
 
-function Th5uGridView.GetDataController: Th5uCustomDataController;
+function Th5uGridView.GetDataController: ThiiCustomDataController;
 begin
   if Assigned(FGetController) then
     Result := FGetController()
@@ -161,7 +162,7 @@ end;
 
 function Th5uGridView.ResolveAdjacentGroupFieldName: string;
 var
-  LColumn: Th5uGridColumn;
+  LColumn: ThiiGridColumn;
 begin
   Result := Trim(FAdjacentGroupFolding.IdColumnId);
   if Result = '' then
@@ -176,7 +177,7 @@ end;
 
 function Th5uGridView.TryGetAdjacentGroupIdForControllerRow(AControllerRowIndex: Int64; out AGroupId: TValue): Boolean;
 var
-  LContext: Th5uAdjacentGroupIdContext;
+  LContext: ThiiAdjacentGroupIdContext;
   LFieldName: string;
 begin
   AGroupId := TValue.Empty;
@@ -193,7 +194,7 @@ begin
 
   if Assigned(FOnGetAdjacentGroupId) then
   begin
-    LContext := Default(Th5uAdjacentGroupIdContext);
+    LContext := Default(ThiiAdjacentGroupIdContext);
     LContext.Grid := FGrid;
     LContext.DataController := DataController;
     LContext.RowKey := DataController.GetRowKey(AControllerRowIndex);
@@ -241,11 +242,11 @@ begin
     Result := DataController.GetSourceRowIndex(LControllerRowIndex);
 end;
 
-function Th5uGridView.GetViewRowKey(AViewRowIndex: Int64): Th5uRowKey;
+function Th5uGridView.GetViewRowKey(AViewRowIndex: Int64): ThiiRowKey;
 var
   LControllerRowIndex: Int64;
 begin
-  Result := Th5uRowKey.Empty;
+  Result := ThiiRowKey.Empty;
   if not Assigned(DataController) then
     Exit;
   LControllerRowIndex := MapViewToControllerRowIndex(AViewRowIndex, True);
@@ -335,7 +336,7 @@ begin
   Result := FAdjacentGroupMap.Active and FAdjacentGroupMap.TryGetRowInfo(AViewRowIndex, AInfo);
 end;
 
-procedure Th5uGridView.PopulateAdjacentGroupContext(var AContext: Th5uFactoryContext; AViewRowIndex: Int64);
+procedure Th5uGridView.PopulateAdjacentGroupContext(var AContext: ThiiFactoryContext; AViewRowIndex: Int64);
 var
   LInfo: Th5uAdjacentGroupRowInfo;
 begin
@@ -351,13 +352,13 @@ begin
   AContext.AdjacentGroupLastVisibleRow := LInfo.IsLastVisibleRow;
 
   if LInfo.IsFirstRow then
-    Include(AContext.ElementFlags, Th5uElementFlag.AdjacentGroupFirst);
+    Include(AContext.ElementFlags, ThiiElementFlag.AdjacentGroupFirst);
   if LInfo.IsLastVisibleRow then
-    Include(AContext.ElementFlags, Th5uElementFlag.AdjacentGroupLast);
+    Include(AContext.ElementFlags, ThiiElementFlag.AdjacentGroupLast);
   if LInfo.Collapsed then
-    Include(AContext.ElementFlags, Th5uElementFlag.AdjacentGroupCollapsed)
+    Include(AContext.ElementFlags, ThiiElementFlag.AdjacentGroupCollapsed)
   else
-    Include(AContext.ElementFlags, Th5uElementFlag.AdjacentGroupExpanded);
+    Include(AContext.ElementFlags, ThiiElementFlag.AdjacentGroupExpanded);
 end;
 
 function Th5uGridView.GetAdjacentGroupEndBandInfo(AViewRowIndex: Int64; out AInfo: Th5uAdjacentGroupRowInfo): Boolean;
@@ -367,24 +368,24 @@ begin
     Exit;
 
   case FAdjacentGroupFolding.EndBand.Visibility of
-    Th5uAdjacentGroupEndBandVisibility.Never:
+    ThiiAdjacentGroupEndBandVisibility.Never:
       Result := False;
-    Th5uAdjacentGroupEndBandVisibility.CollapsedOnly:
+    ThiiAdjacentGroupEndBandVisibility.CollapsedOnly:
       Result := AInfo.Collapsed;
-    Th5uAdjacentGroupEndBandVisibility.ExpandedOnly:
+    ThiiAdjacentGroupEndBandVisibility.ExpandedOnly:
       Result := not AInfo.Collapsed;
-    Th5uAdjacentGroupEndBandVisibility.Always:
+    ThiiAdjacentGroupEndBandVisibility.Always:
       Result := True;
   end;
 end;
 
 procedure Th5uGridView.DoAdjacentGroupStateChanged(const AInfo: Th5uAdjacentGroupRowInfo);
 var
-  LContext: Th5uAdjacentGroupStateChangedContext;
+  LContext: ThiiAdjacentGroupStateChangedContext;
 begin
   if not Assigned(FOnAdjacentGroupStateChanged) then
     Exit;
-  LContext := Default(Th5uAdjacentGroupStateChangedContext);
+  LContext := Default(ThiiAdjacentGroupStateChangedContext);
   LContext.Grid := FGrid;
   LContext.DataController := DataController;
   LContext.GroupId := AInfo.GroupId;
@@ -395,10 +396,10 @@ begin
   FOnAdjacentGroupStateChanged(FGrid, LContext);
 end;
 
-function Th5uGridView.TryGetTreeLevelFor(AViewRowIndex: Int64; const ARowKey: Th5uRowKey; out ALevel: Integer): Boolean;
+function Th5uGridView.TryGetTreeLevelFor(AViewRowIndex: Int64; const ARowKey: ThiiRowKey; out ALevel: Integer): Boolean;
 var
-  LColumn: Th5uGridColumn;
-  LContext: Th5uTreeLevelContext;
+  LColumn: ThiiGridColumn;
+  LContext: ThiiTreeLevelContext;
   LFieldName: string;
   LValue: TValue;
 begin
@@ -422,7 +423,7 @@ begin
 
   if Assigned(FOnGetTreeLevel) then
   begin
-    LContext := Default(Th5uTreeLevelContext);
+    LContext := Default(ThiiTreeLevelContext);
     LContext.Grid := FGrid;
     LContext.DataController := DataController;
     LContext.RowKey := ARowKey;
@@ -435,13 +436,13 @@ begin
     ALevel := Max(0, ALevel);
 end;
 
-function Th5uGridView.GetTreeBranchEndInfo(AViewRowIndex: Int64; const ARowKey: Th5uRowKey; out ATreeLevel: Integer; out AClosedTreeLevels: Integer): Boolean;
+function Th5uGridView.GetTreeBranchEndInfo(AViewRowIndex: Int64; const ARowKey: ThiiRowKey; out ATreeLevel: Integer; out AClosedTreeLevels: Integer): Boolean;
 var
-  LContext: Th5uTreeBranchEndContext;
+  LContext: ThiiTreeBranchEndContext;
   LCurrentAvailable: Boolean;
   LNextAvailable: Boolean;
   LNextIndex: Int64;
-  LNextKey: Th5uRowKey;
+  LNextKey: ThiiRowKey;
   LNextLevel: Integer;
   LHasNextRow: Boolean;
 begin
@@ -454,7 +455,7 @@ begin
   LCurrentAvailable := TryGetTreeLevelFor(AViewRowIndex, ARowKey, ATreeLevel);
 
   LNextIndex := AViewRowIndex + 1;
-  LNextKey := Th5uRowKey.Empty;
+  LNextKey := ThiiRowKey.Empty;
   LNextLevel := ATreeLevel;
   LNextAvailable := False;
   LHasNextRow := IsViewRowAvailable(LNextIndex);
@@ -482,7 +483,7 @@ begin
 
   if Assigned(FOnGetTreeBranchEnd) then
   begin
-    LContext := Default(Th5uTreeBranchEndContext);
+    LContext := Default(ThiiTreeBranchEndContext);
     LContext.Grid := FGrid;
     LContext.DataController := DataController;
     LContext.RowKey := ARowKey;

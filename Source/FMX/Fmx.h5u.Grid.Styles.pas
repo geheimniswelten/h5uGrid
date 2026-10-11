@@ -14,7 +14,7 @@ uses
   h5u.Grid.Types;
 
 type
-  Th5uFmxPalette = record
+  ThiiFmxPalette = record
     GridBackground: TAlphaColor;
     EmptyArea: TAlphaColor;
     CellBackground: TAlphaColor;
@@ -39,7 +39,7 @@ type
     ThumbHintText: TAlphaColor;
   end;
 
-function h5uGetFmxPalette(ATheme: Th5uGridTheme): Th5uFmxPalette;
+function h5uGetFmxPalette(ATheme: ThiiGridTheme): ThiiFmxPalette;
 function h5uColorToFmx(const AColor: TColor): TAlphaColor;
 
 implementation
@@ -60,10 +60,10 @@ begin
   Result := MakeColor(TColorRec(LColor).R, TColorRec(LColor).G, TColorRec(LColor).B);
 end;
 
-function h5uGetFmxPalette(ATheme: Th5uGridTheme): Th5uFmxPalette;
+function h5uGetFmxPalette(ATheme: ThiiGridTheme): ThiiFmxPalette;
 begin
   case ATheme of
-    Th5uGridTheme.Classic2000:
+    ThiiGridTheme.Classic2000:
       begin
         Result.GridBackground := $FFC0C0C0;
         Result.EmptyArea := $FFC0C0C0;
@@ -89,7 +89,7 @@ begin
         Result.ThumbHintText := $FF000000;
       end;
 
-    Th5uGridTheme.Dark:
+    ThiiGridTheme.Dark:
       begin
         Result.GridBackground := $FF242424;
         Result.EmptyArea := $FF202020;

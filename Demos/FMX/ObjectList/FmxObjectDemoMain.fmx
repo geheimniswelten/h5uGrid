@@ -52,7 +52,7 @@ object FmxObjectDemoForm: TFmxObjectDemoForm
       OnChange = OptionChange
     end
   end
-  object Grid: Th5uFmxGrid
+  object Grid: ThiiGrid
     Align = Client
     CanFocus = True
     ClipChildren = True
@@ -162,7 +162,7 @@ object FmxObjectDemoForm: TFmxObjectDemoForm
     Left = 160
     Top = 104
   end
-  object ObjectController: Th5uObjectListController
+  object ObjectController: ThiiObjectListController
     Cache.Mode = None
     Cache.MaxMemoryBytes = 67108864
     OwnsObjects = True

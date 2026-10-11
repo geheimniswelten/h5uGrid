@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased – 2026-10-12
+
+- Produktname `hiiGrid`; öffentliche Klassen und Typen verwenden `Thii…`, während Units, Packages und interne Helfer `h5u…` behalten.
+- VCL, FMX und LCL verwenden jeweils `ThiiGrid` und `ThiiCustomGrid`; die Haupt-Units bieten Aliase für ihre zugehörige öffentliche API.
+- PropertyEditor in eigenständige VCL-/FMX-Runtime-Units ausgelagert; Property-Modell, Werteditoren und Listencontroller in `h5u.PropertyEditor` zusammengeführt.
+- Grid und Strukturmodell hängen nicht vom PropertyEditor ab; die DesignTime-Registrierung verbleibt in den bisherigen Packages.
+- Demos, Formularressourcen, Tests und Dokumentation auf die neuen Namen und kürzere Uses-Listen umgestellt.
+- Delphi-Buildskript verwendet die vorhandenen Package-Namen und baut auch die beiden Mega-Demos.
+
+
 ## 0.2.0 – 2026-09-10
 
 - VCL/FMX: `AutoWidth` und `WidthInPercent` an Spalten; `LayoutWidth` hält das berechnete Ergebnis getrennt von `Width`.
@@ -94,7 +104,7 @@
 - `IncludeEndOfData` steuert den Abschluss des letzten Astes am Datenende,
 - der Look-ahead berücksichtigt nummerierte Seitengrenzen und behandelt ein Seitenende nicht als Datenende,
 - `OnGetTreeLevel` und `OnGetTreeBranchEnd` erlauben alternative Datenmodelle und Sonderregeln,
-- Factory- und CustomDraw-Kontext enthalten `TreeLevel`, `ClosedTreeLevels` und `Th5uElementKind.TreeBranchEndBand`,
+- Factory- und CustomDraw-Kontext enthalten `TreeLevel`, `ClosedTreeLevels` und `ThiiElementKind.TreeBranchEndBand`,
 - Separatoren und Tree-Abschlussleisten werden als gepoolte sichtbare Elemente über den lokalen Grid-Factory-Scope materialisiert,
 - VCL- und FMX-ClientDataset-Demos enthalten `TREE_LEVEL`-Musterdaten und einen zuschaltbaren Test,
 - veraltete Property-/Feldnamen in den ClientDataset-Demoformularen wurden bereinigt.
@@ -126,7 +136,7 @@ Erster testbarer Quellprototyp von `h5u.Grid`.
 - VCL-Referenzgrid und FMX-Basisgrid,
 - per Gridinstanz isolierte Factory-/Registry-Scopes,
 - Dataset-, Objektlisten-, VirtualSource- und Memory-Controller,
-- selbstbefüllendes `Th5uSampleClientDataset` für Design-Time-Demos,
+- selbstbefüllendes `ThiiSampleClientDataset` für Design-Time-Demos,
 - variable Zeilenhöhen und Text-AutoHeight,
 - mehrzeilige Headerlayouts,
 - Zeilen-, Spalten- und Zellbereichsselektion,

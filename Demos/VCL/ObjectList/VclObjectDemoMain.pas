@@ -14,8 +14,6 @@ uses
   Vcl.ExtCtrls,
   Vcl.Forms,
   Vcl.StdCtrls,
-  h5u.Grid.Types,
-  h5u.Grid.Data.Core,
   h5u.Grid.Data.Objects,
   Vcl.h5u.Grid;
 
@@ -49,8 +47,8 @@ type
     DarkCheck: TCheckBox;
     InfoLabel: TLabel;
     UpdateTimer: TTimer;
-    ObjectController: Th5uObjectListController;
-    Grid: Th5uVclGrid;
+    ObjectController: ThiiObjectListController;
+    Grid: ThiiGrid;
     procedure FormCreate(Sender: TObject);
     procedure AddButtonClick(Sender: TObject);
     procedure CacheCheckClick(Sender: TObject);
@@ -98,17 +96,17 @@ end;
 procedure TVclObjectDemoForm.CacheCheckClick(Sender: TObject);
 begin
   if CacheCheck.Checked then
-    ObjectController.Cache.Mode := Th5uCacheMode.Viewport
+    ObjectController.Cache.Mode := ThiiCacheMode.Viewport
   else
-    ObjectController.Cache.Mode := Th5uCacheMode.None;
+    ObjectController.Cache.Mode := ThiiCacheMode.None;
 end;
 
 procedure TVclObjectDemoForm.DarkCheckClick(Sender: TObject);
 begin
   if DarkCheck.Checked then
-    Grid.Theme := Th5uGridTheme.Dark
+    Grid.Theme := ThiiGridTheme.Dark
   else
-    Grid.Theme := Th5uGridTheme.ApplicationStyle;
+    Grid.Theme := ThiiGridTheme.ApplicationStyle;
 end;
 
 procedure TVclObjectDemoForm.FormCreate(Sender: TObject);

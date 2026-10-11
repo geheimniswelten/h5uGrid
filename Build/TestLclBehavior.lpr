@@ -12,11 +12,11 @@ uses
 
 type
   TNativeMouseButton = Controls.TMouseButton;
-  TGridProbe = class(Th5uLclGrid)
+  TGridProbe = class(ThiiGrid)
   public
     procedure Press(AKey: Word);
     procedure TypeUTF8(const AText: string);
-    procedure ClickCell(AColumn: Th5uGridColumn; ARow: Integer);
+    procedure ClickCell(AColumn: ThiiGridColumn; ARow: Integer);
     procedure Render(ABitmap: Graphics.TBitmap);
   end;
   TPickerProbe = class(TDateTimePicker)
@@ -72,17 +72,17 @@ begin
   Check(ABitmap.Canvas.Pixels[2, 2] <> clFuchsia, 'Grid painted into the target canvas');
 end;
 
-procedure TGridProbe.ClickCell(AColumn: Th5uGridColumn; ARow: Integer);
+procedure TGridProbe.ClickCell(AColumn: ThiiGridColumn; ARow: Integer);
 var
   X, Y: Integer;
-  H: Th5uHitTestInfo;
+  H: ThiiHitTestInfo;
 begin
   Repaint;
   for Y := HeaderRowHeight + 2 to ClientHeight - 1 do
     for X := 1 to ClientWidth - 1 do
     begin
       H := HitTest(X, Y);
-      if (H.Kind = Th5uHitKind.DataCell) and (H.Column = AColumn) and (H.RowIndex = ARow) then
+      if (H.Kind = ThiiHitKind.DataCell) and (H.Column = AColumn) and (H.RowIndex = ARow) then
       begin
         MouseDown(TNativeMouseButton(0), [], (H.Bounds.Left + H.Bounds.Right) div 2, (H.Bounds.Top + H.Bounds.Bottom) div 2);
         MouseUp(TNativeMouseButton(0), [], (H.Bounds.Left + H.Bounds.Right) div 2, (H.Bounds.Top + H.Bounds.Bottom) div 2);
@@ -105,13 +105,13 @@ procedure TestGrid;
 var
   F: TForm;
   G: TGridProbe;
-  Data: Th5uMemoryController;
-  NameCol, NumberCol, DateCol: Th5uGridColumn;
+  Data: ThiiMemoryController;
+  NameCol, NumberCol, DateCol: ThiiGridColumn;
   I: Integer;
-  Editor: Th5uLclCustomEditor;
+  Editor: ThiiLclCustomEditor;
   Picker: TDateTimePicker;
   V: TValue;
-  T: Th5uGridTheme;
+  T: ThiiGridTheme;
   B: Graphics.TBitmap;
   PNG: TPortableNetworkGraphic;
   Events: TEvents;
@@ -122,7 +122,7 @@ begin
     Application.OnException := @Events.Failed;
     F.Caption := 'h5u.Grid LCL regression';
     F.SetBounds(160, 140, 760, 440);
-    Data := Th5uMemoryController.Create(F);
+    Data := ThiiMemoryController.Create(F);
     for I := 0 to 99 do
       Data.AppendValues(['Name', 'Count', 'Date'], [TValue.specialize From<string>('Row ' + IntToStr(I)), TValue.specialize From<Integer
         >(I), TValue.specialize From<TDateTime>(EncodeDate(2026, 9, 13))]);
@@ -138,16 +138,16 @@ begin
     NameCol.FieldName := 'Name';
     NameCol.Caption := 'Name / UTF-8';
     NameCol.Width := 250;
-    NameCol.DataType := Th5uColumnDataType.Text;
+    NameCol.DataType := ThiiColumnDataType.Text;
     NumberCol := G.Columns.Add;
     NumberCol.Id := 'count';
     NumberCol.FieldName := 'Count';
-    NumberCol.DataType := Th5uColumnDataType.Integer;
+    NumberCol.DataType := ThiiColumnDataType.Integer;
     DateCol := G.Columns.Add;
     DateCol.Id := 'date';
     DateCol.FieldName := 'Date';
     DateCol.Width := 200;
-    DateCol.DataType := Th5uColumnDataType.DateTime;
+    DateCol.DataType := ThiiColumnDataType.DateTime;
     F.Show;
     Application.ProcessMessages;
     G.Repaint;
@@ -155,7 +155,7 @@ begin
     Check(G.Selection.FocusedCell.IsValid, 'Mouse selection establishes focused cell');
     G.Press(VK_F2);
     Check(Assigned(G.ActiveEditor), 'F2 starts editor');
-    Check(G.ActiveEditor is Th5uLclTextEditor, 'Text editor registration and F2');
+    Check(G.ActiveEditor is ThiiLclTextEditor, 'Text editor registration and F2');
     G.ActiveEditor.SetText('Grüße 東京');
     SendEditorKey(G, VK_RETURN);
     Check(h5uValueAsText(Data.GetValue(0, 'Name')) = string('Grüße 東京'), 'UTF-8 commit');
@@ -169,14 +169,14 @@ begin
     Check(G.Selection.FocusedCell.RowIndex = 1, 'UTF-8 case-insensitive typeahead');
     G.ClickCell(NumberCol, 0);
     G.Press(VK_F2);
-    Check(G.ActiveEditor is Th5uLclIntegerEditor, 'Integer editor registration');
+    Check(G.ActiveEditor is ThiiLclIntegerEditor, 'Integer editor registration');
     G.ActiveEditor.SetText('42');
     SendEditorKey(G, VK_RETURN);
     Check(Data.GetValue(0, 'Count').AsInt64 = 42, 'Integer commit');
     G.ClickCell(DateCol, 0);
     G.Press(VK_F2);
-    Check(G.ActiveEditor is Th5uLclDateTimeEditor, 'DateTime editor registration');
-    Editor := Th5uLclCustomEditor(G.ActiveEditor);
+    Check(G.ActiveEditor is ThiiLclDateTimeEditor, 'DateTime editor registration');
+    Editor := ThiiLclCustomEditor(G.ActiveEditor);
     Picker := TDateTimePicker(Editor.Control);
     Check(Picker.Kind = dtkDateTime, 'Combined date and time picker');
     Editor.OnChange := @Events.Changed;
@@ -208,7 +208,7 @@ begin
     PNG := TPortableNetworkGraphic.Create;
     try
       B.SetSize(G.Width, G.Height);
-      for T := Low(Th5uGridTheme) to High(Th5uGridTheme) do
+      for T := Low(ThiiGridTheme) to High(ThiiGridTheme) do
       begin
         G.Theme := T;
         G.Repaint;
@@ -216,7 +216,7 @@ begin
       end;
       if ParamCount > 1 then
       begin
-        G.Theme := Th5uGridTheme.Modern;
+        G.Theme := ThiiGridTheme.Modern;
         G.Render(B);
         PNG.Assign(B);
         PNG.SaveToFile(ParamStr(2));

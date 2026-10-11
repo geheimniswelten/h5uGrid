@@ -55,17 +55,17 @@ end;
 
 procedure TestColumnWidths;
 var
-  C, CopyColumns: Th5uGridColumns;
-  H, CopyHeader: Th5uHeaderLayout;
-  A, B, D, Outside: Th5uGridColumn;
-  G, Nested: Th5uHeaderLayoutCell;
+  C, CopyColumns: ThiiGridColumns;
+  H, CopyHeader: ThiiHeaderLayout;
+  A, B, D, Outside: ThiiGridColumn;
+  G, Nested: ThiiHeaderLayoutCell;
   I: Integer;
   Total: Single;
 begin
-  C := Th5uGridColumns.Create(nil);
-  H := Th5uHeaderLayout.Create(nil);
-  CopyColumns := Th5uGridColumns.Create(nil);
-  CopyHeader := Th5uHeaderLayout.Create(nil);
+  C := ThiiGridColumns.Create(nil);
+  H := ThiiHeaderLayout.Create(nil);
+  CopyColumns := ThiiGridColumns.Create(nil);
+  CopyHeader := ThiiHeaderLayout.Create(nil);
   try
     A := C.Add; A.Id := 'fixed'; A.Width := 100;
     B := C.Add; B.Id := 'quarter'; B.WidthInPercent := 25;
@@ -75,7 +75,8 @@ begin
     Check((B.Width = -25) and (D.Width = -75), 'layout must preserve configured percentage specifications');
     B.MinWidth := 150;
     h5uResolveColumnWidths(C, H, 1, 503);
-    Check((B.LayoutWidth = 150) and (D.LayoutWidth = 250), Format('minimum redistributes remaining width: %.9f %.9f', [B.LayoutWidth, D.LayoutWidth]));
+    Check((B.LayoutWidth = 150) and (D.LayoutWidth = 250),
+      Format('minimum redistributes remaining width: %.9f %.9f', [B.LayoutWidth, D.LayoutWidth]));
     B.MinWidth := 24;
     D.MaxWidth := 200;
     h5uResolveColumnWidths(C, H, 1, 503);
@@ -96,12 +97,12 @@ begin
     Check(D.LayoutWidth = 401, 'hidden columns consume neither width nor spacing');
     B.Visible := True;
     B.AutoWidth := False;
-    A.FixedKind := Th5uFixedKind.Left;
-    D.FixedKind := Th5uFixedKind.Right;
+    A.FixedKind := ThiiFixedKind.Left;
+    D.FixedKind := ThiiFixedKind.Right;
     h5uResolveColumnWidths(C, H, 1, 504);
     Check(B.LayoutWidth + D.LayoutWidth = 401, 'rounding conserves pixels including pinned columns');
-    A.FixedKind := Th5uFixedKind.None;
-    D.FixedKind := Th5uFixedKind.None;
+    A.FixedKind := ThiiFixedKind.None;
+    D.FixedKind := ThiiFixedKind.None;
     h5uTryResizeColumn(C, B, B.LayoutWidth, 10);
     Check((B.WidthInPercent = 0) and not B.AutoWidth, 'manual resizing selects pixel mode');
     B.WidthInPercent := 30;
@@ -163,13 +164,13 @@ end;
 type
   TWidthStreamHost = class(TComponent)
   private
-    FColumns: Th5uGridColumns;
-    FHeader: Th5uHeaderLayout;
+    FColumns: ThiiGridColumns;
+    FHeader: ThiiHeaderLayout;
     FModernSizing: Boolean;
-    FSizing: Th5uColumnSizingOptions;
-    procedure SetColumns(AValue: Th5uGridColumns);
-    procedure SetHeader(AValue: Th5uHeaderLayout);
-    procedure SetSizing(AValue: Th5uColumnSizingOptions);
+    FSizing: ThiiColumnSizingOptions;
+    procedure SetColumns(AValue: ThiiGridColumns);
+    procedure SetHeader(AValue: ThiiHeaderLayout);
+    procedure SetSizing(AValue: ThiiColumnSizingOptions);
   protected
     procedure Loaded; override;
   public
@@ -177,17 +178,17 @@ type
     destructor Destroy; override;
   published
     property ModernSizing: Boolean read FModernSizing write FModernSizing;
-    property Columns: Th5uGridColumns read FColumns write SetColumns;
-    property Header: Th5uHeaderLayout read FHeader write SetHeader;
-    property Sizing: Th5uColumnSizingOptions read FSizing write SetSizing;
+    property Columns: ThiiGridColumns read FColumns write SetColumns;
+    property Header: ThiiHeaderLayout read FHeader write SetHeader;
+    property Sizing: ThiiColumnSizingOptions read FSizing write SetSizing;
   end;
 
 constructor TWidthStreamHost.Create(AOwner: TComponent);
 begin
   inherited;
-  FColumns := Th5uGridColumns.Create(Self);
-  FHeader := Th5uHeaderLayout.Create(Self);
-  FSizing := Th5uColumnSizingOptions.Create;
+  FColumns := ThiiGridColumns.Create(Self);
+  FHeader := ThiiHeaderLayout.Create(Self);
+  FSizing := ThiiColumnSizingOptions.Create;
 end;
 
 destructor TWidthStreamHost.Destroy;
@@ -198,17 +199,17 @@ begin
   inherited;
 end;
 
-procedure TWidthStreamHost.SetColumns(AValue: Th5uGridColumns);
+procedure TWidthStreamHost.SetColumns(AValue: ThiiGridColumns);
 begin
   FColumns.Assign(AValue);
 end;
 
-procedure TWidthStreamHost.SetHeader(AValue: Th5uHeaderLayout);
+procedure TWidthStreamHost.SetHeader(AValue: ThiiHeaderLayout);
 begin
   FHeader.Assign(AValue);
 end;
 
-procedure TWidthStreamHost.SetSizing(AValue: Th5uColumnSizingOptions);
+procedure TWidthStreamHost.SetSizing(AValue: ThiiColumnSizingOptions);
 begin
   FSizing.Assign(AValue);
 end;
@@ -229,33 +230,32 @@ end;
 
 procedure TestUnifiedColumnWidths;
 var
-  LColumns: Th5uGridColumns;
-  LHeader: Th5uHeaderLayout;
-  LOptions, LCopyOptions: Th5uColumnSizingOptions;
-  LCheck, LText, LOther: Th5uGridColumn;
-  LGroup: Th5uHeaderLayoutCell;
-  LValue: Th5uWidth;
+  LColumns: ThiiGridColumns;
+  LHeader: ThiiHeaderLayout;
+  LOptions, LCopyOptions: ThiiColumnSizingOptions;
+  LCheck, LText, LOther: ThiiGridColumn;
+  LGroup: ThiiHeaderLayoutCell;
+  LValue: ThiiWidth;
   LHost, LCopyHost: TWidthStreamHost;
   LSource: TStringStream;
   LStream: TMemoryStream;
   LFailed: Boolean;
   LSavedDecimal: Char;
 begin
-  LColumns := Th5uGridColumns.Create(nil);
-  LHeader := Th5uHeaderLayout.Create(nil);
-  LOptions := Th5uColumnSizingOptions.Create;
-  LCopyOptions := Th5uColumnSizingOptions.Create;
+  LColumns := ThiiGridColumns.Create(nil);
+  LHeader := ThiiHeaderLayout.Create(nil);
+  LOptions := ThiiColumnSizingOptions.Create;
+  LCopyOptions := ThiiColumnSizingOptions.Create;
   try
     LCheck := LColumns.Add;
     LCheck.SetWidthDefaults(28, 28, 28, 1000);
     LText := LColumns.Add;
     LText.Width := 200;
-    h5uResolveColumnWidths(LColumns, LHeader, 0, 1000, 0, 0, Th5uColumnFitMode.AllColumns);
-    Check((LCheck.LayoutWidth = 28) and (LText.LayoutWidth = 972),
-      'AllColumns preserves fixed editor bounds and gives text the remaining width');
+    h5uResolveColumnWidths(LColumns, LHeader, 0, 1000, 0, 0, ThiiColumnFitMode.AllColumns);
+    Check((LCheck.LayoutWidth = 28) and (LText.LayoutWidth = 972), 'AllColumns preserves fixed editor bounds and gives text the remaining width');
     Check((LCheck.Width = 0) and (LText.Width = 200), 'fitting must preserve requested widths');
     LText.MinWidth := 80;
-    h5uResolveColumnWidths(LColumns, LHeader, 0, 40, 0, 0, Th5uColumnFitMode.AllColumns);
+    h5uResolveColumnWidths(LColumns, LHeader, 0, 40, 0, 0, ThiiColumnFitMode.AllColumns);
     Check((LCheck.LayoutWidth = 28) and (LText.LayoutWidth = 80), 'fitting never scales pixel minima');
     LCheck.Visible := False;
     LOther := LColumns.Add;
@@ -263,35 +263,35 @@ begin
     LText.MinWidth := 0;
     LOther.Width := 200;
     LOther.MinWidth := 0;
-    h5uResolveColumnWidths(LColumns, LHeader, 0, 900, 0, 0, Th5uColumnFitMode.AllColumns);
+    h5uResolveColumnWidths(LColumns, LHeader, 0, 900, 0, 0, ThiiColumnFitMode.AllColumns);
     Check((LText.LayoutWidth = 300) and (LOther.LayoutWidth = 600), 'pixel widths become relative in AllColumns');
     LText.AutoWidth := True;
     LText.SetMeasuredWidth(100);
-    h5uResolveColumnWidths(LColumns, LHeader, 0, 900, 0, 0, Th5uColumnFitMode.AllColumns);
+    h5uResolveColumnWidths(LColumns, LHeader, 0, 900, 0, 0, ThiiColumnFitMode.AllColumns);
     Check((LText.LayoutWidth = 300) and (LOther.LayoutWidth = 600), 'AllColumns includes measured AutoWidth in proportional fitting');
     LText.AutoWidth := False;
     LText.Width := -20;
     LOther.Width := -20;
-    h5uResolveColumnWidths(LColumns, LHeader, 0, 1000, 0, 0, Th5uColumnFitMode.None);
+    h5uResolveColumnWidths(LColumns, LHeader, 0, 1000, 0, 0, ThiiColumnFitMode.None);
     Check((LText.LayoutWidth = 200) and (LOther.LayoutWidth = 200), 'None treats percentages as literal viewport fractions');
-    h5uResolveColumnWidths(LColumns, LHeader, 0, 1000, 0, 0, Th5uColumnFitMode.PercentColumns);
+    h5uResolveColumnWidths(LColumns, LHeader, 0, 1000, 0, 0, ThiiColumnFitMode.PercentColumns);
     Check((LText.LayoutWidth = 500) and (LOther.LayoutWidth = 500), 'PercentColumns normalizes visible percentage weights');
     LText.Width := -200;
     LOther.Width := -12.5;
-    h5uResolveColumnWidths(LColumns, LHeader, 0, 1000, 0, 0, Th5uColumnFitMode.None);
+    h5uResolveColumnWidths(LColumns, LHeader, 0, 1000, 0, 0, ThiiColumnFitMode.None);
     Check((LText.LayoutWidth = 2000) and (LOther.LayoutWidth = 125), 'percent widths allow fractions and values over100');
     LText.Width := 100;
     LText.MaxWidth := -25;
     LOther.Width := 100;
-    h5uResolveColumnWidths(LColumns, LHeader, 0, 1000, 0, 0, Th5uColumnFitMode.AllColumns);
+    h5uResolveColumnWidths(LColumns, LHeader, 0, 1000, 0, 0, ThiiColumnFitMode.AllColumns);
     Check((LText.LayoutWidth = 250) and (LOther.LayoutWidth = 750), 'resolved percent maxima are bounds rather than fitting weights');
-    h5uResolveColumnWidths(LColumns, LHeader, 0, 800, 0, 0, Th5uColumnFitMode.AllColumns);
+    h5uResolveColumnWidths(LColumns, LHeader, 0, 800, 0, 0, ThiiColumnFitMode.AllColumns);
     Check((LText.LayoutWidth = 200) and (LOther.LayoutWidth = 600), 'percent maximum follows current reference width');
     LText.Width := 0;
     LText.MaxWidth := 0;
     LText.SetWidthDefaults(-25, 12, 700, 1000);
     LOther.Visible := False;
-    h5uResolveColumnWidths(LColumns, LHeader, 0, 1000, 0, 0, Th5uColumnFitMode.None);
+    h5uResolveColumnWidths(LColumns, LHeader, 0, 1000, 0, 0, ThiiColumnFitMode.None);
     Check(LText.LayoutWidth = 250, 'default chain may itself resolve to a percentage');
     LText.SetWidthDefaults(100, 12, 3000, 1000);
     LText.AutoWidth := True;
@@ -306,19 +306,18 @@ begin
     LGroup := LHeader.Cells.Add;
     LGroup.ColumnSpan := 2;
     LGroup.Width := 400;
-    h5uResolveColumnWidths(LColumns, LHeader, 0, 1000, 0, 0, Th5uColumnFitMode.None);
+    h5uResolveColumnWidths(LColumns, LHeader, 0, 1000, 0, 0, ThiiColumnFitMode.None);
     Check((LText.LayoutWidth = 200) and (LOther.LayoutWidth = 200), 'literal child percentages use their enclosing group width');
     LText.MaxWidth := -25;
-    h5uResolveColumnWidths(LColumns, LHeader, 0, 1000, 0, 0, Th5uColumnFitMode.PercentColumns);
+    h5uResolveColumnWidths(LColumns, LHeader, 0, 1000, 0, 0, ThiiColumnFitMode.PercentColumns);
     Check((LText.LayoutWidth = 100) and (LOther.LayoutWidth = 300), 'nested percentage maximum resolves from allocated group');
     LOptions.DefaultWidth := -12.5;
     LOptions.DefaultMaxWidth := -200;
-    LOptions.FitMode := Th5uColumnFitMode.AllColumns;
-    LOptions.MaxWidthSource := Th5uMaxWidthSource.Monitor;
+    LOptions.FitMode := ThiiColumnFitMode.AllColumns;
+    LOptions.MaxWidthSource := ThiiMaxWidthSource.Monitor;
     LCopyOptions.Assign(LOptions);
-    Check((LCopyOptions.DefaultWidth = -12.5) and (LCopyOptions.DefaultMaxWidth = -200)
-      and (LCopyOptions.FitMode = Th5uColumnFitMode.AllColumns)
-      and (LCopyOptions.MaxWidthSource = Th5uMaxWidthSource.Monitor), 'sizing Assign copies settings');
+    Check((LCopyOptions.DefaultWidth = -12.5) and (LCopyOptions.DefaultMaxWidth = -200) and (LCopyOptions.FitMode = ThiiColumnFitMode.AllColumns)
+      and (LCopyOptions.MaxWidthSource = ThiiMaxWidthSource.Monitor), 'sizing Assign copies settings');
     Check(h5uTryTextToWidth('Default', LValue) and (LValue = 0), 'default width input');
     Check(h5uTryTextToWidth('200 %', LValue) and (LValue = -200), 'percent width input');
     Check(h5uTryTextToWidth('120 px', LValue) and (LValue = 120), 'pixel width input');
@@ -351,16 +350,11 @@ begin
     LColumns.Free;
   end;
   RegisterClass(TWidthStreamHost);
-  LSource := TStringStream.Create(
-    'object WidthHost: TWidthStreamHost' + sLineBreak
-    + '  Columns = <' + sLineBreak
-    + '    item end' + sLineBreak
-    + '    item Width = 120 MaxWidth = 0 WidthInPercent = 25.0 end' + sLineBreak
-    + '    item WidthInPercent = 12.5 Width = 200 MaxWidth = 400 end' + sLineBreak
-    + '    item Width = -75.0 WidthInPercent = 25.0 end' + sLineBreak
+  LSource := TStringStream.Create('object WidthHost: TWidthStreamHost' + sLineBreak + '  Columns = <' + sLineBreak + '    item end' + sLineBreak
+    + '    item Width = 120 MaxWidth = 0 WidthInPercent = 25.0 end' + sLineBreak + '    item WidthInPercent = 12.5 Width = 200 MaxWidth = 400 end'
+    + sLineBreak + '    item Width = -75.0 WidthInPercent = 25.0 end' + sLineBreak
     + '    item Width = 123.25 MinWidth = 12.5 MaxWidth = 536870911 end>' + sLineBreak
-    + '  Header.Cells = <item WidthInPercent = 25.0 Width = 100 end>' + sLineBreak
-    + 'end');
+    + '  Header.Cells = <item WidthInPercent = 25.0 Width = 100 end>' + sLineBreak + 'end');
   LStream := TMemoryStream.Create;
   LHost := nil;
   LCopyHost := nil;
@@ -368,15 +362,14 @@ begin
     ObjectTextToBinary(LSource, LStream);
     LStream.Position := 0;
     LHost := TWidthStreamHost(LStream.ReadComponent(nil));
-    Check((LHost.Columns[0].Width = 100) and (LHost.Columns[0].MaxWidth = 1000),
-      'legacy omitted column defaults survive migration');
+    Check((LHost.Columns[0].Width = 100) and (LHost.Columns[0].MaxWidth = 1000), 'legacy omitted column defaults survive migration');
     Check((LHost.Columns[1].Width = -25) and (LHost.Columns[1].MaxWidth = h5uUnlimitedWidth),
       'legacy integer width, zero unlimited maximum and percentage survive migration');
     Check((LHost.Columns[2].Width = -12.5) and (LHost.Columns[2].MaxWidth = 400),
       'legacy percentage migration does not depend on stream property order');
     Check(LHost.Columns[3].Width = -75, 'new negative width wins over old percentage property');
-    Check((LHost.Columns[4].Width = 123.25) and (LHost.Columns[4].MinWidth = 12.5)
-      and (LHost.Columns[4].MaxWidth = h5uUnlimitedWidth), 'old numeric sentinel and fractional properties load into Single storage');
+    Check((LHost.Columns[4].Width = 123.25) and (LHost.Columns[4].MinWidth = 12.5) and (LHost.Columns[4].MaxWidth = h5uUnlimitedWidth),
+      'old numeric sentinel and fractional properties load into Single storage');
     Check(LHost.Header.Cells[0].Width = -25, 'legacy group percentage does not depend on stream order');
     LHost.ModernSizing := True;
     LHost.Columns[0].Width := 0;
@@ -388,13 +381,14 @@ begin
     LStream.WriteComponent(LHost);
     LStream.Position := 0;
     LCopyHost := TWidthStreamHost(LStream.ReadComponent(nil));
-    Check((LCopyHost.Columns[0].Width = 0) and (LCopyHost.Columns[0].MaxWidth = 0)
-      and (LCopyHost.Columns[0].MinWidth = 0), Format('modern default widths and explicit zero minimum round trip %.4f %.4f %.4f', [LCopyHost.Columns[0].Width, LCopyHost.Columns[0].MaxWidth, LCopyHost.Columns[0].MinWidth]));
+    Check((LCopyHost.Columns[0].Width = 0) and (LCopyHost.Columns[0].MaxWidth = 0) and (LCopyHost.Columns[0].MinWidth = 0),
+      Format('modern default widths and explicit zero minimum round trip %.4f %.4f %.4f',
+      [LCopyHost.Columns[0].Width, LCopyHost.Columns[0].MaxWidth, LCopyHost.Columns[0].MinWidth]));
     Check(LCopyHost.Columns[2].Width = -12.5, 'modern fractional percent width round trip');
     Check((LCopyHost.Columns[0].RightSpacing = 0) and (LCopyHost.Columns[0].MaxAutoHeight = 0),
       'explicit zero Single values survive nonzero constructor defaults');
-    Check((LCopyHost.Columns[4].Width = 123.25) and (LCopyHost.Columns[4].MinWidth = 12.5)
-      and (LCopyHost.Columns[4].MaxWidth = h5uUnlimitedWidth), 'Single widths and normalized sentinel round trip');
+    Check((LCopyHost.Columns[4].Width = 123.25) and (LCopyHost.Columns[4].MinWidth = 12.5) and (LCopyHost.Columns[4].MaxWidth = h5uUnlimitedWidth),
+      'Single widths and normalized sentinel round trip');
     Writeln('PASS: unified width modes, unscaled bounds, type defaults, nested percent limits, text input and legacy streams');
   finally
     LCopyHost.Free;
@@ -407,15 +401,15 @@ end;
 
 procedure TestNormalizedGroupMaxima;
 var
-  LColumns: Th5uGridColumns;
-  LHeader: Th5uHeaderLayout;
-  LColumn: Th5uGridColumn;
-  LGroup: Th5uHeaderLayoutCell;
+  LColumns: ThiiGridColumns;
+  LHeader: ThiiHeaderLayout;
+  LColumn: ThiiGridColumn;
+  LGroup: ThiiHeaderLayoutCell;
   I: Integer;
-  LFitMode: Th5uColumnFitMode;
+  LFitMode: ThiiColumnFitMode;
 begin
-  LColumns := Th5uGridColumns.Create(nil);
-  LHeader := Th5uHeaderLayout.Create(nil);
+  LColumns := ThiiGridColumns.Create(nil);
+  LHeader := ThiiHeaderLayout.Create(nil);
   try
     LHeader.Enabled := True;
     for I := 0 to 1 do
@@ -428,31 +422,27 @@ begin
       LGroup.LayoutColumn := I;
       LGroup.Width := -20;
     end;
-    for LFitMode in [Th5uColumnFitMode.PercentColumns, Th5uColumnFitMode.AllColumns] do
+    for LFitMode in [ThiiColumnFitMode.PercentColumns, ThiiColumnFitMode.AllColumns] do
     begin
       h5uResolveColumnWidths(LColumns, LHeader, 0, 1000, 0, 0, LFitMode);
       Check((LColumns[0].LayoutWidth = 500) and (LColumns[1].LayoutWidth = 500),
-        Format('normalized group maxima must use allocated reference: %g/%g',
-          [LColumns[0].LayoutWidth, LColumns[1].LayoutWidth]));
+        Format('normalized group maxima must use allocated reference: %g/%g', [LColumns[0].LayoutWidth, LColumns[1].LayoutWidth]));
     end;
     LColumns[0].MaxWidth := -100;
     LColumns[1].MaxWidth := -100;
     h5uResolveColumnWidths(LColumns, LHeader, 0, 1000);
-    Check((LColumns[0].LayoutWidth = 500) and (LColumns[1].LayoutWidth = 500),
-      '100 percent child maxima do not freeze preliminary group widths');
+    Check((LColumns[0].LayoutWidth = 500) and (LColumns[1].LayoutWidth = 500), '100 percent child maxima do not freeze preliminary group widths');
     for I := 0 to 1 do
     begin
       LColumns[I].MaxWidth := 0;
       LColumns[I].SetWidthDefaults(100, 0, -200, 1000);
     end;
     h5uResolveColumnWidths(LColumns, LHeader, 0, 1000);
-    Check((LColumns[0].LayoutWidth = 500) and (LColumns[1].LayoutWidth = 500),
-      'inherited percentage maxima use the eventual group reference');
+    Check((LColumns[0].LayoutWidth = 500) and (LColumns[1].LayoutWidth = 500), 'inherited percentage maxima use the eventual group reference');
     LColumns[0].MaxWidth := 300;
     LColumns[1].MaxWidth := 2000;
     h5uResolveColumnWidths(LColumns, LHeader, 0, 1000);
-    Check((LColumns[0].LayoutWidth = 300) and (LColumns[1].LayoutWidth = 700),
-      'static child maximum remains an absolute group cap');
+    Check((LColumns[0].LayoutWidth = 300) and (LColumns[1].LayoutWidth = 700), 'static child maximum remains an absolute group cap');
     LColumns.Clear;
     LHeader.Cells.Clear;
     LColumn := LColumns.Add;
@@ -477,17 +467,16 @@ begin
     LGroup.Width := -100;
     LGroup.LayoutRow := 1;
     LGroup.ColumnSpan := 2;
-    for LFitMode in [Th5uColumnFitMode.PercentColumns, Th5uColumnFitMode.AllColumns] do
+    for LFitMode in [ThiiColumnFitMode.PercentColumns, ThiiColumnFitMode.AllColumns] do
     begin
       h5uResolveColumnWidths(LColumns, LHeader, 0, 1000, 0, 0, LFitMode);
-      Check((LColumns[0].LayoutWidth = 100) and (LColumns[1].LayoutWidth = 100)
-        and (LColumns[2].LayoutWidth = 800),
+      Check((LColumns[0].LayoutWidth = 100) and (LColumns[1].LayoutWidth = 100) and (LColumns[2].LayoutWidth = 800),
         'nested group with fixed100 and percent maximum50 has intrinsic maximum200');
     end;
     LColumns[1].MaxWidth := -12.5;
     h5uResolveColumnWidths(LColumns, LHeader, 0, 1000);
-    Check((LColumns[0].LayoutWidth = 100) and (Abs(LColumns[1].LayoutWidth - 100 / 7) < 0.001)
-      and (Abs(LColumns[2].LayoutWidth - 6200 / 7) < 0.001), 'fractional intrinsic limits remain unquantized');
+    Check((LColumns[0].LayoutWidth = 100) and (Abs(LColumns[1].LayoutWidth - 100 / 7) < 0.001) and (Abs(LColumns[2].LayoutWidth - 6200 / 7) < 0.001),
+      'fractional intrinsic limits remain unquantized');
     Writeln('PASS: normalized group-relative percentage maxima and intrinsic nested limits');
   finally
     LHeader.Free;
@@ -530,12 +519,9 @@ begin
     LStream.WriteDescendent(LDescendant, LAncestor);
     LStream.Position := 0;
     LStream.ReadComponent(LLoaded);
-    Check((LLoaded.Sizing.DefaultWidth = 0) and (LLoaded.Sizing.DefaultMaxWidth = 0),
-      'inherited form resets nonzero sizing defaults to Default');
-    Check((LLoaded.Columns[0].Width = 0) and (LLoaded.Columns[0].MaxWidth = 0),
-      'inherited form resets column width and maximum to Default');
-    Check((LLoaded.Header.Cells[0].Width = 0) and (LLoaded.Header.Cells[0].MaxWidth = 0),
-      'inherited form resets group width and maximum to Default');
+    Check((LLoaded.Sizing.DefaultWidth = 0) and (LLoaded.Sizing.DefaultMaxWidth = 0), 'inherited form resets nonzero sizing defaults to Default');
+    Check((LLoaded.Columns[0].Width = 0) and (LLoaded.Columns[0].MaxWidth = 0), 'inherited form resets column width and maximum to Default');
+    Check((LLoaded.Header.Cells[0].Width = 0) and (LLoaded.Header.Cells[0].MaxWidth = 0), 'inherited form resets group width and maximum to Default');
     Writeln('PASS: inherited form streaming preserves explicit resets to width defaults');
   finally
     LStream.Free;
@@ -548,17 +534,17 @@ end;
 
 procedure TestSingleWidthGeometry;
 var
-  LColumns: Th5uGridColumns;
-  LHeader: Th5uHeaderLayout;
-  LValue: Th5uWidth;
+  LColumns: ThiiGridColumns;
+  LHeader: ThiiHeaderLayout;
+  LValue: ThiiWidth;
   LBefore: Single;
 begin
-  Check(SizeOf(Th5uWidth) = SizeOf(Single), 'public width type must use Single storage');
+  Check(SizeOf(ThiiWidth) = SizeOf(Single), 'public width type must use Single storage');
   Check(h5uTryTextToWidth('536870911', LValue) and (LValue = h5uUnlimitedWidth),
     'previous unlimited sentinel is accepted and normalized to its exact Single value');
   Check(h5uWidthToText(LValue) = 'Unlimited', 'normalized sentinel retains its display name');
-  LColumns := Th5uGridColumns.Create(nil);
-  LHeader := Th5uHeaderLayout.Create(nil);
+  LColumns := ThiiGridColumns.Create(nil);
+  LHeader := ThiiHeaderLayout.Create(nil);
   try
     LColumns.Add.Width := 100.25;
     LColumns[0].MinWidth := 12.5;
@@ -566,14 +552,12 @@ begin
     LColumns[0].RightSpacing := 0.25;
     LColumns.Add.Width := -100;
     h5uResolveColumnWidths(LColumns, LHeader, 0.5, 300.75);
-    Check((LColumns[0].LayoutWidth = 100.25) and (LColumns[1].LayoutWidth = 199.75),
-      'fractional fixed width and spacing survive shared allocation');
+    Check((LColumns[0].LayoutWidth = 100.25) and (LColumns[1].LayoutWidth = 199.75), 'fractional fixed width and spacing survive shared allocation');
     LColumns[0].SetMeasuredWidth(70.75);
     Check(LColumns[0].MeasuredWidth = 70.75, 'measured width cache preserves fractional geometry');
     LColumns[0].AutoWidth := True;
     h5uResolveColumnWidths(LColumns, LHeader, 0.5, 300.75);
-    Check((LColumns[0].LayoutWidth = 70.75) and (LColumns[1].LayoutWidth = 229.25),
-      'AutoWidth does not quantize its measured value');
+    Check((LColumns[0].LayoutWidth = 70.75) and (LColumns[1].LayoutWidth = 229.25), 'AutoWidth does not quantize its measured value');
     LBefore := LColumns[0].LayoutWidth;
     h5uTryResizeColumn(LColumns, LColumns[0], LBefore, 0.125);
     Check(LColumns[0].Width = 70.875, 'manual logical resize preserves fractional deltas');
@@ -584,13 +568,12 @@ begin
     LColumns[1].Width := -100;
     LColumns[1].MaxWidth := 100;
     h5uResolveColumnWidths(LColumns, LHeader, 0, 500.25);
-    Check((Abs(LColumns[0].LayoutWidth - 400.25) < 0.001)
-      and (LColumns[1].LayoutWidth = 100), 'tiny Single weights receive remainder after other columns reach their maxima');
+    Check((Abs(LColumns[0].LayoutWidth - 400.25) < 0.001) and (LColumns[1].LayoutWidth = 100),
+      'tiny Single weights receive remainder after other columns reach their maxima');
     LColumns[0].Width := -100;
     LColumns[1].MaxWidth := 1000;
     h5uResolveColumnWidths(LColumns, LHeader, 0, 101.25);
-    Check((LColumns[0].LayoutWidth = 50.625) and (LColumns[1].LayoutWidth = 50.625),
-      'equal columns retain subpixel proportions');
+    Check((LColumns[0].LayoutWidth = 50.625) and (LColumns[1].LayoutWidth = 50.625), 'equal columns retain subpixel proportions');
     Writeln('PASS: Single widths, fractional layout/measurement/resize and legacy unlimited sentinel');
   finally
     LHeader.Free;
@@ -600,13 +583,13 @@ end;
 
 procedure TestResizeBoundaries;
 var
-  LColumns: Th5uGridColumns;
-  LOptions: Th5uCustomizationOptions;
+  LColumns: ThiiGridColumns;
+  LOptions: ThiiCustomizationOptions;
   LItems: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uResizeCandidate>;
-  LRemoved: Th5uGridColumn;
+  LRemoved: ThiiGridColumn;
 begin
-  LColumns := Th5uGridColumns.Create(nil);
-  LOptions := Th5uCustomizationOptions.Create;
+  LColumns := ThiiGridColumns.Create(nil);
+  LOptions := ThiiCustomizationOptions.Create;
   try
     SetLength(LItems, 2);
     LItems[0].Column := LColumns.Add;
@@ -650,15 +633,15 @@ end;
 type
   TNavigationData = class
     UnicodeText: Boolean;
-    function RowKey(ARow: Int64): Th5uRowKey;
+    function RowKey(ARow: Int64): ThiiRowKey;
     function Extent(ARow: Int64): Single;
     procedure Prepare(AFirst, ACount: Int64);
-    function Text(AColumn: Th5uGridColumn; ARow: Int64; ADisplay: Boolean): string;
+    function Text(AColumn: ThiiGridColumn; ARow: Int64; ADisplay: Boolean): string;
   end;
 
-function TNavigationData.RowKey(ARow: Int64): Th5uRowKey;
+function TNavigationData.RowKey(ARow: Int64): ThiiRowKey;
 begin
-  Result := Th5uRowKey.FromInt64(ARow + 100);
+  Result := ThiiRowKey.FromInt64(ARow + 100);
 end;
 
 function TNavigationData.Extent(ARow: Int64): Single;
@@ -671,7 +654,7 @@ begin
   Check((AFirst >= 0) and (ACount = 1), 'search preparation range');
 end;
 
-function TNavigationData.Text(AColumn: Th5uGridColumn; ARow: Int64; ADisplay: Boolean): string;
+function TNavigationData.Text(AColumn: ThiiGridColumn; ARow: Int64; ADisplay: Boolean): string;
 begin
   if UnicodeText then
   begin
@@ -694,18 +677,18 @@ end;
 procedure TestNavigation;
 var
   LData: TNavigationData;
-  LColumns: Th5uGridColumns;
-  LSelection: Th5uGridSelection;
+  LColumns: ThiiGridColumns;
+  LSelection: ThiiGridSelection;
   LNav, LOther: Th5uGridNavigation;
   LAction: Th5uNavigationAction;
-  LCell: Th5uCellAddress;
-  LRange: Th5uCellRange;
+  LCell: ThiiCellAddress;
+  LRange: ThiiCellRange;
   LRow: Int64;
   LColumn: Integer;
 begin
   LData := TNavigationData.Create;
-  LColumns := Th5uGridColumns.Create(nil);
-  LSelection := Th5uGridSelection.Create;
+  LColumns := ThiiGridColumns.Create(nil);
+  LSelection := ThiiGridSelection.Create;
   try
     LColumns.Add.Id := 'a';
     LColumns.Add.Id := 'b';
@@ -713,14 +696,14 @@ begin
     LOther := Default(Th5uGridNavigation);
     Check(LNav.Navigate(LColumns, LSelection, 10, {$IFDEF FPC}@{$ENDIF}LData.RowKey, {$IFDEF FPC}@{$ENDIF}LData.Extent, 45, vkF2, [],
       LAction), 'F2 not handled');
-    Check((LAction.Kind = Th5uNavigationActionKind.Focus) and LAction.EditAfterFocus
-      and not LAction.AutomaticEdit, 'F2 initial focus and manual edit');
+    Check((LAction.Kind = Th5uNavigationActionKind.Focus) and LAction.EditAfterFocus and not LAction.AutomaticEdit,
+      'F2 initial focus and manual edit');
     Check(h5uPlanCellFocus(LColumns, LSelection, 10, {$IFDEF FPC}@{$ENDIF}LData.RowKey, 0, 0, False, LCell, LRange), 'focus plan');
     LSelection.SetFocus(LCell, True);
     LNav.Navigate(LColumns, LSelection, 10, {$IFDEF FPC}@{$ENDIF}LData.RowKey, {$IFDEF FPC}@{$ENDIF}LData.Extent, 45, vkNext, [ssShift,
       ssCtrl], LAction);
     Check((LAction.Cell.RowIndex = 3) and LAction.Extend and LAction.Add, 'page navigation and additive extension');
-    LNav.SelectHeaderRange(LColumns, LSelection, 10, {$IFDEF FPC}@{$ENDIF}LData.RowKey, Th5uSelectionKind.Columns, -1, 0, []);
+    LNav.SelectHeaderRange(LColumns, LSelection, 10, {$IFDEF FPC}@{$ENDIF}LData.RowKey, ThiiSelectionKind.Columns, -1, 0, []);
     LNav.Navigate(LColumns, LSelection, 10, {$IFDEF FPC}@{$ENDIF}LData.RowKey, {$IFDEF FPC}@{$ENDIF}LData.Extent, 45, vkRight, [ssShift], LAction);
     Check((LAction.Kind = Th5uNavigationActionKind.Header) and (LAction.Cell.ColumnIndex = 1), 'header navigation action');
     Check(not LOther.HeaderSelectionActive, 'navigation state shared between grids');
@@ -749,8 +732,8 @@ begin
       101 + 200 / MSecsPerDay, LRow, LColumn) and (LRow = 1) and (LNav.SearchText = '東京'), 'continued UTF-8 search');
     {$IFDEF FPC}
     LNav.Cancel(LSelection);
-    Check(LNav.SearchCharacter(LColumns, LSelection, 3, @LData.Prepare, @LData.Text, 'I', 102, LRow, LColumn) and (LRow
-      = 2), 'Unicode prefix comparison must not use UTF-8 byte lengths');
+    Check(LNav.SearchCharacter(LColumns, LSelection, 3, @LData.Prepare, @LData.Text, 'I', 102, LRow, LColumn) and (LRow = 2),
+      'Unicode prefix comparison must not use UTF-8 byte lengths');
     {$ENDIF}
     LNav.Cancel(LSelection);
     Check(not LNav.SearchCharacter(LColumns, LSelection, 3, {$IFDEF FPC}@{$ENDIF}LData.Prepare, {$IFDEF FPC}@{$ENDIF}LData.Text, '',
@@ -765,18 +748,18 @@ end;
 
 type
   TViewData = class
-    Controller: Th5uMemoryController;
+    Controller: ThiiMemoryController;
     Events: Integer;
-    function GetController: Th5uCustomDataController;
-    procedure GroupChanged(Sender: TObject; const AContext: Th5uAdjacentGroupStateChangedContext);
+    function GetController: ThiiCustomDataController;
+    procedure GroupChanged(Sender: TObject; const AContext: ThiiAdjacentGroupStateChangedContext);
   end;
 
-function TViewData.GetController: Th5uCustomDataController;
+function TViewData.GetController: ThiiCustomDataController;
 begin
   Result := Controller;
 end;
 
-procedure TViewData.GroupChanged(Sender: TObject; const AContext: Th5uAdjacentGroupStateChangedContext);
+procedure TViewData.GroupChanged(Sender: TObject; const AContext: ThiiAdjacentGroupStateChangedContext);
 begin
   Check((Sender = Self) and (AContext.Grid = Self) and (AContext.DataController = Controller), 'group event owner/context');
   Inc(Events);
@@ -785,19 +768,19 @@ end;
 procedure TestIndependentViews;
 var
   LData: TViewData;
-  LColumns: Th5uGridColumns;
-  LTree: Th5uTreeOptions;
-  LGroups: Th5uAdjacentGroupFoldingOptions;
+  LColumns: ThiiGridColumns;
+  LTree: ThiiTreeOptions;
+  LGroups: ThiiAdjacentGroupFoldingOptions;
   LView, LOther: Th5uGridView;
   LInfo: Th5uAdjacentGroupRowInfo;
   LChanges: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uAdjacentGroupRowInfo>;
   LLevel, LClosed: Integer;
 begin
   LData := TViewData.Create;
-  LData.Controller := Th5uMemoryController.Create(nil);
-  LColumns := Th5uGridColumns.Create(nil);
-  LTree := Th5uTreeOptions.Create;
-  LGroups := Th5uAdjacentGroupFoldingOptions.Create;
+  LData.Controller := ThiiMemoryController.Create(nil);
+  LColumns := ThiiGridColumns.Create(nil);
+  LTree := ThiiTreeOptions.Create;
+  LGroups := ThiiAdjacentGroupFoldingOptions.Create;
   LView := nil;
   LOther := nil;
   try
@@ -813,7 +796,7 @@ begin
       TValue.{$IFDEF FPC}specialize {$ENDIF}From<Integer>(0)]);
     LGroups.Enabled := True;
     LGroups.IdColumnId := 'group';
-    LGroups.InitialState := Th5uAdjacentGroupInitialState.Expanded;
+    LGroups.InitialState := ThiiAdjacentGroupInitialState.Expanded;
     LTree.Enabled := True;
     LTree.LevelColumnId := 'level';
     LView := Th5uGridView.Create(LData, LColumns, LTree, LGroups, {$IFDEF FPC}@{$ENDIF}LData.GetController);
@@ -827,8 +810,8 @@ begin
     Check(LView.GetViewValue(1, 'group').AsString = 'B', 'view value mapping');
     Check(LView.CanEditViewValue(1, 'level'), 'view edit permission');
     LView.SetViewValue(1, 'level', TValue.{$IFDEF FPC}specialize {$ENDIF}From<Integer>(0));
-    Check(LView.GetTreeBranchEndInfo(2, LView.GetViewRowKey(2), LLevel, LClosed) and (LLevel = 1) and (LClosed
-      = 1), 'tree branch closes at next visible row');
+    Check(LView.GetTreeBranchEndInfo(2, LView.GetViewRowKey(2), LLevel, LClosed) and (LLevel = 1) and (LClosed = 1),
+      'tree branch closes at next visible row');
     Check(not LView.IsViewRowAvailable(4), 'folded look-ahead passed end');
     LChanges := LView.ChangeAllAdjacentGroups(True);
     Check((Length(LChanges) = 1) and (LView.GetViewRowCount = 3), 'collapse only remaining foldable run');
@@ -858,19 +841,19 @@ type
     ExtentValue: Single;
     Prepared: Int64;
     Extents: Integer;
-    function Measure(ARow: Int64; AColumn: Th5uGridColumn): Single;
-    procedure Adjust(ARow: Int64; const AKey: Th5uRowKey; AEstimated: Boolean; var AHeight: Single; var ACacheResult: Boolean);
+    function Measure(ARow: Int64; AColumn: ThiiGridColumn): Single;
+    procedure Adjust(ARow: Int64; const AKey: ThiiRowKey; AEstimated: Boolean; var AHeight: Single; var ACacheResult: Boolean);
     function Extent(ARow: Int64; AAllowMeasure: Boolean): Single;
     procedure Prepare(AFirst, ACount: Int64);
   end;
 
-function TMetricData.Measure(ARow: Int64; AColumn: Th5uGridColumn): Single;
+function TMetricData.Measure(ARow: Int64; AColumn: ThiiGridColumn): Single;
 begin
   Inc(Measures);
   Result := StrToInt(AColumn.Caption);
 end;
 
-procedure TMetricData.Adjust(ARow: Int64; const AKey: Th5uRowKey; AEstimated: Boolean; var AHeight: Single; var ACacheResult: Boolean);
+procedure TMetricData.Adjust(ARow: Int64; const AKey: ThiiRowKey; AEstimated: Boolean; var AHeight: Single; var ACacheResult: Boolean);
 begin
   if Forced then AHeight := ForceHeight;
   ACacheResult := Cache;
@@ -892,17 +875,17 @@ const
   LargeCount: Int64 = 9007199254740993;
 var
   LData: TMetricData;
-  LColumns: Th5uGridColumns;
-  LOptions: Th5uRowHeightOptions;
+  LColumns: ThiiGridColumns;
+  LOptions: ThiiRowHeightOptions;
   LMetrics: Th5uGridRowMetrics;
   LTotal: Th5uTotalRowHeight;
-  LKey: Th5uRowKey;
+  LKey: ThiiRowKey;
   LBefore, LTop: Integer;
   LFloatTop: Single;
 begin
   LData := TMetricData.Create;
-  LColumns := Th5uGridColumns.Create(nil);
-  LOptions := Th5uRowHeightOptions.Create;
+  LColumns := ThiiGridColumns.Create(nil);
+  LOptions := ThiiRowHeightOptions.Create;
   LMetrics := Th5uGridRowMetrics.Create;
   try
     LData.Cache := True;
@@ -911,18 +894,18 @@ begin
     LColumns.Add.Caption := '80';
     LColumns.Add.Caption := '100';
     LColumns[2].Visible := False;
-    LOptions.Mode := Th5uRowHeightMode.Automatic;
+    LOptions.Mode := ThiiRowHeightMode.Automatic;
     LOptions.MinHeight := 1;
     LOptions.MaxHeight := 100;
     LOptions.EstimatedHeight := 17;
-    LKey := Th5uRowKey.FromString('metric-row');
+    LKey := ThiiRowKey.FromString('metric-row');
     Check(LMetrics.GetHeight(LOptions, LColumns, 0, LKey, True, {$IFDEF FPC}@{$ENDIF}LData.Measure, {$IFDEF FPC}@{$ENDIF}LData.Adjust) = 40,
       'explicit height contributors');
     LBefore := LData.Measures;
     Check(LMetrics.GetHeight(LOptions, LColumns, 3, LKey, True, {$IFDEF FPC}@{$ENDIF}LData.Measure, {$IFDEF FPC}@{$ENDIF}LData.Adjust) = 40,
       'cache follows row key');
     Check(LData.Measures = LBefore, 'height cache not reused');
-    LOptions.MeasureScope := Th5uAutoHeightMeasureScope.AllVisibleColumns;
+    LOptions.MeasureScope := ThiiAutoHeightMeasureScope.AllVisibleColumns;
     LMetrics.Clear;
     Check(LMetrics.GetHeight(LOptions, LColumns, 0, LKey, True, {$IFDEF FPC}@{$ENDIF}LData.Measure, {$IFDEF FPC}@{$ENDIF}LData.Adjust) = 80,
       'all visible contributors and hidden exclusion');
@@ -953,7 +936,7 @@ begin
     Check((LData.Prepared = 3001) and SameValue(LTotal.AsFloat, 3001 * 10.25), 'shared exact measurement threshold and fractional sum');
     LTotal := h5uTotalRowHeight(LOptions, h5uExactRowHeightLimit + 1, 0, True, {$IFDEF FPC}@{$ENDIF}LData.Prepare, {$IFDEF FPC}@{$ENDIF}LData.Extent);
     Check(LTotal.Whole = (h5uExactRowHeightLimit + 1) * LOptions.EstimatedHeight, 'large automatic-height estimate');
-    LOptions.Mode := Th5uRowHeightMode.Fixed;
+    LOptions.Mode := ThiiRowHeightMode.Fixed;
     LTotal := h5uTotalRowHeight(LOptions, LargeCount, 0, False, {$IFDEF FPC}@{$ENDIF}LData.Prepare, {$IFDEF FPC}@{$ENDIF}LData.Extent);
     Check(LTotal.Whole = LargeCount * Round(LOptions.FixedHeight), 'Int64 total lost precision above 2^53');
     LData.ExtentValue := 20;
@@ -978,21 +961,21 @@ const
   LargeCount: Int64 = 9007199254740993;
 var
   Metrics: Th5uGridRowMetrics;
-  Options: Th5uRowHeightOptions;
-  Columns: Th5uGridColumns;
+  Options: ThiiRowHeightOptions;
+  Columns: ThiiGridColumns;
   Data: TMetricData;
   Total, Top: Th5uTotalRowHeight;
   FloatTop: Single;
   ExpectedTop, Delta, PrefixDelta: Double;
   IntegerTop, I, Before: Integer;
-  Key: Th5uRowKey;
+  Key: ThiiRowKey;
 begin
   Metrics := Th5uGridRowMetrics.Create;
-  Options := Th5uRowHeightOptions.Create;
-  Columns := Th5uGridColumns.Create(nil);
+  Options := ThiiRowHeightOptions.Create;
+  Columns := ThiiGridColumns.Create(nil);
   Data := TMetricData.Create;
   try
-    Options.Mode := Th5uRowHeightMode.Automatic;
+    Options.Mode := ThiiRowHeightMode.Automatic;
     Options.EstimatedHeight := 17;
     Data.ExtentValue := 20.25;
     Metrics.Configure(Options, 8, 3, True,
@@ -1000,14 +983,11 @@ begin
     Total := Metrics.Total(False);
     Check((Total.Whole = 160) and (Data.Extents = 0), 'provisional totals must not measure');
     Total := Metrics.Total;
-    Check(SameValue(Total.AsFloat, 162) and (Data.Extents = 8) and (Data.Prepared = 8),
-      'small lists retain exact fractional row extents');
-    Check((Metrics.FindFirstVisibleRow(40.75, 100.0, FloatTop) = 2)
-      and SameValue(FloatTop, 99.75), 'indexed fractional boundary');
+    Check(SameValue(Total.AsFloat, 162) and (Data.Extents = 8) and (Data.Prepared = 8), 'small lists retain exact fractional row extents');
+    Check((Metrics.FindFirstVisibleRow(40.75, 100.0, FloatTop) = 2) and SameValue(FloatTop, 99.75), 'indexed fractional boundary');
     Top := Metrics.RowTop(7);
     Total := Metrics.Total;
-    Check(SameValue(Top.AsFloat, 141.75) and (Data.Extents = 8),
-      'exact extent callbacks must be reused across positioning and totals');
+    Check(SameValue(Top.AsFloat, 141.75) and (Data.Extents = 8), 'exact extent callbacks must be reused across positioning and totals');
     Metrics.InvalidateRow(3);
     Total := Metrics.Total;
     Check((Data.Extents = 16) and SameValue(Total.AsFloat, 162), 'invalidated exact extents are recomputed');
@@ -1016,30 +996,27 @@ begin
       {$IFDEF FPC}@{$ENDIF}Data.Prepare, {$IFDEF FPC}@{$ENDIF}Data.Extent);
     Before := Data.Extents;
     Total := Metrics.Total;
-    Check((Total.Whole = RowCount * 20) and (Metrics.ExtentCount = 0),
-      'large lists begin with a sparse uniform estimate');
+    Check((Total.Whole = RowCount * 20) and (Metrics.ExtentCount = 0), 'large lists begin with a sparse uniform estimate');
     for I := 0 to 99 do
     begin
-      Check((Metrics.FindFirstVisibleRow(DeepRow * 20.0 + 7.5, 100.0, FloatTop) = DeepRow)
-        and SameValue(FloatTop, 92.5), 'deep lookup must locate a uniform gap directly');
+      Check((Metrics.FindFirstVisibleRow(DeepRow * 20.0 + 7.5, 100.0, FloatTop) = DeepRow) and SameValue(FloatTop, 92.5),
+        'deep lookup must locate a uniform gap directly');
       Top := Metrics.RowTop(DeepRow);
       Check(Top.Whole = DeepRow * 20, 'deep row top must use the shared index');
     end;
-    Check((Data.Extents = Before) and (Metrics.ExtentCount = 0),
-      'three million unvisited rows must cause no callbacks or extent allocations');
+    Check((Data.Extents = Before) and (Metrics.ExtentCount = 0), 'three million unvisited rows must cause no callbacks or extent allocations');
     Metrics.RecordExtent(0, 25.5);
     Metrics.RecordExtent(10000, 15.25);
     Metrics.RecordExtent(DeepRow - 2, 33.25);
     Metrics.RecordExtent(DeepRow, 30.5);
     Top := Metrics.RowTop(DeepRow);
     Check(SameValue(Top.AsFloat, DeepRow * 20.0 + 14), 'positive and negative sparse deltas accumulate');
-    Check((Metrics.FindFirstVisibleRow(Top.AsFloat + 30.25, 100.0, FloatTop) = DeepRow)
-      and SameValue(FloatTop, 69.75), 'measured row extent controls hit testing');
-    Check((Metrics.FindFirstVisibleRow(Top.AsFloat + 30.5, 100.0, FloatTop) = DeepRow + 1)
-      and SameValue(FloatTop, 100), 'measured row end belongs to the following row');
+    Check((Metrics.FindFirstVisibleRow(Top.AsFloat + 30.25, 100.0, FloatTop) = DeepRow) and SameValue(FloatTop, 69.75),
+      'measured row extent controls hit testing');
+    Check((Metrics.FindFirstVisibleRow(Top.AsFloat + 30.5, 100.0, FloatTop) = DeepRow + 1) and SameValue(FloatTop, 100),
+      'measured row end belongs to the following row');
     Total := Metrics.Total;
-    Check(SameValue(Total.AsFloat, RowCount * 20.0 + 24.5) and (Metrics.ExtentCount = 4),
-      'total includes only the four known deviations');
+    Check(SameValue(Total.AsFloat, RowCount * 20.0 + 24.5) and (Metrics.ExtentCount = 4), 'total includes only the four known deviations');
     Metrics.RecordExtent(10000, 20);
     Check(Metrics.ExtentCount = 3, 'returning to the estimate removes a sparse node');
 
@@ -1063,24 +1040,23 @@ begin
     for I := 0 to 4095 do
     begin
       Top := Metrics.RowTop(Int64(I) * 701);
-      Check(SameValue(Top.AsFloat, Int64(I) * 701 * 20.0 + PrefixDelta),
-        'sparse removal preserves remaining prefix sums');
+      Check(SameValue(Top.AsFloat, Int64(I) * 701 * 20.0 + PrefixDelta), 'sparse removal preserves remaining prefix sums');
       if Odd(I) then
         PrefixDelta := PrefixDelta + ((I mod 7) - 3) * 0.25;
     end;
     Check(Data.Extents = Before, 'sparse lookup cost must not invoke skipped-row callbacks');
 
-    Options.Mode := Th5uRowHeightMode.Fixed;
+    Options.Mode := ThiiRowHeightMode.Fixed;
     Metrics.Configure(Options, LargeCount, 0, False,
       {$IFDEF FPC}@{$ENDIF}Data.Prepare, {$IFDEF FPC}@{$ENDIF}Data.Extent);
     Total := Metrics.Total;
     Check(Total.Whole = LargeCount * Round(Options.FixedHeight), 'indexed total preserves Int64 above 2^53');
     Top := Metrics.RowTop(LargeCount - 2);
     Check(Top.Whole = (LargeCount - 2) * Round(Options.FixedHeight), 'indexed row top preserves Int64 above 2^53');
-    Check((Metrics.FindFirstVisibleRow(Top.Whole + 3, 100, IntegerTop) = LargeCount - 2)
-      and (IntegerTop = 97), 'integer offset lookup must not pass through floating-point row numbers');
+    Check((Metrics.FindFirstVisibleRow(Top.Whole + 3, 100, IntegerTop) = LargeCount - 2) and (IntegerTop = 97),
+      'integer offset lookup must not pass through floating-point row numbers');
 
-    Options.Mode := Th5uRowHeightMode.Automatic;
+    Options.Mode := ThiiRowHeightMode.Automatic;
     Options.MinHeight := 1;
     Columns.Add.Caption := '40';
     Columns[0].AutoHeight := True;
@@ -1088,7 +1064,7 @@ begin
     Metrics.CheckColumnWidths(Columns);
     Metrics.Configure(Options, RowCount, 3, True,
       {$IFDEF FPC}@{$ENDIF}Data.Prepare, {$IFDEF FPC}@{$ENDIF}Data.Extent);
-    Key := Th5uRowKey.FromString('reordered-row');
+    Key := ThiiRowKey.FromString('reordered-row');
     Metrics.GetHeight(Options, Columns, 100, Key, True,
       {$IFDEF FPC}@{$ENDIF}Data.Measure, {$IFDEF FPC}@{$ENDIF}Data.Adjust);
     Metrics.RecordExtent(100, 43);
@@ -1110,21 +1086,20 @@ begin
     Metrics.GetHeight(Options, Columns, DeepRow, Key, True,
       {$IFDEF FPC}@{$ENDIF}Data.Measure, {$IFDEF FPC}@{$ENDIF}Data.Adjust);
     Check(Data.Measures > Before, 'actual width change causes remeasurement');
-    Options.Mode := Th5uRowHeightMode.Fixed;
+    Options.Mode := ThiiRowHeightMode.Fixed;
     Options.FixedHeight := 20.25;
     Metrics.Configure(Options, RowCount, 0.5, False,
       {$IFDEF FPC}@{$ENDIF}Data.Prepare, {$IFDEF FPC}@{$ENDIF}Data.Extent);
     Total := Metrics.Total;
     Check((Total.Whole = 62250000) and (Total.Fraction = 0), 'three million fractional Single row extents retain exact total');
     Top := Metrics.RowTop(DeepRow);
-    Check((Metrics.FindFirstVisibleRow(Top.AsFloat + 0.75, 100, FloatTop) = DeepRow)
-      and (FloatTop = 99.25), 'fractional Single baseline retains deep viewport precision');
+    Check((Metrics.FindFirstVisibleRow(Top.AsFloat + 0.75, 100, FloatTop) = DeepRow) and (FloatTop = 99.25),
+      'fractional Single baseline retains deep viewport precision');
     Options.FixedHeight := 24.25;
     Metrics.Configure(Options, LargeCount, 0, False,
       {$IFDEF FPC}@{$ENDIF}Data.Prepare, {$IFDEF FPC}@{$ENDIF}Data.Extent);
     Total := Metrics.Total;
-    Check((Total.Whole = 218424581927469080) and (Total.Fraction = 0.25),
-      'Single fixed heights retain exact fractional totals above 2^53 rows');
+    Check((Total.Whole = 218424581927469080) and (Total.Fraction = 0.25), 'Single fixed heights retain exact fractional totals above 2^53 rows');
     Metrics.PixelAligned := True;
     Options.FixedHeight := 20.5;
     Metrics.Configure(Options, RowCount, 0.5, False,
@@ -1141,18 +1116,18 @@ end;
 
 procedure TestColumnLayout;
 var
-  LColumns: Th5uGridColumns;
+  LColumns: ThiiGridColumns;
   LLayout: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uColumnLayoutInfo>;
   LLeft, LRight: Single;
 begin
-  LColumns := Th5uGridColumns.Create(nil);
+  LColumns := ThiiGridColumns.Create(nil);
   try
     LColumns.Add.Width := 50;
-    LColumns[0].FixedKind := Th5uFixedKind.Left;
+    LColumns[0].FixedKind := ThiiFixedKind.Left;
     LColumns[0].RightSpacing := 3;
     LColumns.Add.Width := 100;
     LColumns.Add.Width := 40;
-    LColumns[2].FixedKind := Th5uFixedKind.Right;
+    LColumns[2].FixedKind := ThiiFixedKind.Right;
     LColumns[2].RightSpacing := 0;
     LLayout := h5uBuildColumnLayout(LColumns, 1, 0, 200, 10, 20, True);
     Check((LLayout[0].Left = 10) and (LLayout[1].Left = 43) and (LLayout[2].Left = 160), 'fixed/scrollable column positions');
@@ -1173,13 +1148,13 @@ end;
 
 procedure TestControllerLinkLifetime;
 var
-  LController, LReplacement: Th5uMemoryController;
-  LFirst, LSecond: Th5uDataControllerLink;
+  LController, LReplacement: ThiiMemoryController;
+  LFirst, LSecond: ThiiDataControllerLink;
 begin
-  LController := Th5uMemoryController.Create(nil);
-  LReplacement := Th5uMemoryController.Create(nil);
-  LFirst := Th5uDataControllerLink.Create;
-  LSecond := Th5uDataControllerLink.Create;
+  LController := ThiiMemoryController.Create(nil);
+  LReplacement := ThiiMemoryController.Create(nil);
+  LFirst := ThiiDataControllerLink.Create;
+  LSecond := ThiiDataControllerLink.Create;
   try
     LFirst.Controller := LController;
     LSecond.Controller := LController;
@@ -1202,18 +1177,17 @@ end;
 
 procedure TestValueConversion;
 var
-  LType: Th5uColumnDataType;
+  LType: ThiiColumnDataType;
   LValue: TValue;
   LFailed: Boolean;
 begin
-  Check(h5uParseEditorValue(Th5uColumnDataType.Integer, '9223372036854775807').AsInt64 = High(Int64), 'Int64 parsing');
-  Check(SameValue(h5uParseEditorValue(Th5uColumnDataType.Float, FloatToStr(1.5)).AsExtended, 1.5), 'locale float parsing');
-  Check(h5uParseEditorValue(Th5uColumnDataType.Currency, CurrToStr(12.25)).{$IFDEF FPC}specialize {$ENDIF}AsType<Currency> = 12.25,
+  Check(h5uParseEditorValue(ThiiColumnDataType.Integer, '9223372036854775807').AsInt64 = High(Int64), 'Int64 parsing');
+  Check(SameValue(h5uParseEditorValue(ThiiColumnDataType.Float, FloatToStr(1.5)).AsExtended, 1.5), 'locale float parsing');
+  Check(h5uParseEditorValue(ThiiColumnDataType.Currency, CurrToStr(12.25)).{$IFDEF FPC}specialize {$ENDIF}AsType<Currency> = 12.25,
     'currency parsing');
-  Check(h5uParseEditorValue(Th5uColumnDataType.Text, ' abc ').AsString = ' abc ', 'text whitespace preservation');
-  for LType
-    in [Th5uColumnDataType.Integer, Th5uColumnDataType.Float, Th5uColumnDataType.Currency, Th5uColumnDataType.Date, Th5uColumnDataType.DateTime,
-    Th5uColumnDataType.Time] do
+  Check(h5uParseEditorValue(ThiiColumnDataType.Text, ' abc ').AsString = ' abc ', 'text whitespace preservation');
+  for LType in [ThiiColumnDataType.Integer, ThiiColumnDataType.Float, ThiiColumnDataType.Currency, ThiiColumnDataType.Date,
+    ThiiColumnDataType.DateTime, ThiiColumnDataType.Time] do
   begin
     LFailed := False;
     try

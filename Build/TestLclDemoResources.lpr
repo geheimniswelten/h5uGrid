@@ -35,7 +35,7 @@ end;
 procedure TestDataset;
 var
   LForm: TLclDatasetDemoForm;
-  LNameColumn: Th5uGridColumn;
+  LNameColumn: ThiiGridColumn;
 begin
   Trace('Loading ClientDataset form resource...');
   LForm := TLclDatasetDemoForm.Create(nil);
@@ -62,14 +62,14 @@ begin
     LForm.TreeEndBandCheck.Checked := False;
     LForm.AdjacentGroupCheck.Checked := False;
     LForm.OptionClick(nil);
-    Check(LForm.Grid.RowHeight.Mode = Th5uRowHeightMode.Fixed, 'Dataset row height option failed.');
+    Check(LForm.Grid.RowHeight.Mode = ThiiRowHeightMode.Fixed, 'Dataset row height option failed.');
     Check(not LForm.Grid.HeaderLayout.Enabled, 'Dataset header option failed.');
     Check(not LForm.Grid.Tree.Enabled, 'Dataset tree option failed.');
     Check(not LForm.Grid.AdjacentGroupFolding.Enabled, 'Dataset adjacent-group option failed.');
-    Check(LForm.Grid.Theme = Th5uGridTheme.Dark, 'Dataset theme option failed.');
+    Check(LForm.Grid.Theme = ThiiGridTheme.Dark, 'Dataset theme option failed.');
     Check(not LForm.Grid.Columns.FindById('picture').Visible, 'Dataset picture column option failed.');
     Check(not LForm.Grid.GridLines, 'Dataset separators option failed.');
-    Check(LForm.DataController.Cache.Mode = Th5uCacheMode.None, 'Dataset cache option failed.');
+    Check(LForm.DataController.Cache.Mode = ThiiCacheMode.None, 'Dataset cache option failed.');
     Check(LForm.DataController.GetRowCount = 10, 'Dataset pagination failed.');
     LForm.NextPageButtonClick(nil);
     Check(LForm.DataController.Pagination.PageIndex = 1, 'Dataset next-page button failed.');
@@ -114,7 +114,7 @@ begin
     Check(LForm.ObjectController.Count = 81, 'Object-list add button failed.');
     LForm.CacheCheck.Checked := True;
     LForm.CacheCheckClick(nil);
-    Check(LForm.ObjectController.Cache.Mode = Th5uCacheMode.Viewport, 'Object-list cache option failed.');
+    Check(LForm.ObjectController.Cache.Mode = ThiiCacheMode.Viewport, 'Object-list cache option failed.');
     LAmountBefore := 0;
     for I := 0 to LForm.ObjectController.Count - 1 do
       LAmountBefore := LAmountBefore + TPersonRow(LForm.ObjectController.Item(I)).Amount;
@@ -125,7 +125,7 @@ begin
     Check(LAmountAfter = LAmountBefore + 12.5, 'Object-list live update failed.');
     LForm.DarkCheck.Checked := True;
     LForm.DarkCheckClick(nil);
-    Check(LForm.Grid.Theme = Th5uGridTheme.Dark, 'Object-list theme option failed.');
+    Check(LForm.Grid.Theme = ThiiGridTheme.Dark, 'Object-list theme option failed.');
     LForm.LiveCheck.Checked := False;
     LForm.LiveCheckClick(nil);
     Check(not LForm.UpdateTimer.Enabled, 'Object-list pause option failed.');
@@ -168,8 +168,8 @@ begin
     LForm.DarkCheck.Checked := True;
     LForm.OptionClick(nil);
     Check(not LForm.LiveTimer.Enabled, 'Virtual pause option failed.');
-    Check(LForm.VirtualController.Cache.Mode = Th5uCacheMode.None, 'Virtual cache option failed.');
-    Check(LForm.Grid.Theme = Th5uGridTheme.Dark, 'Virtual theme option failed.');
+    Check(LForm.VirtualController.Cache.Mode = ThiiCacheMode.None, 'Virtual cache option failed.');
+    Check(LForm.Grid.Theme = ThiiGridTheme.Dark, 'Virtual theme option failed.');
     Check(LForm.VirtualController.GetRowCount = 20, 'Virtual pagination failed.');
     LForm.NextPageButtonClick(nil);
     Check(LForm.VirtualController.Pagination.PageIndex = 1, 'Virtual next-page button failed.');

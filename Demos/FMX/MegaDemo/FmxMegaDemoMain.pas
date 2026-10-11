@@ -12,8 +12,8 @@ uses
   System.StrUtils,
   System.UITypes,
   System.TypInfo,
-  System.Generics.Collections,  // for Th5uVirtualController
-  System.Rtti,                  // for Th5uVirtualController
+  System.Generics.Collections,  // for ThiiVirtualController
+  System.Rtti,                  // for ThiiVirtualController
   Data.DB,
   Datasnap.DBClient,
   FMX.Types,
@@ -34,17 +34,14 @@ uses
   FMX.SpinBox,
   FMX.MultiView,
   FMX.ApplicationEvents,
-  h5u.Grid.Types,
-  h5u.Grid.Columns,
-  h5u.Grid.Data.Core,
-  h5u.Grid.Data.DataSet,  // for Th5uDatasetController + TDataSource + TDataSet(Th5uSampleClientDataSet)
-  h5u.Grid.Data.Objects,  // for Th5uObjectListController + TDataRow(RTTI)
-  h5u.Grid.Data.Virtual,  // for Th5uVirtualController + TDataRow(manual)
+  h5u.Grid.Data.DataSet,  // for ThiiDatasetController + TDataSource + TDataSet(ThiiSampleClientDataset)
+  h5u.Grid.Data.Objects,  // for ThiiObjectListController + TDataRow(RTTI)
+  h5u.Grid.Data.Virtual,  // for ThiiVirtualController + TDataRow(manual)
   h5u.Grid.SampleData,
   Fmx.h5u.Grid;
 
 type
-  TDataRow = class  // for Th5uObjectListController
+  TDataRow = class  // for ThiiObjectListController
   private
     {$REGION 'Fields'}
     FId: Int64;
@@ -76,10 +73,10 @@ type
   end;
 
   TFmxMegaDemoForm = class(TForm)
-    Grid: Th5uFmxGrid;
-    SampleData: Th5uSampleClientDataSet;
+    Grid: ThiiGrid;
+    SampleData: ThiiSampleClientDataset;
     DataSource: TDataSource;
-    DataController: Th5uDataSetController;
+    DataController: ThiiDatasetController;
     MultiView1: TMultiView;
     AniIndicator1: TAniIndicator;
     ApplicationEvents: TApplicationEvents;
@@ -117,8 +114,8 @@ type
     Expander6: TExpander;
     Expander7: TExpander;
     Expander8: TExpander;
-    ObjectController: Th5uObjectListController;
-    VirtualController: Th5uVirtualController;
+    ObjectController: ThiiObjectListController;
+    VirtualController: ThiiVirtualController;
     UpdateTimer: TTimer;
     ComboBox3: TComboBox;
     ComboBox4: TComboBox;
@@ -148,18 +145,18 @@ type
     {$REGION 'Events'}
     procedure FormCreate(Sender: TObject);
     procedure ToggleGroupsButtonClick(Sender: TObject);
-    procedure GridGetThumbHint(Sender: TObject; const AContext: Th5uFmxThumbHintContext; var AText: string; var AVisible: Boolean);
+    procedure GridGetThumbHint(Sender: TObject; const AContext: ThiiThumbHintContext; var AText: string; var AVisible: Boolean);
     procedure UpdateTimerTimer(Sender: TObject);
     procedure VirtualControllerGetRowCount(Sender: TObject; var ARowCount: Int64);
-    procedure VirtualControllerGetRowKey(Sender: TObject; ASourceRowIndex: Int64; var ARowKey: Th5uRowKey);
+    procedure VirtualControllerGetRowKey(Sender: TObject; ASourceRowIndex: Int64; var ARowKey: ThiiRowKey);
     procedure VirtualControllerGetValue(Sender: TObject; ASourceRowIndex: Int64; const AFieldName: string; var AValue: TValue);
     procedure VirtualControllerSetValue(Sender: TObject; ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue; var AHandled: Boolean);
     procedure edConfigChange(Sender: TObject);
     {$ENDREGION}
   private
     FLoading: Boolean;
-    FRows: TObjectList<TDataRow>;  // for TDataRow/Th5uVirtualController
-    FNextId: Integer;              // for TDataRow/Th5uObjectListController
+    FRows: TObjectList<TDataRow>;  // for TDataRow/ThiiVirtualController
+    FNextId: Integer;              // for TDataRow/ThiiObjectListController
     FAllAdjacentGroupsCollapsed: Boolean;
     procedure InitOptions;
     procedure LoadOptions;
@@ -178,10 +175,10 @@ implementation
 
 procedure TFmxMegaDemoForm.ApplyOptions(Sender: TObject);
 var
-  LPicture: Th5uGridColumn;
-  LNameColumn: Th5uGridColumn;
-  LActiveColumn: Th5uGridColumn;
-  LDescriptionColumn: Th5uGridColumn;
+  LPicture: ThiiGridColumn;
+  LNameColumn: ThiiGridColumn;
+  LActiveColumn: ThiiGridColumn;
+  LDescriptionColumn: ThiiGridColumn;
 begin
   if FLoading or (csLoading in Self.ComponentState) then
     Exit;
@@ -200,12 +197,12 @@ begin
 
 //  if PagedCheck.IsChecked then
 //  begin
-//    DataController.Pagination.Mode := Th5uPaginationMode.NumberedPages;
+//    DataController.Pagination.Mode := ThiiPaginationMode.NumberedPages;
 //    DataController.Pagination.PageSize := 10;
 //  end
 //  else
 //  begin
-//    DataController.Pagination.Mode := Th5uPaginationMode.Continuous;
+//    DataController.Pagination.Mode := ThiiPaginationMode.Continuous;
 //    DataController.Pagination.PageIndex := 0;
 //  end;
 //  NextPageButton.Enabled := PagedCheck.IsChecked;
@@ -214,7 +211,7 @@ procedure TFmxMegaDemoForm.NextPageButtonClick(Sender: TObject);
 var
   LPageCount: Integer;
 begin
-  if DataController.Pagination.Mode <> Th5uPaginationMode.NumberedPages then
+  if DataController.Pagination.Mode <> ThiiPaginationMode.NumberedPages then
     Exit;
   LPageCount := (DataController.GetTotalRowCount + DataController.Pagination.PageSize - 1) div DataController.Pagination.PageSize;
   DataController.Pagination.PageIndex := (DataController.Pagination.PageIndex + 1) mod Max(1, LPageCount);
@@ -266,7 +263,7 @@ end;
   Grid.AdjacentGroupFolding.GroupEmptyValues   := cbAGFGroupEmptyValues.IsChecked;
   Grid.AdjacentGroupFolding.ShowFoldGlyph      := cbAGFShowFoldGlyph.IsChecked;
   Grid.AdjacentGroupFolding.EndBand.Height     := Round(edAGFEBHeight.Value);
-  Grid.AdjacentGroupFolding.EndBand.Visibility := Th5uAdjacentGroupEndBandVisibility(cbAGFEBVisibility.ItemIndex);
+  Grid.AdjacentGroupFolding.EndBand.Visibility := ThiiAdjacentGroupEndBandVisibility(cbAGFEBVisibility.ItemIndex);
   Grid.AdjacentGroupFolding.EndBand.Color      := cbAGFEBColor.Color;
   Grid.AdjacentGroupFolding.EndBand.StyleName  := cbAGFEBStyleName.Text;
   ToggleGroupsButton.Enabled                   := cbAGFEnabled.IsChecked;
@@ -289,11 +286,11 @@ end;
   Grid.Customization.AllowColumnMoving                := cbCustAllowColumnMoving.IsChecked;
   Grid.Customization.AllowColumnResizing              := cbCustAllowColumnResizing.IsChecked;
   Grid.Customization.AllowRowMoving                   := cbCustAllowRowMoving.IsChecked;
-  Grid.Customization.ColumnMovingGesture              := Th5uColumnRowMovingGesture(cbCustColumnMovingGesture.ItemIndex);
+  Grid.Customization.ColumnMovingGesture              := ThiiColumnRowMovingGesture(cbCustColumnMovingGesture.ItemIndex);
   Grid.Customization.ColumnResizeHitZoneLeft          := Round(edCustColumnResizeHitZoneLeft.Value);
   Grid.Customization.ColumnResizeHitZoneRight         := Round(edCustColumnResizeHitZoneRight.Value);
   Grid.Customization.LastColumnResizeHitZoneLeft      := Round(edCustLastColumnResizeHitZoneLeft.Value);
-  Grid.Customization.RowMovingGesture                 := Th5uColumnRowMovingGesture(cbCustRowMovingGesture.ItemIndex);
+  Grid.Customization.RowMovingGesture                 := ThiiColumnRowMovingGesture(cbCustRowMovingGesture.ItemIndex);
   Grid.Customization.ShowColumnChooser                := cbCustShowColumnChooser.IsChecked;
   Grid.Customization.TouchColumnResizeHitZoneLeft     := Round(edCustTouchColumnResizeHitZoneLeft.Value);
   Grid.Customization.TouchColumnResizeHitZoneRight    := Round(edCustTouchColumnResizeHitZoneRight.Value);
@@ -314,7 +311,7 @@ var
   I: Integer;
 begin
   FLoading := True;
-  Grid.Customization.ColumnMovingGesture := Th5uColumnRowMovingGesture.Drag;  // wird nicht in DFM gespeichert?
+  Grid.Customization.ColumnMovingGesture := ThiiColumnRowMovingGesture.Drag;  // wird nicht in DFM gespeichert?
 
   FAllAdjacentGroupsCollapsed := False;
 
@@ -362,7 +359,8 @@ end;
 
 function TFmxMegaDemoForm.GetEnumNames(Enum: PTypeInfo): string;
 begin
-  //Result := SetToString(Enum, ($1 shl Enum.TypeData.MaxValue) - 1, False).Replace(',', sLineBreak);   Benötigt einen SetTypen. Funktioniert nicht mit einem EnumTyp.
+  //Result := SetToString(Enum, ($1 shl Enum.TypeData.MaxValue) - 1, False).Replace(',', sLineBreak);   Benötigt einen SetTypen.
+// Funktioniert nicht mit einem EnumTyp.
   Result := GetEnumName(Enum, 0);
   for var i := 1 to Enum.TypeData.MaxValue do
     Result := Result + sLineBreak + GetEnumName(Enum, 1);
@@ -373,9 +371,9 @@ begin
   Result := '';
 end;
 
-procedure TFmxMegaDemoForm.GridGetThumbHint(Sender: TObject; const AContext: Th5uFmxThumbHintContext; var AText: string; var AVisible: Boolean);
+procedure TFmxMegaDemoForm.GridGetThumbHint(Sender: TObject; const AContext: ThiiThumbHintContext; var AText: string; var AVisible: Boolean);
 begin
-  if AContext.Axis = Th5uScrollAxis.Vertical then
+  if AContext.Axis = ThiiScrollAxis.Vertical then
     AText := 'FMX: ' + AText;
 end;
 
@@ -384,11 +382,11 @@ begin
   FLoading := True;
 
   { AdjacentGroupFolding }
-  cbAGFEBVisibility.Items.Text := GetEnumNames(TypeInfo(Th5uAdjacentGroupEndBandVisibility));
+  cbAGFEBVisibility.Items.Text := GetEnumNames(TypeInfo(ThiiAdjacentGroupEndBandVisibility));
   cbAGFEBStyleName.Items.Text  := GetStyleNames;
   { Customization }
-  cbCustColumnMovingGesture.Items.Text := GetEnumNames(TypeInfo(Th5uColumnRowMovingGesture));
-  cbCustRowMovingGesture.Items.Text    := GetEnumNames(TypeInfo(Th5uColumnRowMovingGesture));
+  cbCustColumnMovingGesture.Items.Text := GetEnumNames(TypeInfo(ThiiColumnRowMovingGesture));
+  cbCustRowMovingGesture.Items.Text    := GetEnumNames(TypeInfo(ThiiColumnRowMovingGesture));
 
   for var C in Self do
     if C is TCustomEdit then
@@ -406,7 +404,8 @@ begin
     else if C is TSwitch then
       TSwitch(C).OnSwitch := edConfigChange
 
-    else if (C is TLabel) and (TLabel(C).Hint = '') then begin
+    else if (C is TLabel) and (TLabel(C).Hint = '') then
+    begin
       TLabel(C).Hint     := TLabel(C).Text;
       TLabel(C).ShowHint := True;
     end;
@@ -498,12 +497,12 @@ begin
 //    ARowCount := FRows.Count;
 end;
 
-procedure TFmxMegaDemoForm.VirtualControllerGetRowKey(Sender: TObject; ASourceRowIndex: Int64; var ARowKey: Th5uRowKey);
+procedure TFmxMegaDemoForm.VirtualControllerGetRowKey(Sender: TObject; ASourceRowIndex: Int64; var ARowKey: ThiiRowKey);
 begin
 //  if not Assigned(FRows) then
 //    Exit;
 //  if (ASourceRowIndex >= 0) and (ASourceRowIndex < FRows.Count) then
-//    ARowKey := Th5uRowKey.FromInt64(FRows[ASourceRowIndex].Id);
+//    ARowKey := ThiiRowKey.FromInt64(FRows[ASourceRowIndex].Id);
 end;
 
 procedure TFmxMegaDemoForm.VirtualControllerGetValue(Sender: TObject; ASourceRowIndex: Int64; const AFieldName: string; var AValue: TValue);
@@ -516,7 +515,8 @@ begin
 //    Exit;
 //  LRow := FRows[ASourceRowIndex];
 //
-//  case IndexText(AFieldName, ['id', 'name', 'category', 'description', 'quantity', 'unit_price', 'priority', 'active', 'updated_at', 'picture', 'fold_group']) of
+//  case IndexText(AFieldName, ['id', 'name', 'category', 'description', 'quantity', 'unit_price', 'priority', 'active', 'updated_at',
+// 'picture', 'fold_group']) of
 //    0: AValue := TValue.From<Int64>(LRow.id);
 //    1: AValue := TValue.From<string>(LRow.name);
 //    2: AValue := TValue.From<string>(LRow.category);
@@ -542,7 +542,8 @@ begin
 //    Exit;
 //  LRow := FRows[ASourceRowIndex];
 //
-//  case IndexText(AFieldName, ['id', 'name', 'category', 'description', 'quantity', 'unit_price', 'priority', 'active', 'updated_at', 'picture', 'fold_group']) of
+//  case IndexText(AFieldName, ['id', 'name', 'category', 'description', 'quantity', 'unit_price', 'priority', 'active', 'updated_at',
+// 'picture', 'fold_group']) of
 //    //0: LRow.id        := AValue.AsInt64;
 //    1: LRow.name        := AValue.AsString;
 //    2: LRow.category    := AValue.AsString;
@@ -569,7 +570,8 @@ end;
 
 procedure TDataRow.SetPicture(APicture: TBitmap);
 begin
-  if Assigned(APicture) then begin
+  if Assigned(APicture) then
+  begin
     if not Assigned(FPicture) then
       FPicture := TBitmap.Create(APicture.Width, APicture.Height);
     FPicture.Assign(APicture);

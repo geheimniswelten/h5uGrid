@@ -14,9 +14,7 @@ uses
   FMX.Forms,
   FMX.StdCtrls,
   FMX.Types,
-  h5u.Grid.Data.Core,
   h5u.Grid.Data.Virtual,
-  h5u.Grid.Types,
   Fmx.h5u.Grid;
 
 type
@@ -37,8 +35,8 @@ type
     DarkCheck: TCheckBox;
     AppendButton: TButton;
     ClearButton: TButton;
-    Grid: Th5uFmxGrid;
-    VirtualController: Th5uVirtualController;
+    Grid: ThiiGrid;
+    VirtualController: ThiiVirtualController;
     LiveTimer: TTimer;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -47,7 +45,7 @@ type
     procedure ClearButtonClick(Sender: TObject);
     procedure LiveTimerTimer(Sender: TObject);
     procedure VirtualGetRowCount(Sender: TObject; var ARowCount: Int64);
-    procedure VirtualGetRowKey(Sender: TObject; ASourceRowIndex: Int64; var ARowKey: Th5uRowKey);
+    procedure VirtualGetRowKey(Sender: TObject; ASourceRowIndex: Int64; var ARowKey: ThiiRowKey);
     procedure VirtualGetValue(Sender: TObject; ASourceRowIndex: Int64; const AFieldName: string; var AValue: TValue);
     procedure VirtualSetValue(Sender: TObject; ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue; var AHandled: Boolean);
   private
@@ -96,13 +94,13 @@ procedure TFmxVirtualDemoForm.ApplyOptions;
 begin
   LiveTimer.Enabled := not PauseCheck.IsChecked;
   if CacheCheck.IsChecked then
-    VirtualController.Cache.Mode := Th5uCacheMode.Viewport
+    VirtualController.Cache.Mode := ThiiCacheMode.Viewport
   else
-    VirtualController.Cache.Mode := Th5uCacheMode.None;
+    VirtualController.Cache.Mode := ThiiCacheMode.None;
   if DarkCheck.IsChecked then
-    Grid.Theme := Th5uGridTheme.Dark
+    Grid.Theme := ThiiGridTheme.Dark
   else
-    Grid.Theme := Th5uGridTheme.ApplicationStyle;
+    Grid.Theme := ThiiGridTheme.ApplicationStyle;
 end;
 
 procedure TFmxVirtualDemoForm.ClearButtonClick(Sender: TObject);
@@ -159,12 +157,12 @@ begin
     ARowCount := FRows.Count;
 end;
 
-procedure TFmxVirtualDemoForm.VirtualGetRowKey(Sender: TObject; ASourceRowIndex: Int64; var ARowKey: Th5uRowKey);
+procedure TFmxVirtualDemoForm.VirtualGetRowKey(Sender: TObject; ASourceRowIndex: Int64; var ARowKey: ThiiRowKey);
 begin
   if not Assigned(FRows) then
     Exit;
   if (ASourceRowIndex >= 0) and (ASourceRowIndex < FRows.Count) then
-    ARowKey := Th5uRowKey.FromInt64(FRows[ASourceRowIndex].Id);
+    ARowKey := ThiiRowKey.FromInt64(FRows[ASourceRowIndex].Id);
 end;
 
 procedure TFmxVirtualDemoForm.VirtualGetValue(Sender: TObject; ASourceRowIndex: Int64; const AFieldName: string; var AValue: TValue);

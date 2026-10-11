@@ -32,56 +32,56 @@ uses
   h5u.Grid.Types;
 
 type
-  Th5uCustomDataController = class;
-  Th5uDataControllerLink = class;
+  ThiiCustomDataController = class;
+  ThiiDataControllerLink = class;
 
-  Th5uDataControllerChangedEvent = procedure(Sender: TObject; const AChange: Th5uDataChange) of object;
+  ThiiDataControllerChangedEvent = procedure(Sender: TObject; const AChange: ThiiDataChange) of object;
 
-  Th5uDataControllerLink = class(TObject)
+  ThiiDataControllerLink = class(TObject)
   private
-    FController: Th5uCustomDataController;
-    FOnChanged: Th5uDataControllerChangedEvent;
-    procedure SetController(const AValue: Th5uCustomDataController);
+    FController: ThiiCustomDataController;
+    FOnChanged: ThiiDataControllerChangedEvent;
+    procedure SetController(const AValue: ThiiCustomDataController);
   public
     destructor Destroy; override;
-    procedure DataChanged(const AChange: Th5uDataChange);
-    property Controller: Th5uCustomDataController read FController write SetController;
-    property OnChanged: Th5uDataControllerChangedEvent read FOnChanged write FOnChanged;
+    procedure DataChanged(const AChange: ThiiDataChange);
+    property Controller: ThiiCustomDataController read FController write SetController;
+    property OnChanged: ThiiDataControllerChangedEvent read FOnChanged write FOnChanged;
   end;
 
-  Th5uDataViewSession = class(Th5uFactoryObject)
+  ThiiDataViewSession = class(ThiiFactoryObject)
   private
     FGrid: TObject;
     FView: TObject;
-    FController: Th5uCustomDataController;
+    FController: ThiiCustomDataController;
     FQueryGeneration: Int64;
   public
-    constructor Create(const AContext: Th5uFactoryContext); override;
+    constructor Create(const AContext: ThiiFactoryContext); override;
     procedure NextQueryGeneration;
     property Grid: TObject read FGrid;
     property View: TObject read FView;
-    property Controller: Th5uCustomDataController read FController;
+    property Controller: ThiiCustomDataController read FController;
     property QueryGeneration: Int64 read FQueryGeneration;
   end;
 
-  Th5uCustomDataController = class(TComponent)
+  ThiiCustomDataController = class(TComponent)
   private
-    FLinks: {$IFDEF FPC}specialize {$ENDIF}TList<Th5uDataControllerLink>;
-    FFactoryScope: Th5uFactoryScope;
-    FSharedClassFactory: Th5uClassFactory;
-    FCache: Th5uCacheOptions;
-    FPagination: Th5uPaginationOptions;
+    FLinks: {$IFDEF FPC}specialize {$ENDIF}TList<ThiiDataControllerLink>;
+    FFactoryScope: ThiiFactoryScope;
+    FSharedClassFactory: ThiiClassFactory;
+    FCache: ThiiCacheOptions;
+    FPagination: ThiiPaginationOptions;
     FEnabled: Boolean;
     FUpdateCount: Integer;
     FPendingReset: Boolean;
     procedure CacheOptionsChanged(Sender: TObject);
     procedure PaginationOptionsChanged(Sender: TObject);
-    procedure SetSharedClassFactory(const AValue: Th5uClassFactory);
+    procedure SetSharedClassFactory(const AValue: ThiiClassFactory);
   protected
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
 
     function GetSourceRowCount: Int64; virtual; abstract;
-    function GetSourceRowKey(ASourceRowIndex: Int64): Th5uRowKey; virtual;
+    function GetSourceRowKey(ASourceRowIndex: Int64): ThiiRowKey; virtual;
     function GetSourceValue(ASourceRowIndex: Int64; const AFieldName: string): TValue; virtual; abstract;
     procedure SetSourceValue(ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue); virtual;
     function GetSourceCanEdit(ASourceRowIndex: Int64; const AFieldName: string): Boolean; virtual;
@@ -91,13 +91,13 @@ type
     procedure DoCacheOptionsChanged; virtual;
     procedure DoPaginationChanged; virtual;
 
-    procedure RegisterLink(ALink: Th5uDataControllerLink);
-    procedure UnregisterLink(ALink: Th5uDataControllerLink);
-    procedure NotifyDataChanged(const AChange: Th5uDataChange);
+    procedure RegisterLink(ALink: ThiiDataControllerLink);
+    procedure UnregisterLink(ALink: ThiiDataControllerLink);
+    procedure NotifyDataChanged(const AChange: ThiiDataChange);
 
-    function GetDataSessionClass(const AContext: Th5uFactoryContext): TClass; virtual;
+    function GetDataSessionClass(const AContext: ThiiFactoryContext): TClass; virtual;
 
-    property Links: {$IFDEF FPC}specialize {$ENDIF}TList<Th5uDataControllerLink> read FLinks;
+    property Links: {$IFDEF FPC}specialize {$ENDIF}TList<ThiiDataControllerLink> read FLinks;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -114,20 +114,20 @@ type
     // immediately following logical view index so layout helpers can inspect
     // a page boundary without treating it as the end of the source.
     function IsRowAvailable(AViewRowIndex: Int64): Boolean;
-    function GetRowKey(AViewRowIndex: Int64): Th5uRowKey;
+    function GetRowKey(AViewRowIndex: Int64): ThiiRowKey;
     function GetValue(AViewRowIndex: Int64; const AFieldName: string): TValue;
     procedure SetValue(AViewRowIndex: Int64; const AFieldName: string; const AValue: TValue);
     function CanEdit(AViewRowIndex: Int64; const AFieldName: string): Boolean;
     function GetDisplayText(AViewRowIndex: Int64; const AFieldName: string; const ADisplayFormat: string = ''): string;
 
-    function CreateSession(AGrid, AView: TObject): Th5uDataViewSession; virtual;
+    function CreateSession(AGrid, AView: TObject): ThiiDataViewSession; virtual;
 
-    property FactoryScope: Th5uFactoryScope read FFactoryScope;
+    property FactoryScope: ThiiFactoryScope read FFactoryScope;
   published
     property Enabled: Boolean read FEnabled write FEnabled default True;
-    property SharedClassFactory: Th5uClassFactory read FSharedClassFactory write SetSharedClassFactory;
-    property Cache: Th5uCacheOptions read FCache write FCache;
-    property Pagination: Th5uPaginationOptions read FPagination write FPagination;
+    property SharedClassFactory: ThiiClassFactory read FSharedClassFactory write SetSharedClassFactory;
+    property Cache: ThiiCacheOptions read FCache write FCache;
+    property Pagination: ThiiPaginationOptions read FPagination write FPagination;
   end;
 
 function h5uValueToDisplayText(const AValue: TValue; const ADisplayFormat: string = ''): string;
@@ -228,21 +228,21 @@ begin
   Result := TryStrToInt(LText, AInteger);
 end;
 
-{ Th5uDataControllerLink }
+{ ThiiDataControllerLink }
 
-procedure Th5uDataControllerLink.DataChanged(const AChange: Th5uDataChange);
+procedure ThiiDataControllerLink.DataChanged(const AChange: ThiiDataChange);
 begin
   if Assigned(FOnChanged) then
     FOnChanged(FController, AChange);
 end;
 
-destructor Th5uDataControllerLink.Destroy;
+destructor ThiiDataControllerLink.Destroy;
 begin
   Controller := nil;
   inherited;
 end;
 
-procedure Th5uDataControllerLink.SetController(const AValue: Th5uCustomDataController);
+procedure ThiiDataControllerLink.SetController(const AValue: ThiiCustomDataController);
 begin
   if FController = AValue then
     Exit;
@@ -256,37 +256,37 @@ begin
     FController.RegisterLink(Self);
 end;
 
-{ Th5uDataViewSession }
+{ ThiiDataViewSession }
 
-constructor Th5uDataViewSession.Create(const AContext: Th5uFactoryContext);
+constructor ThiiDataViewSession.Create(const AContext: ThiiFactoryContext);
 begin
   inherited;
   FGrid := AContext.Grid;
   FView := AContext.View;
-  if AContext.DataController is Th5uCustomDataController then
-    FController := Th5uCustomDataController(AContext.DataController);
+  if AContext.DataController is ThiiCustomDataController then
+    FController := ThiiCustomDataController(AContext.DataController);
   FQueryGeneration := 1;
 end;
 
-procedure Th5uDataViewSession.NextQueryGeneration;
+procedure ThiiDataViewSession.NextQueryGeneration;
 begin
   Inc(FQueryGeneration);
 end;
 
-{ Th5uCustomDataController }
+{ ThiiCustomDataController }
 
-procedure Th5uCustomDataController.BeginUpdate;
+procedure ThiiCustomDataController.BeginUpdate;
 begin
   Inc(FUpdateCount);
 end;
 
-procedure Th5uCustomDataController.CacheOptionsChanged(Sender: TObject);
+procedure ThiiCustomDataController.CacheOptionsChanged(Sender: TObject);
 begin
   DoCacheOptionsChanged;
   Invalidate;
 end;
 
-function Th5uCustomDataController.CanEdit(AViewRowIndex: Int64; const AFieldName: string): Boolean;
+function ThiiCustomDataController.CanEdit(AViewRowIndex: Int64; const AFieldName: string): Boolean;
 var
   LSourceIndex: Int64;
 begin
@@ -296,31 +296,31 @@ begin
   Result := (LSourceIndex >= 0) and GetSourceCanEdit(LSourceIndex, AFieldName);
 end;
 
-constructor Th5uCustomDataController.Create(AOwner: TComponent);
+constructor ThiiCustomDataController.Create(AOwner: TComponent);
 begin
   inherited;
-  FLinks := {$IFDEF FPC}specialize {$ENDIF}TList<Th5uDataControllerLink>.Create;
-  FFactoryScope := Th5uFactoryScope.Create(Self);
+  FLinks := {$IFDEF FPC}specialize {$ENDIF}TList<ThiiDataControllerLink>.Create;
+  FFactoryScope := ThiiFactoryScope.Create(Self);
   FFactoryScope.Parent := h5uGlobalFactoryScope;
-  FCache := Th5uCacheOptions.Create;
+  FCache := ThiiCacheOptions.Create;
   FCache.OnChanged := {$IFDEF FPC}@{$ENDIF}CacheOptionsChanged;
-  FPagination := Th5uPaginationOptions.Create;
+  FPagination := ThiiPaginationOptions.Create;
   FPagination.OnChanged := {$IFDEF FPC}@{$ENDIF}PaginationOptionsChanged;
   FEnabled := True;
 end;
 
-function Th5uCustomDataController.CreateSession(AGrid, AView: TObject): Th5uDataViewSession;
+function ThiiCustomDataController.CreateSession(AGrid, AView: TObject): ThiiDataViewSession;
 var
-  LContext: Th5uFactoryContext;
+  LContext: ThiiFactoryContext;
 begin
-  LContext := Th5uFactoryContext.Create(AGrid, AView, Self, h5uClassIdDataSession, Th5uElementKind.DataSession);
+  LContext := ThiiFactoryContext.Create(AGrid, AView, Self, h5uClassIdDataSession, ThiiElementKind.DataSession);
   LContext.Owner := Self;
-  LContext.CreationReason := Th5uCreationReason.ControllerInternal;
+  LContext.CreationReason := ThiiCreationReason.ControllerInternal;
 
-  Result := Th5uDataViewSession(FFactoryScope.CreateInstance(LContext, Th5uDataViewSession, GetDataSessionClass(LContext)));
+  Result := ThiiDataViewSession(FFactoryScope.CreateInstance(LContext, ThiiDataViewSession, GetDataSessionClass(LContext)));
 end;
 
-destructor Th5uCustomDataController.Destroy;
+destructor ThiiCustomDataController.Destroy;
 begin
   if Assigned(FLinks) then
     while FLinks.Count > 0 do
@@ -332,15 +332,15 @@ begin
   inherited;
 end;
 
-procedure Th5uCustomDataController.DoCacheOptionsChanged;
+procedure ThiiCustomDataController.DoCacheOptionsChanged;
 begin
 end;
 
-procedure Th5uCustomDataController.DoPaginationChanged;
+procedure ThiiCustomDataController.DoPaginationChanged;
 begin
 end;
 
-procedure Th5uCustomDataController.EndUpdate;
+procedure ThiiCustomDataController.EndUpdate;
 begin
   if FUpdateCount = 0 then
     Exit;
@@ -349,16 +349,16 @@ begin
   if (FUpdateCount = 0) and FPendingReset then
   begin
     FPendingReset := False;
-    NotifyDataChanged(Th5uDataChange.ResetAll);
+    NotifyDataChanged(ThiiDataChange.ResetAll);
   end;
 end;
 
-function Th5uCustomDataController.GetDataSessionClass(const AContext: Th5uFactoryContext): TClass;
+function ThiiCustomDataController.GetDataSessionClass(const AContext: ThiiFactoryContext): TClass;
 begin
-  Result := Th5uDataViewSession;
+  Result := ThiiDataViewSession;
 end;
 
-function Th5uCustomDataController.GetDisplayText(AViewRowIndex: Int64; const AFieldName, ADisplayFormat: string): string;
+function ThiiCustomDataController.GetDisplayText(AViewRowIndex: Int64; const AFieldName, ADisplayFormat: string): string;
 var
   LSourceIndex: Int64;
 begin
@@ -368,7 +368,7 @@ begin
   Result := GetSourceDisplayText(LSourceIndex, AFieldName, ADisplayFormat);
 end;
 
-function Th5uCustomDataController.GetRowCount: Int64;
+function ThiiCustomDataController.GetRowCount: Int64;
 var
   LTotal: Int64;
   LOffset: Int64;
@@ -377,7 +377,7 @@ begin
     Exit(0);
 
   LTotal := GetSourceRowCount;
-  if FPagination.Mode <> Th5uPaginationMode.NumberedPages then
+  if FPagination.Mode <> ThiiPaginationMode.NumberedPages then
     Exit(LTotal);
 
   LOffset := Int64(FPagination.PageIndex) * FPagination.PageSize;
@@ -389,51 +389,51 @@ begin
     Result := FPagination.PageSize;
 end;
 
-function Th5uCustomDataController.GetSourceRowIndex(AViewRowIndex: Int64): Int64;
+function ThiiCustomDataController.GetSourceRowIndex(AViewRowIndex: Int64): Int64;
 begin
   if not FEnabled then
     Exit(-1);
   Result := MapViewToSourceIndex(AViewRowIndex);
 end;
 
-function Th5uCustomDataController.IsRowAvailable(AViewRowIndex: Int64): Boolean;
+function ThiiCustomDataController.IsRowAvailable(AViewRowIndex: Int64): Boolean;
 begin
   Result := GetSourceRowIndex(AViewRowIndex) >= 0;
 end;
 
-function Th5uCustomDataController.GetRowKey(AViewRowIndex: Int64): Th5uRowKey;
+function ThiiCustomDataController.GetRowKey(AViewRowIndex: Int64): ThiiRowKey;
 var
   LSourceIndex: Int64;
 begin
   LSourceIndex := MapViewToSourceIndex(AViewRowIndex);
   if LSourceIndex < 0 then
-    Exit(Th5uRowKey.Empty);
+    Exit(ThiiRowKey.Empty);
   Result := GetSourceRowKey(LSourceIndex);
 end;
 
-function Th5uCustomDataController.GetSourceCanEdit(ASourceRowIndex: Int64; const AFieldName: string): Boolean;
+function ThiiCustomDataController.GetSourceCanEdit(ASourceRowIndex: Int64; const AFieldName: string): Boolean;
 begin
   Result := False;
 end;
 
-function Th5uCustomDataController.GetSourceDisplayText(ASourceRowIndex: Int64; const AFieldName, ADisplayFormat: string): string;
+function ThiiCustomDataController.GetSourceDisplayText(ASourceRowIndex: Int64; const AFieldName, ADisplayFormat: string): string;
 begin
   Result := h5uValueToDisplayText(GetSourceValue(ASourceRowIndex, AFieldName), ADisplayFormat);
 end;
 
-function Th5uCustomDataController.GetSourceRowKey(ASourceRowIndex: Int64): Th5uRowKey;
+function ThiiCustomDataController.GetSourceRowKey(ASourceRowIndex: Int64): ThiiRowKey;
 begin
-  Result := Th5uRowKey.FromInt64(ASourceRowIndex);
+  Result := ThiiRowKey.FromInt64(ASourceRowIndex);
 end;
 
-function Th5uCustomDataController.GetTotalRowCount: Int64;
+function ThiiCustomDataController.GetTotalRowCount: Int64;
 begin
   if not FEnabled then
     Exit(0);
   Result := GetSourceRowCount;
 end;
 
-function Th5uCustomDataController.GetValue(AViewRowIndex: Int64; const AFieldName: string): TValue;
+function ThiiCustomDataController.GetValue(AViewRowIndex: Int64; const AFieldName: string): TValue;
 var
   LSourceIndex: Int64;
 begin
@@ -443,37 +443,37 @@ begin
   Result := GetSourceValue(LSourceIndex, AFieldName);
 end;
 
-procedure Th5uCustomDataController.Invalidate;
+procedure ThiiCustomDataController.Invalidate;
 begin
   if FUpdateCount > 0 then
   begin
     FPendingReset := True;
     Exit;
   end;
-  NotifyDataChanged(Th5uDataChange.ResetAll);
+  NotifyDataChanged(ThiiDataChange.ResetAll);
 end;
 
-function Th5uCustomDataController.MapViewToSourceIndex(AViewRowIndex: Int64): Int64;
+function ThiiCustomDataController.MapViewToSourceIndex(AViewRowIndex: Int64): Int64;
 begin
   Result := AViewRowIndex;
-  if FPagination.Mode = Th5uPaginationMode.NumberedPages then
+  if FPagination.Mode = ThiiPaginationMode.NumberedPages then
     Inc(Result, Int64(FPagination.PageIndex) * FPagination.PageSize);
 
   if (Result < 0) or (Result >= GetSourceRowCount) then
     Result := -1;
 end;
 
-procedure Th5uCustomDataController.Notification(AComponent: TComponent; Operation: TOperation);
+procedure ThiiCustomDataController.Notification(AComponent: TComponent; Operation: TOperation);
 begin
   inherited;
   if (Operation = opRemove) and (AComponent = FSharedClassFactory) then
     SharedClassFactory := nil;
 end;
 
-procedure Th5uCustomDataController.NotifyDataChanged(const AChange: Th5uDataChange);
+procedure ThiiCustomDataController.NotifyDataChanged(const AChange: ThiiDataChange);
 var
-  LLinks: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uDataControllerLink>;
-  LLink: Th5uDataControllerLink;
+  LLinks: {$IFDEF FPC}specialize {$ENDIF}TArray<ThiiDataControllerLink>;
+  LLink: ThiiDataControllerLink;
 begin
   if FUpdateCount > 0 then
   begin
@@ -486,27 +486,27 @@ begin
     LLink.DataChanged(AChange);
 end;
 
-procedure Th5uCustomDataController.PaginationOptionsChanged(Sender: TObject);
+procedure ThiiCustomDataController.PaginationOptionsChanged(Sender: TObject);
 var
-  LChange: Th5uDataChange;
+  LChange: ThiiDataChange;
 begin
   DoPaginationChanged;
-  LChange := Th5uDataChange.ResetAll;
-  LChange.Kind := Th5uDataChangeKind.PageChanged;
+  LChange := ThiiDataChange.ResetAll;
+  LChange.Kind := ThiiDataChangeKind.PageChanged;
   NotifyDataChanged(LChange);
 end;
 
-procedure Th5uCustomDataController.PrepareRange(AFirstViewRow, ACount: Int64);
+procedure ThiiCustomDataController.PrepareRange(AFirstViewRow, ACount: Int64);
 begin
 end;
 
-procedure Th5uCustomDataController.RegisterLink(ALink: Th5uDataControllerLink);
+procedure ThiiCustomDataController.RegisterLink(ALink: ThiiDataControllerLink);
 begin
   if FLinks.IndexOf(ALink) < 0 then
     FLinks.Add(ALink);
 end;
 
-procedure Th5uCustomDataController.SetSharedClassFactory(const AValue: Th5uClassFactory);
+procedure ThiiCustomDataController.SetSharedClassFactory(const AValue: ThiiClassFactory);
 begin
   if FSharedClassFactory = AValue then
     Exit;
@@ -525,12 +525,12 @@ begin
     FFactoryScope.Parent := h5uGlobalFactoryScope;
 end;
 
-procedure Th5uCustomDataController.SetSourceValue(ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue);
+procedure ThiiCustomDataController.SetSourceValue(ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue);
 begin
-  raise Eh5uDataController.CreateFmt('%s does not support editing field "%s".', [ClassName, AFieldName]);
+  raise EhiiDataController.CreateFmt('%s does not support editing field "%s".', [ClassName, AFieldName]);
 end;
 
-procedure Th5uCustomDataController.SetValue(AViewRowIndex: Int64; const AFieldName: string; const AValue: TValue);
+procedure ThiiCustomDataController.SetValue(AViewRowIndex: Int64; const AFieldName: string; const AValue: TValue);
 var
   LSourceIndex: Int64;
 begin
@@ -539,12 +539,12 @@ begin
     Exit;
 
   if not GetSourceCanEdit(LSourceIndex, AFieldName) then
-    raise Eh5uDataController.CreateFmt('Field "%s" cannot be edited.', [AFieldName]);
+    raise EhiiDataController.CreateFmt('Field "%s" cannot be edited.', [AFieldName]);
 
   SetSourceValue(LSourceIndex, AFieldName, AValue);
 end;
 
-procedure Th5uCustomDataController.UnregisterLink(ALink: Th5uDataControllerLink);
+procedure ThiiCustomDataController.UnregisterLink(ALink: ThiiDataControllerLink);
 begin
   FLinks.Remove(ALink);
 end;

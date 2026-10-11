@@ -5,6 +5,7 @@ interface
 {$SCOPEDENUMS ON}
 
 uses
+  h5u.Grid.Types,
   System.Math,
   System.Classes,
   System.Rtti,
@@ -17,20 +18,16 @@ uses
   Vcl.Forms,
   Vcl.Graphics,
   Vcl.StdCtrls,
-  h5u.Grid.Data.Core,
   h5u.Grid.Data.DataSet,
   h5u.Grid.Factory,
   h5u.Grid.SampleData,
-  h5u.Grid.Types,
-  h5u.Grid.Columns,
-  h5u.Grid.Options,
   Vcl.h5u.Grid.Styles,
   Vcl.h5u.Grid;
 
 type
-  TPriorityDemoCell = class(Th5uVclDataCell)
+  TPriorityDemoCell = class(ThiiVclDataCell)
   protected
-    procedure PaintDefault(AGrid: Th5uVclCustomGrid; ACanvas: TCanvas); override;
+    procedure PaintDefault(AGrid: ThiiCustomGrid; ACanvas: TCanvas); override;
   end;
 
   TVclDatasetDemoForm = class(TForm)
@@ -52,17 +49,17 @@ type
     NextPageButton: TButton;
     MoveNameButton: TButton;
     InfoLabel: TLabel;
-    SampleData: Th5uSampleClientDataSet;
+    SampleData: ThiiSampleClientDataset;
     DataSource: TDataSource;
-    DataController: Th5uDataSetController;
-    Grid: Th5uVclGrid;
+    DataController: ThiiDatasetController;
+    Grid: ThiiGrid;
     procedure FormCreate(Sender: TObject);
     procedure OptionClick(Sender: TObject);
     procedure NextPageButtonClick(Sender: TObject);
     procedure MoveNameButtonClick(Sender: TObject);
     procedure ToggleGroupsButtonClick(Sender: TObject);
-    procedure GridGetRowHeight(Sender: TObject; const AContext: Th5uGetRowHeightContext; var AHeight: Integer; var ACacheResult: Boolean);
-    procedure GridGetThumbHint(Sender: TObject; const AContext: Th5uThumbHintContext; var AText: string; var AVisible: Boolean);
+    procedure GridGetRowHeight(Sender: TObject; const AContext: ThiiGetRowHeightContext; var AHeight: Integer; var ACacheResult: Boolean);
+    procedure GridGetThumbHint(Sender: TObject; const AContext: ThiiThumbHintContext; var AText: string; var AVisible: Boolean);
   private
     FAllAdjacentGroupsCollapsed: Boolean;
     procedure ApplyOptions;
@@ -77,7 +74,7 @@ implementation
 
 { TPriorityDemoCell }
 
-procedure TPriorityDemoCell.PaintDefault(AGrid: Th5uVclCustomGrid; ACanvas: TCanvas);
+procedure TPriorityDemoCell.PaintDefault(AGrid: ThiiCustomGrid; ACanvas: TCanvas);
 var
   LPriority: Integer;
   LRect: TRect;
@@ -102,15 +99,15 @@ end;
 
 procedure TVclDatasetDemoForm.ApplyOptions;
 var
-  LPictureColumn: Th5uGridColumn;
-  LNameColumn: Th5uGridColumn;
-  LActiveColumn: Th5uGridColumn;
-  LDescriptionColumn: Th5uGridColumn;
+  LPictureColumn: ThiiGridColumn;
+  LNameColumn: ThiiGridColumn;
+  LActiveColumn: ThiiGridColumn;
+  LDescriptionColumn: ThiiGridColumn;
 begin
   if AutoHeightCheck.Checked then
-    Grid.RowHeight.Mode := Th5uRowHeightMode.Automatic
+    Grid.RowHeight.Mode := ThiiRowHeightMode.Automatic
   else
-    Grid.RowHeight.Mode := Th5uRowHeightMode.Fixed;
+    Grid.RowHeight.Mode := ThiiRowHeightMode.Fixed;
 
   Grid.HeaderLayout.Enabled := MultiHeaderCheck.Checked;
 
@@ -124,10 +121,10 @@ begin
   Grid.AdjacentGroupFolding.EndBand.Height := 7;
   Grid.AdjacentGroupFolding.EndBand.StyleName := 'AdjacentGroupEnd';
   case AdjacentBandModeCombo.ItemIndex of
-    0: Grid.AdjacentGroupFolding.EndBand.Visibility := Th5uAdjacentGroupEndBandVisibility.Never;
-    1: Grid.AdjacentGroupFolding.EndBand.Visibility := Th5uAdjacentGroupEndBandVisibility.CollapsedOnly;
-    2: Grid.AdjacentGroupFolding.EndBand.Visibility := Th5uAdjacentGroupEndBandVisibility.ExpandedOnly;
-    else Grid.AdjacentGroupFolding.EndBand.Visibility := Th5uAdjacentGroupEndBandVisibility.Always;
+    0: Grid.AdjacentGroupFolding.EndBand.Visibility := ThiiAdjacentGroupEndBandVisibility.Never;
+    1: Grid.AdjacentGroupFolding.EndBand.Visibility := ThiiAdjacentGroupEndBandVisibility.CollapsedOnly;
+    2: Grid.AdjacentGroupFolding.EndBand.Visibility := ThiiAdjacentGroupEndBandVisibility.ExpandedOnly;
+    else Grid.AdjacentGroupFolding.EndBand.Visibility := ThiiAdjacentGroupEndBandVisibility.Always;
   end;
   ToggleGroupsButton.Enabled := AdjacentGroupCheck.Checked;
 
@@ -144,25 +141,25 @@ begin
 
   if PagedCheck.Checked then
   begin
-    DataController.Pagination.Mode := Th5uPaginationMode.NumberedPages;
+    DataController.Pagination.Mode := ThiiPaginationMode.NumberedPages;
     DataController.Pagination.PageSize := 10;
   end
   else
   begin
-    DataController.Pagination.Mode := Th5uPaginationMode.Continuous;
+    DataController.Pagination.Mode := ThiiPaginationMode.Continuous;
     DataController.Pagination.PageIndex := 0;
   end;
   NextPageButton.Enabled := PagedCheck.Checked;
 
   if CacheCheck.Checked then
-    DataController.Cache.Mode := Th5uCacheMode.Paged
+    DataController.Cache.Mode := ThiiCacheMode.Paged
   else
-    DataController.Cache.Mode := Th5uCacheMode.None;
+    DataController.Cache.Mode := ThiiCacheMode.None;
 
   if DarkCheck.Checked then
-    Grid.Theme := Th5uGridTheme.Dark
+    Grid.Theme := ThiiGridTheme.Dark
   else
-    Grid.Theme := Th5uGridTheme.ApplicationStyle;
+    Grid.Theme := ThiiGridTheme.ApplicationStyle;
 
   // GridLines toggles all grid-wide one-pixel separator bands.
   // Explicit per-column RightSpacing values remain independent.
@@ -219,31 +216,31 @@ begin
   if not SampleData.Active then
     SampleData.RecreateSampleData;
 
-  Grid.FactoryScope.RegisterClass(h5uClassIdGridDataCell, Th5uVclVisualCell, TPriorityDemoCell, 100,
-    function(const AContext: Th5uFactoryContext): Boolean
+  Grid.FactoryScope.RegisterClass(h5uClassIdGridDataCell, ThiiVclVisualCell, TPriorityDemoCell, 100,
+    function(const AContext: ThiiFactoryContext): Boolean
     begin
-      Result := (AContext.Grid = Grid) and (AContext.Column is Th5uGridColumn) and SameText(Th5uGridColumn(AContext.Column).Id, 'priority');
+      Result := (AContext.Grid = Grid) and (AContext.Column is ThiiGridColumn) and SameText(ThiiGridColumn(AContext.Column).Id, 'priority');
     end);
 
   ApplyOptions;
 end;
 
-procedure TVclDatasetDemoForm.GridGetRowHeight(Sender: TObject; const AContext: Th5uGetRowHeightContext; var AHeight: Integer; var ACacheResult: Boolean);
+procedure TVclDatasetDemoForm.GridGetRowHeight(Sender: TObject; const AContext: ThiiGetRowHeightContext; var AHeight: Integer; var ACacheResult: Boolean);
 begin
   // Demonstrates the proposed value as a var parameter.
   if ((AContext.ViewRowIndex + 1) mod 9) = 0 then
     Inc(AHeight, 8);
 end;
 
-procedure TVclDatasetDemoForm.GridGetThumbHint(Sender: TObject; const AContext: Th5uThumbHintContext; var AText: string; var AVisible: Boolean);
+procedure TVclDatasetDemoForm.GridGetThumbHint(Sender: TObject; const AContext: ThiiThumbHintContext; var AText: string; var AVisible: Boolean);
 begin
-  if AContext.Axis = Th5uScrollAxis.Vertical then
+  if AContext.Axis = ThiiScrollAxis.Vertical then
     AText := 'Datensatz: ' + AText;
 end;
 
 procedure TVclDatasetDemoForm.MoveNameButtonClick(Sender: TObject);
 var
-  LColumn: Th5uGridColumn;
+  LColumn: ThiiGridColumn;
 begin
   LColumn := Grid.Columns.FindById('name');
   if Assigned(LColumn) then
@@ -273,7 +270,7 @@ procedure TVclDatasetDemoForm.NextPageButtonClick(Sender: TObject);
 var
   LPageCount: Integer;
 begin
-  if DataController.Pagination.Mode <> Th5uPaginationMode.NumberedPages then
+  if DataController.Pagination.Mode <> ThiiPaginationMode.NumberedPages then
     Exit;
 
   LPageCount := (DataController.GetTotalRowCount + DataController.Pagination.PageSize - 1) div DataController.Pagination.PageSize;

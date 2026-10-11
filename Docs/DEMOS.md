@@ -10,7 +10,7 @@ Demos\Vcl\ClientDataset
 
 Zweck:
 
-- `Th5uSampleClientDataset` mit selbst erzeugtem Schema und Daten
+- `ThiiSampleClientDataset` mit selbst erzeugtem Schema und Daten
 - Anzeige bereits im Designer
 - keine externe Datenbank und keine `.cds`-Datei
 - Text, Memo, Integer, Currency, Boolean, DateTime und BLOB-Bild
@@ -121,7 +121,7 @@ Die Lazarus-Portierungen der drei VCL-Demos liegen hier:
 
 | Demo | Projektverzeichnis | Datenquelle |
 | --- | --- | --- |
-| ClientDataset | `Demos/LCL/ClientDataset` | `Th5uSampleClientDataset` auf Basis von `TBufDataset` |
+| ClientDataset | `Demos/LCL/ClientDataset` | `ThiiSampleClientDataset` auf Basis von `TBufDataset` |
 | ObjectList | `Demos/LCL/ObjectList` | Laufzeitobjekte mit `published`-Properties für FPC-RTTI |
 | VirtualLive | `Demos/LCL/VirtualLive` | Ereignisse des gemeinsamen Virtual-Controllers |
 
@@ -130,7 +130,7 @@ benötigen `Packages/h5uGridLcl.lpk` und dessen Runtime-Abhängigkeiten.
 Für das Öffnen der `.lfm`-Formulare im Designer vorher
 `Packages/h5uGridLclDesign.lpk` installieren; siehe [BUILD.md](BUILD.md).
 
-Die LCL-Demos verwenden `Th5uLclGrid` aus `Lcl.h5u.Grid` und die LCL-Editoren.
+Die LCL-Demos verwenden `ThiiGrid` aus `Lcl.h5u.Grid` und die LCL-Editoren.
 SampleData gehört zum Common-Runtime-Paket. Die Programme benötigen deshalb
 keine Design-Time-Units und die Dataset-Demo keine externe Datenbank.
 Die VCL- und FMX-Demos bleiben als separate Projekte erhalten.
@@ -141,7 +141,7 @@ Vor einem manuellen Start unter Windows den Desktop-Hinweis aus
 
 ## Maus und Touch
 
-Alle sechs Demos setzen `Grid.Customization.ColumnMovingGesture := Th5uColumnRowMovingGesture.Drag`.
+Alle sechs Demos setzen `Grid.Customization.ColumnMovingGesture := ThiiColumnRowMovingGesture.Drag`.
 Einfaches Ziehen am Spaltenkopf verschiebt die Spalte. Ctrl-Klick markiert einzelne Spalten;
 Shift-Klick erweitert die Header-Auswahl. Die Komponente selbst verwendet weiterhin
 `AltDrag` als Standard; bei dieser Einstellung markiert normales Ziehen einen Spaltenbereich.
@@ -194,10 +194,10 @@ aktivierten breiteren Zeilentrenner.
 Nach Installation der Design-Packages:
 
 1. Neues VCL- oder FMX-Formular erstellen.
-2. `Th5uSampleClientDataset` aus `h5u Data` ablegen.
-3. `TDataSource` und `Th5uDatasetController` verbinden.
-4. `Th5uVclGrid` beziehungsweise `Th5uFmxGrid` aus `h5u Grid` ablegen.
+2. `ThiiSampleClientDataset` aus `h5u Data` ablegen.
+3. `TDataSource` und `ThiiDatasetController` verbinden.
+4. `ThiiGrid` beziehungsweise `ThiiGrid` aus `h5u Grid` ablegen.
 5. Controller zuordnen.
 6. Columns erzeugen beziehungsweise die Demoform als Vorlage öffnen.
 
-`Th5uSampleClientDataset` aktiviert sich mit Beispieldaten. Ändern von `SampleRowCount` oder `IncludeImages` erzeugt die Daten erneut.
+`ThiiSampleClientDataset` aktiviert sich mit Beispieldaten. Ändern von `SampleRowCount` oder `IncludeImages` erzeugt die Daten erneut.

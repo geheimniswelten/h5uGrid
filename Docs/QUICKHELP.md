@@ -1,4 +1,4 @@
-﻿# h5u.Grid – Kurzhilfe für Entwickler
+﻿# hiiGrid – Kurzhilfe für Entwickler
 
 ## 1. Benötigte Units
 
@@ -6,8 +6,6 @@ VCL:
 
 ```pascal
 uses
-  h5u.Grid.Types,
-  h5u.Grid.Columns,
   h5u.Grid.Data.Dataset,
   Vcl.h5u.Grid;
 ```
@@ -18,23 +16,27 @@ FMX:
 
 ```pascal
 uses
-  h5u.Grid.Types,
-  h5u.Grid.Columns,
   h5u.Grid.Data.Dataset,
   Fmx.h5u.Grid;
 ```
 
 Mit `FMX` als Unit Scope Name ebenfalls kurz als `h5u.Grid`.
 
+Die Haupt-Unit des jeweiligen Frameworks bietet Aliase für die unmittelbar
+zugehörigen Spalten-, Options-, Enum- und Eventtypen. Die Deklarationen bleiben
+in ihren Common-Units; die Aliase erzeugen keine zusätzlichen Klassen.
+Spezialisierte Controller, native Editor-/Style-Erweiterungen und Factory-IDs
+werden bei Bedarf aus ihren eigenen Units eingebunden.
+
 ## 2. Dataset verbinden
 
 Auf dem Formular:
 
 ```text
-Th5uSampleClientDataset
+ThiiSampleClientDataset
 TDataSource
-Th5uDatasetController
-Th5uVclGrid oder Th5uFmxGrid
+ThiiDatasetController
+ThiiGrid
 ```
 
 Verknüpfung:
@@ -72,7 +74,7 @@ begin
   Id := 'picture';
   FieldName := 'PICTURE';
   Caption := 'Bild';
-  EditorKind := Th5uColumnEditorKind.Image;
+  EditorKind := ThiiColumnEditorKind.Image;
   Width := 90;
 end;
 ```
@@ -93,7 +95,7 @@ Eine separate `ItemClass`-Angabe ist nicht nötig: Der Controller wertet die Lau
 Der Cache kann für direkte, günstige Getter abgeschaltet werden:
 
 ```pascal
-ObjectController1.Cache.Mode := Th5uCacheMode.None;
+ObjectController1.Cache.Mode := ThiiCacheMode.None;
 ```
 
 ## 5. Virtuelle Live-Daten
@@ -111,9 +113,9 @@ end;
 procedure TForm1.VirtualGetRowKey(
   Sender: TObject;
   ASourceRowIndex: Int64;
-  var ARowKey: Th5uRowKey);
+  var ARowKey: ThiiRowKey);
 begin
-  ARowKey := Th5uRowKey.FromInt64(FRows[ASourceRowIndex].Id);
+  ARowKey := ThiiRowKey.FromInt64(FRows[ASourceRowIndex].Id);
 end;
 
 procedure TForm1.VirtualGetValue(
@@ -135,27 +137,27 @@ Globalen Standard nur dann verwenden, wenn wirklich alle Grids betroffen sein so
 ```pascal
 Grid1.FactoryScope.RegisterClass(
   h5uClassIdGridDataCell,
-  Th5uVclVisualCell,
+  ThiiVclVisualCell,
   TMyDataCell,
   100
 );
 ```
 
-Für FMX wird als erwartete Basisklasse `Th5uFmxVisualCell` angegeben. Eine kontextabhängige Registrierung verwendet denselben Aufruf mit Prädikat:
+Für FMX wird als erwartete Basisklasse `ThiiFmxVisualCell` angegeben. Eine kontextabhängige Registrierung verwendet denselben Aufruf mit Prädikat:
 
 ```pascal
 Grid1.FactoryScope.RegisterClass(
   h5uClassIdGridDataCell,
-  Th5uVclVisualCell,
+  ThiiVclVisualCell,
   TMyPriorityCell,
   200,
-  function(const AContext: Th5uFactoryContext): Boolean
+  function(const AContext: ThiiFactoryContext): Boolean
   begin
     Result :=
       (AContext.Grid = Grid1) and
-      (AContext.Column is Th5uGridColumn) and
+      (AContext.Column is ThiiGridColumn) and
       SameText(
-        Th5uGridColumn(AContext.Column).Id,
+        ThiiGridColumn(AContext.Column).Id,
         'priority'
       );
   end
@@ -221,7 +223,7 @@ Zeilenabhängiger Abstand:
 ```pascal
 procedure TForm1.GridGetRowSpacing(
   Sender: TObject;
-  const AContext: Th5uGetRowHeightContext;
+  const AContext: ThiiGetRowHeightContext;
   var ASpacing: Integer);
 begin
   if (AContext.ViewRowIndex + 1) mod 5 = 0 then
@@ -250,7 +252,7 @@ Event:
 ```pascal
 procedure TForm1.GridGetRowHeight(
   Sender: TObject;
-  const AContext: Th5uGetRowHeightContext;
+  const AContext: ThiiGetRowHeightContext;
   var AHeight: Integer;
   var ACacheResult: Boolean);
 begin
@@ -264,7 +266,7 @@ end;
 ## 9. Scrollmodus
 
 ```pascal
-Grid1.Scrolling.VerticalMode := Th5uVerticalScrollMode.Pixel;
+Grid1.Scrolling.VerticalMode := ThiiVerticalScrollMode.Pixel;
 ```
 
 Alternativen:
@@ -296,11 +298,11 @@ Vorschlag ändern:
 ```pascal
 procedure TForm1.GridGetThumbHint(
   Sender: TObject;
-  const AContext: Th5uThumbHintContext;
+  const AContext: ThiiThumbHintContext;
   var AText: string;
   var AVisible: Boolean);
 begin
-  if AContext.Axis = Th5uScrollAxis.Vertical then
+  if AContext.Axis = ThiiScrollAxis.Vertical then
     AText := Format('%s – Zeile %d', [
       AText,
       AContext.ViewRowIndex + 1
@@ -314,9 +316,9 @@ Aktivierbare Arten:
 
 ```pascal
 Grid1.Selection.AllowedKinds := [
-  Th5uSelectionKind.Rows,
-  Th5uSelectionKind.Columns,
-  Th5uSelectionKind.CellRanges
+  ThiiSelectionKind.Rows,
+  ThiiSelectionKind.Columns,
+  ThiiSelectionKind.CellRanges
 ];
 ```
 
@@ -324,7 +326,7 @@ Mischbetrieb:
 
 ```pascal
 Grid1.Selection.CombinationMode :=
-  Th5uSelectionCombinationMode.Mixed;
+  ThiiSelectionCombinationMode.Mixed;
 Grid1.Selection.MultiRange := True;
 ```
 
@@ -415,7 +417,7 @@ Die Level-Column darf unsichtbar sein. Statt einer Column können die Werte übe
 ```pascal
 procedure TForm1.GridGetTreeLevel(
   Sender: TObject;
-  const AContext: Th5uTreeLevelContext;
+  const AContext: ThiiTreeLevelContext;
   var ALevel: Integer;
   var AAvailable: Boolean);
 begin
@@ -424,7 +426,7 @@ end;
 
 procedure TForm1.GridGetTreeBranchEnd(
   Sender: TObject;
-  const AContext: Th5uTreeBranchEndContext;
+  const AContext: ThiiTreeBranchEndContext;
   var AIsBranchEnd: Boolean;
   var AClosedLevels: Integer);
 begin
@@ -432,18 +434,18 @@ begin
 end;
 ```
 
-In `OnCustomDraw` ist die Leiste als `Th5uElementKind.TreeBranchEndBand` erkennbar. Der Factory-Kontext enthält zusätzlich `TreeLevel`, `ClosedTreeLevels` und das Flag `Th5uElementFlag.TreeBranchEnd`. Separatoren und Abschlussleisten werden als gepoolte sichtbare Elemente über den lokalen Factory-Scope erzeugt. Eine VCL-Anwendung kann deshalb beispielsweise nur für dieses Grid eine eigene Klasse einsetzen:
+In `OnCustomDraw` ist die Leiste als `ThiiElementKind.TreeBranchEndBand` erkennbar. Der Factory-Kontext enthält zusätzlich `TreeLevel`, `ClosedTreeLevels` und das Flag `ThiiElementFlag.TreeBranchEnd`. Separatoren und Abschlussleisten werden als gepoolte sichtbare Elemente über den lokalen Factory-Scope erzeugt. Eine VCL-Anwendung kann deshalb beispielsweise nur für dieses Grid eine eigene Klasse einsetzen:
 
 ```pascal
 Grid1.FactoryScope.RegisterClass(
   h5uClassIdGridTreeBranchEndBand,
-  Th5uVclVisualCell,
+  ThiiVclVisualCell,
   TMyTreeBranchEndCell,
   100
 );
 ```
 
-Unter FMX wird entsprechend von `Th5uFmxVisualCell` abgeleitet. Die Funktion ist ein Tree-Metadatenpfad des Prototyps; Ein-/Ausklappen und ein vollständiges `TreeTableView` bleiben eine eigene Ausbaustufe.
+Unter FMX wird entsprechend von `ThiiFmxVisualCell` abgeleitet. Die Funktion ist ein Tree-Metadatenpfad des Prototyps; Ein-/Ausklappen und ein vollständiges `TreeTableView` bleiben eine eigene Ausbaustufe.
 
 ## 16. Aufeinanderfolgende gleiche IDs falten
 
@@ -453,7 +455,7 @@ Unter FMX wird entsprechend von `Th5uFmxVisualCell` abgeleitet. Die Funktion ist
 Grid1.AdjacentGroupFolding.Enabled := True;
 Grid1.AdjacentGroupFolding.IdColumnId := 'fold_group';
 Grid1.AdjacentGroupFolding.InitialState :=
-  Th5uAdjacentGroupInitialState.Expanded;
+  ThiiAdjacentGroupInitialState.Expanded;
 Grid1.AdjacentGroupFolding.ShowFoldGlyph := True;
 Grid1.AdjacentGroupFolding.PreserveStateOnDataChange := True;
 ```
@@ -477,7 +479,7 @@ Grid1.AdjacentGroupFolding.EndBand.Color := TColorRec.SysDefault;
 Grid1.AdjacentGroupFolding.EndBand.StyleName :=
   'AdjacentGroupEnd';
 Grid1.AdjacentGroupFolding.EndBand.Visibility :=
-  Th5uAdjacentGroupEndBandVisibility.Always;
+  ThiiAdjacentGroupEndBandVisibility.Always;
 ```
 
 `Visibility` bietet vier Zustände:
@@ -519,7 +521,7 @@ Die angegebene View-Row darf eine beliebige sichtbare Row des Laufs sein. Das Sy
 ```pascal
 procedure TForm1.GridGetAdjacentGroupId(
   Sender: TObject;
-  const AContext: Th5uAdjacentGroupIdContext;
+  const AContext: ThiiAdjacentGroupIdContext;
   var AGroupId: TValue;
   var AAvailable: Boolean);
 begin
@@ -528,7 +530,7 @@ end;
 
 procedure TForm1.GridAdjacentGroupStateChanged(
   Sender: TObject;
-  const AContext: Th5uAdjacentGroupStateChangedContext);
+  const AContext: ThiiAdjacentGroupStateChangedContext);
 begin
   // AContext.GroupId, AnchorRowKey, RowCount und Collapsed auswerten.
 end;
@@ -552,8 +554,8 @@ Die austauschbaren Elemente heißen:
 h5uClassIdGridAdjacentGroupFoldGlyph
 h5uClassIdGridAdjacentGroupEndBand
 
-Th5uElementKind.AdjacentGroupFoldGlyph
-Th5uElementKind.AdjacentGroupEndBand
+ThiiElementKind.AdjacentGroupFoldGlyph
+ThiiElementKind.AdjacentGroupEndBand
 ```
 
 Die Abschlussleiste hat Vorrang vor einer Tree-Abschlussleiste, falls beide an derselben sichtbaren Grenze liegen. Auch dann wird nur genau eine alternative Leiste verwendet.
@@ -563,12 +565,12 @@ Bei nummerierter Pagination werden Läufe im aktuellen Controller-View beziehung
 ## 17. Cache und Paging
 
 ```pascal
-DatasetController1.Cache.Mode := Th5uCacheMode.Paged;
+DatasetController1.Cache.Mode := ThiiCacheMode.Paged;
 DatasetController1.Cache.PageSize := 100;
 DatasetController1.Cache.MaxCachedPages := 8;
 
 DatasetController1.Pagination.Mode :=
-  Th5uPaginationMode.NumberedPages;
+  ThiiPaginationMode.NumberedPages;
 DatasetController1.Pagination.PageSize := 50;
 DatasetController1.Pagination.PageIndex := 0;
 ```
@@ -612,7 +614,7 @@ Bei unerwartetem Verhalten zuerst prüfen:
 
 ```pascal
 Grid1.Selection.RightClickSelect := True; // Standard: False
-Grid1.Customization.ColumnMovingGesture := Th5uColumnRowMovingGesture.Drag;
+Grid1.Customization.ColumnMovingGesture := ThiiColumnRowMovingGesture.Drag;
 Grid1.Customization.AllowColumnResizing := True;
 Grid1.Customization.ColumnResizeHitZoneLeft := 4;
 Grid1.Customization.ColumnResizeHitZoneRight := 4;

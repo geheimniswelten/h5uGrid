@@ -4,7 +4,7 @@ interface
 
 uses
   System.Classes, DesignIntf,
-  Vcl.h5u.Grid, Vcl.h5u.FormDesigner;
+  Vcl.h5u.Grid, Vcl.h5u.PropertyEditor, Vcl.h5u.FormDesigner;
 
 procedure Register;
 
@@ -12,20 +12,20 @@ implementation
 
 procedure Register;
 begin
-  RegisterPropertyEditor(nil, Th5uVclCustomGrid, 'MinWidth', nil);
-  RegisterPropertyEditor(nil, Th5uVclCustomGrid, 'MaxWidth', nil);
-  RegisterPropertyEditor(nil, Th5uVclCustomGrid, 'AutoWidthRowLimit', nil);
-  RegisterPropertyEditor(nil, Th5uVclCustomGrid, 'HeaderLayout', nil);
-  RegisterPropertyEditor(nil, Th5uVclCustomGrid, 'Theme', nil);
-  RegisterPropertyEditor(nil, Th5uVclCustomGrid, 'HeaderRowHeight', nil);
-  RegisterPropertyEditor(nil, Th5uVclCustomGrid, 'RowIndicatorWidth', nil);
-  RegisterPropertyEditor(nil, Th5uVclCustomGrid, 'ShowHeader', nil);
-  RegisterPropertyEditor(nil, Th5uVclCustomGrid, 'ShowRowIndicator', nil);
-  RegisterPropertyEditor(nil, Th5uVclCustomGrid, 'AllowEditing', nil);
-  RegisterPropertyEditor(nil, Th5uVclCustomGrid, 'ImmediateEdit', nil);
+  RegisterPropertyEditor(nil, ThiiCustomGrid, 'MinWidth', nil);
+  RegisterPropertyEditor(nil, ThiiCustomGrid, 'MaxWidth', nil);
+  RegisterPropertyEditor(nil, ThiiCustomGrid, 'AutoWidthRowLimit', nil);
+  RegisterPropertyEditor(nil, ThiiCustomGrid, 'HeaderLayout', nil);
+  RegisterPropertyEditor(nil, ThiiCustomGrid, 'Theme', nil);
+  RegisterPropertyEditor(nil, ThiiCustomGrid, 'HeaderRowHeight', nil);
+  RegisterPropertyEditor(nil, ThiiCustomGrid, 'RowIndicatorWidth', nil);
+  RegisterPropertyEditor(nil, ThiiCustomGrid, 'ShowHeader', nil);
+  RegisterPropertyEditor(nil, ThiiCustomGrid, 'ShowRowIndicator', nil);
+  RegisterPropertyEditor(nil, ThiiCustomGrid, 'AllowEditing', nil);
+  RegisterPropertyEditor(nil, ThiiCustomGrid, 'ImmediateEdit', nil);
 
-  RegisterComponents('h5u Grid', [Th5uVclGrid]);
-  RegisterComponents('h5u FormDesign', [Th5uVclStructureView, Th5uVclPropertyEditor]);
+  RegisterComponents('hiiGrid', [ThiiGrid]);
+  RegisterComponents('hii FormDesign', [ThiiStructureView, ThiiPropertyEditor]);
 end;
 
 end.

@@ -9,12 +9,12 @@ uses
 
 type
   {$IFDEF TEST_FMX}
-  TTestGrid = Th5uFmxGrid;
-  THeightContext = Th5uFmxGetRowHeightContext;
+  TTestGrid = ThiiGrid;
+  THeightContext = ThiiGetRowHeightContext;
   THeight = Single;
   {$ELSE}
-  TTestGrid = Th5uVclGrid;
-  THeightContext = Th5uGetRowHeightContext;
+  TTestGrid = ThiiGrid;
+  THeightContext = ThiiGetRowHeightContext;
   THeight = Integer;
   {$ENDIF}
 
@@ -33,12 +33,10 @@ type
     InvalidSpacing: Boolean;
     ForcedHeight, RowSpacing: Integer;
     procedure RowCount(Sender: TObject; var ACount: Int64);
-    procedure RowKey(Sender: TObject; ARow: Int64; var AKey: Th5uRowKey);
+    procedure RowKey(Sender: TObject; ARow: Int64; var AKey: ThiiRowKey);
     procedure Value(Sender: TObject; ARow: Int64; const AField: string; var AValue: TValue);
-    procedure Height(Sender: TObject; const AContext: THeightContext;
-      var AHeight: THeight; var ACacheResult: Boolean);
-    procedure Spacing(Sender: TObject; const AContext: THeightContext;
-      var ASpacing: THeight);
+    procedure Height(Sender: TObject; const AContext: THeightContext; var AHeight: THeight; var ACacheResult: Boolean);
+    procedure Spacing(Sender: TObject; const AContext: THeightContext; var ASpacing: THeight);
   end;
 
 procedure Check(ACondition: Boolean; const AMessage: string);
@@ -53,10 +51,10 @@ begin
   ACount := Count;
 end;
 
-procedure TSource.RowKey(Sender: TObject; ARow: Int64; var AKey: Th5uRowKey);
+procedure TSource.RowKey(Sender: TObject; ARow: Int64; var AKey: ThiiRowKey);
 begin
   Inc(KeyCalls);
-  AKey := Th5uRowKey.FromInt64(ARow + 1);
+  AKey := ThiiRowKey.FromInt64(ARow + 1);
 end;
 
 procedure TSource.Value(Sender: TObject; ARow: Int64; const AField: string; var AValue: TValue);
@@ -65,8 +63,7 @@ begin
   AValue := TValue.From<string>('Row ' + IntToStr(ARow) + ' wrapping text for automatic height');
 end;
 
-procedure TSource.Height(Sender: TObject; const AContext: THeightContext;
-  var AHeight: THeight; var ACacheResult: Boolean);
+procedure TSource.Height(Sender: TObject; const AContext: THeightContext; var AHeight: THeight; var ACacheResult: Boolean);
 begin
   Inc(HeightCalls);
   AHeight := 24 + (AContext.ViewRowIndex mod 3) * 12;
@@ -77,8 +74,7 @@ begin
   ACacheResult := CacheHeight;
 end;
 
-procedure TSource.Spacing(Sender: TObject; const AContext: THeightContext;
-  var ASpacing: THeight);
+procedure TSource.Spacing(Sender: TObject; const AContext: THeightContext; var ASpacing: THeight);
 begin
   ASpacing := RowSpacing;
   {$IFDEF TEST_FMX}
@@ -147,9 +143,9 @@ var
   Form: TForm;
   Grid: TTestGrid;
   Source: TSource;
-  Controller: Th5uVirtualController;
-  Objects: Th5uObjectListController;
-  Column: Th5uGridColumn;
+  Controller: ThiiVirtualController;
+  Objects: ThiiObjectListController;
+  Column: ThiiGridColumn;
   Row: TRow;
   I: Integer;
   Before: Int64;
@@ -165,7 +161,7 @@ begin
     Grid.Width := 640;
     Grid.Height := 360;
     Grid.ScrollHints.Enabled := False;
-    Grid.RowHeight.Mode := Th5uRowHeightMode.Automatic;
+    Grid.RowHeight.Mode := ThiiRowHeightMode.Automatic;
     Grid.OnGetRowHeight := Source.Height;
     Column := Grid.Columns.Add;
     Column.Id := 'Text';
@@ -173,7 +169,7 @@ begin
     Column.WidthInPercent := 100;
     Column.WordWrap := True;
     Column.AutoHeight := True;
-    Controller := Th5uVirtualController.Create(Form);
+    Controller := ThiiVirtualController.Create(Form);
     Controller.OnGetRowCount := Source.RowCount;
     Controller.OnGetRowKey := Source.RowKey;
     Controller.OnGetValue := Source.Value;
@@ -190,8 +186,7 @@ begin
     Source.ValueCalls := 0;
     ScrollTo(Grid, 0.95);
     PaintOffscreen(Grid);
-    Check((Source.KeyCalls < 2000) and (Source.ValueCalls < 2000),
-      'three-million-row deep scroll visits only a bounded visible range');
+    Check((Source.KeyCalls < 2000) and (Source.ValueCalls < 2000), 'three-million-row deep scroll visits only a bounded visible range');
     Source.HeightCalls := 0;
     PaintOffscreen(Grid);
     Check(Source.HeightCalls = 0, 'deep rows retain measured heights on the next frame');
@@ -215,11 +210,10 @@ begin
     Check(Grid.Performance.Paint.Count = Before, 'disabled timing leaves counters unchanged');
     Grid.Performance.Enabled := True;
     Grid.Performance.Reset;
-    Check((Grid.Performance.Paint.Count = 0) and (Grid.Performance.Layout.TotalMilliseconds = 0),
-      'performance reset clears counts and durations');
+    Check((Grid.Performance.Paint.Count = 0) and (Grid.Performance.Layout.TotalMilliseconds = 0), 'performance reset clears counts and durations');
 
     Grid.DataController := nil;
-    Objects := Th5uObjectListController.Create(Form);
+    Objects := ThiiObjectListController.Create(Form);
     Objects.OwnsObjects := True;
     Objects.BeginUpdate;
     try
@@ -250,8 +244,7 @@ begin
     Before := Round(VerticalBar(Grid).Max);
     Source.ForcedHeight := 200;
     PaintOffscreen(Grid);
-    Check(Round(VerticalBar(Grid).Max) = Before + 800,
-      'uncached dynamic heights update the scrollbar in the same frame');
+    Check(Round(VerticalBar(Grid).Max) = Before + 800, 'uncached dynamic heights update the scrollbar in the same frame');
 
     Source.CacheHeight := True;
     Source.RowSpacing := 1;
@@ -261,14 +254,12 @@ begin
     Source.HeightCalls := 0;
     Source.RowSpacing := 41;
     PaintOffscreen(Grid);
-    Check(Round(VerticalBar(Grid).Max) = Before + 320,
-      'dynamic spacing updates the exact total including offscreen rows');
+    Check(Round(VerticalBar(Grid).Max) = Before + 320, 'dynamic spacing updates the exact total including offscreen rows');
     Check(Source.HeightCalls = 0, 'dynamic spacing retains cached content heights');
     {$IFDEF TEST_FMX}
     Source.InvalidSpacing := True;
     PaintOffscreen(Grid);
-    Check(Round(VerticalBar(Grid).Max) = Before,
-      'invalid floating-point row spacing falls back to the configured spacing');
+    Check(Round(VerticalBar(Grid).Max) = Before, 'invalid floating-point row spacing falls back to the configured spacing');
     {$ENDIF}
     Writeln('PASS: scrolling, cache invalidation and public performance counters');
   finally

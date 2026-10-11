@@ -29,11 +29,11 @@ uses
   h5u.Grid.Types;
 
 type
-  Th5uDatasetController = class;
+  ThiiDatasetController = class;
 
   Th5uDatasetDataLink = class(TDataLink)
   private
-    FOwner: Th5uDatasetController;
+    FOwner: ThiiDatasetController;
   protected
     procedure ActiveChanged; override;
     procedure DataSetChanged; override;
@@ -41,21 +41,21 @@ type
     procedure LayoutChanged; override;
     procedure RecordChanged(Field: TField); override;
   public
-    constructor Create(AOwner: Th5uDatasetController);
+    constructor Create(AOwner: ThiiDatasetController);
   end;
 
   Th5uDataRowSnapshot = class
   private
-    FRowKey: Th5uRowKey;
+    FRowKey: ThiiRowKey;
     FValues: {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, TValue>;
   public
     constructor Create;
     destructor Destroy; override;
-    property RowKey: Th5uRowKey read FRowKey write FRowKey;
+    property RowKey: ThiiRowKey read FRowKey write FRowKey;
     property Values: {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, TValue> read FValues;
   end;
 
-  Th5uDatasetController = class(Th5uCustomDataController)
+  ThiiDatasetController = class(ThiiCustomDataController)
   private
     FDataSource: TDataSource;
     FDataLink: Th5uDatasetDataLink;
@@ -75,7 +75,7 @@ type
   protected
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     function GetSourceRowCount: Int64; override;
-    function GetSourceRowKey(ASourceRowIndex: Int64): Th5uRowKey; override;
+    function GetSourceRowKey(ASourceRowIndex: Int64): ThiiRowKey; override;
     function GetSourceValue(ASourceRowIndex: Int64; const AFieldName: string): TValue; override;
     procedure SetSourceValue(ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue); override;
     function GetSourceCanEdit(ASourceRowIndex: Int64; const AFieldName: string): Boolean; override;
@@ -84,7 +84,7 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure PrepareRange(AFirstViewRow, ACount: Int64); override;
-    procedure DatasetChanged(AKind: Th5uDataChangeKind; AField: TField = nil);
+    procedure DatasetChanged(AKind: ThiiDataChangeKind; AField: TField = nil);
     property Dataset: TDataset read GetDataset;
   published
     property DataSource: TDataSource read FDataSource write SetDataSource;
@@ -98,10 +98,10 @@ implementation
 procedure Th5uDatasetDataLink.ActiveChanged;
 begin
   inherited;
-  FOwner.DatasetChanged(Th5uDataChangeKind.Reset);
+  FOwner.DatasetChanged(ThiiDataChangeKind.Reset);
 end;
 
-constructor Th5uDatasetDataLink.Create(AOwner: Th5uDatasetController);
+constructor Th5uDatasetDataLink.Create(AOwner: ThiiDatasetController);
 begin
   inherited Create;
   FOwner := AOwner;
@@ -110,7 +110,7 @@ end;
 procedure Th5uDatasetDataLink.DataSetChanged;
 begin
   inherited;
-  FOwner.DatasetChanged(Th5uDataChangeKind.RowsChanged);
+  FOwner.DatasetChanged(ThiiDataChangeKind.RowsChanged);
 end;
 
 procedure Th5uDatasetDataLink.DataSetScrolled(Distance: Integer);
@@ -121,13 +121,13 @@ end;
 procedure Th5uDatasetDataLink.LayoutChanged;
 begin
   inherited;
-  FOwner.DatasetChanged(Th5uDataChangeKind.LayoutChanged);
+  FOwner.DatasetChanged(ThiiDataChangeKind.LayoutChanged);
 end;
 
 procedure Th5uDatasetDataLink.RecordChanged(Field: TField);
 begin
   inherited;
-  FOwner.DatasetChanged(Th5uDataChangeKind.CellChanged, Field);
+  FOwner.DatasetChanged(ThiiDataChangeKind.CellChanged, Field);
 end;
 
 { Th5uDataRowSnapshot }
@@ -144,23 +144,23 @@ begin
   inherited;
 end;
 
-{ Th5uDatasetController }
+{ ThiiDatasetController }
 
-procedure Th5uDatasetController.ClearSnapshotCache;
+procedure ThiiDatasetController.ClearSnapshotCache;
 begin
   FSnapshotCache.Clear;
   Inc(FCacheGeneration);
 end;
 
-constructor Th5uDatasetController.Create(AOwner: TComponent);
+constructor ThiiDatasetController.Create(AOwner: TComponent);
 begin
   inherited;
   FDataLink := Th5uDatasetDataLink.Create(Self);
   FSnapshotCache := {$IFDEF FPC}specialize {$ENDIF}TObjectDictionary<Int64, Th5uDataRowSnapshot>.Create([doOwnsValues]);
-  Cache.Mode := Th5uCacheMode.Viewport;
+  Cache.Mode := ThiiCacheMode.Viewport;
 end;
 
-function Th5uDatasetController.CreateSnapshot(ASourceRowIndex: Int64): Th5uDataRowSnapshot;
+function ThiiDatasetController.CreateSnapshot(ASourceRowIndex: Int64): Th5uDataRowSnapshot;
 var
   LDataset: TDataset;
   LBookmark: TBookmark;
@@ -194,10 +194,10 @@ begin
         if (FKeyFieldName <> '') and Assigned(LDataset.FindField(FKeyFieldName)) then
         begin
           LKeyValue := ReadFieldValue(LDataset.FieldByName(FKeyFieldName));
-          Result.RowKey := Th5uRowKey.FromString(h5uValueToDisplayText(LKeyValue));
+          Result.RowKey := ThiiRowKey.FromString(h5uValueToDisplayText(LKeyValue));
         end
         else
-          Result.RowKey := Th5uRowKey.FromInt64(ASourceRowIndex);
+          Result.RowKey := ThiiRowKey.FromInt64(ASourceRowIndex);
       finally
         if LHasBookmark and not (LDataset.State in dsEditModes) then
           try
@@ -216,9 +216,9 @@ begin
   end;
 end;
 
-procedure Th5uDatasetController.DatasetChanged(AKind: Th5uDataChangeKind; AField: TField);
+procedure ThiiDatasetController.DatasetChanged(AKind: ThiiDataChangeKind; AField: TField);
 var
-  LChange: Th5uDataChange;
+  LChange: ThiiDataChange;
 begin
   // Internal cursor moves are reads. EnableControls also synchronously notifies
   // the data link, so the read guard must remain active until it returns.
@@ -226,14 +226,14 @@ begin
     Exit;
 
   ClearSnapshotCache;
-  LChange := Th5uDataChange.ResetAll;
+  LChange := ThiiDataChange.ResetAll;
   LChange.Kind := AKind;
   if Assigned(AField) then
     LChange.ColumnId := AField.FieldName;
   NotifyDataChanged(LChange);
 end;
 
-destructor Th5uDatasetController.Destroy;
+destructor ThiiDatasetController.Destroy;
 begin
   FDataLink.DataSource := nil;
   FSnapshotCache.Free;
@@ -241,13 +241,13 @@ begin
   inherited;
 end;
 
-procedure Th5uDatasetController.DoCacheOptionsChanged;
+procedure ThiiDatasetController.DoCacheOptionsChanged;
 begin
   inherited;
   ClearSnapshotCache;
 end;
 
-function Th5uDatasetController.GetDataset: TDataset;
+function ThiiDatasetController.GetDataset: TDataset;
 begin
   if Assigned(FDataSource) then
     Result := FDataSource.Dataset
@@ -255,7 +255,7 @@ begin
     Result := nil;
 end;
 
-function Th5uDatasetController.GetSnapshot(ASourceRowIndex: Int64): Th5uDataRowSnapshot;
+function ThiiDatasetController.GetSnapshot(ASourceRowIndex: Int64): Th5uDataRowSnapshot;
 begin
   if not FSnapshotCache.TryGetValue(ASourceRowIndex, Result) then
   begin
@@ -264,7 +264,7 @@ begin
   end;
 end;
 
-function Th5uDatasetController.GetSourceCanEdit(ASourceRowIndex: Int64; const AFieldName: string): Boolean;
+function ThiiDatasetController.GetSourceCanEdit(ASourceRowIndex: Int64; const AFieldName: string): Boolean;
 var
   LField: TField;
 begin
@@ -276,7 +276,7 @@ begin
   Result := Assigned(LField) and not LField.ReadOnly and (LField.FieldKind = fkData);
 end;
 
-function Th5uDatasetController.GetSourceRowCount: Int64;
+function ThiiDatasetController.GetSourceRowCount: Int64;
 begin
   if Assigned(Dataset) and Dataset.Active then
     Result := Dataset.RecordCount
@@ -284,11 +284,11 @@ begin
     Result := 0;
 end;
 
-function Th5uDatasetController.GetSourceRowKey(ASourceRowIndex: Int64): Th5uRowKey;
+function ThiiDatasetController.GetSourceRowKey(ASourceRowIndex: Int64): ThiiRowKey;
 var
   LSnapshot: Th5uDataRowSnapshot;
 begin
-  if Cache.Mode <> Th5uCacheMode.None then
+  if Cache.Mode <> ThiiCacheMode.None then
   begin
     LSnapshot := GetSnapshot(ASourceRowIndex);
     Exit(LSnapshot.RowKey);
@@ -297,7 +297,7 @@ begin
   Result := inherited;
 end;
 
-function Th5uDatasetController.GetSourceValue(ASourceRowIndex: Int64; const AFieldName: string): TValue;
+function ThiiDatasetController.GetSourceValue(ASourceRowIndex: Int64; const AFieldName: string): TValue;
 var
   LSnapshot: Th5uDataRowSnapshot;
   LDataset: TDataset;
@@ -307,7 +307,7 @@ var
 begin
   Result := TValue.Empty;
 
-  if Cache.Mode <> Th5uCacheMode.None then
+  if Cache.Mode <> ThiiCacheMode.None then
   begin
     LSnapshot := GetSnapshot(ASourceRowIndex);
     LSnapshot.Values.TryGetValue(AFieldName, Result);
@@ -348,7 +348,7 @@ begin
   end;
 end;
 
-function Th5uDatasetController.GoToSourceRow(ASourceRowIndex: Int64; AReadOnly: Boolean): Boolean;
+function ThiiDatasetController.GoToSourceRow(ASourceRowIndex: Int64; AReadOnly: Boolean): Boolean;
 var
   LDataset: TDataset;
 begin
@@ -373,14 +373,14 @@ begin
   end;
 end;
 
-procedure Th5uDatasetController.Notification(AComponent: TComponent; Operation: TOperation);
+procedure ThiiDatasetController.Notification(AComponent: TComponent; Operation: TOperation);
 begin
   inherited;
   if (Operation = opRemove) and (AComponent = FDataSource) then
     DataSource := nil;
 end;
 
-procedure Th5uDatasetController.PrepareRange(AFirstViewRow, ACount: Int64);
+procedure ThiiDatasetController.PrepareRange(AFirstViewRow, ACount: Int64);
 var
   LViewIndex: Int64;
   LFirstSource: Int64;
@@ -389,7 +389,7 @@ var
   LKey: Int64;
 begin
   inherited;
-  if Cache.Mode = Th5uCacheMode.None then
+  if Cache.Mode = ThiiCacheMode.None then
     Exit;
 
   if ACount <= 0 then
@@ -403,13 +403,13 @@ begin
     LLastSource := LFirstSource;
 
   case Cache.Mode of
-    Th5uCacheMode.All:
+    ThiiCacheMode.All:
       begin
         LFirstSource := 0;
         LLastSource := GetSourceRowCount - 1;
       end;
 
-    Th5uCacheMode.Paged:
+    ThiiCacheMode.Paged:
       begin
         LFirstSource := (LFirstSource div Cache.PageSize) * Cache.PageSize;
         LLastSource := LFirstSource + Cache.PageSize - 1;
@@ -426,7 +426,7 @@ begin
     Inc(LViewIndex);
   end;
 
-  if Cache.Mode in [Th5uCacheMode.Viewport, Th5uCacheMode.Adaptive] then
+  if Cache.Mode in [ThiiCacheMode.Viewport, ThiiCacheMode.Adaptive] then
   begin
     LKeys := FSnapshotCache.Keys.ToArray;
     for LKey in LKeys do
@@ -435,7 +435,7 @@ begin
   end;
 end;
 
-function Th5uDatasetController.ReadFieldValue(AField: TField): TValue;
+function ThiiDatasetController.ReadFieldValue(AField: TField): TValue;
 var
   LStream: TMemoryStream;
   LBytes: TBytes;
@@ -488,7 +488,7 @@ begin
   end;
 end;
 
-procedure Th5uDatasetController.SetDataSource(const AValue: TDataSource);
+procedure ThiiDatasetController.SetDataSource(const AValue: TDataSource);
 begin
   if FDataSource = AValue then
     Exit;
@@ -506,7 +506,7 @@ begin
   Invalidate;
 end;
 
-procedure Th5uDatasetController.SetSourceValue(ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue);
+procedure ThiiDatasetController.SetSourceValue(ASourceRowIndex: Int64; const AFieldName: string; const AValue: TValue);
 var
   LDataset: TDataset;
   LField: TField;
@@ -549,10 +549,10 @@ begin
   finally
     Dec(FInternalWriteCount);
   end;
-  NotifyDataChanged(Th5uDataChange.ResetAll);
+  NotifyDataChanged(ThiiDataChange.ResetAll);
 end;
 
-procedure Th5uDatasetController.WriteFieldValue(AField: TField; const AValue: TValue);
+procedure ThiiDatasetController.WriteFieldValue(AField: TField; const AValue: TValue);
 var
   LBytes: TBytes;
   LStream: TBytesStream;

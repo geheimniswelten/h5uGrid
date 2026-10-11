@@ -25,7 +25,7 @@
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'h5u Grid VCL runtime'}
+{$DESCRIPTION 'hiiGrid VCL runtime'}
 {$LIBSUFFIX AUTO}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
@@ -41,7 +41,8 @@ contains
   Vcl.h5u.Grid.Editors in '..\Source\Vcl\Vcl.h5u.Grid.Editors.pas',
   Vcl.h5u.Grid.Styles in '..\Source\Vcl\Vcl.h5u.Grid.Styles.pas',
   Vcl.h5u.Grid in '..\Source\Vcl\Vcl.h5u.Grid.pas',
-  Vcl.h5u.FormDesigner in '..\Source\VCL\Vcl.h5u.FormDesigner.pas';
+  Vcl.h5u.FormDesigner in '..\Source\VCL\Vcl.h5u.FormDesigner.pas',
+  Vcl.h5u.PropertyEditor in '..\Source\VCL\Vcl.h5u.PropertyEditor.pas';
 
 end.
 

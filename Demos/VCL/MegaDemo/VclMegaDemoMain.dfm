@@ -188,7 +188,7 @@ object VclMegaDemoForm: TVclMegaDemoForm
       OnClick = MoveNameButtonClick
     end
   end
-  object Grid: Th5uVclGrid
+  object Grid: ThiiGrid
     Left = 200
     Top = 73
     Width = 920
@@ -490,7 +490,7 @@ object VclMegaDemoForm: TVclMegaDemoForm
       end
     end
   end
-  object SampleData: Th5uSampleClientDataset
+  object SampleData: ThiiSampleClientDataset
     PersistDataPacket.Data = {
       DA3E00009619E0BD01000000180000000C0028000000030000003C0102494404
       000100040000000A545245455F4C4556454C04000100040000000A464F4C445F
@@ -1063,7 +1063,7 @@ object VclMegaDemoForm: TVclMegaDemoForm
     Left = 488
     Top = 272
   end
-  object DataController: Th5uDatasetController
+  object DataController: ThiiDatasetController
     Cache.Mode = Paged
     Cache.PageSize = 100
     Cache.MaxMemoryBytes = 67108864

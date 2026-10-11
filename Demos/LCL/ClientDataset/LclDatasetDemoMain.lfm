@@ -197,7 +197,7 @@ object LclDatasetDemoForm: TLclDatasetDemoForm
       OnClick = MoveNameButtonClick
     end
   end
-  object Grid: Th5uLclGrid
+  object Grid: ThiiGrid
     Left = 0
     Top = 104
     Width = 1120
@@ -436,7 +436,7 @@ object LclDatasetDemoForm: TLclDatasetDemoForm
     OnGetRowHeight = GridGetRowHeight
     OnGetThumbHint = GridGetThumbHint
   end
-  object SampleData: Th5uSampleClientDataset
+  object SampleData: ThiiSampleClientDataset
     SampleRowCount = 40
     Left = 40
     Top = 112
@@ -446,7 +446,7 @@ object LclDatasetDemoForm: TLclDatasetDemoForm
     Left = 120
     Top = 112
   end
-  object DataController: Th5uDatasetController
+  object DataController: ThiiDatasetController
     Cache.Mode = Paged
     Cache.PageSize = 100
     Cache.MaxMemoryBytes = 67108864

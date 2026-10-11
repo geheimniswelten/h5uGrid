@@ -35,7 +35,7 @@ type
     StateKey: string;
     ComparisonKey: string;
     GroupId: TValue;
-    AnchorRowKey: Th5uRowKey;
+    AnchorRowKey: ThiiRowKey;
     FirstControllerRowIndex: Int64;
     LastControllerRowIndex: Int64;
     RowCount: Int64;
@@ -49,7 +49,7 @@ type
     GroupIndex: Integer;
     GroupOffset: Int64;
     GroupId: TValue;
-    AnchorRowKey: Th5uRowKey;
+    AnchorRowKey: ThiiRowKey;
     RowCount: Int64;
     Collapsed: Boolean;
     IsFirstRow: Boolean;
@@ -76,7 +76,7 @@ type
     procedure FinalizePendingRun;
     procedure RebuildVisibleRows;
     function BuildComparisonKey(const AGroupId: TValue; AControllerRowIndex: Int64; AAvailable: Boolean; out AKey: string): Boolean;
-    function BuildStateKey(const ARowKey: Th5uRowKey; AControllerRowIndex: Int64; const AComparisonKey: string): string;
+    function BuildStateKey(const ARowKey: ThiiRowKey; AControllerRowIndex: Int64; const AComparisonKey: string): string;
     function GetRun(AIndex: Integer): Th5uAdjacentGroupRun;
     function GetRunCount: Integer;
   public
@@ -85,8 +85,8 @@ type
 
     procedure Clear(AClearStates: Boolean = False);
     procedure ResetStates;
-    procedure BeginBuild(AInitialState: Th5uAdjacentGroupInitialState; ACaseSensitive: Boolean; AGroupEmptyValues: Boolean);
-    procedure AddRow(AControllerRowIndex: Int64; const ARowKey: Th5uRowKey; const AGroupId: TValue; AAvailable: Boolean);
+    procedure BeginBuild(AInitialState: ThiiAdjacentGroupInitialState; ACaseSensitive: Boolean; AGroupEmptyValues: Boolean);
+    procedure AddRow(AControllerRowIndex: Int64; const ARowKey: ThiiRowKey; const AGroupId: TValue; AAvailable: Boolean);
     procedure EndBuild;
 
     function GetVisibleRowCount: Int64;
@@ -145,12 +145,12 @@ begin
   Result.ControllerRowIndex := -1;
   Result.GroupIndex := -1;
   Result.GroupOffset := -1;
-  Result.AnchorRowKey := Th5uRowKey.Empty;
+  Result.AnchorRowKey := ThiiRowKey.Empty;
 end;
 
 { Th5uAdjacentGroupMap }
 
-procedure Th5uAdjacentGroupMap.AddRow(AControllerRowIndex: Int64; const ARowKey: Th5uRowKey; const AGroupId: TValue; AAvailable: Boolean);
+procedure Th5uAdjacentGroupMap.AddRow(AControllerRowIndex: Int64; const ARowKey: ThiiRowKey; const AGroupId: TValue; AAvailable: Boolean);
 var
   LComparisonKey: string;
   LCanGroup: Boolean;
@@ -177,12 +177,12 @@ begin
   FHasPendingRun := True;
 end;
 
-procedure Th5uAdjacentGroupMap.BeginBuild(AInitialState: Th5uAdjacentGroupInitialState; ACaseSensitive: Boolean; AGroupEmptyValues: Boolean);
+procedure Th5uAdjacentGroupMap.BeginBuild(AInitialState: ThiiAdjacentGroupInitialState; ACaseSensitive: Boolean; AGroupEmptyValues: Boolean);
 begin
   FRuns.Clear;
   FVisibleControllerRows.Clear;
   FVisibleGroupIndexes.Clear;
-  FInitialCollapsed := AInitialState = Th5uAdjacentGroupInitialState.Collapsed;
+  FInitialCollapsed := AInitialState = ThiiAdjacentGroupInitialState.Collapsed;
   FCaseSensitive := ACaseSensitive;
   FGroupEmptyValues := AGroupEmptyValues;
   FHasPendingRun := False;
@@ -220,7 +220,7 @@ begin
   AKey := LTypeName + ':' + LText;
 end;
 
-function Th5uAdjacentGroupMap.BuildStateKey(const ARowKey: Th5uRowKey; AControllerRowIndex: Int64; const AComparisonKey: string): string;
+function Th5uAdjacentGroupMap.BuildStateKey(const ARowKey: ThiiRowKey; AControllerRowIndex: Int64; const AComparisonKey: string): string;
 begin
   if not ARowKey.IsEmpty then
     Result := 'row:' + ARowKey.ToString + '|id:' + AComparisonKey

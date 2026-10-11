@@ -11,7 +11,7 @@ Sie misst die abgeschlossenen synchronen Arbeitsschritte mit `TStopwatch`:
 | `HeightMeasurement` | Tatsächliche Messung eines Zellinhalts für die automatische Zeilenhöhe; Cache-Treffer zählen nicht |
 | `DataUpdate` | Verarbeitung einer Änderungsmeldung des Controllers im Grid |
 
-Jeder Wert ist ein `Th5uGridTiming` mit `Count`, `LastMilliseconds`,
+Jeder Wert ist ein `ThiiGridTiming` mit `Count`, `LastMilliseconds`,
 `TotalMilliseconds` und `MaxMilliseconds`. Die Zeitmessung ist standardmäßig
 aktiv; `Grid.Performance.Enabled := False` schaltet sie ab.
 `Grid.Performance.Reset` setzt alle Zähler und Zeiten zurück.

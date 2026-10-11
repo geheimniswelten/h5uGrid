@@ -8,7 +8,7 @@ unit h5uGridLcl;
 interface
 
 uses
-  Lcl.h5u.Grid.Compat, Lcl.h5u.Grid, Lcl.h5u.Grid.Editors, 
+  Lcl.h5u.Grid.Compat, Lcl.h5u.Grid, Lcl.h5u.Grid.Editors,
   Lcl.h5u.Grid.Styles, LazarusPackageIntf;
 
 implementation

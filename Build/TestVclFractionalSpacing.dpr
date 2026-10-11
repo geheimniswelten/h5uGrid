@@ -35,7 +35,7 @@ begin
     raise Exception.Create(AMessage);
 end;
 
-procedure ScrollTo(AGrid: Th5uVclGrid; APosition: Integer);
+procedure ScrollTo(AGrid: ThiiGrid; APosition: Integer);
 var
   I: Integer;
   Bar: TScrollBar;
@@ -65,17 +65,17 @@ const
   HeaderY = 10;
 var
   Form: TForm;
-  Grid: Th5uVclGrid;
+  Grid: ThiiGrid;
   Source: TSource;
-  Controller: Th5uVirtualController;
+  Controller: ThiiVirtualController;
   Bitmap: TBitmap;
-  Header: Th5uHeaderLayoutCell;
+  Header: ThiiHeaderLayoutCell;
   Bounds: array[0..ColumnCount - 1] of TColumnBounds;
   I, X, FirstRight, IndicatorRight, ViewRight: Integer;
   CellLeft, CellRight: Integer;
   DataLeft, NextLeft, RightStart, LogicalRight, LogicalSpacingRight: Single;
   HeaderSpacing, BodySpacing, ExpectedCell: Boolean;
-  Hit: Th5uHitTestInfo;
+  Hit: ThiiHitTestInfo;
   Name: string;
 begin
   Name := Format('spacing %s, scenario %d', [FloatToStr(ASpacing), AScenario]);
@@ -83,10 +83,10 @@ begin
   Source := TSource.Create;
   Bitmap := TBitmap.Create;
   try
-    Controller := Th5uVirtualController.Create(Form);
+    Controller := ThiiVirtualController.Create(Form);
     Controller.OnGetRowCount := Source.Count;
     Controller.OnGetValue := Source.Value;
-    Grid := Th5uVclGrid.Create(Form);
+    Grid := ThiiGrid.Create(Form);
     Grid.Parent := Form;
     if AScenario = 3 then
       Grid.SetBounds(0, 0, 320, 160)
@@ -94,7 +94,7 @@ begin
       Grid.SetBounds(0, 0, 540, 160);
     Grid.ScrollHints.Enabled := False;
     Grid.Header.RowHeight := 24;
-    Grid.RowHeight.Mode := Th5uRowHeightMode.Fixed;
+    Grid.RowHeight.Mode := ThiiRowHeightMode.Fixed;
     Grid.RowHeight.FixedHeight := 24;
     Grid.RowIndicator.Visible := AScenario = 1;
     Grid.RowIndicator.Width := 34;
@@ -106,13 +106,12 @@ begin
     Grid.Spacing.DefaultColumnRightSpacing := ASpacing;
     Check(Grid.GridLines, Name + ': fractional column spacing must enable GridLines');
     Grid.GridLines := False;
-    Check((Grid.Spacing.DefaultColumnRightSpacing = 0) and not Grid.GridLines,
-      Name + ': GridLines must clear the fractional default spacing');
+    Check((Grid.Spacing.DefaultColumnRightSpacing = 0) and not Grid.GridLines, Name + ': GridLines must clear the fractional default spacing');
     Grid.Spacing.DefaultColumnRightSpacing := ASpacing;
     Grid.Spacing.Left := ViewLeft;
     Grid.Appearance.ColumnSpacingColor := clFuchsia;
     Grid.Appearance.DefaultCellColor := clWhite;
-    Grid.ColumnSizing.FitMode := Th5uColumnFitMode.None;
+    Grid.ColumnSizing.FitMode := ThiiColumnFitMode.None;
     for I := 0 to ColumnCount - 1 do
     begin
       Grid.Columns.Add.Id := 'Column' + IntToStr(I);
@@ -131,8 +130,8 @@ begin
     end;
     if AScenario = 3 then
     begin
-      Grid.Columns[0].FixedKind := Th5uFixedKind.Left;
-      Grid.Columns[3].FixedKind := Th5uFixedKind.Right;
+      Grid.Columns[0].FixedKind := ThiiFixedKind.Left;
+      Grid.Columns[3].FixedKind := ThiiFixedKind.Right;
     end;
     Grid.DataController := Controller;
     Bitmap.SetSize(Grid.Width, Grid.Height);
@@ -191,14 +190,10 @@ begin
         begin
           ExpectedCell := True;
           Hit := Grid.HitTest(X, BodyY);
-          Check((Hit.Kind = Th5uHitKind.DataCell) and (Hit.Column = Grid.Columns[I]),
-            Name + ': wrong hit column at ' + IntToStr(X));
-          Check((Hit.Bounds.Left = CellLeft) and (Hit.Bounds.Right = CellRight),
-            Name + ': hit bounds differ from the native cell edges');
+          Check((Hit.Kind = ThiiHitKind.DataCell) and (Hit.Column = Grid.Columns[I]), Name + ': wrong hit column at ' + IntToStr(X));
+          Check((Hit.Bounds.Left = CellLeft) and (Hit.Bounds.Right = CellRight), Name + ': hit bounds differ from the native cell edges');
         end;
-        if (X >= Max(Bounds[I].Right, Bounds[I].ClipLeft))
-          and (X < Min(Bounds[I].SpacingRight, Bounds[I].ClipRight))
-        then
+        if (X >= Max(Bounds[I].Right, Bounds[I].ClipLeft)) and (X < Min(Bounds[I].SpacingRight, Bounds[I].ClipRight)) then
         begin
           BodySpacing := True;
           if (AScenario <> 2) or Odd(I) then
@@ -210,8 +205,7 @@ begin
       Check((ColorToRGB(Bitmap.Canvas.Pixels[X, HeaderY]) = ColorToRGB(clFuchsia)) = HeaderSpacing,
         Name + ': header separator pixel differs at ' + IntToStr(X));
       if not ExpectedCell and (X >= FirstRight) then
-        Check(Grid.HitTest(X, BodyY).Kind = Th5uHitKind.None,
-          Name + ': separator or empty area was hittable at ' + IntToStr(X));
+        Check(Grid.HitTest(X, BodyY).Kind = ThiiHitKind.None, Name + ': separator or empty area was hittable at ' + IntToStr(X));
     end;
     Check(not Form.Visible, 'Test form became visible');
     Writeln('PASS: native edges, separator pixels and hit testing for ' + Name);

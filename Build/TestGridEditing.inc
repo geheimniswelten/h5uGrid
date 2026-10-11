@@ -20,16 +20,16 @@
 
 type
 {$IFDEF TEST_FMX}
-  TNativeCustomEditor = Th5uFmxCustomEditor;
-  TNativeTextEditor = Th5uFmxTextEditor;
-  TNativeDateEditor = Th5uFmxDateEditor;
+  TNativeCustomEditor = ThiiFmxCustomEditor;
+  TNativeTextEditor = ThiiFmxTextEditor;
+  TNativeDateEditor = ThiiFmxDateEditor;
 {$ELSE}
-  TNativeCustomEditor = Th5uVclCustomEditor;
-  TNativeTextEditor = Th5uVclTextEditor;
-  TNativeDateEditor = Th5uVclDateEditor;
+  TNativeCustomEditor = ThiiVclCustomEditor;
+  TNativeTextEditor = ThiiVclTextEditor;
+  TNativeDateEditor = ThiiVclDateEditor;
 {$ENDIF}
 {$IFDEF TEST_FMX}
-  TDateEditAccess = class(Th5uCellDateEdit)
+  TDateEditAccess = class(ThiiCellDateEdit)
   public
     procedure PickDate(const ADate: TDateTime);
   end;
@@ -40,10 +40,10 @@ type
     Found: Boolean;
 {$IFDEF TEST_FMX}
     Bounds: TRectF;
-    procedure Draw(Sender: TObject; ACanvas: TCanvas; const AContext: Th5uFmxDrawContext; AStage: Th5uFmxCustomDrawStage; var ADrawDefault: Boolean);
+    procedure Draw(Sender: TObject; ACanvas: TCanvas; const AContext: ThiiFmxDrawContext; AStage: ThiiCustomDrawStage; var ADrawDefault: Boolean);
 {$ELSE}
     Bounds: TRect;
-    procedure Draw(Sender: TObject; ACanvas: TCanvas; const AContext: Th5uVclDrawContext; AStage: Th5uCustomDrawStage; var ADrawDefault: Boolean);
+    procedure Draw(Sender: TObject; ACanvas: TCanvas; const AContext: ThiiVclDrawContext; AStage: ThiiCustomDrawStage; var ADrawDefault: Boolean);
 {$ENDIF}
   end;
   TExceptionSink = class
@@ -53,9 +53,9 @@ type
   end;
 
 {$IFDEF TEST_FMX}
-  TGridAccess = class(Th5uFmxGrid)
+  TGridAccess = class(ThiiGrid)
 {$ELSE}
-  TGridAccess = class(Th5uVclGrid)
+  TGridAccess = class(ThiiGrid)
 {$ENDIF}
   public
 {$IFDEF TEST_FMX}
@@ -81,14 +81,14 @@ type
   TMoveProbe = class
   public
     Count: Integer;
-    Context: Th5uRowsMovedContext;
+    Context: ThiiRowsMovedContext;
     RaiseError: Boolean;
-    procedure RowsMoved(Sender: TObject; const AContext: Th5uRowsMovedContext);
+    procedure RowsMoved(Sender: TObject; const AContext: ThiiRowsMovedContext);
   end;
 
   TFixture = class
   private
-    procedure Changed(Sender: TObject; const AChange: Th5uDataChange);
+    procedure Changed(Sender: TObject; const AChange: ThiiDataChange);
   private
     FLastEditor: TEdit;
     function GetEditor: TEdit;
@@ -99,15 +99,15 @@ type
     Grid: TGridAccess;
     Data: TClientDataSet;
     Source: TDataSource;
-    Controller: Th5uDatasetController;
-    Link: Th5uDataControllerLink;
+    Controller: ThiiDatasetController;
+    Link: ThiiDataControllerLink;
     property Editor: TEdit read GetEditor;
   public
     Posts: Integer;
     Changes: Integer;
     RejectPost: Boolean;
     HideOnReject: Boolean;
-    constructor Create(AMode: Th5uCacheMode);
+    constructor Create(AMode: ThiiCacheMode);
     destructor Destroy; override;
     procedure PaintGrid;
     function CellPoint(const AField: string; ARow: Integer = 0): TPoint;
@@ -133,18 +133,19 @@ end;
 {$ENDIF}
 
 {$IFDEF TEST_FMX}
-procedure TCellBoundsProbe.Draw(Sender: TObject; ACanvas: TCanvas; const AContext: Th5uFmxDrawContext; AStage: Th5uFmxCustomDrawStage; var ADrawDefault: Boolean);
+procedure TCellBoundsProbe.Draw(Sender: TObject; ACanvas: TCanvas; const AContext: ThiiFmxDrawContext; AStage: ThiiCustomDrawStage; var ADrawDefault: Boolean);
 {$ELSE}
-procedure TCellBoundsProbe.Draw(Sender: TObject; ACanvas: TCanvas; const AContext: Th5uVclDrawContext; AStage: Th5uCustomDrawStage; var ADrawDefault: Boolean);
+procedure TCellBoundsProbe.Draw(Sender: TObject; ACanvas: TCanvas; const AContext: ThiiVclDrawContext; AStage: ThiiCustomDrawStage; var ADrawDefault: Boolean);
 {$ENDIF}
 begin
-  if (AContext.FactoryContext.ElementKind = Th5uElementKind.DataCell) and (AContext.FactoryContext.ViewRowIndex = 0)
-    and (Th5uGridColumn(AContext.FactoryContext.Column).FieldName = 'FLAG') then
+  if (AContext.FactoryContext.ElementKind = ThiiElementKind.DataCell) and (AContext.FactoryContext.ViewRowIndex = 0)
+    and (ThiiGridColumn(AContext.FactoryContext.Column).FieldName = 'FLAG') then
   begin
     Found := True;
     Bounds := AContext.Bounds;
   end;
 end;
+
 procedure TExceptionSink.HandleException(Sender: TObject; E: Exception);
 begin
   Inc(Count);
@@ -205,9 +206,10 @@ begin
 {$ENDIF}
   end;
 end;
-constructor TFixture.Create(AMode: Th5uCacheMode);
+
+constructor TFixture.Create(AMode: ThiiCacheMode);
 var
-  LColumn: Th5uGridColumn;
+  LColumn: ThiiGridColumn;
   LIndex: Integer;
   LText: TStringStream;
   LBinary: TMemoryStream;
@@ -231,7 +233,7 @@ begin
   Data.AfterPost := AfterPost;
   Source := TDataSource.Create(Form);
   Source.DataSet := Data;
-  Controller := Th5uDatasetController.Create(Form);
+  Controller := ThiiDatasetController.Create(Form);
   Controller.Cache.Mode := AMode;
   Controller.DataSource := Source;
   // Create the control through streaming, as in the actual demo forms.
@@ -262,15 +264,15 @@ begin
     LColumn.MinWidth := 24;
     LColumn.MaxWidth := 1000;
     case LIndex of
-      0: LColumn.DataType := Th5uColumnDataType.Boolean;
-      1: LColumn.DataType := Th5uColumnDataType.Text;
-      2: LColumn.DataType := Th5uColumnDataType.Integer;
+      0: LColumn.DataType := ThiiColumnDataType.Boolean;
+      1: LColumn.DataType := ThiiColumnDataType.Text;
+      2: LColumn.DataType := ThiiColumnDataType.Integer;
     end;
   end;
   Grid.DataController := Controller;
   for LIndex := 0 to Grid.ComponentCount - 1 do
     Check(not (Grid.Components[LIndex] is TEdit), 'Text editor created before first edit');
-  Link := Th5uDataControllerLink.Create;
+  Link := ThiiDataControllerLink.Create;
   Link.Controller := Controller;
   Link.OnChanged := Changed;
   Form.Show;
@@ -288,7 +290,7 @@ begin
   inherited Destroy;
 end;
 
-procedure TFixture.Changed(Sender: TObject; const AChange: Th5uDataChange);
+procedure TFixture.Changed(Sender: TObject; const AChange: ThiiDataChange);
 var
   LIndex: Integer;
 begin
@@ -332,9 +334,9 @@ function TFixture.CellPoint(const AField: string; ARow: Integer): TPoint;
 var
   LX, LY: Integer;
 {$IFDEF TEST_FMX}
-  LHit: Th5uFmxHitTestInfo;
+  LHit: ThiiHitTestInfo;
 {$ELSE}
-  LHit: Th5uHitTestInfo;
+  LHit: ThiiHitTestInfo;
 {$ENDIF}
 begin
   PaintGrid;
@@ -343,10 +345,10 @@ begin
     begin
 {$IFDEF TEST_FMX}
       LHit := Grid.GridHitTest(LX * 4, LY * 4);
-      if LHit.Kind <> Th5uFmxHitKind.DataCell then
+      if LHit.Kind <> ThiiHitKind.DataCell then
 {$ELSE}
       LHit := Grid.HitTest(LX * 4, LY * 4);
-      if LHit.Kind <> Th5uHitKind.DataCell then
+      if LHit.Kind <> ThiiHitKind.DataCell then
 {$ENDIF}
         Continue;
       if (LHit.RowIndex = ARow) and (LHit.Column.FieldName = AField) then
@@ -382,43 +384,65 @@ type
     Log: string;
     ColumnValidations, GridValidations, Gets, Sets, DisplayGets, EditGets: Integer;
     Clicks, Headers, Indicators, Enters, Exits, Selections: Integer;
-    procedure CanFocus(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64; var Allow: Boolean);
-    procedure CanEdit(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64; var Allow: Boolean);
-    procedure Validate(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64; var Value: TValue; var Valid: Boolean; var Error: string);
-    procedure GetValue(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64; var Value: TValue; Display: Boolean);
-    procedure SetValue(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64; var Value: TValue);
-    procedure CellClick(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64);
-    procedure HeaderClick(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64);
-    procedure IndicatorClick(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64);
-    procedure CellEnter(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64);
-    procedure CellExit(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64);
+    procedure CanFocus(Sender: TObject; AColumn: ThiiGridColumn; ARow: Int64; var Allow: Boolean);
+    procedure CanEdit(Sender: TObject; AColumn: ThiiGridColumn; ARow: Int64; var Allow: Boolean);
+    procedure Validate(Sender: TObject; AColumn: ThiiGridColumn; ARow: Int64; var Value: TValue; var Valid: Boolean; var Error: string);
+    procedure GetValue(Sender: TObject; AColumn: ThiiGridColumn; ARow: Int64; var Value: TValue; Display: Boolean);
+    procedure SetValue(Sender: TObject; AColumn: ThiiGridColumn; ARow: Int64; var Value: TValue);
+    procedure CellClick(Sender: TObject; AColumn: ThiiGridColumn; ARow: Int64);
+    procedure HeaderClick(Sender: TObject; AColumn: ThiiGridColumn; ARow: Int64);
+    procedure IndicatorClick(Sender: TObject; AColumn: ThiiGridColumn; ARow: Int64);
+    procedure CellEnter(Sender: TObject; AColumn: ThiiGridColumn; ARow: Int64);
+    procedure CellExit(Sender: TObject; AColumn: ThiiGridColumn; ARow: Int64);
     procedure SelectionChange(Sender: TObject);
   end;
 
-procedure TCellEventProbe.CanFocus(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64; var Allow: Boolean);
+procedure TCellEventProbe.CanFocus(Sender: TObject; AColumn: ThiiGridColumn; ARow: Int64; var Allow: Boolean);
 begin
-  if Sender = AColumn then begin Log := Log+'c'; Allow := AllowFocus; end
-  else begin Log := Log+'g'; if GridOverride then Allow := True; end;
+  if Sender = AColumn then
+  begin
+    Log := Log+'c';
+    Allow := AllowFocus;
+  end
+  else
+  begin
+    Log := Log+'g';
+    if GridOverride then
+      Allow := True;
+  end;
 end;
-procedure TCellEventProbe.CanEdit(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64; var Allow: Boolean);
+
+procedure TCellEventProbe.CanEdit(Sender: TObject; AColumn: ThiiGridColumn; ARow: Int64; var Allow: Boolean);
 begin
-  if Sender = AColumn then begin Log := Log+'e'; Allow := AllowEdit; end
-  else begin Log := Log+'G'; if GridOverride then Allow := True; end;
+  if Sender = AColumn then
+  begin
+    Log := Log+'e';
+    Allow := AllowEdit;
+  end
+  else
+  begin
+    Log := Log+'G';
+    if GridOverride then
+      Allow := True;
+  end;
 end;
-procedure TCellEventProbe.Validate(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64; var Value: TValue; var Valid: Boolean; var Error: string);
+
+procedure TCellEventProbe.Validate(Sender: TObject; AColumn: ThiiGridColumn; ARow: Int64; var Value: TValue; var Valid: Boolean; var Error: string);
 begin
   if Sender = AColumn then Inc(ColumnValidations) else Inc(GridValidations);
   Valid := not RejectValue;
   Error := 'Rejected by cell event';
 end;
-procedure TCellEventProbe.GetValue(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64; var Value: TValue; Display: Boolean);
+
+procedure TCellEventProbe.GetValue(Sender: TObject; AColumn: ThiiGridColumn; ARow: Int64; var Value: TValue; Display: Boolean);
 begin
   Inc(Gets);
   if Display then Inc(DisplayGets) else Inc(EditGets);
   if BooleanMap then Value := TValue.From<Boolean>(Value.ToString = 'yes')
   else if Display then Value := TValue.From<string>('Display: '+Value.ToString);
 end;
-procedure TCellEventProbe.SetValue(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64; var Value: TValue);
+
+procedure TCellEventProbe.SetValue(Sender: TObject; AColumn: ThiiGridColumn; ARow: Int64; var Value: TValue);
 begin
   Inc(Sets);
   if BooleanMap then
@@ -427,29 +451,49 @@ begin
   end
   else Value := TValue.From<string>(UpperCase(Value.ToString));
 end;
-procedure TCellEventProbe.CellClick(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64);
-begin Inc(Clicks); end;
-procedure TCellEventProbe.HeaderClick(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64);
-begin Check(ARow = -1, 'Header row index'); Inc(Headers); end;
-procedure TCellEventProbe.IndicatorClick(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64);
-begin Check(AColumn = nil, 'Indicator column'); Inc(Indicators); end;
-procedure TCellEventProbe.CellEnter(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64);
-begin Inc(Enters); end;
-procedure TCellEventProbe.CellExit(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64);
-begin Inc(Exits); end;
+
+procedure TCellEventProbe.CellClick(Sender: TObject; AColumn: ThiiGridColumn; ARow: Int64);
+begin
+  Inc(Clicks);
+end;
+
+procedure TCellEventProbe.HeaderClick(Sender: TObject; AColumn: ThiiGridColumn; ARow: Int64);
+begin
+  Check(ARow = -1, 'Header row index');
+  Inc(Headers);
+end;
+
+procedure TCellEventProbe.IndicatorClick(Sender: TObject; AColumn: ThiiGridColumn; ARow: Int64);
+begin
+  Check(AColumn = nil, 'Indicator column');
+  Inc(Indicators);
+end;
+
+procedure TCellEventProbe.CellEnter(Sender: TObject; AColumn: ThiiGridColumn; ARow: Int64);
+begin
+  Inc(Enters);
+end;
+
+procedure TCellEventProbe.CellExit(Sender: TObject; AColumn: ThiiGridColumn; ARow: Int64);
+begin
+  Inc(Exits);
+end;
+
 procedure TCellEventProbe.SelectionChange(Sender: TObject);
-begin Inc(Selections); end;
+begin
+  Inc(Selections);
+end;
 
 procedure TestCellEvents;
 var
   T: TFixture;
   P: TCellEventProbe;
-  C: Th5uGridColumn;
+  C: ThiiGridColumn;
   PointInCell: TPoint;
   BeforeValidate, BeforeSets: Integer;
   Rejected: Boolean;
 begin
-  T := TFixture.Create(Th5uCacheMode.None);
+  T := TFixture.Create(ThiiCacheMode.None);
   P := TCellEventProbe.Create;
   try
     C := T.Grid.Columns[1];
@@ -528,7 +572,7 @@ begin
     Check((P.Selections > 0) and (P.Exits > 0), 'Selection/exit events missing');
     T.Controller.SetValue(0,'DESCRIPTION',TValue.From<string>('yes'));
     P.BooleanMap := True;
-    C.DataType := Th5uColumnDataType.Boolean;
+    C.DataType := ThiiColumnDataType.Boolean;
     T.PaintGrid;
     T.Grid.ClickAt(T.CellPoint('DESCRIPTION'));
     Check(T.Controller.GetValue(0,'DESCRIPTION').ToString = 'no', 'Text-to-Boolean checkbox conversion failed');
@@ -544,34 +588,34 @@ end;
 
 type
   TElementStyleProbe = class
-    Kinds: set of Th5uElementKind;
+    Kinds: set of ThiiElementKind;
     Symbols: Integer;
 {$IFDEF TEST_FMX}
-    procedure Prepare(Sender, Control: TObject; Canvas: TCanvas; const Context: Th5uFmxDrawContext; Part: Th5uElementPaintPart);
+    procedure Prepare(Sender, Control: TObject; Canvas: TCanvas; const Context: ThiiFmxDrawContext; Part: ThiiElementPaintPart);
 {$ELSE}
-    procedure Prepare(Sender, Control: TObject; Canvas: TCanvas; const Context: Th5uVclDrawContext; Part: Th5uElementPaintPart);
+    procedure Prepare(Sender, Control: TObject; Canvas: TCanvas; const Context: ThiiVclDrawContext; Part: ThiiElementPaintPart);
 {$ENDIF}
   end;
 {$IFDEF TEST_FMX}
-procedure TElementStyleProbe.Prepare(Sender, Control: TObject; Canvas: TCanvas; const Context: Th5uFmxDrawContext; Part: Th5uElementPaintPart);
+procedure TElementStyleProbe.Prepare(Sender, Control: TObject; Canvas: TCanvas; const Context: ThiiFmxDrawContext; Part: ThiiElementPaintPart);
 {$ELSE}
-procedure TElementStyleProbe.Prepare(Sender, Control: TObject; Canvas: TCanvas; const Context: Th5uVclDrawContext; Part: Th5uElementPaintPart);
+procedure TElementStyleProbe.Prepare(Sender, Control: TObject; Canvas: TCanvas; const Context: ThiiVclDrawContext; Part: ThiiElementPaintPart);
 {$ENDIF}
 var
   Color: TAlphaColor;
 begin
   Check(Assigned(Control), 'PrepareElement has no element');
   Include(Kinds, Context.FactoryContext.ElementKind);
-  if Context.FactoryContext.ElementKind = Th5uElementKind.RowHeaderCell then
+  if Context.FactoryContext.ElementKind = ThiiElementKind.RowHeaderCell then
     Check(Control <> Sender, 'Index cell has no element object');
-  if Part = Th5uElementPaintPart.ColumnMode then Inc(Symbols);
-  if Part = Th5uElementPaintPart.Background then
+  if Part = ThiiElementPaintPart.ColumnMode then Inc(Symbols);
+  if Part = ThiiElementPaintPart.Background then
   begin
     case Context.FactoryContext.ElementKind of
-      Th5uElementKind.DataCell: Color := TAlphaColorRec.Red;
-      Th5uElementKind.ColumnHeaderCell: Color := TAlphaColorRec.Lime;
-      Th5uElementKind.RowHeaderCell: Color := TAlphaColorRec.Blue;
-      Th5uElementKind.Grid: Color := TAlphaColorRec.Yellow;
+      ThiiElementKind.DataCell: Color := TAlphaColorRec.Red;
+      ThiiElementKind.ColumnHeaderCell: Color := TAlphaColorRec.Lime;
+      ThiiElementKind.RowHeaderCell: Color := TAlphaColorRec.Blue;
+      ThiiElementKind.Grid: Color := TAlphaColorRec.Yellow;
       else Color := TAlphaColorRec.Fuchsia;
     end;
 {$IFDEF TEST_FMX}
@@ -582,7 +626,7 @@ begin
     Canvas.Brush.Color := RGB((Color shr 16) and $FF, (Color shr 8) and $FF, Color and $FF);
 {$ENDIF}
   end;
-  if Part = Th5uElementPaintPart.Text then
+  if Part = ThiiElementPaintPart.Text then
   begin
     Canvas.Font.Size := 17;
     Canvas.Font.Style := [TFontStyle.fsBold];
@@ -600,13 +644,13 @@ var
   P: TElementStyleProbe;
   B: TBitmap;
   Pt: TPoint;
-  Column: Th5uGridColumn;
+  Column: ThiiGridColumn;
   Info: PPropInfo;
 {$IFDEF TEST_FMX}
   Map: TBitmapData;
-  H: Th5uFmxHitTestInfo;
+  H: ThiiHitTestInfo;
 {$ELSE}
-  H: Th5uHitTestInfo;
+  H: ThiiHitTestInfo;
 {$ENDIF}
   procedure CheckPixel(X,Y: Integer; Expected: TAlphaColor; const Message: string);
 {$IFNDEF TEST_FMX}
@@ -621,7 +665,7 @@ var
 {$ENDIF}
   end;
 begin
-  T := TFixture.Create(Th5uCacheMode.None);
+  T := TFixture.Create(ThiiCacheMode.None);
   P := TElementStyleProbe.Create;
   try
     Column := T.Grid.Columns[0];
@@ -645,9 +689,9 @@ begin
     T.PaintGrid;
     Check(P.Symbols > 0, 'Designer must always show roles');
     T.Grid.DesignModeForTest(False);
-    Check(Th5uElementKind.ContentPadding in P.Kinds, 'Padding style event missing');
-    Check(Th5uElementKind.ColumnSpacing in P.Kinds, 'Column spacing style event missing');
-    Check(Th5uElementKind.RowSpacing in P.Kinds, 'Row spacing style event missing');
+    Check(ThiiElementKind.ContentPadding in P.Kinds, 'Padding style event missing');
+    Check(ThiiElementKind.ColumnSpacing in P.Kinds, 'Column spacing style event missing');
+    Check(ThiiElementKind.RowSpacing in P.Kinds, 'Row spacing style event missing');
     Pt := T.CellPoint('DESCRIPTION');
 {$IFDEF TEST_FMX}
     H := T.Grid.GridHitTest(Pt.X,Pt.Y);
@@ -681,22 +725,33 @@ end;
 
 {$IFDEF TEST_FMX}
 type
-  TMobileTextAccess = class(Th5uCellTextEdit)
+  TMobileTextAccess = class(ThiiCellTextEdit)
     procedure ForceFixedHeight;
   end;
-  TMobileDateAccess = class(Th5uCellDateEdit)
+  TMobileDateAccess = class(ThiiCellDateEdit)
     procedure ForceFixedHeight;
   end;
-  TMobileTimeAccess = class(Th5uCellTimeEdit)
+  TMobileTimeAccess = class(ThiiCellTimeEdit)
     procedure ForceFixedHeight;
   end;
 
 procedure TMobileTextAccess.ForceFixedHeight;
-begin SetAdjustSizeValue(TSizeF.Create(100,22)); SetAdjustType(TAdjustType.FixedHeight); end;
+begin
+  SetAdjustSizeValue(TSizeF.Create(100,22));
+  SetAdjustType(TAdjustType.FixedHeight);
+end;
+
 procedure TMobileDateAccess.ForceFixedHeight;
-begin SetAdjustSizeValue(TSizeF.Create(100,22)); SetAdjustType(TAdjustType.FixedHeight); end;
+begin
+  SetAdjustSizeValue(TSizeF.Create(100,22));
+  SetAdjustType(TAdjustType.FixedHeight);
+end;
+
 procedure TMobileTimeAccess.ForceFixedHeight;
-begin SetAdjustSizeValue(TSizeF.Create(100,22)); SetAdjustType(TAdjustType.FixedHeight); end;
+begin
+  SetAdjustSizeValue(TSizeF.Create(100,22));
+  SetAdjustType(TAdjustType.FixedHeight);
+end;
 
 procedure TGridAccess.TouchDrag(const AFrom, ATo: TPointF);
 begin
@@ -738,7 +793,7 @@ var
   BeforeValue: Boolean;
   Events: TCellEventProbe;
 begin
-  T := TFixture.Create(Th5uCacheMode.None);
+  T := TFixture.Create(ThiiCacheMode.None);
   try
     T.Grid.Width := 300;
     T.Grid.Height := 180;
@@ -817,7 +872,7 @@ end;
 {$ENDIF}
 
 
-procedure TestCheckbox(AMode: Th5uCacheMode);
+procedure TestCheckbox(AMode: ThiiCacheMode);
 var
   LTest: TFixture;
   LPoint: TPoint;
@@ -841,7 +896,7 @@ begin
   end;
 end;
 
-procedure TestEditor(AMode: Th5uCacheMode);
+procedure TestEditor(AMode: ThiiCacheMode);
 var
   LTest: TFixture;
   LRejected: Boolean;
@@ -921,7 +976,7 @@ begin
   end;
 end;
 
-procedure TestExternalEdit(AMode: Th5uCacheMode);
+procedure TestExternalEdit(AMode: ThiiCacheMode);
 var
   LTest: TFixture;
 begin
@@ -959,15 +1014,16 @@ procedure TGridAccess.PointerUp(const P: TPoint; Shift: TShiftState);
 begin
   MouseUp(TMouseButton.mbLeft, Shift, P.X, P.Y);
 end;
+
 procedure TestColumnMovingStreaming;
 var
   Form: TForm;
   Grid: TGridAccess;
   Text: TStringStream;
   Binary: TMemoryStream;
-  Columns: Th5uGridColumns;
-  Options: Th5uCustomizationOptions;
-  Selection: Th5uGridSelection;
+  Columns: ThiiGridColumns;
+  Options: ThiiCustomizationOptions;
+  Selection: ThiiGridSelection;
 begin
   Form := TForm.CreateNew(nil);
   Text := TStringStream.Create('object OptionsForm: TForm' + sLineBreak + 'object Grid: TGridAccess' + sLineBreak
@@ -984,24 +1040,24 @@ begin
     Binary.Position := 0;
     Binary.ReadComponent(Form);
     Grid := Form.FindComponent('Grid') as TGridAccess;
-    Check(Grid.Columns[0].MovePermission=Th5uColumnMovePermission.Deny,'MovePermission=Deny not loaded');
-    Check(Grid.Columns[1].MovePermission=Th5uColumnMovePermission.Allow,'Column Allow not loaded');
-    Check(not Grid.Customization.AllowColumnMoving and (Grid.Customization.ColumnMovingGesture
-      =Th5uColumnRowMovingGesture.Drag),'Customization options not loaded');
-    Columns := Th5uGridColumns.Create(Form);
-    Options := Th5uCustomizationOptions.Create;
-    Selection := Th5uGridSelection.Create;
+    Check(Grid.Columns[0].MovePermission=ThiiColumnMovePermission.Deny,'MovePermission=Deny not loaded');
+    Check(Grid.Columns[1].MovePermission=ThiiColumnMovePermission.Allow,'Column Allow not loaded');
+    Check(not Grid.Customization.AllowColumnMoving and (Grid.Customization.ColumnMovingGesture =ThiiColumnRowMovingGesture.Drag),
+      'Customization options not loaded');
+    Columns := ThiiGridColumns.Create(Form);
+    Options := ThiiCustomizationOptions.Create;
+    Selection := ThiiGridSelection.Create;
     try
       Selection.Assign(Grid.Selection);
       Check(Selection.RightClickSelect, 'RightClickSelect streaming/Assign failed');
       Columns.Assign(Grid.Columns);
       Options.Assign(Grid.Customization);
-      Check((Options.LastColumnResizeHitZoneLeft = 17) and (Options.TouchLastColumnResizeHitZoneLeft
-        = 28), 'Last column hit zones lost during streaming/Assign');
+      Check((Options.LastColumnResizeHitZoneLeft = 17) and (Options.TouchLastColumnResizeHitZoneLeft = 28),
+        'Last column hit zones lost during streaming/Assign');
       Options.LastColumnResizeHitZoneLeft := -2;
       Options.TouchLastColumnResizeHitZoneLeft := -2;
-      Check((Options.LastColumnResizeHitZoneLeft = -1) and (Options.TouchLastColumnResizeHitZoneLeft
-        = -1), 'Last column hit zone sentinel must clamp at -1');
+      Check((Options.LastColumnResizeHitZoneLeft = -1) and (Options.TouchLastColumnResizeHitZoneLeft = -1),
+        'Last column hit zone sentinel must clamp at -1');
       Check((Options.ColumnResizeHitZoneLeft = 9) and (Options.ColumnResizeHitZoneRight = 2) and (Options.TouchColumnResizeHitZoneLeft = 20)
         and (Options.TouchColumnResizeHitZoneRight = 3), 'Resize hit zones lost during streaming/Assign');
       Options.ColumnResizeHitZoneLeft := -1;
@@ -1010,10 +1066,10 @@ begin
       Options.TouchColumnResizeHitZoneRight := -1;
       Check((Options.ColumnResizeHitZoneLeft = 0) and (Options.ColumnResizeHitZoneRight = 0) and (Options.TouchColumnResizeHitZoneLeft = 0)
         and (Options.TouchColumnResizeHitZoneRight = 0), 'Negative hit zone sizes must clamp to zero');
-      Check(not Options.AllowRowMoving and (Options.RowMovingGesture=Th5uColumnRowMovingGesture.Drag),'Assign lost row moving options');
-      Check((Columns[0].MovePermission=Th5uColumnMovePermission.Deny) and (Columns[1].MovePermission
-        =Th5uColumnMovePermission.Allow),'Assign lost column permissions');
-      Check(not Options.AllowColumnMoving and (Options.ColumnMovingGesture=Th5uColumnRowMovingGesture.Drag),'Assign lost moving gesture');
+      Check(not Options.AllowRowMoving and (Options.RowMovingGesture=ThiiColumnRowMovingGesture.Drag),'Assign lost row moving options');
+      Check((Columns[0].MovePermission=ThiiColumnMovePermission.Deny) and (Columns[1].MovePermission =ThiiColumnMovePermission.Allow),
+        'Assign lost column permissions');
+      Check(not Options.AllowColumnMoving and (Options.ColumnMovingGesture=ThiiColumnRowMovingGesture.Drag),'Assign lost moving gesture');
     finally
       Selection.Free;
       Options.Free;
@@ -1027,11 +1083,11 @@ begin
     Check(Text.DataString.Contains('ColumnMovingGesture = Drag') and Text.DataString.Contains('MovePermission = Deny')
       and Text.DataString.Contains('MovePermission = Allow'),'New moving options not saved');
     Check(Text.DataString.Contains('RightClickSelect = True'), 'RightClickSelect not saved');
-    Check(Text.DataString.Contains('LastColumnResizeHitZoneLeft = 17')
-      and Text.DataString.Contains('TouchLastColumnResizeHitZoneLeft = 28'), 'Last column hit zones not saved');
+    Check(Text.DataString.Contains('LastColumnResizeHitZoneLeft = 17') and Text.DataString.Contains('TouchLastColumnResizeHitZoneLeft = 28'),
+      'Last column hit zones not saved');
     Check(Text.DataString.Contains('ColumnResizeHitZoneLeft = 9') and Text.DataString.Contains('ColumnResizeHitZoneRight = 2')
-      and Text.DataString.Contains('TouchColumnResizeHitZoneLeft = 20')
-      and Text.DataString.Contains('TouchColumnResizeHitZoneRight = 3'), 'Resize hit zones not saved');
+      and Text.DataString.Contains('TouchColumnResizeHitZoneLeft = 20') and Text.DataString.Contains('TouchColumnResizeHitZoneRight = 3'),
+      'Resize hit zones not saved');
     Check(not Text.DataString.Contains('CanMove ='),'Legacy alias should not be saved alongside MovePermission');
     Writeln('PASS: moving options DFM/FMX streaming and Assign');
   finally
@@ -1041,7 +1097,7 @@ begin
   end;
 end;
 
-procedure TMoveProbe.RowsMoved(Sender: TObject; const AContext: Th5uRowsMovedContext);
+procedure TMoveProbe.RowsMoved(Sender: TObject; const AContext: ThiiRowsMovedContext);
 begin
   Inc(Count);
   Context := AContext;
@@ -1087,9 +1143,9 @@ function TGridAccess.HeaderBounds(AColumn: Integer): TRect;
 var
   X, Y, HeaderRow: Integer;
 {$IFDEF TEST_FMX}
-  H: Th5uFmxHitTestInfo;
+  H: ThiiHitTestInfo;
 {$ELSE}
-  H: Th5uHitTestInfo;
+  H: ThiiHitTestInfo;
 {$ENDIF}
 begin
   for HeaderRow := 0 to HeaderLayout.RowCount - 1 do
@@ -1099,10 +1155,10 @@ begin
     begin
 {$IFDEF TEST_FMX}
       H := GridHitTest(X, Y);
-      if (H.Kind <> Th5uFmxHitKind.Header) or (H.ColumnIndex <> AColumn) then Continue;
+      if (H.Kind <> ThiiHitKind.Header) or (H.ColumnIndex <> AColumn) then Continue;
 {$ELSE}
       H := HitTest(X, Y);
-      if (H.Kind <> Th5uHitKind.Header) or (H.ColumnIndex <> AColumn) then Continue;
+      if (H.Kind <> ThiiHitKind.Header) or (H.ColumnIndex <> AColumn) then Continue;
 {$ENDIF}
       if Assigned(H.HeaderCell) and (H.HeaderCell.ColumnSpan > 1) then Continue;
       Exit(Rect(Round(H.Bounds.Left), Round(H.Bounds.Top), Round(H.Bounds.Right), Round(H.Bounds.Bottom)));
@@ -1128,10 +1184,10 @@ var
 begin
   for Scenario := 0 to 8 do
   begin
-    T := TFixture.Create(Th5uCacheMode.None);
+    T := TFixture.Create(ThiiCacheMode.None);
     try
       T.Grid.AllowEditing := False;
-      T.Grid.Customization.ColumnMovingGesture := Th5uColumnRowMovingGesture.Drag;
+      T.Grid.Customization.ColumnMovingGesture := ThiiColumnRowMovingGesture.Drag;
       T.Grid.Cursor := crCross;
       case Scenario of
         0, 1, 2, 3:
@@ -1146,8 +1202,8 @@ begin
             if Scenario = 2 then Winapi.Windows.ReleaseCapture
             else if Scenario = 3 then T.Grid.Press(vkEscape);
             SendMouse(WM_LBUTTONUP, Q);
-            Check((T.Grid.Columns.VisibleColumns[0] <> T.Grid.Columns[0]) = (Scenario
-              < 2), 'Native column release lost its final coordinate or ignored cancellation');
+            Check((T.Grid.Columns.VisibleColumns[0] <> T.Grid.Columns[0]) = (Scenario < 2),
+              'Native column release lost its final coordinate or ignored cancellation');
           end;
         4:
           begin
@@ -1246,13 +1302,13 @@ var
 begin
   for Scenario := 0 to 6 do
   begin
-    T := TFixture.Create(Th5uCacheMode.None);
+    T := TFixture.Create(ThiiCacheMode.None);
     try
       T.Grid.AllowEditing := False;
       T.Grid.Cursor := crCross;
-      T.Grid.Theme := Th5uGridTheme(Scenario mod 4);
-      T.Grid.Customization.ColumnMovingGesture := Th5uColumnRowMovingGesture.Drag;
-      if Scenario = 3 then T.Grid.Columns[2].FixedKind := Th5uFixedKind.Right;
+      T.Grid.Theme := ThiiGridTheme(Scenario mod 4);
+      T.Grid.Customization.ColumnMovingGesture := ThiiColumnRowMovingGesture.Drag;
+      if Scenario = 3 then T.Grid.Columns[2].FixedKind := ThiiFixedKind.Right;
       if Scenario = 4 then
       begin
         T.Grid.Selection.SelectColumn('FLAG');
@@ -1279,8 +1335,8 @@ begin
       ExpectedValid := Scenario <> 3;
       Check((Active <> Baseline) = ExpectedValid, 'VCL insertion marker disagrees with drop permissions');
       if ExpectedValid then
-        Check(PixelAt(Point(Q.X - 55, Q.Y + Offset + 10))
-          = ColorToRGB(h5uGetVclPalette(T.Grid.Theme).SelectedBackground), 'VCL moving caption is missing');
+        Check(PixelAt(Point(Q.X - 55, Q.Y + Offset + 10)) = ColorToRGB(h5uGetVclPalette(T.Grid.Theme).SelectedBackground),
+          'VCL moving caption is missing');
       Check(T.Grid.Columns.VisibleColumns[0] = T.Grid.Columns[0], 'VCL feedback reordered before release');
       SendMouse(WM_MOUSEMOVE, Point(Q.X, 100), MK_LBUTTON);
       Check(PixelAt(Marker) = Baseline, 'VCL data area shows a valid drop marker');
@@ -1314,7 +1370,7 @@ procedure TestVclGroupedMoveFeedback;
 var
   T: TFixture;
   D: TVclDatasetDemoForm;
-  Cell: Th5uHeaderLayoutCell;
+  Cell: ThiiHeaderLayoutCell;
   I: Integer;
 
   procedure CheckMove(G: TGridAccess; ASource, ATarget, ASourceRow, ATargetRow, ASourceSpan: Integer);
@@ -1322,7 +1378,7 @@ var
     BeforeImage, DragImage: TBitmap;
     SourceBounds, TargetBounds: TRect;
     P, Q: TPoint;
-    SourceColumn: Th5uGridColumn;
+    SourceColumn: ThiiGridColumn;
     SourceTop, TargetTop, X, Y: Integer;
 
     procedure Paint(B: TBitmap);
@@ -1358,8 +1414,8 @@ var
       X := SourceBounds.Left + 8;
       Y := Round(SourceTop + 5 + (ASourceSpan - 1) * (G.HeaderRowHeight + G.Spacing.RowSpacing));
       Check(BeforeImage.Canvas.Pixels[X, Y] <> DragImage.Canvas.Pixels[X, Y], 'VCL source highlight misses the actual header cell/row span');
-      Check(DragImage.Canvas.Pixels[TargetBounds.Right - 1, TargetTop + 3]
-        = ColorToRGB(h5uGetVclPalette(G.Theme).SelectedBackground), 'VCL marker does not start at the target header');
+      Check(DragImage.Canvas.Pixels[TargetBounds.Right - 1, TargetTop + 3] = ColorToRGB(h5uGetVclPalette(G.Theme).SelectedBackground),
+        'VCL marker does not start at the target header');
       Check(G.Columns.VisibleColumns[ASource] = SourceColumn, 'Grouped VCL move happened before release');
       G.Perform(WM_LBUTTONUP, 0, MakeLParam(Q.X, Q.Y));
       Check(G.Columns.VisibleColumns[ATarget] = SourceColumn, 'Grouped VCL move did not reach its indicated target');
@@ -1380,9 +1436,9 @@ begin
   finally
     D.Free;
   end;
-  T := TFixture.Create(Th5uCacheMode.None);
+  T := TFixture.Create(ThiiCacheMode.None);
   try
-    T.Grid.Customization.ColumnMovingGesture := Th5uColumnRowMovingGesture.Drag;
+    T.Grid.Customization.ColumnMovingGesture := ThiiColumnRowMovingGesture.Drag;
     T.Grid.HeaderLayout.RowCount := 3;
     T.Grid.Spacing.RowSpacing := 3;
     Cell := T.Grid.HeaderLayout.Cells.Add;
@@ -1417,11 +1473,11 @@ var
   SavedCursor: TCursor;
 begin
   SavedCursor := Screen.Cursor;
-  T := TFixture.Create(Th5uCacheMode.None);
+  T := TFixture.Create(ThiiCacheMode.None);
   try
     T.Grid.AllowEditing := False;
     T.Grid.Cursor := crCross;
-    T.Grid.Customization.ColumnMovingGesture := Th5uColumnRowMovingGesture.Drag;
+    T.Grid.Customization.ColumnMovingGesture := ThiiColumnRowMovingGesture.Drag;
     P := T.Grid.HeaderBounds(0).CenterPoint;
     Q := T.Grid.HeaderBounds(2).CenterPoint;
     Screen.Cursor := crHourGlass;
@@ -1447,21 +1503,21 @@ end;
 procedure TestGroupedHeaderMoving;
 var
   T: TFixture;
-  Alpha, Beta, Cell, SourceHeader, TargetHeader: Th5uHeaderLayoutCell;
-  SourceColumns: array[0..2] of Th5uGridColumn;
+  Alpha, Beta, Cell, SourceHeader, TargetHeader: ThiiHeaderLayoutCell;
+  SourceColumns: array[0..2] of ThiiGridColumn;
   SourceBounds, TargetBounds, LeafBounds: TRect;
   P, Q, SourcePixel, ChildPixel, MarkerPixel: TPoint;
   BeforeImage, DragImage: TBitmap;
   Scenario, I, SourceIndex, TargetIndex, FirstAfter: Integer;
   ExpectedMove, ExpectedFeedback: Boolean;
 
-  function BoundsFor(ACell: Th5uHeaderLayoutCell): TRect;
+  function BoundsFor(ACell: ThiiHeaderLayoutCell): TRect;
   var
     X, Y: Integer;
 {$IFDEF TEST_FMX}
-    H: Th5uFmxHitTestInfo;
+    H: ThiiHitTestInfo;
 {$ELSE}
-    H: Th5uHitTestInfo;
+    H: ThiiHitTestInfo;
 {$ENDIF}
   begin
     Y := Round(T.Grid.Spacing.Top + ACell.LayoutRow * (T.Grid.HeaderRowHeight + T.Grid.Spacing.RowSpacing) + T.Grid.HeaderRowHeight / 2);
@@ -1533,10 +1589,10 @@ var
 begin
   for Scenario := 0 to 16 do
   begin
-    T := TFixture.Create(Th5uCacheMode.None);
+    T := TFixture.Create(ThiiCacheMode.None);
     try
       T.Grid.AllowEditing := False;
-      T.Grid.Customization.ColumnMovingGesture := Th5uColumnRowMovingGesture.Drag;
+      T.Grid.Customization.ColumnMovingGesture := ThiiColumnRowMovingGesture.Drag;
       for I := 3 to 6 do
       begin
         with T.Grid.Columns.Add do
@@ -1547,7 +1603,7 @@ begin
         end;
       end;
       for I := 0 to 6 do T.Grid.Columns[I].Width := 65;
-      T.Grid.Columns[0].FixedKind := Th5uFixedKind.Left;
+      T.Grid.Columns[0].FixedKind := ThiiFixedKind.Left;
       T.Grid.HeaderLayout.RowCount := 2;
       T.Grid.Spacing.RowSpacing := 2;
       Alpha := T.Grid.HeaderLayout.Cells.Add;
@@ -1596,7 +1652,7 @@ begin
       if Scenario = 16 then T.Grid.Columns[1].Visible := False;
       if Scenario in [8, 12] then SourceColumns[2].Visible := False;
       if Scenario = 9 then SourceColumns[0].Visible := False;
-      if Scenario in [7, 12] then SourceColumns[2].MovePermission := Th5uColumnMovePermission.Deny;
+      if Scenario in [7, 12] then SourceColumns[2].MovePermission := ThiiColumnMovePermission.Deny;
       T.PaintGrid;
       T.Grid.SetFocus;
       SourceBounds := BoundsFor(SourceHeader);
@@ -1630,13 +1686,13 @@ begin
         Move;
         DragImage := Snapshot;
         try
-          Check((Pixel(BeforeImage, MarkerPixel) <> Pixel(DragImage, MarkerPixel))
-            = ExpectedFeedback, 'Group marker disagrees with valid drop/row/permissions, scenario ' + IntToStr(Scenario));
+          Check((Pixel(BeforeImage, MarkerPixel) <> Pixel(DragImage, MarkerPixel)) = ExpectedFeedback,
+            'Group marker disagrees with valid drop/row/permissions, scenario ' + IntToStr(Scenario));
           if ExpectedFeedback then
           begin
             Check(Pixel(BeforeImage, SourcePixel) <> Pixel(DragImage, SourcePixel), 'Source feedback is on the wrong header row');
-            Check(Pixel(BeforeImage, ChildPixel) = Pixel(DragImage, ChildPixel), 'Source feedback paints the other header row, scenario '
-              + IntToStr(Scenario));
+            Check(Pixel(BeforeImage, ChildPixel) = Pixel(DragImage, ChildPixel),
+              'Source feedback paints the other header row, scenario ' + IntToStr(Scenario));
           end;
         finally
           DragImage.Free;
@@ -1686,7 +1742,7 @@ var
   T: TFixture;
   A, B, C, R: TPoint;
 begin
-  T := TFixture.Create(Th5uCacheMode.None);
+  T := TFixture.Create(ThiiCacheMode.None);
   try
     T.Grid.AllowEditing := False;
     A := T.CellPoint('FLAG');
@@ -1706,7 +1762,7 @@ begin
     Check(T.Grid.Selection.IsCellSelected(0, 0) and (T.Grid.Selection.CellRanges.Count = 1) and (T.Grid.Selection.SelectedColumnCount = 0)
       and (T.Grid.Selection.SelectedRowCount(3) = 0), 'Unselected right click must replace all selection kinds, regardless of modifiers');
     Check(T.Grid.Selection.FocusedCell.ColumnId = 'FLAG', 'Right click did not focus new cell');
-    T.Grid.Selection.AddCellRange(Th5uCellRange.Create(0, 0, 1, 1), True);
+    T.Grid.Selection.AddCellRange(ThiiCellRange.Create(0, 0, 1, 1), True);
     T.Grid.Selection.SelectRow(T.Controller.GetRowKey(1), True);
     T.Grid.Selection.SelectColumn('NUMBER', True);
     T.Grid.RightClickAt(B);
@@ -1714,8 +1770,8 @@ begin
     T.Grid.RightClickAt(C);
     Check(T.Grid.Selection.FocusedCell.ColumnId = 'NUMBER', 'Selected column right click did not change focus');
     T.Grid.RightClickAt(R);
-    Check((T.Grid.Selection.FocusedCell.RowIndex = 1) and (T.Grid.Selection.FocusedCell.ColumnId
-      = 'FLAG'), 'Selected row right click did not change focus');
+    Check((T.Grid.Selection.FocusedCell.RowIndex = 1) and (T.Grid.Selection.FocusedCell.ColumnId = 'FLAG'),
+      'Selected row right click did not change focus');
     Check((T.Grid.Selection.CellRanges.Count = 2) and T.Grid.Selection.IsColumnSelected('NUMBER')
       and T.Grid.Selection.IsRowSelected(T.Controller.GetRowKey(1)), 'Right click inside mixed selection changed it');
     T.Grid.RightClickAt(Point(590, 210));
@@ -1725,13 +1781,13 @@ begin
     T.Grid.Selection.SelectColumn('DESCRIPTION');
     T.Grid.Columns[0].CanSelect := False;
     T.Grid.RightClickAt(A);
-    Check(T.Grid.Selection.IsColumnSelected('DESCRIPTION') and (T.Grid.Selection.FocusedCell.ColumnId
-      = 'FLAG'), 'CanSelect=False must permit focus while preserving selection');
+    Check(T.Grid.Selection.IsColumnSelected('DESCRIPTION') and (T.Grid.Selection.FocusedCell.ColumnId = 'FLAG'),
+      'CanSelect=False must permit focus while preserving selection');
     T.Grid.Columns[0].CanSelect := True;
-    T.Grid.Selection.AllowedKinds := [Th5uSelectionKind.Columns];
+    T.Grid.Selection.AllowedKinds := [ThiiSelectionKind.Columns];
     T.Grid.RightClickAt(C);
-    Check(T.Grid.Selection.IsColumnSelected('DESCRIPTION') and (T.Grid.Selection.FocusedCell.ColumnId
-      = 'NUMBER'), 'Right click bypassed AllowedKinds or failed to focus');
+    Check(T.Grid.Selection.IsColumnSelected('DESCRIPTION') and (T.Grid.Selection.FocusedCell.ColumnId = 'NUMBER'),
+      'Right click bypassed AllowedKinds or failed to focus');
     Writeln('PASS: right-click defaults, replacement, selected cells/rows/columns, modifiers, blank area, focus and permissions');
   finally
     T.Free;
@@ -1752,12 +1808,12 @@ var
   end;
 
 begin
-  T := TFixture.Create(Th5uCacheMode.None);
+  T := TFixture.Create(ThiiCacheMode.None);
   try
     T.Grid.Cursor := crCross;
     T.Grid.AllowEditing := False;
-    Check((T.Grid.Customization.LastColumnResizeHitZoneLeft = -1) and (T.Grid.Customization.TouchLastColumnResizeHitZoneLeft
-      = -1), 'Last-column hit zones must default to -1');
+    Check((T.Grid.Customization.LastColumnResizeHitZoneLeft = -1) and (T.Grid.Customization.TouchLastColumnResizeHitZoneLeft = -1),
+      'Last-column hit zones must default to -1');
     T.Grid.Customization.ColumnResizeHitZoneLeft := 2;
     T.Grid.Customization.ColumnResizeHitZoneRight := 1;
     CheckHover(2, -2, True);
@@ -1786,7 +1842,7 @@ begin
     T.PaintGrid;
     CheckHover(1, -10, True);
     CheckHover(0, -6, False);
-    T.Grid.Columns[0].FixedKind := Th5uFixedKind.Right;
+    T.Grid.Columns[0].FixedKind := ThiiFixedKind.Right;
     T.PaintGrid;
     CheckHover(1, -10, True);
     CheckHover(0, -6, False);
@@ -1825,14 +1881,14 @@ var
   end;
 
 begin
-  T := TFixture.Create(Th5uCacheMode.None);
+  T := TFixture.Create(ThiiCacheMode.None);
   try
     T.Grid.Cursor := crCross;
     T.Grid.AllowEditing := False;
     T.Grid.Customization.AllowColumnMoving := False;
     Check((T.Grid.Customization.ColumnResizeHitZoneLeft = 4) and (T.Grid.Customization.ColumnResizeHitZoneRight = 4)
-      and (T.Grid.Customization.TouchColumnResizeHitZoneLeft = 12) and (T.Grid.Customization.TouchColumnResizeHitZoneRight
-      = 12), 'Resize hit zone defaults changed');
+      and (T.Grid.Customization.TouchColumnResizeHitZoneLeft = 12) and (T.Grid.Customization.TouchColumnResizeHitZoneRight = 12),
+      'Resize hit zone defaults changed');
     T.Grid.Customization.ColumnResizeHitZoneLeft := 9;
     T.Grid.Customization.ColumnResizeHitZoneRight := 2;
     H := T.Grid.HeaderBounds(0);
@@ -1898,11 +1954,11 @@ var
   I: Integer;
   Original: Double;
 begin
-  T := TFixture.Create(Th5uCacheMode.None);
+  T := TFixture.Create(ThiiCacheMode.None);
   try
     T.Grid.AllowEditing := False;
     T.Grid.Cursor := crCross;
-    T.Grid.Customization.ColumnMovingGesture := Th5uColumnRowMovingGesture.Drag;
+    T.Grid.Customization.ColumnMovingGesture := ThiiColumnRowMovingGesture.Drag;
     T.Grid.Columns[0].RightSpacing := 8;
     T.PaintGrid;
     H := T.Grid.HeaderBounds(0);
@@ -2014,11 +2070,11 @@ begin
   for TouchMode := 0 to 1 do
     for CancelMode := 0 to 2 do
     begin
-      T := TFixture.Create(Th5uCacheMode.None);
+      T := TFixture.Create(ThiiCacheMode.None);
       try
         T.Grid.AllowEditing := False;
         T.Grid.Cursor := crCross;
-        T.Grid.Customization.ColumnMovingGesture := Th5uColumnRowMovingGesture.Drag;
+        T.Grid.Customization.ColumnMovingGesture := ThiiColumnRowMovingGesture.Drag;
         if TouchMode = 1 then Shift := [ssTouch] else Shift := [];
         P := T.Grid.HeaderBounds(0).CenterPoint;
         Q := T.Grid.HeaderBounds(2).CenterPoint;
@@ -2068,10 +2124,10 @@ var
   I, X, Y, Difference, FixedDifference: Integer;
   Header: TRect;
 begin
-  T := TFixture.Create(Th5uCacheMode.None);
+  T := TFixture.Create(ThiiCacheMode.None);
   try
     T.Grid.AllowEditing := False;
-    T.Grid.Columns[0].FixedKind := Th5uFixedKind.Left;
+    T.Grid.Columns[0].FixedKind := ThiiFixedKind.Left;
     T.Grid.Columns[1].WordWrap := True;
     T.Grid.Width := 370;
     T.Grid.RowHeight.FixedHeight := 80;
@@ -2127,10 +2183,10 @@ var
   I, Attempt: Integer;
   V, H: TScrollBar;
 begin
-  T := TFixture.Create(Th5uCacheMode.None);
+  T := TFixture.Create(ThiiCacheMode.None);
   try
     T.Grid.AllowEditing := False;
-    T.Grid.Columns[0].FixedKind := Th5uFixedKind.Left;
+    T.Grid.Columns[0].FixedKind := ThiiFixedKind.Left;
     T.Grid.Width := 370;
     T.Grid.Height := 180;
     T.Grid.RowHeight.FixedHeight := 80;
@@ -2196,7 +2252,7 @@ var
   P, Q: TPointF;
   Original: Double;
 begin
-  T := TFixture.Create(Th5uCacheMode.None);
+  T := TFixture.Create(ThiiCacheMode.None);
   try
     T.Grid.AllowEditing := False;
     T.Grid.Cursor := crCross;
@@ -2234,13 +2290,13 @@ var
   T: TFixture;
   Probe: TMoveProbe;
   Rows, Cols: array[0..2] of TPoint;
-  Keys: array[0..2] of Th5uRowKey;
+  Keys: array[0..2] of ThiiRowKey;
   I, X, Y, Before: Integer;
   Found: Boolean;
 {$IFDEF TEST_FMX}
-  H: Th5uFmxHitTestInfo;
+  H: ThiiHitTestInfo;
 {$ELSE}
-  H: Th5uHitTestInfo;
+  H: ThiiHitTestInfo;
 {$ENDIF}
 
   procedure Drag(const AFrom, ATo: TPoint; Shift: TShiftState = [ssAlt]);
@@ -2252,19 +2308,19 @@ var
 
   procedure CheckOrder(A, B, C: Integer; const Msg: string);
   var
-    V: TArray<Th5uGridColumn>;
+    V: TArray<ThiiGridColumn>;
   begin
     V := T.Grid.Columns.VisibleColumns;
     Check((V[0]=T.Grid.Columns[A]) and (V[1]=T.Grid.Columns[B]) and (V[2]=T.Grid.Columns[C]), Msg);
   end;
 
 begin
-  T := TFixture.Create(Th5uCacheMode.None);
+  T := TFixture.Create(ThiiCacheMode.None);
   Probe := TMoveProbe.Create;
   try
     T.Grid.AllowEditing := False;
     T.Grid.Cursor := crCross;
-    T.Grid.Selection.AllowedKinds := [Th5uSelectionKind.Rows,Th5uSelectionKind.Columns,Th5uSelectionKind.CellRanges];
+    T.Grid.Selection.AllowedKinds := [ThiiSelectionKind.Rows,ThiiSelectionKind.Columns,ThiiSelectionKind.CellRanges];
     Check(GetPropInfo(T.Grid.Columns[0], 'CanMove') = nil, 'CanMove compatibility remains published');
     for I := 0 to 2 do
     begin
@@ -2276,10 +2332,10 @@ begin
         begin
 {$IFDEF TEST_FMX}
           H := T.Grid.GridHitTest(X*4,Y*4);
-          if (H.Kind=Th5uFmxHitKind.RowIndicator) and (H.RowIndex=I) then
+          if (H.Kind=ThiiHitKind.RowIndicator) and (H.RowIndex=I) then
 {$ELSE}
           H := T.Grid.HitTest(X*4,Y*4);
-          if (H.Kind=Th5uHitKind.RowIndicator) and (H.RowIndex=I) then
+          if (H.Kind=ThiiHitKind.RowIndicator) and (H.RowIndex=I) then
 {$ENDIF}
           begin
             Rows[I] := Point(X*4, Round((H.Bounds.Top+H.Bounds.Bottom)/2));
@@ -2297,10 +2353,10 @@ begin
         begin
 {$IFDEF TEST_FMX}
           H := T.Grid.GridHitTest(X*4,Y*4);
-          if (H.Kind=Th5uFmxHitKind.Header) and (H.ColumnIndex=I) then
+          if (H.Kind=ThiiHitKind.Header) and (H.ColumnIndex=I) then
 {$ELSE}
           H := T.Grid.HitTest(X*4,Y*4);
-          if (H.Kind=Th5uHitKind.Header) and (H.ColumnIndex=I) then
+          if (H.Kind=ThiiHitKind.Header) and (H.ColumnIndex=I) then
 {$ENDIF}
           begin
             Cols[I] := Point(Round((H.Bounds.Left+H.Bounds.Right)/2), Y*4);
@@ -2321,8 +2377,8 @@ begin
     T.Grid.PointerUp(Cols[2],[ssAlt]);
     CheckOrder(2,0,1,'Column block did not retain order moving right');
     Check(T.Grid.Cursor=crCross,'Column cursor not restored');
-    Check(T.Grid.Selection.IsColumnSelected(T.Grid.Columns[0].Id)
-      and T.Grid.Selection.IsColumnSelected(T.Grid.Columns[1].Id),'Column move lost selection');
+    Check(T.Grid.Selection.IsColumnSelected(T.Grid.Columns[0].Id) and T.Grid.Selection.IsColumnSelected(T.Grid.Columns[1].Id),
+      'Column move lost selection');
     T.PaintGrid;
     Drag(Cols[2],Cols[0]);
     CheckOrder(0,1,2,'Column block did not retain order moving left');
@@ -2336,16 +2392,16 @@ begin
     T.Grid.PointerUp(Cols[1],[ssAlt]);
     CheckOrder(0,1,2,'Non-contiguous column selection moved');
     T.Grid.Selection.SelectColumns([T.Grid.Columns[0].Id,T.Grid.Columns[1].Id]);
-    T.Grid.Columns[1].MovePermission := Th5uColumnMovePermission.Deny;
+    T.Grid.Columns[1].MovePermission := ThiiColumnMovePermission.Deny;
     Drag(Cols[0],Cols[2]);
     CheckOrder(0,1,2,'Partially denied column block moved');
-    T.Grid.Columns[1].MovePermission := Th5uColumnMovePermission.Default;
+    T.Grid.Columns[1].MovePermission := ThiiColumnMovePermission.Default;
     T.Grid.Selection.Clear;
-    T.Grid.Columns[0].FixedKind := Th5uFixedKind.Left;
+    T.Grid.Columns[0].FixedKind := ThiiFixedKind.Left;
     T.PaintGrid;
     Drag(Cols[1],Cols[0]);
     CheckOrder(0,1,2,'Column crossed the fixed region');
-    T.Grid.Columns[0].FixedKind := Th5uFixedKind.None;
+    T.Grid.Columns[0].FixedKind := ThiiFixedKind.None;
     T.PaintGrid;
     T.Grid.PointerDown(Cols[0],[ssAlt]);
     T.Grid.PointerMove(Cols[2],[ssAlt]);
@@ -2355,10 +2411,10 @@ begin
     CheckOrder(0,1,2,'Escape did not cancel column move');
     T.Grid.PointerDown(Cols[0],[ssAlt]);
     T.Grid.PointerMove(Cols[2],[ssAlt]);
-    T.Grid.Columns[0].MovePermission := Th5uColumnMovePermission.Deny;
+    T.Grid.Columns[0].MovePermission := ThiiColumnMovePermission.Deny;
     T.Grid.PointerUp(Cols[2],[ssAlt]);
     CheckOrder(0,1,2,'Column permission changed during drag was ignored');
-    T.Grid.Columns[0].MovePermission := Th5uColumnMovePermission.Default;
+    T.Grid.Columns[0].MovePermission := ThiiColumnMovePermission.Default;
     Drag(Cols[0],Point(-20,-20));
     CheckOrder(0,1,2,'Outside column drop changed order');
     Check(T.Grid.Cursor=crCross,'Outside column drop left drag cursor');
@@ -2402,7 +2458,7 @@ begin
     Drag(Rows[2],Rows[0]);
     Check((Probe.Count=Before+1) and (Length(Probe.Context.RowKeys)=2),'Contiguous select-all minus exclusions could not move');
     T.Grid.Selection.Clear;
-    T.Grid.Customization.RowMovingGesture := Th5uColumnRowMovingGesture.Drag;
+    T.Grid.Customization.RowMovingGesture := ThiiColumnRowMovingGesture.Drag;
     Drag(Rows[0],Rows[2],[]);
     Check((Probe.Count=Before+2) and (Length(Probe.Context.RowKeys)=1),'Plain row moving gesture failed');
     Before := Probe.Count;
@@ -2412,7 +2468,7 @@ begin
     Drag(Rows[0],Rows[2],[]);
     Check(Probe.Count=Before,'Row moving ignored grid prohibition');
     T.Grid.Customization.AllowRowMoving := True;
-    T.Grid.Customization.RowMovingGesture := Th5uColumnRowMovingGesture.AltDrag;
+    T.Grid.Customization.RowMovingGesture := ThiiColumnRowMovingGesture.AltDrag;
     T.Grid.Selection.Clear;
     T.Grid.PointerDown(Rows[0],[ssAlt]);
     T.Grid.PointerMove(Rows[2],[ssAlt]);
@@ -2471,16 +2527,16 @@ var
   Events: TCellEventProbe;
   Cells: array[0..2, 0..2] of TPoint;
   Rows, Cols: array[0..2] of TPoint;
-  Keys: array[0..2] of Th5uRowKey;
+  Keys: array[0..2] of ThiiRowKey;
   I, J, Before: Integer;
 
-  function HitPoint(Kind: Th5uSelectionKind; Row, Col: Integer): TPoint;
+  function HitPoint(Kind: ThiiSelectionKind; Row, Col: Integer): TPoint;
   var
     X, Y: Integer;
 {$IFDEF TEST_FMX}
-    H: Th5uFmxHitTestInfo;
+    H: ThiiHitTestInfo;
 {$ELSE}
-    H: Th5uHitTestInfo;
+    H: ThiiHitTestInfo;
 {$ENDIF}
     Match: Boolean;
   begin
@@ -2490,18 +2546,18 @@ var
       begin
 {$IFDEF TEST_FMX}
         H := T.Grid.GridHitTest(X*4,Y*4);
-        Match := ((Kind=Th5uSelectionKind.Rows) and (H.Kind=Th5uFmxHitKind.RowIndicator) and (H.RowIndex=Row)) or ((Kind=Th5uSelectionKind.Columns)
-          and (H.Kind=Th5uFmxHitKind.Header) and (H.ColumnIndex=Col)) or ((Kind=Th5uSelectionKind.CellRanges) and (H.Kind=Th5uFmxHitKind.DataCell)
-          and (H.RowIndex=Row) and (H.ColumnIndex=Col));
+        Match := ((Kind=ThiiSelectionKind.Rows) and (H.Kind=ThiiHitKind.RowIndicator) and (H.RowIndex=Row))
+          or ((Kind=ThiiSelectionKind.Columns) and (H.Kind=ThiiHitKind.Header) and (H.ColumnIndex=Col))
+          or ((Kind=ThiiSelectionKind.CellRanges) and (H.Kind=ThiiHitKind.DataCell) and (H.RowIndex=Row) and (H.ColumnIndex=Col));
 {$ELSE}
         H := T.Grid.HitTest(X*4,Y*4);
-        Match := ((Kind=Th5uSelectionKind.Rows) and (H.Kind=Th5uHitKind.RowIndicator) and (H.RowIndex=Row)) or ((Kind=Th5uSelectionKind.Columns)
-          and (H.Kind=Th5uHitKind.Header) and (H.ColumnIndex=Col)) or ((Kind=Th5uSelectionKind.CellRanges) and (H.Kind=Th5uHitKind.DataCell)
-          and (H.RowIndex=Row) and (H.ColumnIndex=Col));
+        Match := ((Kind=ThiiSelectionKind.Rows) and (H.Kind=ThiiHitKind.RowIndicator) and (H.RowIndex=Row))
+          or ((Kind=ThiiSelectionKind.Columns) and (H.Kind=ThiiHitKind.Header) and (H.ColumnIndex=Col))
+          or ((Kind=ThiiSelectionKind.CellRanges) and (H.Kind=ThiiHitKind.DataCell) and (H.RowIndex=Row) and (H.ColumnIndex=Col));
 {$ENDIF}
         if Match then
-          if Kind=Th5uSelectionKind.Rows then Exit(Point(X*4,Round((H.Bounds.Top+H.Bounds.Bottom)/2)))
-          else if Kind=Th5uSelectionKind.Columns then Exit(Point(Round((H.Bounds.Left+H.Bounds.Right)/2),Y*4))
+          if Kind=ThiiSelectionKind.Rows then Exit(Point(X*4,Round((H.Bounds.Top+H.Bounds.Bottom)/2)))
+          else if Kind=ThiiSelectionKind.Columns then Exit(Point(Round((H.Bounds.Left+H.Bounds.Right)/2),Y*4))
           else Exit(Point(Round((H.Bounds.Left+H.Bounds.Right)/2),Round((H.Bounds.Top+H.Bounds.Bottom)/2)));
       end;
     raise Exception.CreateFmt('Selection target not found: %d/%d/%d',[Ord(Kind),Row,Col]);
@@ -2509,8 +2565,8 @@ var
 
   procedure CheckRows(A, B, C: Boolean; const Msg: string);
   begin
-    Check((T.Grid.Selection.IsRowSelected(Keys[0])=A) and (T.Grid.Selection.IsRowSelected(Keys[1])=B) and (T.Grid.Selection.IsRowSelected(Keys[2])
-      =C),Msg);
+    Check((T.Grid.Selection.IsRowSelected(Keys[0])=A) and (T.Grid.Selection.IsRowSelected(Keys[1])=B)
+      and (T.Grid.Selection.IsRowSelected(Keys[2]) =C),Msg);
   end;
 
   procedure CheckCols(A, B, C: Boolean; const Msg: string);
@@ -2520,7 +2576,7 @@ var
   end;
 
 begin
-  T := TFixture.Create(Th5uCacheMode.None);
+  T := TFixture.Create(ThiiCacheMode.None);
   Events := TCellEventProbe.Create;
   try
     T.Grid.AllowEditing := False;
@@ -2528,9 +2584,9 @@ begin
     for I := 0 to 2 do
     begin
       Keys[I] := T.Controller.GetRowKey(I);
-      Rows[I] := HitPoint(Th5uSelectionKind.Rows,I,-1);
-      Cols[I] := HitPoint(Th5uSelectionKind.Columns,-1,I);
-      for J := 0 to 2 do Cells[I,J] := HitPoint(Th5uSelectionKind.CellRanges,I,J);
+      Rows[I] := HitPoint(ThiiSelectionKind.Rows,I,-1);
+      Cols[I] := HitPoint(ThiiSelectionKind.Columns,-1,I);
+      for J := 0 to 2 do Cells[I,J] := HitPoint(ThiiSelectionKind.CellRanges,I,J);
     end;
     T.Grid.ClickAt(Rows[0]);
     T.Grid.ClickWithShift(Cols[0],[ssCtrl]);
@@ -2600,8 +2656,8 @@ begin
     Check(T.Grid.Selection.IsCellSelected(0,0) and T.Grid.Selection.IsCellSelected(1,1) and T.Grid.Selection.IsCellSelected(2,1)
       and not T.Grid.Selection.IsCellSelected(0,2),'Ctrl+Shift cell range incorrect');
     T.Grid.ClickWithShift(Cells[2,2],[ssCtrl,ssShift]);
-    Check(T.Grid.Selection.IsCellSelected(0,0)
-      and not T.Grid.Selection.IsCellSelected(1,1),'Ctrl+Shift cell contraction lost base or retained old extent');
+    Check(T.Grid.Selection.IsCellSelected(0,0) and not T.Grid.Selection.IsCellSelected(1,1),
+      'Ctrl+Shift cell contraction lost base or retained old extent');
     T.Grid.Press(vkUp,[ssCtrl,ssShift]);
     T.Grid.Press(vkLeft,[ssCtrl,ssShift]);
     Check(T.Grid.Selection.IsCellSelected(0,0) and T.Grid.Selection.IsCellSelected(1,1),'Ctrl+Shift arrows replaced base selection');
@@ -2661,7 +2717,7 @@ begin
     T.Grid.PointerUp(Rows[2],[ssCtrl]);
     CheckRows(True,False,True,'Ctrl row drag contraction incorrect');
 
-    Check(T.Grid.Customization.ColumnMovingGesture=Th5uColumnRowMovingGesture.AltDrag,'Default moving gesture is not Alt+drag');
+    Check(T.Grid.Customization.ColumnMovingGesture=ThiiColumnRowMovingGesture.AltDrag,'Default moving gesture is not Alt+drag');
     T.Grid.PointerDown(Cols[0]);
     T.Grid.PointerMove(Cols[2]);
     CheckCols(True,True,True,'Column header drag missing');
@@ -2705,7 +2761,7 @@ begin
     Check(T.Grid.Columns[0].VisibleIndex=2,'Alt+drag did not move column');
     T.Grid.MoveColumn(T.Grid.Columns[0],0);
     T.PaintGrid;
-    T.Grid.Customization.ColumnMovingGesture := Th5uColumnRowMovingGesture.Drag;
+    T.Grid.Customization.ColumnMovingGesture := ThiiColumnRowMovingGesture.Drag;
     T.Grid.PointerDown(Cols[0]);
     T.Grid.PointerMove(Cols[2]);
     T.Grid.PointerUp(Cols[2]);
@@ -2724,7 +2780,7 @@ begin
     CheckCols(True,True,True,'Disabled moving did not permit column selection');
     Check(T.Grid.Columns[0].VisibleIndex=0,'Grid move prohibition ignored');
     T.Grid.Selection.Clear;
-    T.Grid.Columns[0].MovePermission := Th5uColumnMovePermission.Allow;
+    T.Grid.Columns[0].MovePermission := ThiiColumnMovePermission.Allow;
     T.Grid.PointerDown(Cols[0]);
     T.Grid.PointerMove(Cols[2]);
     T.Grid.PointerUp(Cols[2]);
@@ -2732,29 +2788,29 @@ begin
     T.Grid.MoveColumn(T.Grid.Columns[0],0);
     T.PaintGrid;
     T.Grid.Customization.AllowColumnMoving := True;
-    T.Grid.Columns[0].MovePermission := Th5uColumnMovePermission.Deny;
+    T.Grid.Columns[0].MovePermission := ThiiColumnMovePermission.Deny;
     T.Grid.PointerDown(Cols[0]);
     T.Grid.PointerMove(Cols[2]);
     T.Grid.PointerUp(Cols[2]);
     Check(T.Grid.Columns[0].VisibleIndex=0,'Column Deny was ignored');
     CheckCols(True,True,True,'Denied column moving blocked range selection');
-    T.Grid.Columns[0].MovePermission := Th5uColumnMovePermission.Default;
-    T.Grid.Customization.ColumnMovingGesture := Th5uColumnRowMovingGesture.AltDrag;
+    T.Grid.Columns[0].MovePermission := ThiiColumnMovePermission.Default;
+    T.Grid.Customization.ColumnMovingGesture := ThiiColumnRowMovingGesture.AltDrag;
     Writeln(
       'PASS: live mouse range selection, Ctrl addition, release/capture, immediate and checkbox editing, configurable column moving and permissions');
 
-    T.Grid.Selection.CombinationMode := Th5uSelectionCombinationMode.Exclusive;
+    T.Grid.Selection.CombinationMode := ThiiSelectionCombinationMode.Exclusive;
     T.Grid.ClickAt(Rows[0]);
     T.Grid.ClickWithShift(Cols[0],[ssCtrl]);
     CheckRows(False,False,False,'Exclusive column toggle retained rows');
     T.Grid.ClickWithShift(Rows[0],[ssCtrl]);
     CheckCols(False,False,False,'Exclusive row toggle retained columns');
-    T.Grid.Selection.AllowedKinds := [Th5uSelectionKind.CellRanges];
+    T.Grid.Selection.AllowedKinds := [ThiiSelectionKind.CellRanges];
     T.Grid.ClickWithShift(Rows[0],[ssCtrl]);
     T.Grid.ClickWithShift(Cols[0],[ssCtrl]);
     CheckRows(False,False,False,'Ctrl bypassed AllowedKinds for rows');
     CheckCols(False,False,False,'Ctrl bypassed AllowedKinds for columns');
-    T.Grid.Selection.AllowedKinds := [Th5uSelectionKind.Rows,Th5uSelectionKind.Columns,Th5uSelectionKind.CellRanges];
+    T.Grid.Selection.AllowedKinds := [ThiiSelectionKind.Rows,ThiiSelectionKind.Columns,ThiiSelectionKind.CellRanges];
     T.Grid.Columns[1].CanSelect := False;
     T.Grid.ClickAt(Cols[0]);
     T.Grid.ClickWithShift(Cols[2],[ssShift]);
@@ -2770,15 +2826,15 @@ begin
 end;
 
 
-procedure TestKeyboard(AMode: Th5uCacheMode);
+procedure TestKeyboard(AMode: ThiiCacheMode);
 var
   T: TFixture;
   I: Integer;
   P: TPoint;
 {$IFDEF TEST_FMX}
-  H: Th5uFmxHitTestInfo;
+  H: ThiiHitTestInfo;
 {$ELSE}
-  H: Th5uHitTestInfo;
+  H: ThiiHitTestInfo;
 {$ENDIF}
 begin
   T := TFixture.Create(AMode);
@@ -2815,8 +2871,9 @@ begin
     Check(T.Grid.Selection.FocusedCell.RowIndex = 1, 'Escape cleared focus');
     T.Grid.Press(vkRight);
     T.Grid.Press(vkEscape);
-    Check(T.Grid.Selection.IsCellSelected(1,1), Format('Escape cleared single cell; focus=%d/%d, ranges=%d', [T.Grid.Selection.FocusedCell.RowIndex,
-      T.Grid.Selection.FocusedCell.ColumnIndex, T.Grid.Selection.CellRanges.Count]));
+    Check(T.Grid.Selection.IsCellSelected(1,1),
+      Format('Escape cleared single cell; focus=%d/%d, ranges=%d',
+      [T.Grid.Selection.FocusedCell.RowIndex, T.Grid.Selection.FocusedCell.ColumnIndex, T.Grid.Selection.CellRanges.Count]));
     T.Grid.Selection.SelectRow(T.Grid.Selection.FocusedCell.RowKey);
     T.Grid.Press(vkEscape);
     Check(not T.Grid.Selection.IsRowSelected(T.Grid.Selection.FocusedCell.RowKey), 'Escape retained row');
@@ -2920,16 +2977,16 @@ end;
 
 procedure CheckDemoCheckbox(G: TGridAccess);
 var
-  Columns: TArray<Th5uGridColumn>;
+  Columns: TArray<ThiiGridColumn>;
   Index, I, X, Y: Integer;
   Original: Boolean;
   P: TPoint;
   Found: Boolean;
 {$IFDEF TEST_FMX}
-  H: Th5uFmxHitTestInfo;
+  H: ThiiHitTestInfo;
   B: TBitmap;
 {$ELSE}
-  H: Th5uHitTestInfo;
+  H: ThiiHitTestInfo;
 {$ENDIF}
 begin
 {$IFDEF TEST_FMX}
@@ -2938,9 +2995,12 @@ begin
   Columns := G.Columns.VisibleColumns;
   Index := -1;
   for I := 0 to High(Columns) do
-    if Columns[I].DataType = Th5uColumnDataType.Boolean then
-    begin Index := I; Break; end;
-  Check(G.Customization.ColumnMovingGesture = Th5uColumnRowMovingGesture.Drag, 'Demo header must use normal drag');
+    if Columns[I].DataType = ThiiColumnDataType.Boolean then
+    begin
+      Index := I;
+      Break;
+    end;
+  Check(G.Customization.ColumnMovingGesture = ThiiColumnRowMovingGesture.Drag, 'Demo header must use normal drag');
   Check(Index >= 0, 'Demo Boolean column missing');
   G.SetFocus;
   G.Press(vkHome, [ssCtrl]);
@@ -2959,10 +3019,10 @@ begin
     begin
 {$IFDEF TEST_FMX}
       H := G.GridHitTest(X*4,Y*4);
-      if (H.Kind = Th5uFmxHitKind.DataCell) and (H.RowIndex = 0) and (H.Column = Columns[Index]) then
+      if (H.Kind = ThiiHitKind.DataCell) and (H.RowIndex = 0) and (H.Column = Columns[Index]) then
 {$ELSE}
       H := G.HitTest(X*4,Y*4);
-      if (H.Kind = Th5uHitKind.DataCell) and (H.RowIndex = 0) and (H.Column = Columns[Index]) then
+      if (H.Kind = ThiiHitKind.DataCell) and (H.RowIndex = 0) and (H.Column = Columns[Index]) then
 {$ENDIF}
       begin
         P := Point(Round((H.Bounds.Left+H.Bounds.Right)/2), Round((H.Bounds.Top+H.Bounds.Bottom)/2));
@@ -3020,8 +3080,17 @@ begin
     try
       for J := 0 to 1 do
       begin
-        if J = 0 then begin L.Show; G := TGridAccess(L.Grid); end
-        else begin L.Hide; V.Show; G := TGridAccess(V.Grid); end;
+        if J = 0 then
+        begin
+          L.Show;
+          G := TGridAccess(L.Grid);
+        end
+        else
+        begin
+          L.Hide;
+          V.Show;
+          G := TGridAccess(V.Grid);
+        end;
         Application.ProcessMessages;
         CheckDemoCheckbox(G);
         E := nil;
@@ -3045,7 +3114,11 @@ begin
         end;
         Check(E.Visible and (E.Text = 'Live draft'), 'Live data update discarded draft');
         if J = 0 then L.ObjectController.Clear
-        else begin V.VirtualController.OnGetRowCount := nil; V.VirtualController.NotifyReset; end;
+        else
+        begin
+          V.VirtualController.OnGetRowCount := nil;
+          V.VirtualController.NotifyReset;
+        end;
         Check(not E.Visible, 'Removed row retained an editor');
         Writeln('PASS: live demo ', J, ' retains draft and cancels removed row');
       end;
@@ -3057,10 +3130,10 @@ begin
   end;
 end;
 {$ENDIF}
-procedure TestTemporalEditors(AMode: Th5uCacheMode);
+procedure TestTemporalEditors(AMode: ThiiCacheMode);
 var
   T: TFixture;
-  Kind: Th5uColumnDataType;
+  Kind: ThiiColumnDataType;
   I, BeforePosts: Integer;
   Expected, Original: TDateTime;
   Key: Word;
@@ -3108,9 +3181,9 @@ begin
     for I := 0 to 2 do
     begin
       case I of
-        0: Kind := Th5uColumnDataType.Date;
-        1: Kind := Th5uColumnDataType.Time;
-        else Kind := Th5uColumnDataType.DateTime;
+        0: Kind := ThiiColumnDataType.Date;
+        1: Kind := ThiiColumnDataType.Time;
+        else Kind := ThiiColumnDataType.DateTime;
       end;
       T.Changes := 0;
       T.Grid.Columns[2].DataType := Kind;
@@ -3121,7 +3194,7 @@ begin
       T.Grid.Press(vkF2);
       FindEditor;
 {$IFDEF TEST_FMX}
-      if Kind = Th5uColumnDataType.Time then Check(D is TTimeEdit, 'Time cell must use TTimeEdit')
+      if Kind = ThiiColumnDataType.Time then Check(D is TTimeEdit, 'Time cell must use TTimeEdit')
       else Check(D is TDateEdit, 'Date cell must use TDateEdit');
 {$ENDIF}
       T.Grid.SetFocus;
@@ -3131,7 +3204,7 @@ begin
       Expected := EncodeDate(2025, 7, 18) + EncodeTime(15, 16, 17, 0);
       D.DateTime := Expected;
 {$IFDEF TEST_FMX}
-      if Kind = Th5uColumnDataType.DateTime then
+      if Kind = ThiiColumnDataType.DateTime then
       begin
         TDateEditAccess(D).PickDate(DateOf(Expected) + 1);
         Check(SameTime(D.DateTime, Expected), 'Calendar selection lost the time component');
@@ -3144,7 +3217,7 @@ begin
       FindEditor;
       D.DateTime := Expected;
 {$IFDEF TEST_FMX}
-      if Kind = Th5uColumnDataType.DateTime then
+      if Kind = ThiiColumnDataType.DateTime then
       begin
         TDateEditAccess(D).PickDate(DateOf(Expected) + 1);
         Check(SameTime(D.DateTime, Expected), 'Calendar selection lost the time component');
@@ -3152,8 +3225,8 @@ begin
       end;
 {$ENDIF}
       PressEditor(vkReturn);
-      if Kind = Th5uColumnDataType.Date then Expected := DateOf(Expected)
-      else if Kind = Th5uColumnDataType.Time then Expected := TimeOf(Expected);
+      if Kind = ThiiColumnDataType.Date then Expected := DateOf(Expected)
+      else if Kind = ThiiColumnDataType.Time then Expected := TimeOf(Expected);
       Check(SameDateTime(T.Controller.GetValue(0, 'DATEVALUE').AsType<TDateTime>, Expected), 'Date/time commit lost a component');
       T.Controller.SetValue(0, 'DATEVALUE', TValue.Empty);
       BeforePosts := T.Posts;
@@ -3170,28 +3243,28 @@ procedure TestOpaqueCellBackground;
 var
   T: TFixture;
   B: TBitmap;
-  Context: Th5uFactoryContext;
-  Appearance: Th5uResolvedAppearance;
+  Context: ThiiFactoryContext;
+  Appearance: ThiiResolvedAppearance;
 {$IFDEF TEST_FMX}
-  Cell: Th5uFmxDataCell;
+  Cell: ThiiFmxDataCell;
   Data: TBitmapData;
 {$ELSE}
-  Cell: Th5uVclDataCell;
+  Cell: ThiiVclDataCell;
 {$ENDIF}
 begin
-  T := TFixture.Create(Th5uCacheMode.None);
+  T := TFixture.Create(ThiiCacheMode.None);
   try
-    Context := Default(Th5uFactoryContext);
+    Context := Default(ThiiFactoryContext);
     Context.Column := T.Grid.Columns[1];
-    Context.ElementKind := Th5uElementKind.DataCell;
+    Context.ElementKind := ThiiElementKind.DataCell;
     Appearance.Clear;
     Appearance.HasBackground := True;
     Appearance.Background := TColorRec.Red;
     B := TBitmap.Create;
 {$IFDEF TEST_FMX}
-    Cell := Th5uFmxDataCell.Create(Context);
+    Cell := ThiiFmxDataCell.Create(Context);
 {$ELSE}
-    Cell := Th5uVclDataCell.Create(Context);
+    Cell := ThiiVclDataCell.Create(Context);
 {$ENDIF}
     try
       B.SetSize(60, 30);
@@ -3226,7 +3299,7 @@ var
   Bar: TScrollBar;
   OldWidth: Single;
 begin
-  T := TFixture.Create(Th5uCacheMode.None);
+  T := TFixture.Create(ThiiCacheMode.None);
   try
     T.Grid.Width := 400;
     T.PaintGrid;
@@ -3263,14 +3336,14 @@ var
   Center, OldCenter: TPoint;
   Original: Boolean;
 {$IFDEF TEST_FMX}
-  H: Th5uFmxHitTestInfo;
+  H: ThiiHitTestInfo;
 {$ELSE}
-  H: Th5uHitTestInfo;
+  H: ThiiHitTestInfo;
 {$ENDIF}
 begin
   for Scenario := 0 to 6 do
   begin
-    T := TFixture.Create(Th5uCacheMode.None);
+    T := TFixture.Create(ThiiCacheMode.None);
     Probe := TCellBoundsProbe.Create;
     try
       T.Grid.Columns[0].Width := 240;
@@ -3280,11 +3353,11 @@ begin
       if Scenario in [5, 6] then
       begin
         T.Grid.Width := 400;
-        T.Grid.Columns[1].FixedKind := Th5uFixedKind.Left;
+        T.Grid.Columns[1].FixedKind := ThiiFixedKind.Left;
         T.Grid.Columns[1].Width := 90;
         if Scenario = 6 then
         begin
-          T.Grid.Columns[2].FixedKind := Th5uFixedKind.Right;
+          T.Grid.Columns[2].FixedKind := ThiiFixedKind.Right;
           T.Grid.Columns[2].Width := 180;
         end;
       end;
@@ -3314,8 +3387,8 @@ begin
 {$IFDEF TEST_FMX}
             if TScrollBar(T.Grid.Components[I]).Orientation = TOrientation.Horizontal then
             begin
-              Check(TScrollBar(T.Grid.Components[I]).Max
-                > TScrollBar(T.Grid.Components[I]).ViewportSize, 'FMX horizontal scrollbar has no scrollable range');
+              Check(TScrollBar(T.Grid.Components[I]).Max > TScrollBar(T.Grid.Components[I]).ViewportSize,
+                'FMX horizontal scrollbar has no scrollable range');
               TScrollBar(T.Grid.Components[I]).Value := 70;
               Check(TScrollBar(T.Grid.Components[I]).Value > 0, 'Horizontal scroll value remains zero');
             end;
@@ -3365,40 +3438,41 @@ begin
     end;
   end;
 end;
+
 procedure TestCheckboxPixels;
 var
   T: TFixture;
-  Theme: Th5uGridTheme;
+  Theme: ThiiGridTheme;
   Selected, Checked: Boolean;
-  Context: Th5uFactoryContext;
-  Appearance: Th5uResolvedAppearance;
+  Context: ThiiFactoryContext;
+  Appearance: ThiiResolvedAppearance;
   OffImage, OnImage, B: TBitmap;
   X, Y, Difference: Integer;
 {$IFDEF TEST_FMX}
-  Cell: Th5uFmxDataCell;
-  Palette: Th5uFmxPalette;
+  Cell: ThiiFmxDataCell;
+  Palette: ThiiFmxPalette;
   OffData, OnData: TBitmapData;
 {$ELSE}
-  Cell: Th5uVclDataCell;
-  Palette: Th5uVclPalette;
+  Cell: ThiiVclDataCell;
+  Palette: ThiiVclPalette;
 {$ENDIF}
 begin
-  T := TFixture.Create(Th5uCacheMode.None);
+  T := TFixture.Create(ThiiCacheMode.None);
   try
-    Context := Default(Th5uFactoryContext);
+    Context := Default(ThiiFactoryContext);
     Context.Column := T.Grid.Columns[0];
-    Context.ElementKind := Th5uElementKind.DataCell;
+    Context.ElementKind := ThiiElementKind.DataCell;
 {$IFDEF TEST_FMX}
-    Cell := Th5uFmxDataCell.Create(Context);
+    Cell := ThiiFmxDataCell.Create(Context);
 {$ELSE}
-    Cell := Th5uVclDataCell.Create(Context);
+    Cell := ThiiVclDataCell.Create(Context);
 {$ENDIF}
     OffImage := TBitmap.Create;
     OnImage := TBitmap.Create;
     try
       OffImage.SetSize(60, 30);
       OnImage.SetSize(60, 30);
-      for Theme := Low(Th5uGridTheme) to High(Th5uGridTheme) do
+      for Theme := Low(ThiiGridTheme) to High(ThiiGridTheme) do
         for Selected := False to True do
         begin
           T.Grid.Theme := Theme;
@@ -3469,8 +3543,8 @@ begin
             finally OnImage.Unmap(OnData); end;
           finally OffImage.Unmap(OffData); end;
 {$ENDIF}
-          Check(Difference
-            >= 8, Format('Checkbox checkmark invisible: theme %d, selected %s, pixels %d', [Ord(Theme), BoolToStr(Selected, True), Difference]));
+          Check(Difference >= 8,
+            Format('Checkbox checkmark invisible: theme %d, selected %s, pixels %d', [Ord(Theme), BoolToStr(Selected, True), Difference]));
         end;
       Writeln('PASS: checkbox pixels for all 4 themes, selected and unselected');
     finally
@@ -3480,6 +3554,7 @@ begin
     end;
   finally T.Free; end;
 end;
+
 procedure TestActualDemo;
 var
 {$IFDEF TEST_FMX}
@@ -3504,9 +3579,9 @@ begin
     D.Show;
     Application.ProcessMessages;
     G := TGridAccess(D.Grid);
-    Check(G.Customization.ColumnMovingGesture = Th5uColumnRowMovingGesture.Drag, 'Dataset demo requires normal header drag');
-    Check(G.HeaderLayout.Enabled and (G.HeaderLayout.RowCount = 2) and (G.HeaderLayout.Cells.Count
-      = 13), 'Dataset demo must expose matching grouped headers');
+    Check(G.Customization.ColumnMovingGesture = ThiiColumnRowMovingGesture.Drag, 'Dataset demo requires normal header drag');
+    Check(G.HeaderLayout.Enabled and (G.HeaderLayout.RowCount = 2) and (G.HeaderLayout.Cells.Count = 13),
+      'Dataset demo must expose matching grouped headers');
     Check((G.HeaderLayout.Cells[3].ColumnId = 'id') and (G.HeaderLayout.Cells[3].RowSpan = 2), 'Dataset demo ID must span both header rows');
 {$IFDEF TEST_FMX}
     D.SeparatorsCheck.IsChecked := False;
@@ -3552,7 +3627,7 @@ begin
     G.Press(vkHome, [ssCtrl]);
     for I := 1 to 4 do G.Press(vkRight);
     Check(G.Selection.FocusedCell.ColumnId = 'quantity', 'Quantity column not focused');
-    Check(G.Columns[4].DataType = Th5uColumnDataType.Integer, 'Quantity type disagrees with dataset');
+    Check(G.Columns[4].DataType = ThiiColumnDataType.Integer, 'Quantity type disagrees with dataset');
     G.Press(vkF2);
     E := TEdit(TNativeCustomEditor(G.ActiveEditor).Control);
     G.SetFocus;
@@ -3578,22 +3653,22 @@ type
   public
     CellName, RowName: string;
     Builds, Shows, Hides, Cancels, Commits, Draws: Integer;
-    procedure CellEditor(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64; var AName: string);
-    procedure RowEditor(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64; var AName: string);
+    procedure CellEditor(Sender: TObject; AColumn: ThiiGridColumn; ARow: Int64; var AName: string);
+    procedure RowEditor(Sender: TObject; AColumn: ThiiGridColumn; ARow: Int64; var AName: string);
     procedure Build(Sender: TObject; var AControl: TControl);
     procedure Show(Sender: TObject);
     procedure Hide(Sender: TObject);
     procedure Cancel(Sender: TObject);
     procedure Commit(Sender: TObject);
-    procedure Draw(Sender: TObject; const AContext: Th5uEditorContext; var AHandled: Boolean);
+    procedure Draw(Sender: TObject; const AContext: ThiiEditorContext; var AHandled: Boolean);
   end;
 
-procedure TNamedEditorProbe.CellEditor(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64; var AName: string);
+procedure TNamedEditorProbe.CellEditor(Sender: TObject; AColumn: ThiiGridColumn; ARow: Int64; var AName: string);
 begin
   AName := CellName;
 end;
 
-procedure TNamedEditorProbe.RowEditor(Sender: TObject; AColumn: Th5uGridColumn; ARow: Int64; var AName: string);
+procedure TNamedEditorProbe.RowEditor(Sender: TObject; AColumn: ThiiGridColumn; ARow: Int64; var AName: string);
 begin
   AName := RowName;
 end;
@@ -3601,7 +3676,7 @@ end;
 procedure TNamedEditorProbe.Build(Sender: TObject; var AControl: TControl);
 begin
   Inc(Builds);
-  AControl := TEdit.Create(Th5uGridEditorItem(Sender).Context.Grid);
+  AControl := TEdit.Create(ThiiGridEditorItem(Sender).Context.Grid);
 end;
 
 procedure TNamedEditorProbe.Show(Sender: TObject);
@@ -3624,7 +3699,7 @@ begin
   Inc(Commits);
 end;
 
-procedure TNamedEditorProbe.Draw(Sender: TObject; const AContext: Th5uEditorContext; var AHandled: Boolean);
+procedure TNamedEditorProbe.Draw(Sender: TObject; const AContext: ThiiEditorContext; var AHandled: Boolean);
 begin
   Inc(Draws);
   Check(Assigned(AContext.Grid) and Assigned(AContext.Column) and Assigned(AContext.Canvas), 'Incomplete editor paint context');
@@ -3635,21 +3710,21 @@ procedure TestNamedEditors;
 var
   T: TFixture;
   P: TNamedEditorProbe;
-  C, Other, Selector: Th5uGridColumn;
-  E, Same, Different: Th5uGridEditorItem;
+  C, Other, Selector: ThiiGridColumn;
+  E, Same, Different: ThiiGridEditorItem;
   Custom, Variant: TNativeCustomEditor;
   G, H: TGridAccess;
   Stream: TMemoryStream;
-  EC: Th5uEditorContext;
+  EC: ThiiEditorContext;
   B, V: Integer;
   Failed: Boolean;
 begin
   P := TNamedEditorProbe.Create;
-  T := TFixture.Create(Th5uCacheMode.None);
+  T := TFixture.Create(ThiiCacheMode.None);
   try
     C := T.Grid.Columns.FindById('DESCRIPTION');
     Other := T.Grid.Columns.Add;
-    Other.Id := 'other'; Other.FieldName := 'DESCRIPTION'; Other.DataType := Th5uColumnDataType.Text;
+    Other.Id := 'other'; Other.FieldName := 'DESCRIPTION'; Other.DataType := ThiiColumnDataType.Text;
     Other.Visible := False;
     E := T.Grid.GetCellEditor(C, 0);
     Check(not Assigned(TNativeCustomEditor(E).Control), 'Paint/lookup eagerly built an editor');
@@ -3732,15 +3807,15 @@ begin
       Variant.EditorVersion := 7;
       G.DefaultEditors.Date := Variant.EditorName;
       G.Columns.Add.Id := 'delivery';
-      G.Columns[0].DataType := Th5uColumnDataType.Date;
+      G.Columns[0].DataType := ThiiColumnDataType.Date;
       Stream.WriteComponent(G);
       Stream.Position := 0;
       H := TGridAccess.Create(nil);
       H.Parent := T.Form;
       try
         Stream.ReadComponent(H);
-        Check((H.Editors.Count = 1) and (H.Editors[0].EditorType = 'DateEditor') and (H.Editors[0].EditorVersion
-          = 7), 'Editor collection did not round-trip');
+        Check((H.Editors.Count = 1) and (H.Editors[0].EditorType = 'DateEditor') and (H.Editors[0].EditorVersion = 7),
+          'Editor collection did not round-trip');
         Check(H.GetCellEditor(H.Columns[0], 0) is TNativeDateEditor, 'Streamed variant lost its registered editor class');
         Check(not Assigned(TNativeCustomEditor(H.GetCellEditor(H.Columns[0], 0)).Control), 'Streaming constructed native editor controls');
       finally H.Free; end;
@@ -3750,7 +3825,7 @@ begin
     end;
 
     // A row-selected numeric editor converts independently of the common column type.
-    EC := Default(Th5uEditorContext);
+    EC := Default(ThiiEditorContext);
     EC.Grid := T.Grid; EC.Column := C;
     EC.Value := TValue.From<string>('23'); EC.Text := '23';
     EC.Bounds := RectF(0, 0, 120, 25);
@@ -3764,7 +3839,7 @@ begin
     Variant := T.Grid.Editors.Add;
     Variant.EditorName := 'LabelEditor';
     Variant.ControlClass := TLabel;
-    EC := Default(Th5uEditorContext);
+    EC := Default(ThiiEditorContext);
     EC.Grid := T.Grid; EC.Column := C;
     EC.Value := TValue.From<string>('label'); EC.Text := 'label';
     EC.Bounds := RectF(0, 0, 120, 25);
@@ -3776,7 +3851,7 @@ begin
     P.CellName := '';
     Variant := T.Grid.Editors.Add;
     Variant.EditorName := 'GraphicEditor';
-    Variant.Mode := Th5uEditorMode.Graphic;
+    Variant.Mode := ThiiEditorMode.Graphic;
     Variant.OnDrawEditor := P.Draw;
     C.Editor := Variant.EditorName;
     T.Grid.Press(vkF2);
@@ -3808,7 +3883,7 @@ begin
     Check(not Assigned(T.Grid.GetCellEditor(C, 0)), 'None editor did not disable editing');
     C.Editor := 'missing editor';
     Failed := False;
-    try T.Grid.GetCellEditor(C, 0); except on Eh5uGrid do Failed := True; end;
+    try T.Grid.GetCellEditor(C, 0); except on EhiiGrid do Failed := True; end;
     Check(Failed, 'Unknown editor silently fell back');
     C.Editor := '';
     T.Grid.ClearEditorCache;
@@ -3828,10 +3903,10 @@ end;
 type
   TWidthProbe = class
     Calls: Integer;
-    procedure Measure(Sender: TObject; const AContext: Th5uEditorContext; var AWidth: Single);
+    procedure Measure(Sender: TObject; const AContext: ThiiEditorContext; var AWidth: Single);
   end;
 
-procedure TWidthProbe.Measure(Sender: TObject; const AContext: Th5uEditorContext; var AWidth: Single);
+procedure TWidthProbe.Measure(Sender: TObject; const AContext: ThiiEditorContext; var AWidth: Single);
 begin
   Inc(Calls);
   Check(Assigned(AContext.Canvas) and Assigned(AContext.Grid), 'measurement context lacks canvas or grid');
@@ -3842,15 +3917,15 @@ end;
 procedure TestColumnSizing;
 var
   T: TFixture;
-  C: Th5uGridColumn;
+  C: ThiiGridColumn;
   P: TWidthProbe;
-  E, Active: Th5uGridEditorItem;
+  E, Active: ThiiGridEditorItem;
   Original, Measured, Total: Single;
   I: Integer;
   G, H: TGridAccess;
   Stream: TMemoryStream;
 begin
-  T := TFixture.Create(Th5uCacheMode.None);
+  T := TFixture.Create(ThiiCacheMode.None);
   P := TWidthProbe.Create;
   try
     C := T.Grid.Columns[1];
@@ -3945,7 +4020,7 @@ begin
   end;
 end;
 
-procedure TestEditorDetails(AMode: Th5uCacheMode);
+procedure TestEditorDetails(AMode: ThiiCacheMode);
 var
   T: TFixture;
   P: TPoint;
@@ -3981,7 +4056,7 @@ begin
   end;
 end;
 var
-  LMode: Th5uCacheMode;
+  LMode: ThiiCacheMode;
   LCase: Integer;
   LFailures: Integer;
   LExceptionSink: TExceptionSink;
@@ -3996,7 +4071,11 @@ begin
     try
       TestColumnSizing;
     except
-      on E: Exception do begin Writeln('FAIL: column sizing: ', E.ClassName, ': ', E.Message); ExitCode := 1; end;
+      on E: Exception do
+      begin
+        Writeln('FAIL: column sizing: ', E.ClassName, ': ', E.Message);
+        ExitCode := 1;
+      end;
     end;
     if LExceptionSink.Count > 0 then ExitCode := 1;
     Application.OnException := nil;
@@ -4008,14 +4087,18 @@ begin
     try
       TestNamedEditors;
     except
-      on E: Exception do begin Writeln('FAIL: named editors: ', E.ClassName, ': ', E.Message); ExitCode := 1; end;
+      on E: Exception do
+      begin
+        Writeln('FAIL: named editors: ', E.ClassName, ': ', E.Message);
+        ExitCode := 1;
+      end;
     end;
     if LExceptionSink.Count > 0 then ExitCode := 1;
     Application.OnException := nil;
     LExceptionSink.Free;
     Halt(ExitCode);
   end;
-  for LMode := Low(Th5uCacheMode) to High(Th5uCacheMode) do
+  for LMode := Low(ThiiCacheMode) to High(ThiiCacheMode) do
     for LCase := 0 to 5 do
       try
         case LCase of

@@ -19,9 +19,6 @@ uses
   FMX.Edit,
   FMX.Types,
   FMX.Controls.Presentation,
-  h5u.Grid.Columns,
-  h5u.Grid.Types,
-  h5u.Grid.Data.Core,
   h5u.Grid.Data.DataSet,
   h5u.Grid.SampleData,
   Fmx.h5u.Grid;
@@ -44,15 +41,15 @@ type
     AdjacentBandModeCombo: TComboBox;
     ToggleGroupsButton: TButton;
     NextPageButton: TButton;
-    Grid: Th5uFmxGrid;
-    SampleData: Th5uSampleClientDataSet;
+    Grid: ThiiGrid;
+    SampleData: ThiiSampleClientDataset;
     DataSource: TDataSource;
-    DataController: Th5uDataSetController;
+    DataController: ThiiDatasetController;
     procedure FormCreate(Sender: TObject);
     procedure OptionClick(Sender: TObject);
     procedure NextPageButtonClick(Sender: TObject);
     procedure ToggleGroupsButtonClick(Sender: TObject);
-    procedure GridGetThumbHint(Sender: TObject; const AContext: Th5uFmxThumbHintContext; var AText: string; var AVisible: Boolean);
+    procedure GridGetThumbHint(Sender: TObject; const AContext: ThiiThumbHintContext; var AText: string; var AVisible: Boolean);
   private
     FAllAdjacentGroupsCollapsed: Boolean;
     procedure ApplyOptions;
@@ -67,15 +64,15 @@ implementation
 
 procedure TFmxDatasetDemoForm.ApplyOptions;
 var
-  LPicture: Th5uGridColumn;
-  LNameColumn: Th5uGridColumn;
-  LActiveColumn: Th5uGridColumn;
-  LDescriptionColumn: Th5uGridColumn;
+  LPicture: ThiiGridColumn;
+  LNameColumn: ThiiGridColumn;
+  LActiveColumn: ThiiGridColumn;
+  LDescriptionColumn: ThiiGridColumn;
 begin
   if AutoHeightCheck.IsChecked then
-    Grid.RowHeight.Mode := Th5uRowHeightMode.Automatic
+    Grid.RowHeight.Mode := ThiiRowHeightMode.Automatic
   else
-    Grid.RowHeight.Mode := Th5uRowHeightMode.Fixed;
+    Grid.RowHeight.Mode := ThiiRowHeightMode.Fixed;
 
   Grid.HeaderLayout.Enabled := MultiHeaderCheck.IsChecked;
 
@@ -89,10 +86,10 @@ begin
   Grid.AdjacentGroupFolding.EndBand.Height := 7;
   Grid.AdjacentGroupFolding.EndBand.StyleName := 'AdjacentGroupEnd';
   case AdjacentBandModeCombo.ItemIndex of
-    0: Grid.AdjacentGroupFolding.EndBand.Visibility := Th5uAdjacentGroupEndBandVisibility.Never;
-    1: Grid.AdjacentGroupFolding.EndBand.Visibility := Th5uAdjacentGroupEndBandVisibility.CollapsedOnly;
-    2: Grid.AdjacentGroupFolding.EndBand.Visibility := Th5uAdjacentGroupEndBandVisibility.ExpandedOnly;
-    else Grid.AdjacentGroupFolding.EndBand.Visibility := Th5uAdjacentGroupEndBandVisibility.Always;
+    0: Grid.AdjacentGroupFolding.EndBand.Visibility := ThiiAdjacentGroupEndBandVisibility.Never;
+    1: Grid.AdjacentGroupFolding.EndBand.Visibility := ThiiAdjacentGroupEndBandVisibility.CollapsedOnly;
+    2: Grid.AdjacentGroupFolding.EndBand.Visibility := ThiiAdjacentGroupEndBandVisibility.ExpandedOnly;
+    else Grid.AdjacentGroupFolding.EndBand.Visibility := ThiiAdjacentGroupEndBandVisibility.Always;
   end;
   ToggleGroupsButton.Enabled := AdjacentGroupCheck.IsChecked;
 
@@ -108,26 +105,26 @@ begin
   end;
 
   if CacheCheck.IsChecked then
-    DataController.Cache.Mode := Th5uCacheMode.Paged
+    DataController.Cache.Mode := ThiiCacheMode.Paged
   else
-    DataController.Cache.Mode := Th5uCacheMode.None;
+    DataController.Cache.Mode := ThiiCacheMode.None;
 
   if PagedCheck.IsChecked then
   begin
-    DataController.Pagination.Mode := Th5uPaginationMode.NumberedPages;
+    DataController.Pagination.Mode := ThiiPaginationMode.NumberedPages;
     DataController.Pagination.PageSize := 10;
   end
   else
   begin
-    DataController.Pagination.Mode := Th5uPaginationMode.Continuous;
+    DataController.Pagination.Mode := ThiiPaginationMode.Continuous;
     DataController.Pagination.PageIndex := 0;
   end;
   NextPageButton.Enabled := PagedCheck.IsChecked;
 
   if DarkCheck.IsChecked then
-    Grid.Theme := Th5uGridTheme.Dark
+    Grid.Theme := ThiiGridTheme.Dark
   else
-    Grid.Theme := Th5uGridTheme.ApplicationStyle;
+    Grid.Theme := ThiiGridTheme.ApplicationStyle;
 
   // GridLines toggles all grid-wide one-pixel separator bands.
   // Explicit per-column RightSpacing values remain independent.
@@ -186,9 +183,9 @@ begin
   ApplyOptions;
 end;
 
-procedure TFmxDatasetDemoForm.GridGetThumbHint(Sender: TObject; const AContext: Th5uFmxThumbHintContext; var AText: string; var AVisible: Boolean);
+procedure TFmxDatasetDemoForm.GridGetThumbHint(Sender: TObject; const AContext: ThiiThumbHintContext; var AText: string; var AVisible: Boolean);
 begin
-  if AContext.Axis = Th5uScrollAxis.Vertical then
+  if AContext.Axis = ThiiScrollAxis.Vertical then
     AText := 'FMX: ' + AText;
 end;
 
@@ -215,7 +212,7 @@ procedure TFmxDatasetDemoForm.NextPageButtonClick(Sender: TObject);
 var
   LPageCount: Integer;
 begin
-  if DataController.Pagination.Mode <> Th5uPaginationMode.NumberedPages then
+  if DataController.Pagination.Mode <> ThiiPaginationMode.NumberedPages then
     Exit;
   LPageCount := (DataController.GetTotalRowCount + DataController.Pagination.PageSize - 1) div DataController.Pagination.PageSize;
   DataController.Pagination.PageIndex := (DataController.Pagination.PageIndex + 1) mod Max(1, LPageCount);

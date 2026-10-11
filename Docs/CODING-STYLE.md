@@ -38,7 +38,7 @@ Result := FirstValue
   + SecondValue
   - Correction;
 
-if Th5uScrollHintTrigger.ThumbTracking
+if ThiiScrollHintTrigger.ThumbTracking
   in FScrolling.Hint.Triggers then
   ShowThumbHint;
 ```
@@ -68,7 +68,7 @@ Der Formatter berücksichtigt dabei auch verschachtelte `case`- und `if`-Anweisu
 
 - Zwei Leerzeichen je Einrückungsebene; keine Tabulatoren.
 - Vorhandene CRLF-Zeilenenden und die Kodierung einschließlich BOM bleiben erhalten.
-- Die Markenschreibweise ist `h5u`, beispielsweise `Th5uVclGrid` und `Ih5uDataController`.
+- Die Markenschreibweise ist `h5u`, beispielsweise `ThiiGrid` und `Ih5uDataController`.
 - Gemeinsame Units beginnen mit `h5u.`, Plattformfassaden mit `Vcl.h5u...` bzw. `Fmx.h5u...`.
 
 ## Formatter und Prüfung

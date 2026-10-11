@@ -37,11 +37,11 @@ def main() -> None:
     units.sort(key=lambda item: item[0])
 
     lines = [
-        "# h5u.Grid – öffentlicher API-Auszug",
+        "# hiiGrid – öffentlicher API-Auszug",
         "",
         "> Automatisch aus den vollständigen `interface`-Abschnitten des ausgelieferten Quellstands erzeugt. Maßgeblich bleiben die Pascal-Units.",
         "",
-        "**Erzeugt:** 2. September 2026  ",
+        "**Erzeugt:** 12. Oktober 2026",
         f"**Version:** {VERSION}",
         "",
     ]

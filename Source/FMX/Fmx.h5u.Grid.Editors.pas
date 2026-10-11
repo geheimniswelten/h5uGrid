@@ -12,7 +12,7 @@ uses
   FMX.StdCtrls, FMX.Graphics, FMX.Objects, FMX.Layouts, FMX.Dialogs;
 
 type
-  Th5uCellDateEdit = class(TDateEdit)
+  ThiiCellDateEdit = class(TDateEdit)
   protected
     function GetAdjustType: TAdjustType; override;
     procedure HandlerPickerDateTimeChanged(Sender: TObject; const ADate: TDateTime); override;
@@ -20,33 +20,33 @@ type
     procedure ApplyStyleLookup; override;
   end;
 
-  Th5uCellTimeEdit = class(TTimeEdit)
+  ThiiCellTimeEdit = class(TTimeEdit)
   protected
     function GetAdjustType: TAdjustType; override;
   public
     procedure ApplyStyleLookup; override;
   end;
 
-  Th5uCellTextEdit = class(TEdit)
+  ThiiCellTextEdit = class(TEdit)
   protected
     function GetAdjustType: TAdjustType; override;
   public
     procedure ApplyStyleLookup; override;
   end;
 
-  Th5uFmxEditorControlClass = class of TControl;
-  Th5uFmxBuildEditorEvent = procedure(Sender: TObject; var AControl: TControl) of object;
+  ThiiFmxEditorControlClass = class of TControl;
+  ThiiFmxBuildEditorEvent = procedure(Sender: TObject; var AControl: TControl) of object;
 
-  Th5uFmxCustomEditor = class(Th5uGridEditorItem)
+  ThiiFmxCustomEditor = class(ThiiGridEditorItem)
   private
     FControl: TControl;
-    FControlClass: Th5uFmxEditorControlClass;
+    FControlClass: ThiiFmxEditorControlClass;
     FControlVersion: Integer;
-    FOnBuildEditor: Th5uFmxBuildEditorEvent;
+    FOnBuildEditor: ThiiFmxBuildEditorEvent;
     FBackground: TRectangle;
     function GetControlClassName: string;
     procedure SetControlClassName(const AValue: string);
-    procedure SetControlClass(AValue: Th5uFmxEditorControlClass);
+    procedure SetControlClass(AValue: ThiiFmxEditorControlClass);
     procedure ControlChanged(Sender: TObject);
     procedure ControlEnter(Sender: TObject);
     procedure ControlExit(Sender: TObject);
@@ -58,7 +58,7 @@ type
     procedure SetEditorType(const AValue: string); override;
     function ReadText: string; override;
     procedure WriteText(const AText: string); override;
-    function DefaultControlClass: Th5uFmxEditorControlClass; virtual;
+    function DefaultControlClass: ThiiFmxEditorControlClass; virtual;
     procedure ConfigureControl; virtual;
     procedure ReleaseControl; virtual;
   public
@@ -73,40 +73,40 @@ type
     procedure Focus; override;
     procedure BringToFront; override;
     property Control: TControl read FControl;
-    property ControlClass: Th5uFmxEditorControlClass read FControlClass write SetControlClass;
+    property ControlClass: ThiiFmxEditorControlClass read FControlClass write SetControlClass;
   published
     // RegisterClass makes a custom control class available to DFM/FMX streaming.
     property ControlClassName: string read GetControlClassName write SetControlClassName;
-    property OnBuildEditor: Th5uFmxBuildEditorEvent read FOnBuildEditor write FOnBuildEditor;
+    property OnBuildEditor: ThiiFmxBuildEditorEvent read FOnBuildEditor write FOnBuildEditor;
   end;
 
-  Th5uFmxTextEditor = class(Th5uFmxCustomEditor)
+  ThiiFmxTextEditor = class(ThiiFmxCustomEditor)
   protected
-    function MeasureContentWidth(const AContext: Th5uEditorContext): Single; override;
+    function MeasureContentWidth(const AContext: ThiiEditorContext): Single; override;
   public
-    function DrawDisplay(const AContext: Th5uEditorContext): Boolean; override;
+    function DrawDisplay(const AContext: ThiiEditorContext): Boolean; override;
   end;
 
-  Th5uFmxIntegerEditor = class(Th5uFmxTextEditor)
+  ThiiFmxIntegerEditor = class(ThiiFmxTextEditor)
   protected
     function ReadValue: TValue; override;
   end;
 
-  Th5uFmxFloatEditor = class(Th5uFmxTextEditor)
+  ThiiFmxFloatEditor = class(ThiiFmxTextEditor)
   protected
     function ReadValue: TValue; override;
   end;
 
-  Th5uFmxCurrencyEditor = class(Th5uFmxTextEditor)
+  ThiiFmxCurrencyEditor = class(ThiiFmxTextEditor)
   protected
     function ReadValue: TValue; override;
   end;
 
-  Th5uFmxDateEditor = class(Th5uFmxTextEditor)
+  ThiiFmxDateEditor = class(ThiiFmxTextEditor)
   protected
-    function DefaultControlClass: Th5uFmxEditorControlClass; override;
+    function DefaultControlClass: ThiiFmxEditorControlClass; override;
     procedure ConfigureControl; override;
-    function DateKind: Th5uColumnEditorKind; virtual;
+    function DateKind: ThiiColumnEditorKind; virtual;
     function ReadValue: TValue; override;
     procedure WriteValue(const AValue: TValue); override;
     function State: string; override;
@@ -115,34 +115,34 @@ type
     function DeferExit: Boolean; override;
   end;
 
-  Th5uFmxTimeEditor = class(Th5uFmxDateEditor)
+  ThiiFmxTimeEditor = class(ThiiFmxDateEditor)
   protected
-    function DateKind: Th5uColumnEditorKind; override;
+    function DateKind: ThiiColumnEditorKind; override;
   end;
 
-  Th5uFmxDateTimeEditor = class(Th5uFmxDateEditor)
+  ThiiFmxDateTimeEditor = class(ThiiFmxDateEditor)
   protected
-    function DateKind: Th5uColumnEditorKind; override;
+    function DateKind: ThiiColumnEditorKind; override;
   end;
 
-  Th5uFmxCheckBoxEditor = class(Th5uFmxCustomEditor)
+  ThiiFmxCheckBoxEditor = class(ThiiFmxCustomEditor)
   protected
-    function MeasureContentWidth(const AContext: Th5uEditorContext): Single; override;
+    function MeasureContentWidth(const AContext: ThiiEditorContext): Single; override;
   public
     constructor Create(Collection: TCollection); override;
     procedure Activate; override;
-    function DrawDisplay(const AContext: Th5uEditorContext): Boolean; override;
+    function DrawDisplay(const AContext: ThiiEditorContext): Boolean; override;
     function HitTest(const ABounds: TRectF; const APoint: TPointF): Boolean; override;
   end;
 
-  Th5uFmxImageCellEditor = class(Th5uFmxCustomEditor)
+  ThiiFmxImageCellEditor = class(ThiiFmxCustomEditor)
   protected
-    function MeasureContentWidth(const AContext: Th5uEditorContext): Single; override;
+    function MeasureContentWidth(const AContext: ThiiEditorContext): Single; override;
   private
     procedure ImageCommit(Sender: TObject);
     procedure ImageCancel(Sender: TObject);
   protected
-    function DefaultControlClass: Th5uFmxEditorControlClass; override;
+    function DefaultControlClass: ThiiFmxEditorControlClass; override;
     procedure ConfigureControl; override;
     function ReadValue: TValue; override;
     procedure WriteValue(const AValue: TValue); override;
@@ -150,17 +150,17 @@ type
     constructor Create(Collection: TCollection); override;
     procedure Activate; override;
     function Modified: Boolean; override;
-    function DrawDisplay(const AContext: Th5uEditorContext): Boolean; override;
+    function DrawDisplay(const AContext: ThiiEditorContext): Boolean; override;
   end;
 
-  Th5uFmxGridEditors = class(Th5uGridEditors)
+  ThiiFmxGridEditors = class(ThiiGridEditors)
   private
-    function GetItem(AIndex: Integer): Th5uFmxCustomEditor;
+    function GetItem(AIndex: Integer): ThiiFmxCustomEditor;
   public
     constructor Create(AOwner: TPersistent);
-    function Add: Th5uFmxCustomEditor;
-    function AddVariant(const AName, AType: string): Th5uFmxCustomEditor;
-    property Items[AIndex: Integer]: Th5uFmxCustomEditor read GetItem; default;
+    function Add: ThiiFmxCustomEditor;
+    function AddVariant(const AName, AType: string): ThiiFmxCustomEditor;
+    property Items[AIndex: Integer]: ThiiFmxCustomEditor read GetItem; default;
   end;
 
   Th5uFmxImageEditor = class(TLayout)
@@ -193,17 +193,17 @@ type
   TControlAccess = class(TControl);
   TEditAccess = class(TEdit);
 
-constructor Th5uFmxGridEditors.Create(AOwner: TPersistent);
+constructor ThiiFmxGridEditors.Create(AOwner: TPersistent);
 begin
-  inherited Create(AOwner, Th5uFmxCustomEditor);
+  inherited Create(AOwner, ThiiFmxCustomEditor);
 end;
 
-function Th5uFmxGridEditors.Add: Th5uFmxCustomEditor;
+function ThiiFmxGridEditors.Add: ThiiFmxCustomEditor;
 begin
-  Result := Th5uFmxCustomEditor(inherited Add);
+  Result := ThiiFmxCustomEditor(inherited Add);
 end;
 
-function Th5uFmxGridEditors.AddVariant(const AName, AType: string): Th5uFmxCustomEditor;
+function ThiiFmxGridEditors.AddVariant(const AName, AType: string): ThiiFmxCustomEditor;
 begin
   Result := Add;
   try
@@ -215,15 +215,15 @@ begin
   end;
 end;
 
-procedure Th5uFmxCustomEditor.SetEditorType(const AValue: string);
+procedure ThiiFmxCustomEditor.SetEditorType(const AValue: string);
 var
-  E: Th5uGridEditorItem;
+  E: ThiiGridEditorItem;
 begin
   if EditorType = AValue then
     Exit;
   if AValue <> '' then
   begin
-    E := h5uCreateEditor(Th5uEditorPlatform.FMX, AValue, nil);
+    E := h5uCreateEditor(ThiiEditorPlatform.FMX, AValue, nil);
     try
       Mode := E.Mode;
       ActivateOnClick := E.ActivateOnClick;
@@ -234,18 +234,18 @@ begin
   inherited;
 end;
 
-function Th5uFmxGridEditors.GetItem(AIndex: Integer): Th5uFmxCustomEditor;
+function ThiiFmxGridEditors.GetItem(AIndex: Integer): ThiiFmxCustomEditor;
 begin
-  Result := Th5uFmxCustomEditor(inherited Items[AIndex]);
+  Result := ThiiFmxCustomEditor(inherited Items[AIndex]);
 end;
 
-constructor Th5uFmxCustomEditor.Create(Collection: TCollection);
+constructor ThiiFmxCustomEditor.Create(Collection: TCollection);
 begin
   inherited;
   FControlVersion := -1;
 end;
 
-destructor Th5uFmxCustomEditor.Destroy;
+destructor ThiiFmxCustomEditor.Destroy;
 begin
   if Active then
     RequestCancel;
@@ -253,20 +253,20 @@ begin
   inherited;
 end;
 
-procedure Th5uFmxCustomEditor.Assign(Source: TPersistent);
+procedure ThiiFmxCustomEditor.Assign(Source: TPersistent);
 begin
   if Active then
-    raise Eh5uGrid.Create('Ein aktiver Editor kann nicht ersetzt werden.');
+    raise EhiiGrid.Create('Ein aktiver Editor kann nicht ersetzt werden.');
   inherited;
-  if Source is Th5uFmxCustomEditor then
+  if Source is ThiiFmxCustomEditor then
   begin
     ReleaseControl;
-    FControlClass := Th5uFmxCustomEditor(Source).FControlClass;
-    FOnBuildEditor := Th5uFmxCustomEditor(Source).FOnBuildEditor;
+    FControlClass := ThiiFmxCustomEditor(Source).FControlClass;
+    FOnBuildEditor := ThiiFmxCustomEditor(Source).FOnBuildEditor;
   end;
 end;
 
-procedure Th5uFmxCustomEditor.ReleaseControl;
+procedure ThiiFmxCustomEditor.ReleaseControl;
 begin
   // Detach callbacks before destroying a focused native control.
   if Assigned(FControl) then
@@ -278,21 +278,21 @@ begin
   FControlVersion := -1;
 end;
 
-procedure Th5uFmxCustomEditor.ReleaseEditor;
+procedure ThiiFmxCustomEditor.ReleaseEditor;
 begin
   if Active then
     RequestCancel;
   ReleaseControl;
 end;
 
-function Th5uFmxCustomEditor.GetControlClassName: string;
+function ThiiFmxCustomEditor.GetControlClassName: string;
 begin
   Result := '';
   if Assigned(FControlClass) then
     Result := FControlClass.ClassName;
 end;
 
-procedure Th5uFmxCustomEditor.SetControlClassName(const AValue: string);
+procedure ThiiFmxCustomEditor.SetControlClassName(const AValue: string);
 var
   C: TPersistentClass;
 begin
@@ -303,11 +303,11 @@ begin
   end;
   C := GetClass(AValue);
   if not Assigned(C) or not C.InheritsFrom(TControl) then
-    raise Eh5uGrid.CreateFmt('Control-Klasse "%s" ist nicht registriert.', [AValue]);
-  SetControlClass(Th5uFmxEditorControlClass(C));
+    raise EhiiGrid.CreateFmt('Control-Klasse "%s" ist nicht registriert.', [AValue]);
+  SetControlClass(ThiiFmxEditorControlClass(C));
 end;
 
-procedure Th5uFmxCustomEditor.SetControlClass(AValue: Th5uFmxEditorControlClass);
+procedure ThiiFmxCustomEditor.SetControlClass(AValue: ThiiFmxEditorControlClass);
 begin
   if FControlClass = AValue then
     Exit;
@@ -315,17 +315,17 @@ begin
   EditorVersion := EditorVersion + 1;
 end;
 
-function Th5uFmxCustomEditor.DefaultControlClass: Th5uFmxEditorControlClass;
+function ThiiFmxCustomEditor.DefaultControlClass: ThiiFmxEditorControlClass;
 begin
-  if Mode = Th5uEditorMode.Text then
-    Result := Th5uCellTextEdit
+  if Mode = ThiiEditorMode.Text then
+    Result := ThiiCellTextEdit
   else
     Result := nil;
 end;
 
-procedure Th5uFmxCustomEditor.BuildEditor;
+procedure ThiiFmxCustomEditor.BuildEditor;
 var
-  C: Th5uFmxEditorControlClass;
+  C: ThiiFmxEditorControlClass;
 begin
   if not Assigned(Context.Grid) or (csDesigning in Context.Grid.ComponentState) then
     Exit;
@@ -356,7 +356,7 @@ begin
   end;
 end;
 
-procedure Th5uFmxCustomEditor.ConfigureControl;
+procedure ThiiFmxCustomEditor.ConfigureControl;
 var
   P: PPropInfo;
   M: TMethod;
@@ -384,43 +384,43 @@ begin
   TControlAccess(Control).OnMouseUp := ControlMouseUp;
 end;
 
-procedure Th5uFmxCustomEditor.ControlChanged(Sender: TObject);
+procedure ThiiFmxCustomEditor.ControlChanged(Sender: TObject);
 begin
   Change;
 end;
 
-procedure Th5uFmxCustomEditor.ControlEnter(Sender: TObject);
+procedure ThiiFmxCustomEditor.ControlEnter(Sender: TObject);
 begin
   Enter;
 end;
 
-procedure Th5uFmxCustomEditor.ControlExit(Sender: TObject);
+procedure ThiiFmxCustomEditor.ControlExit(Sender: TObject);
 begin
   if not DeferExit then
     ExitEditor;
 end;
 
-procedure Th5uFmxCustomEditor.ControlKeyDown(Sender: TObject; var Key: Word; var KeyChar: Char; Shift: TShiftState);
+procedure ThiiFmxCustomEditor.ControlKeyDown(Sender: TObject; var Key: Word; var KeyChar: Char; Shift: TShiftState);
 begin
   KeyDown(Key, KeyChar, Shift);
 end;
 
-procedure Th5uFmxCustomEditor.ControlMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
+procedure ThiiFmxCustomEditor.ControlMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
 begin
   MouseDown(Button, Shift, PointF(X, Y));
 end;
 
-procedure Th5uFmxCustomEditor.ControlMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Single);
+procedure ThiiFmxCustomEditor.ControlMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Single);
 begin
   MouseMove(Shift, PointF(X, Y));
 end;
 
-procedure Th5uFmxCustomEditor.ControlMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
+procedure ThiiFmxCustomEditor.ControlMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
 begin
   MouseUp(Button, Shift, PointF(X, Y));
 end;
 
-function Th5uFmxCustomEditor.ReadText: string;
+function ThiiFmxCustomEditor.ReadText: string;
 begin
   if Assigned(Control) and IsPublishedProp(Control, 'Text') then
     Result := GetStrProp(Control, 'Text')
@@ -428,18 +428,18 @@ begin
     Result := inherited;
 end;
 
-procedure Th5uFmxCustomEditor.WriteText(const AText: string);
+procedure ThiiFmxCustomEditor.WriteText(const AText: string);
 begin
   inherited;
   if Assigned(Control) and IsPublishedProp(Control, 'Text') then
     SetStrProp(Control, 'Text', AText);
 end;
 
-procedure Th5uFmxCustomEditor.UpdateBounds(const ABounds: TRectF);
+procedure ThiiFmxCustomEditor.UpdateBounds(const ABounds: TRectF);
 begin
   inherited;
   // Graphic editors may use a separate popup instead of the cell rectangle.
-  if Mode <> Th5uEditorMode.Text then
+  if Mode <> ThiiEditorMode.Text then
     Exit;
   if Assigned(Control) then
     Control.SetBounds(ABounds.Left, ABounds.Top, ABounds.Width, ABounds.Height);
@@ -447,7 +447,7 @@ begin
     FBackground.SetBounds(ABounds.Left, ABounds.Top, ABounds.Width, ABounds.Height);
 end;
 
-procedure Th5uFmxCustomEditor.Show;
+procedure ThiiFmxCustomEditor.Show;
 begin
   if Assigned(Control) then
   begin
@@ -480,7 +480,7 @@ begin
     TEdit(Control).SelectAll;
 end;
 
-procedure Th5uFmxCustomEditor.Hide;
+procedure ThiiFmxCustomEditor.Hide;
 begin
   inherited;
   if Assigned(Control) then
@@ -489,62 +489,62 @@ begin
     FBackground.Visible := False;
 end;
 
-procedure Th5uFmxCustomEditor.Focus;
+procedure ThiiFmxCustomEditor.Focus;
 begin
   if Assigned(Control) and Control.CanFocus then
     Control.SetFocus;
 end;
 
-procedure Th5uFmxCustomEditor.BringToFront;
+procedure ThiiFmxCustomEditor.BringToFront;
 begin
   if Assigned(Control) then
     Control.BringToFront;
 end;
 
-function Th5uFmxIntegerEditor.ReadValue: TValue;
+function ThiiFmxIntegerEditor.ReadValue: TValue;
 begin
-  Result := h5uParseEditorValue(Th5uColumnDataType.Integer, GetText);
+  Result := h5uParseEditorValue(ThiiColumnDataType.Integer, GetText);
 end;
 
-function Th5uFmxFloatEditor.ReadValue: TValue;
+function ThiiFmxFloatEditor.ReadValue: TValue;
 begin
-  Result := h5uParseEditorValue(Th5uColumnDataType.Float, GetText);
+  Result := h5uParseEditorValue(ThiiColumnDataType.Float, GetText);
 end;
 
-function Th5uFmxCurrencyEditor.ReadValue: TValue;
+function ThiiFmxCurrencyEditor.ReadValue: TValue;
 begin
-  Result := h5uParseEditorValue(Th5uColumnDataType.Currency, GetText);
+  Result := h5uParseEditorValue(ThiiColumnDataType.Currency, GetText);
 end;
 
-function Th5uFmxDateEditor.DefaultControlClass: Th5uFmxEditorControlClass;
+function ThiiFmxDateEditor.DefaultControlClass: ThiiFmxEditorControlClass;
 begin
-  if DateKind = Th5uColumnEditorKind.Time then
-    Result := Th5uCellTimeEdit
+  if DateKind = ThiiColumnEditorKind.Time then
+    Result := ThiiCellTimeEdit
   else
-    Result := Th5uCellDateEdit;
+    Result := ThiiCellDateEdit;
 end;
 
-function Th5uFmxDateEditor.DateKind: Th5uColumnEditorKind;
+function ThiiFmxDateEditor.DateKind: ThiiColumnEditorKind;
 begin
-  Result := Th5uColumnEditorKind.Date;
+  Result := ThiiColumnEditorKind.Date;
 end;
 
-function Th5uFmxTimeEditor.DateKind: Th5uColumnEditorKind;
+function ThiiFmxTimeEditor.DateKind: ThiiColumnEditorKind;
 begin
-  Result := Th5uColumnEditorKind.Time;
+  Result := ThiiColumnEditorKind.Time;
 end;
 
-function Th5uFmxDateTimeEditor.DateKind: Th5uColumnEditorKind;
+function ThiiFmxDateTimeEditor.DateKind: ThiiColumnEditorKind;
 begin
-  Result := Th5uColumnEditorKind.DateTime;
+  Result := ThiiColumnEditorKind.DateTime;
 end;
 
-procedure Th5uFmxDateEditor.ConfigureControl;
+procedure ThiiFmxDateEditor.ConfigureControl;
 var
   E: TCustomDateTimeEdit;
 begin
   if not (Control is TCustomDateTimeEdit) then
-    raise Eh5uGrid.Create('Der Datumseditor benötigt ein TCustomDateTimeEdit-Control.');
+    raise EhiiGrid.Create('Der Datumseditor benötigt ein TCustomDateTimeEdit-Control.');
   inherited;
   E := TCustomDateTimeEdit(Control);
   E.ShowClearButton := True;
@@ -553,16 +553,16 @@ begin
   if E is TDateEdit then
     TDateEdit(E).TodayDefault := False;
   case DateKind of
-    Th5uColumnEditorKind.Time:
+    ThiiColumnEditorKind.Time:
       E.Format := 'hh:nn:ss';
-    Th5uColumnEditorKind.DateTime:
+    ThiiColumnEditorKind.DateTime:
       E.Format := 'dd.mm.yyyy hh:nn:ss';
     else
       E.Format := 'dd.mm.yyyy';
   end;
 end;
 
-function Th5uFmxDateEditor.ReadValue: TValue;
+function ThiiFmxDateEditor.ReadValue: TValue;
 var
   D: TDateTime;
   E: TCustomDateTimeEdit;
@@ -572,13 +572,13 @@ begin
     Exit(TValue.Empty);
   D := E.DateTime;
   case DateKind of
-    Th5uColumnEditorKind.Date: D := DateOf(D);
-    Th5uColumnEditorKind.Time: D := TimeOf(D);
+    ThiiColumnEditorKind.Date: D := DateOf(D);
+    ThiiColumnEditorKind.Time: D := TimeOf(D);
   end;
   Result := TValue.From<TDateTime>(D);
 end;
 
-procedure Th5uFmxDateEditor.WriteValue(const AValue: TValue);
+procedure ThiiFmxDateEditor.WriteValue(const AValue: TValue);
 var
   E: TCustomDateTimeEdit;
 begin
@@ -590,30 +590,30 @@ begin
   E.IsEmpty := AValue.IsEmpty;
 end;
 
-function Th5uFmxDateEditor.State: string;
+function ThiiFmxDateEditor.State: string;
 begin
-  Result := BoolToStr(TCustomDateTimeEdit(Control).IsEmpty, True) + ':'
-    + FloatToStr(TCustomDateTimeEdit(Control).DateTime, TFormatSettings.Invariant);
+  Result := BoolToStr(TCustomDateTimeEdit(Control).IsEmpty, True) + ':' + FloatToStr(TCustomDateTimeEdit(Control).DateTime,
+    TFormatSettings.Invariant);
 end;
 
-function Th5uFmxDateEditor.UsesTextValue: Boolean;
+function ThiiFmxDateEditor.UsesTextValue: Boolean;
 begin
   Result := False;
 end;
 
-function Th5uFmxDateEditor.DeferExit: Boolean;
+function ThiiFmxDateEditor.DeferExit: Boolean;
 begin
   Result := Assigned(Control) and TCustomDateTimeEdit(Control).IsPickerOpened;
 end;
 
-constructor Th5uFmxCheckBoxEditor.Create(Collection: TCollection);
+constructor ThiiFmxCheckBoxEditor.Create(Collection: TCollection);
 begin
   inherited;
-  Mode := Th5uEditorMode.Graphic;
+  Mode := ThiiEditorMode.Graphic;
   ActivateOnClick := True;
 end;
 
-procedure Th5uFmxCheckBoxEditor.Activate;
+procedure ThiiFmxCheckBoxEditor.Activate;
 var
   V: TValue;
 begin
@@ -624,37 +624,37 @@ begin
   RequestCommit;
 end;
 
-function Th5uFmxCheckBoxEditor.HitTest(const ABounds: TRectF; const APoint: TPointF): Boolean;
+function ThiiFmxCheckBoxEditor.HitTest(const ABounds: TRectF; const APoint: TPointF): Boolean;
 begin
   Result := h5uEditorCheckBounds(ABounds).Contains(APoint);
 end;
 
-constructor Th5uFmxImageCellEditor.Create(Collection: TCollection);
+constructor ThiiFmxImageCellEditor.Create(Collection: TCollection);
 begin
   inherited;
-  Mode := Th5uEditorMode.Graphic;
+  Mode := ThiiEditorMode.Graphic;
 end;
 
-function Th5uFmxImageCellEditor.DefaultControlClass: Th5uFmxEditorControlClass;
+function ThiiFmxImageCellEditor.DefaultControlClass: ThiiFmxEditorControlClass;
 begin
   Result := Th5uFmxImageEditor;
 end;
 
-procedure Th5uFmxImageCellEditor.ConfigureControl;
+procedure ThiiFmxImageCellEditor.ConfigureControl;
 begin
   if not (Control is Th5uFmxImageEditor) then
-    raise Eh5uGrid.Create('Der Bildeditor benötigt ein Th5uFmxImageEditor-Control.');
+    raise EhiiGrid.Create('Der Bildeditor benötigt ein Th5uFmxImageEditor-Control.');
   inherited;
   Th5uFmxImageEditor(Control).OnCommit := ImageCommit;
   Th5uFmxImageEditor(Control).OnCancel := ImageCancel;
 end;
 
-function Th5uFmxImageCellEditor.ReadValue: TValue;
+function ThiiFmxImageCellEditor.ReadValue: TValue;
 begin
   Result := TValue.From<TBytes>(Th5uFmxImageEditor(Control).Bytes);
 end;
 
-procedure Th5uFmxImageCellEditor.WriteValue(const AValue: TValue);
+procedure ThiiFmxImageCellEditor.WriteValue(const AValue: TValue);
 begin
   if AValue.IsType<TBytes> then
     Th5uFmxImageEditor(Control).Bytes := AValue.AsType<TBytes>
@@ -662,31 +662,31 @@ begin
     Th5uFmxImageEditor(Control).Bytes := nil;
 end;
 
-function Th5uFmxImageCellEditor.Modified: Boolean;
+function ThiiFmxImageCellEditor.Modified: Boolean;
 begin
   // An explicit OK accepts the image even when the TValue is a byte array.
   Result := True;
 end;
 
-procedure Th5uFmxImageCellEditor.Activate;
+procedure ThiiFmxImageCellEditor.Activate;
 
 begin
   inherited;
-  Control.SetBounds(Max(4, (TControl(Context.Grid).Width - 420) / 2), Max(4, (TControl(Context.Grid).Height - 300)
-    / 2), Min(420, TControl(Context.Grid).Width - 8), Min(300, TControl(Context.Grid).Height - 8));
+  Control.SetBounds(Max(4, (TControl(Context.Grid).Width - 420) / 2), Max(4, (TControl(Context.Grid).Height - 300) / 2),
+    Min(420, TControl(Context.Grid).Width - 8), Min(300, TControl(Context.Grid).Height - 8));
 end;
 
-procedure Th5uFmxImageCellEditor.ImageCommit(Sender: TObject);
+procedure ThiiFmxImageCellEditor.ImageCommit(Sender: TObject);
 begin
   RequestCommit;
 end;
 
-procedure Th5uFmxImageCellEditor.ImageCancel(Sender: TObject);
+procedure ThiiFmxImageCellEditor.ImageCancel(Sender: TObject);
 begin
   RequestCancel;
 end;
 
-function Th5uFmxTextEditor.MeasureContentWidth(const AContext: Th5uEditorContext): Single;
+function ThiiFmxTextEditor.MeasureContentWidth(const AContext: ThiiEditorContext): Single;
 var
   LLine: string;
 begin
@@ -698,12 +698,12 @@ begin
   Result := Result + 10;
 end;
 
-function Th5uFmxCheckBoxEditor.MeasureContentWidth(const AContext: Th5uEditorContext): Single;
+function ThiiFmxCheckBoxEditor.MeasureContentWidth(const AContext: ThiiEditorContext): Single;
 begin
   Result := 25;
 end;
 
-function Th5uFmxImageCellEditor.MeasureContentWidth(const AContext: Th5uEditorContext): Single;
+function ThiiFmxImageCellEditor.MeasureContentWidth(const AContext: ThiiEditorContext): Single;
 var
   B: TBitmap;
   S: TBytesStream;
@@ -730,10 +730,10 @@ begin
   end;
 end;
 
-function Th5uFmxTextEditor.DrawDisplay(const AContext: Th5uEditorContext): Boolean;
+function ThiiFmxTextEditor.DrawDisplay(const AContext: ThiiEditorContext): Boolean;
 var
   ACanvas: TCanvas;
-  LColumn: Th5uGridColumn;
+  LColumn: ThiiGridColumn;
   LTextRect: TRectF;
   LAlign: TTextAlign;
 begin
@@ -747,16 +747,16 @@ begin
   ACanvas.Fill.Color := AContext.Foreground;
 
   LAlign := TTextAlign.Leading;
-  if LColumn.DataType in [Th5uColumnDataType.Integer, Th5uColumnDataType.Float, Th5uColumnDataType.Currency] then
+  if LColumn.DataType in [ThiiColumnDataType.Integer, ThiiColumnDataType.Float, ThiiColumnDataType.Currency] then
     LAlign := TTextAlign.Trailing;
 
-  AContext.PreparePaint(Th5uElementPaintPart.Text);
+  AContext.PreparePaint(ThiiElementPaintPart.Text);
 
   ACanvas.FillText(LTextRect, AContext.Text, LColumn.WordWrap, 1, [], LAlign, TTextAlign.Center);
   Result := True;
 end;
 
-function Th5uFmxCheckBoxEditor.DrawDisplay(const AContext: Th5uEditorContext): Boolean;
+function ThiiFmxCheckBoxEditor.DrawDisplay(const AContext: ThiiEditorContext): Boolean;
 var
   ACanvas: TCanvas;
   LCheckRect: TRectF;
@@ -780,27 +780,27 @@ begin
   ACanvas.Stroke.Color := AContext.Foreground;
   ACanvas.Fill.Kind := TBrushKind.Solid;
   ACanvas.Fill.Color := AContext.Background;
-  AContext.PreparePaint(Th5uElementPaintPart.Background);
+  AContext.PreparePaint(ThiiElementPaintPart.Background);
   ACanvas.FillRect(LCheckRect, 2, 2, AllCorners, 1);
-  AContext.PreparePaint(Th5uElementPaintPart.Glyph);
+  AContext.PreparePaint(ThiiElementPaintPart.Glyph);
   ACanvas.DrawRect(LCheckRect, 2, 2, AllCorners, 1);
   if LChecked then
   begin
     ACanvas.Stroke.Color := AContext.Foreground;
     ACanvas.Stroke.Thickness := 2;
-    AContext.PreparePaint(Th5uElementPaintPart.Glyph);
+    AContext.PreparePaint(ThiiElementPaintPart.Glyph);
     ACanvas.DrawLine(PointF(LCheckRect.Left + 3, LCheckRect.Top + 8), PointF(LCheckRect.Left + 6, LCheckRect.Bottom - 3), 1);
-    AContext.PreparePaint(Th5uElementPaintPart.Glyph);
+    AContext.PreparePaint(ThiiElementPaintPart.Glyph);
     ACanvas.DrawLine(PointF(LCheckRect.Left + 6, LCheckRect.Bottom - 3), PointF(LCheckRect.Right - 2, LCheckRect.Top + 3), 1);
     ACanvas.Stroke.Thickness := 1;
   end;
   Result := True;
 end;
 
-function Th5uFmxImageCellEditor.DrawDisplay(const AContext: Th5uEditorContext): Boolean;
+function ThiiFmxImageCellEditor.DrawDisplay(const AContext: ThiiEditorContext): Boolean;
 var
   ACanvas: TCanvas;
-  LColumn: Th5uGridColumn;
+  LColumn: ThiiGridColumn;
   LDest: TRectF;
   LScale, LWidth, LHeight: Single;
   FBitmap: TBitmap;
@@ -820,15 +820,15 @@ begin
       LScale := Min(LDest.Width / FBitmap.Width, LDest.Height / FBitmap.Height);
       LWidth := FBitmap.Width * LScale;
       LHeight := FBitmap.Height * LScale;
-      LDest := RectF(LDest.Left + (LDest.Width - LWidth) / 2, LDest.Top + (LDest.Height - LHeight) / 2, LDest.Left + (LDest.Width - LWidth) / 2
-        + LWidth, LDest.Top + (LDest.Height - LHeight) / 2 + LHeight);
+      LDest := RectF(LDest.Left + (LDest.Width - LWidth) / 2, LDest.Top + (LDest.Height - LHeight) / 2,
+        LDest.Left + (LDest.Width - LWidth) / 2 + LWidth, LDest.Top + (LDest.Height - LHeight) / 2 + LHeight);
     end;
     ACanvas.DrawBitmap(FBitmap, RectF(0, 0, FBitmap.Width, FBitmap.Height), LDest, 1, True);
   end;
   Result := True;
 end;
 
-procedure Th5uCellDateEdit.ApplyStyleLookup;
+procedure ThiiCellDateEdit.ApplyStyleLookup;
 var
   LBounds: TRectF;
 begin
@@ -839,19 +839,19 @@ begin
   BoundsRect := LBounds;
 end;
 
-function Th5uCellDateEdit.GetAdjustType: TAdjustType;
+function ThiiCellDateEdit.GetAdjustType: TAdjustType;
 begin
   Result := TAdjustType.None;
 end;
 
-procedure Th5uCellDateEdit.HandlerPickerDateTimeChanged(Sender: TObject; const ADate: TDateTime);
+procedure ThiiCellDateEdit.HandlerPickerDateTimeChanged(Sender: TObject; const ADate: TDateTime);
 begin
   // The calendar picks a date, not a new time. Keep the time component when
   // this control is used for a combined date/time cell.
   inherited HandlerPickerDateTimeChanged(Sender, DateOf(ADate) + TimeOf(DateTime));
 end;
 
-procedure Th5uCellTimeEdit.ApplyStyleLookup;
+procedure ThiiCellTimeEdit.ApplyStyleLookup;
 var
   LBounds: TRectF;
 begin
@@ -862,12 +862,12 @@ begin
   BoundsRect := LBounds;
 end;
 
-function Th5uCellTimeEdit.GetAdjustType: TAdjustType;
+function ThiiCellTimeEdit.GetAdjustType: TAdjustType;
 begin
   Result := TAdjustType.None;
 end;
 
-procedure Th5uCellTextEdit.ApplyStyleLookup;
+procedure ThiiCellTextEdit.ApplyStyleLookup;
 var
   LBounds: TRectF;
 begin
@@ -878,7 +878,7 @@ begin
   BoundsRect := LBounds;
 end;
 
-function Th5uCellTextEdit.GetAdjustType: TAdjustType;
+function ThiiCellTextEdit.GetAdjustType: TAdjustType;
 begin
   Result := TAdjustType.None;
 end;
@@ -1003,15 +1003,15 @@ begin
 end;
 
 initialization
-  h5uRegisterEditor(Th5uEditorPlatform.FMX, 'TextEditor', Th5uFmxTextEditor);
-  h5uRegisterEditor(Th5uEditorPlatform.FMX, 'IntegerEditor', Th5uFmxIntegerEditor);
-  h5uRegisterEditor(Th5uEditorPlatform.FMX, 'FloatEditor', Th5uFmxFloatEditor);
-  h5uRegisterEditor(Th5uEditorPlatform.FMX, 'CurrencyEditor', Th5uFmxCurrencyEditor);
-  h5uRegisterEditor(Th5uEditorPlatform.FMX, 'DateEditor', Th5uFmxDateEditor);
-  h5uRegisterEditor(Th5uEditorPlatform.FMX, 'TimeEditor', Th5uFmxTimeEditor);
-  h5uRegisterEditor(Th5uEditorPlatform.FMX, 'DateTimeEditor', Th5uFmxDateTimeEditor);
-  h5uRegisterEditor(Th5uEditorPlatform.FMX, 'CheckBoxEditor', Th5uFmxCheckBoxEditor);
-  h5uRegisterEditor(Th5uEditorPlatform.FMX, 'ImageEditor', Th5uFmxImageCellEditor);
-  h5uRegisterEditor(Th5uEditorPlatform.FMX, 'CustomEditor', Th5uFmxCustomEditor);
+  h5uRegisterEditor(ThiiEditorPlatform.FMX, 'TextEditor', ThiiFmxTextEditor);
+  h5uRegisterEditor(ThiiEditorPlatform.FMX, 'IntegerEditor', ThiiFmxIntegerEditor);
+  h5uRegisterEditor(ThiiEditorPlatform.FMX, 'FloatEditor', ThiiFmxFloatEditor);
+  h5uRegisterEditor(ThiiEditorPlatform.FMX, 'CurrencyEditor', ThiiFmxCurrencyEditor);
+  h5uRegisterEditor(ThiiEditorPlatform.FMX, 'DateEditor', ThiiFmxDateEditor);
+  h5uRegisterEditor(ThiiEditorPlatform.FMX, 'TimeEditor', ThiiFmxTimeEditor);
+  h5uRegisterEditor(ThiiEditorPlatform.FMX, 'DateTimeEditor', ThiiFmxDateTimeEditor);
+  h5uRegisterEditor(ThiiEditorPlatform.FMX, 'CheckBoxEditor', ThiiFmxCheckBoxEditor);
+  h5uRegisterEditor(ThiiEditorPlatform.FMX, 'ImageEditor', ThiiFmxImageCellEditor);
+  h5uRegisterEditor(ThiiEditorPlatform.FMX, 'CustomEditor', ThiiFmxCustomEditor);
 
 end.
