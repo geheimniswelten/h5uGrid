@@ -23,15 +23,16 @@ uses
   {$ENDIF}
   h5u.Grid.Columns,
   h5u.Grid.Options,
+  h5u.Grid.Sizing,
   h5u.Grid.Types;
 
 const
   h5uExactRowHeightLimit = 5000;
 
 type
-  Th5uMeasureCellHeight = function(ARow: Int64; AColumn: Th5uGridColumn): Double of object;
-  Th5uAdjustRowHeight = procedure(ARow: Int64; const AKey: Th5uRowKey; AEstimated: Boolean; var AHeight: Double; var ACacheResult: Boolean) of object;
-  Th5uGetRowExtent = function(ARow: Int64; AAllowMeasure: Boolean): Double of object;
+  Th5uMeasureCellHeight = function(ARow: Int64; AColumn: Th5uGridColumn): Single of object;
+  Th5uAdjustRowHeight = procedure(ARow: Int64; const AKey: Th5uRowKey; AEstimated: Boolean; var AHeight: Single; var ACacheResult: Boolean) of object;
+  Th5uGetRowExtent = function(ARow: Int64; AAllowMeasure: Boolean): Single of object;
   Th5uPrepareMetricRange = procedure(AFirst, ACount: Int64) of object;
 
   // Large integer estimates retain Int64 precision; fractional measured heights remain available to FMX.
@@ -50,10 +51,12 @@ type
 
   Th5uGridRowMetrics = class
   private
-    FHeights: {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, Double>;
+    FHeights: {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, Single>;
     FRowsByKey: {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, Int64>;
     FRoot: Th5uRowExtentNode;
-    FRowCount, FEstimatedExtent: Int64;
+    FRowCount: Int64;
+    FEstimatedExtent: Single;
+    FPixelAligned: Boolean;
     FExtentCount: Integer;
     FConfigured, FExact, FExactReady, FPreparing: Boolean;
     FHasUncachedHeights, FDynamicSpacing: Boolean;
@@ -61,6 +64,7 @@ type
     FExtent: Th5uGetRowExtent;
     FColumnWidths: string;
     procedure EnsureExact;
+    procedure SetPixelAligned(AValue: Boolean);
     function EstimatedTop(ARow: Int64; ADelta: Double): Th5uTotalRowHeight;
     function LocateOffset(const AOffset: Th5uTotalRowHeight;
       out ARowTop: Th5uTotalRowHeight): Int64;
@@ -70,9 +74,9 @@ type
     procedure Clear;
     procedure Remove(const AKey: string);
     procedure Configure(AOptions: Th5uRowHeightOptions; ARowCount: Int64;
-      ASpacing: Integer; AVariableSpacing: Boolean; APrepare: Th5uPrepareMetricRange;
+      ASpacing: Single; AVariableSpacing: Boolean; APrepare: Th5uPrepareMetricRange;
       AExtent: Th5uGetRowExtent; ADynamicSpacing: Boolean = False);
-    procedure RecordExtent(ARow: Int64; AExtent: Double);
+    procedure RecordExtent(ARow: Int64; AExtent: Single);
     procedure InvalidateExtents;
     procedure InvalidateRow(ARow: Int64);
     function CheckColumnWidths(AColumns: Th5uGridColumns): Boolean;
@@ -80,17 +84,18 @@ type
     function Total(AAllowMeasure: Boolean = True): Th5uTotalRowHeight;
     function FindFirstVisibleRow(AOffset: Int64; AViewportTop: Integer;
       out ATop: Integer): Int64; overload;
-    function FindFirstVisibleRow(AOffset, AViewportTop: Double;
-      out ATop: Double): Int64; overload;
+    function FindFirstVisibleRow(AOffset: Double; AViewportTop: Single;
+      out ATop: Single): Int64; overload;
     function GetHeight(AOptions: Th5uRowHeightOptions; AColumns: Th5uGridColumns; ARow: Int64; const AKey: Th5uRowKey;
-      AAllowMeasure: Boolean; AMeasure: Th5uMeasureCellHeight; AAdjust: Th5uAdjustRowHeight): Double;
+      AAllowMeasure: Boolean; AMeasure: Th5uMeasureCellHeight; AAdjust: Th5uAdjustRowHeight): Single;
     property ExtentCount: Integer read FExtentCount;
+    property PixelAligned: Boolean read FPixelAligned write SetPixelAligned;
   end;
 
 function h5uFindFirstVisibleRow(ARowCount, AOffset: Int64; AViewportTop: Integer; AExtent: Th5uGetRowExtent; out ATop: Integer): Int64; overload;
-function h5uFindFirstVisibleRow(ARowCount: Int64; AOffset, AViewportTop: Double; AExtent: Th5uGetRowExtent; out ATop: Double): Int64; overload;
-function h5uTotalRowHeight(AOptions: Th5uRowHeightOptions; ARowCount: Int64; ASpacing: Integer; AVariableSpacing: Boolean;
-  APrepare: Th5uPrepareMetricRange; AExtent: Th5uGetRowExtent): Th5uTotalRowHeight;
+function h5uFindFirstVisibleRow(ARowCount: Int64; AOffset: Double; AViewportTop: Single; AExtent: Th5uGetRowExtent; out ATop: Single): Int64; overload;
+function h5uTotalRowHeight(AOptions: Th5uRowHeightOptions; ARowCount: Int64; ASpacing: Single; AVariableSpacing: Boolean;
+  APrepare: Th5uPrepareMetricRange; AExtent: Th5uGetRowExtent; AWholePixels: Boolean = False): Th5uTotalRowHeight;
 function h5uRowTop(ARow: Int64; AExtent: Th5uGetRowExtent): Double;
 
 implementation
@@ -249,6 +254,58 @@ begin
   end;
 end;
 
+function SafeRowSpacing(AValue: Single): Single;
+begin
+  if IsNan(AValue) or IsInfinite(AValue) then
+    Exit(0);
+  Result := EnsureRange(AValue, 0, h5uUnlimitedWidth);
+end;
+
+function SafeRowExtent(AValue: Single): Single;
+begin
+  if IsNan(AValue) or IsInfinite(AValue) then
+    Exit(1);
+  // A complete extent can contain both a height and a spacing. Bound their
+  // sum before integer conversion or accumulation into the sparse index.
+  Result := EnsureRange(AValue, Single(1), 2 * h5uUnlimitedWidth);
+end;
+
+function MultiplyExtent(ACount: Int64; AExtent: Single): Th5uTotalRowHeight;
+const
+  FractionScale: Int64 = 8388608;
+var
+  WholeExtent, FractionUnits, Remainder, FractionWhole: Int64;
+begin
+  Result := Default(Th5uTotalRowHeight);
+  if ACount <= 0 then
+    Exit;
+  AExtent := SafeRowExtent(AExtent);
+  WholeExtent := Trunc(AExtent);
+  if ACount > High(Int64) div WholeExtent then
+  begin
+    Result.Whole := High(Int64);
+    Exit;
+  end;
+  Result.Whole := ACount * WholeExtent;
+  if AExtent = WholeExtent then
+    Exit;
+  // A Single extent >= 1 has at most 23 fractional bits. Split the row count
+  // before multiplication so even totals above 2^53 retain their exact fraction.
+  FractionUnits := Round((Double(AExtent) - WholeExtent) * FractionScale);
+  Remainder := (ACount mod FractionScale) * FractionUnits;
+  FractionWhole := (ACount div FractionScale) * FractionUnits
+    + Remainder div FractionScale;
+  if Result.Whole > High(Int64) - FractionWhole then
+  begin
+    Result.Whole := High(Int64);
+    Exit;
+  end;
+  Result.Whole := Result.Whole + FractionWhole;
+  if Result.Whole = High(Int64) then
+    Exit;
+  Result.Fraction := (Remainder mod FractionScale) / FractionScale;
+end;
+
 function CompareHeight(const A, B: Th5uTotalRowHeight): Integer;
 begin
   if A.Whole < B.Whole then
@@ -265,7 +322,7 @@ end;
 constructor Th5uGridRowMetrics.Create;
 begin
   inherited;
-  FHeights := {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, Double>.Create;
+  FHeights := {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, Single>.Create;
   FRowsByKey := {$IFDEF FPC}specialize {$ENDIF}TDictionary<string, Int64>.Create;
 end;
 
@@ -316,19 +373,33 @@ begin
   FExactReady := False;
 end;
 
+procedure Th5uGridRowMetrics.SetPixelAligned(AValue: Boolean);
+begin
+  if FPixelAligned = AValue then
+    Exit;
+  FPixelAligned := AValue;
+  FConfigured := False;
+  Clear;
+end;
+
 procedure Th5uGridRowMetrics.Configure(AOptions: Th5uRowHeightOptions; ARowCount: Int64;
-  ASpacing: Integer; AVariableSpacing: Boolean; APrepare: Th5uPrepareMetricRange;
+  ASpacing: Single; AVariableSpacing: Boolean; APrepare: Th5uPrepareMetricRange;
   AExtent: Th5uGetRowExtent; ADynamicSpacing: Boolean);
 var
-  EstimatedExtent: Int64;
+  EstimatedExtent: Single;
   Exact: Boolean;
 begin
   ARowCount := Max(Int64(0), ARowCount);
+  ASpacing := SafeRowSpacing(ASpacing);
   if AOptions.Mode = Th5uRowHeightMode.Fixed then
-    EstimatedExtent := Int64(AOptions.FixedHeight) + ASpacing
+    EstimatedExtent := AOptions.FixedHeight
   else
-    EstimatedExtent := Int64(AOptions.EstimatedHeight) + ASpacing;
-  EstimatedExtent := Max(Int64(1), EstimatedExtent);
+    EstimatedExtent := AOptions.EstimatedHeight;
+  if FPixelAligned then
+    EstimatedExtent := Round(EstimatedExtent) + Round(ASpacing)
+  else
+    EstimatedExtent := EstimatedExtent + ASpacing;
+  EstimatedExtent := SafeRowExtent(EstimatedExtent);
   Exact := (ARowCount <= h5uExactRowHeightLimit)
     and ((AOptions.Mode <> Th5uRowHeightMode.Fixed) or AVariableSpacing);
   if not FConfigured or (FRowCount <> ARowCount) or (FEstimatedExtent <> EstimatedExtent)
@@ -344,7 +415,7 @@ begin
   FDynamicSpacing := ADynamicSpacing;
 end;
 
-procedure Th5uGridRowMetrics.RecordExtent(ARow: Int64; AExtent: Double);
+procedure Th5uGridRowMetrics.RecordExtent(ARow: Int64; AExtent: Single);
 var
   Changed: Boolean;
   Delta: Double;
@@ -353,7 +424,10 @@ begin
     Exit;
   if IsNan(AExtent) or IsInfinite(AExtent) then
     Exit;
-  Delta := Max(1.0, AExtent) - FEstimatedExtent;
+  AExtent := SafeRowExtent(AExtent);
+  if FPixelAligned then
+    AExtent := Round(AExtent);
+  Delta := Double(Max(Single(1), AExtent)) - FEstimatedExtent;
   Changed := False;
   if Delta = 0 then
   begin
@@ -377,7 +451,7 @@ begin
   Signature := '';
   for Column in AColumns.VisibleColumns do
     Signature := Signature + IntToStr(Length(Column.Id)) + ':' + Column.Id
-      + ':' + IntToStr(Column.LayoutWidth) + ':' + IntToStr(Ord(Column.AutoHeight)) + ';';
+      + ':' + FloatToStr(Column.LayoutWidth) + ':' + IntToStr(Ord(Column.AutoHeight)) + ';';
   Result := Signature <> FColumnWidths;
   if Result then
   begin
@@ -415,14 +489,10 @@ end;
 
 function Th5uGridRowMetrics.EstimatedTop(ARow: Int64; ADelta: Double): Th5uTotalRowHeight;
 begin
-  Result := Default(Th5uTotalRowHeight);
-  if (FEstimatedExtent > 0) and (ARow > High(Int64) div FEstimatedExtent) then
-  begin
-    Result.Whole := High(Int64);
+  Result := MultiplyExtent(ARow, FEstimatedExtent);
+  if Result.Whole = High(Int64) then
     Exit;
-  end;
-  Result.Whole := ARow * FEstimatedExtent;
-  Result.Fraction := ADelta;
+  Result.Fraction := Result.Fraction + ADelta;
   NormalizeHeight(Result);
 end;
 
@@ -445,7 +515,7 @@ function Th5uGridRowMetrics.LocateOffset(const AOffset: Th5uTotalRowHeight;
 var
   Node: Th5uRowExtentNode;
   DeltaBefore: Double;
-  LowerRow, UpperRow: Int64;
+  LowerRow, UpperRow, MiddleRow: Int64;
   Start, Finish, Remaining: Th5uTotalRowHeight;
 begin
   Result := -1;
@@ -484,7 +554,23 @@ begin
   Remaining.Whole := AOffset.Whole - Start.Whole;
   Remaining.Fraction := AOffset.Fraction - Start.Fraction;
   NormalizeHeight(Remaining);
-  Result := LowerRow + Remaining.Whole div FEstimatedExtent;
+  if Frac(FEstimatedExtent) = 0 then
+    Result := LowerRow + Remaining.Whole div Trunc(FEstimatedExtent)
+  else
+  begin
+    // Compare split totals directly instead of converting a large row number
+    // or offset to floating point. No row callbacks are needed within this gap.
+    while LowerRow + 1 < UpperRow do
+    begin
+      MiddleRow := LowerRow + (UpperRow - LowerRow) div 2;
+      Start := EstimatedTop(MiddleRow, DeltaBefore);
+      if CompareHeight(AOffset, Start) < 0 then
+        UpperRow := MiddleRow
+      else
+        LowerRow := MiddleRow;
+    end;
+    Result := LowerRow;
+  end;
   Result := Max(LowerRow, Min(Result, UpperRow - 1));
   ARowTop := EstimatedTop(Result, DeltaBefore);
 end;
@@ -502,8 +588,8 @@ begin
     ATop := AViewportTop - Round((Offset.Whole - Top.Whole) - Top.Fraction);
 end;
 
-function Th5uGridRowMetrics.FindFirstVisibleRow(AOffset, AViewportTop: Double;
-  out ATop: Double): Int64;
+function Th5uGridRowMetrics.FindFirstVisibleRow(AOffset: Double; AViewportTop: Single;
+  out ATop: Single): Int64;
 var
   Offset, Top: Th5uTotalRowHeight;
 begin
@@ -525,11 +611,12 @@ begin
 end;
 
 function Th5uGridRowMetrics.GetHeight(AOptions: Th5uRowHeightOptions; AColumns: Th5uGridColumns; ARow: Int64; const AKey: Th5uRowKey;
-  AAllowMeasure: Boolean; AMeasure: Th5uMeasureCellHeight; AAdjust: Th5uAdjustRowHeight): Double;
+  AAllowMeasure: Boolean; AMeasure: Th5uMeasureCellHeight; AAdjust: Th5uAdjustRowHeight): Single;
 var
   LKey: string;
   LColumn: Th5uGridColumn;
   LCache: Boolean;
+  LMeasuredHeight, LUnadjustedHeight: Single;
 begin
   LKey := AKey.ToString;
   if LKey = '' then
@@ -537,7 +624,11 @@ begin
   if AAllowMeasure then
     FRowsByKey.AddOrSetValue(LKey, ARow);
   if AOptions.Mode = Th5uRowHeightMode.Fixed then
+  begin
+    if FPixelAligned then
+      Exit(Round(AOptions.FixedHeight));
     Exit(AOptions.FixedHeight);
+  end;
   if FHeights.TryGetValue(LKey, Result) then
     Exit;
   if not AAllowMeasure then
@@ -547,13 +638,24 @@ begin
     Result := AOptions.MinHeight;
     for LColumn in AColumns.VisibleColumns do
       if (AOptions.MeasureScope <> Th5uAutoHeightMeasureScope.ExplicitContributorColumns) or LColumn.AutoHeight then
-        Result := Max(Result, AMeasure(ARow, LColumn));
+      begin
+        LMeasuredHeight := AMeasure(ARow, LColumn);
+        if not IsNan(LMeasuredHeight) and not IsInfinite(LMeasuredHeight) then
+          Result := Max(Result, LMeasuredHeight);
+      end;
   end;
-  Result := EnsureRange(Result, Double(AOptions.MinHeight), Double(AOptions.MaxHeight));
+  Result := EnsureRange(Result, AOptions.MinHeight, AOptions.MaxHeight);
   LCache := True;
   if Assigned(AAdjust) then
+  begin
+    LUnadjustedHeight := Result;
     AAdjust(ARow, AKey, not AAllowMeasure, Result, LCache);
-  Result := Max(1.0, Result);
+    if IsNan(Result) or IsInfinite(Result) then
+      Result := LUnadjustedHeight;
+  end;
+  Result := EnsureRange(Result, Single(1), h5uUnlimitedWidth);
+  if FPixelAligned then
+    Result := Round(Result);
   if LCache and AAllowMeasure then
     FHeights.AddOrSetValue(LKey, Result)
   else if AAllowMeasure then
@@ -579,7 +681,7 @@ begin
   for LRow := 0 to ARowCount - 1 do
   {$ENDIF}
   begin
-    LExtent := Round(AExtent(LRow, ARowCount <= h5uExactRowHeightLimit));
+    LExtent := Round(SafeRowExtent(AExtent(LRow, ARowCount <= h5uExactRowHeightLimit)));
     if LRemaining < LExtent then
     begin
       ATop := AViewportTop - Integer(LRemaining);
@@ -592,10 +694,11 @@ begin
   end;
 end;
 
-function h5uFindFirstVisibleRow(ARowCount: Int64; AOffset, AViewportTop: Double; AExtent: Th5uGetRowExtent; out ATop: Double): Int64;
+function h5uFindFirstVisibleRow(ARowCount: Int64; AOffset: Double; AViewportTop: Single; AExtent: Th5uGetRowExtent; out ATop: Single): Int64;
 var
   LRow: Int64;
-  LRemaining, LExtent: Double;
+  LRemaining: Double;
+  LExtent: Single;
 begin
   Result := -1;
   ATop := AViewportTop;
@@ -607,7 +710,7 @@ begin
   for LRow := 0 to ARowCount - 1 do
   {$ENDIF}
   begin
-    LExtent := AExtent(LRow, ARowCount <= h5uExactRowHeightLimit);
+    LExtent := SafeRowExtent(AExtent(LRow, ARowCount <= h5uExactRowHeightLimit));
     if LRemaining < LExtent then
     begin
       ATop := AViewportTop - LRemaining;
@@ -620,15 +723,23 @@ begin
   end;
 end;
 
-function h5uTotalRowHeight(AOptions: Th5uRowHeightOptions; ARowCount: Int64; ASpacing: Integer; AVariableSpacing: Boolean;
-  APrepare: Th5uPrepareMetricRange; AExtent: Th5uGetRowExtent): Th5uTotalRowHeight;
+function h5uTotalRowHeight(AOptions: Th5uRowHeightOptions; ARowCount: Int64; ASpacing: Single; AVariableSpacing: Boolean;
+  APrepare: Th5uPrepareMetricRange; AExtent: Th5uGetRowExtent; AWholePixels: Boolean): Th5uTotalRowHeight;
 var
   LRow: Int64;
   LTotal: Double;
+  LExtent: Single;
 begin
+  ASpacing := SafeRowSpacing(ASpacing);
   Result := Default(Th5uTotalRowHeight);
   if (AOptions.Mode = Th5uRowHeightMode.Fixed) and not AVariableSpacing then
-    Result.Whole := ARowCount * (AOptions.FixedHeight + ASpacing)
+  begin
+    if AWholePixels then
+      LExtent := Round(AOptions.FixedHeight) + Round(ASpacing)
+    else
+      LExtent := AOptions.FixedHeight + ASpacing;
+    Result := MultiplyExtent(ARowCount, LExtent);
+  end
   else
   if ARowCount <= h5uExactRowHeightLimit then
   begin
@@ -638,18 +749,24 @@ begin
       LRow := 0;
       while LRow < ARowCount do
       begin
-        Inc(LTotal, AExtent(LRow, True));
+        LTotal := LTotal + SafeRowExtent(AExtent(LRow, True));
         Inc(LRow);
       end;
     {$ELSE}
       for LRow := 0 to ARowCount - 1 do
-        LTotal := LTotal + AExtent(LRow, True);
+        LTotal := LTotal + SafeRowExtent(AExtent(LRow, True));
     {$ENDIF}
     Result.Whole := Trunc(LTotal);
     Result.Fraction := LTotal - Result.Whole;
   end
   else
-    Result.Whole := ARowCount * (AOptions.EstimatedHeight + ASpacing);
+  begin
+    if AWholePixels then
+      LExtent := Round(AOptions.EstimatedHeight) + Round(ASpacing)
+    else
+      LExtent := AOptions.EstimatedHeight + ASpacing;
+    Result := MultiplyExtent(ARowCount, LExtent);
+  end;
 end;
 
 function h5uRowTop(ARow: Int64; AExtent: Th5uGetRowExtent): Double;
@@ -661,12 +778,12 @@ begin
     I := 0;
     while I < ARow do
     begin
-      Result := Result + AExtent(I, True);
+      Result := Result + SafeRowExtent(AExtent(I, True));
       Inc(I);
     end;
   {$ELSE}
     for I := 0 to ARow - 1 do
-      Result := Result + AExtent(I, True);
+      Result := Result + SafeRowExtent(AExtent(I, True));
   {$ENDIF}
 end;
 

@@ -135,6 +135,7 @@
         <DCCReference Include="..\Source\Common\h5u.Grid.Resizing.pas"/>
         <DCCReference Include="..\Source\Common\h5u.Grid.RowMetrics.pas"/>
         <DCCReference Include="..\Source\Common\h5u.Grid.Selection.pas"/>
+        <DCCReference Include="..\Source\Common\h5u.Grid.Sizing.pas"/>
         <DCCReference Include="..\Source\Common\h5u.Grid.Types.pas"/>
         <DCCReference Include="..\Source\Common\h5u.Grid.Values.pas"/>
         <DCCReference Include="..\Source\Common\h5u.Grid.View.pas"/>
@@ -143,6 +144,8 @@
         <DCCReference Include="..\Source\Common\h5u.Grid.Data.Memory.pas"/>
         <DCCReference Include="..\Source\Common\h5u.Grid.Data.Objects.pas"/>
         <DCCReference Include="..\Source\Common\h5u.Grid.Data.Virtual.pas"/>
+        <DCCReference Include="..\Source\Common\h5u.FormDesigner.Properties.pas"/>
+        <DCCReference Include="..\Source\Common\h5u.FormDesigner.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

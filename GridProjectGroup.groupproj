@@ -30,6 +30,9 @@
         <Projects Include="Demos\VCL\VirtualLive\GridVclVirtualLiveDemo.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="Demos\VCL\MegaDemo\GridVclMegaDemo.dproj">
+            <Dependencies/>
+        </Projects>
         <Projects Include="Demos\FMX\ClientDataset\GridFmxClientDatasetDemo.dproj">
             <Dependencies/>
         </Projects>
@@ -37,6 +40,9 @@
             <Dependencies/>
         </Projects>
         <Projects Include="Demos\FMX\VirtualLive\GridFmxVirtualLiveDemo.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Demos\FMX\MegaDemo\GridFmxMegaDemo.dproj">
             <Dependencies/>
         </Projects>
     </ItemGroup>
@@ -128,6 +134,15 @@
     <Target Name="GridVclVirtualLiveDemo:Make">
         <MSBuild Projects="Demos\VCL\VirtualLive\GridVclVirtualLiveDemo.dproj" Targets="Make"/>
     </Target>
+    <Target Name="GridVclMegaDemo">
+        <MSBuild Projects="Demos\VCL\MegaDemo\GridVclMegaDemo.dproj"/>
+    </Target>
+    <Target Name="GridVclMegaDemo:Clean">
+        <MSBuild Projects="Demos\VCL\MegaDemo\GridVclMegaDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="GridVclMegaDemo:Make">
+        <MSBuild Projects="Demos\VCL\MegaDemo\GridVclMegaDemo.dproj" Targets="Make"/>
+    </Target>
     <Target Name="GridFmxClientDatasetDemo">
         <MSBuild Projects="Demos\FMX\ClientDataset\GridFmxClientDatasetDemo.dproj"/>
     </Target>
@@ -155,14 +170,23 @@
     <Target Name="GridFmxVirtualLiveDemo:Make">
         <MSBuild Projects="Demos\FMX\VirtualLive\GridFmxVirtualLiveDemo.dproj" Targets="Make"/>
     </Target>
+    <Target Name="GridFmxMegaDemo">
+        <MSBuild Projects="Demos\FMX\MegaDemo\GridFmxMegaDemo.dproj"/>
+    </Target>
+    <Target Name="GridFmxMegaDemo:Clean">
+        <MSBuild Projects="Demos\FMX\MegaDemo\GridFmxMegaDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="GridFmxMegaDemo:Make">
+        <MSBuild Projects="Demos\FMX\MegaDemo\GridFmxMegaDemo.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="h5uGridCore;h5uGridCoreDesign;h5uGridVcl;h5uGridVclDesign;h5uGridFmx;h5uGridFmxDesign;GridVclClientDatasetDemo;GridVclObjectListDemo;GridVclVirtualLiveDemo;GridFmxClientDatasetDemo;GridFmxObjectListDemo;GridFmxVirtualLiveDemo"/>
+        <CallTarget Targets="h5uGridCore;h5uGridCoreDesign;h5uGridVcl;h5uGridVclDesign;h5uGridFmx;h5uGridFmxDesign;GridVclClientDatasetDemo;GridVclObjectListDemo;GridVclVirtualLiveDemo;GridVclMegaDemo;GridFmxClientDatasetDemo;GridFmxObjectListDemo;GridFmxVirtualLiveDemo;GridFmxMegaDemo"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="h5uGridCore:Clean;h5uGridCoreDesign:Clean;h5uGridVcl:Clean;h5uGridVclDesign:Clean;h5uGridFmx:Clean;h5uGridFmxDesign:Clean;GridVclClientDatasetDemo:Clean;GridVclObjectListDemo:Clean;GridVclVirtualLiveDemo:Clean;GridFmxClientDatasetDemo:Clean;GridFmxObjectListDemo:Clean;GridFmxVirtualLiveDemo:Clean"/>
+        <CallTarget Targets="h5uGridCore:Clean;h5uGridCoreDesign:Clean;h5uGridVcl:Clean;h5uGridVclDesign:Clean;h5uGridFmx:Clean;h5uGridFmxDesign:Clean;GridVclClientDatasetDemo:Clean;GridVclObjectListDemo:Clean;GridVclVirtualLiveDemo:Clean;GridVclMegaDemo:Clean;GridFmxClientDatasetDemo:Clean;GridFmxObjectListDemo:Clean;GridFmxVirtualLiveDemo:Clean;GridFmxMegaDemo:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="h5uGridCore:Make;h5uGridCoreDesign:Make;h5uGridVcl:Make;h5uGridVclDesign:Make;h5uGridFmx:Make;h5uGridFmxDesign:Make;GridVclClientDatasetDemo:Make;GridVclObjectListDemo:Make;GridVclVirtualLiveDemo:Make;GridFmxClientDatasetDemo:Make;GridFmxObjectListDemo:Make;GridFmxVirtualLiveDemo:Make"/>
+        <CallTarget Targets="h5uGridCore:Make;h5uGridCoreDesign:Make;h5uGridVcl:Make;h5uGridVclDesign:Make;h5uGridFmx:Make;h5uGridFmxDesign:Make;GridVclClientDatasetDemo:Make;GridVclObjectListDemo:Make;GridVclVirtualLiveDemo:Make;GridVclMegaDemo:Make;GridFmxClientDatasetDemo:Make;GridFmxObjectListDemo:Make;GridFmxVirtualLiveDemo:Make;GridFmxMegaDemo:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

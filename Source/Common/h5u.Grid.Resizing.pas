@@ -24,22 +24,22 @@ type
   Th5uResizeCandidate = record
     Column: Th5uGridColumn;
     VisibleIndex: Integer;
-    Right, ViewLeft, ViewRight: Double;
+    Right, ViewLeft, ViewRight: Single;
   end;
 
-  Th5uResizeHeaderEdgeTest = function(AX, AY: Double): Boolean of object;
+  Th5uResizeHeaderEdgeTest = function(AX, AY: Single): Boolean of object;
 
 function h5uColumnResizeAt(AOptions: Th5uCustomizationOptions; const ACandidates: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uResizeCandidate>;
-  ALastVisibleIndex: Integer; X, Y: Double; ATouch: Boolean; AHeaderEdge: Th5uResizeHeaderEdgeTest): Th5uGridColumn;
-function h5uTryResizeColumn(AColumns: Th5uGridColumns; AColumn: Th5uGridColumn; AOriginalWidth, ADelta: Integer): Boolean;
+  ALastVisibleIndex: Integer; X, Y: Single; ATouch: Boolean; AHeaderEdge: Th5uResizeHeaderEdgeTest): Th5uGridColumn;
+function h5uTryResizeColumn(AColumns: Th5uGridColumns; AColumn: Th5uGridColumn; AOriginalWidth, ADelta: Single): Boolean;
 
 implementation
 
 function h5uColumnResizeAt(AOptions: Th5uCustomizationOptions; const ACandidates: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uResizeCandidate>;
-  ALastVisibleIndex: Integer; X, Y: Double; ATouch: Boolean; AHeaderEdge: Th5uResizeHeaderEdgeTest): Th5uGridColumn;
+  ALastVisibleIndex: Integer; X, Y: Single; ATouch: Boolean; AHeaderEdge: Th5uResizeHeaderEdgeTest): Th5uGridColumn;
 var
   LInfo: Th5uResizeCandidate;
-  LLeft, LRight, LLastLeft, LEffectiveLeft, LDelta, LDistance, LBest: Double;
+  LLeft, LRight, LLastLeft, LEffectiveLeft, LDelta, LDistance, LBest: Single;
 begin
   Result := nil;
   if not AOptions.AllowColumnResizing then
@@ -81,7 +81,7 @@ begin
   end;
 end;
 
-function h5uTryResizeColumn(AColumns: Th5uGridColumns; AColumn: Th5uGridColumn; AOriginalWidth, ADelta: Integer): Boolean;
+function h5uTryResizeColumn(AColumns: Th5uGridColumns; AColumn: Th5uGridColumn; AOriginalWidth, ADelta: Single): Boolean;
 var
   I: Integer;
 begin
@@ -95,8 +95,7 @@ begin
         AColumns.BeginUpdate;
         try
           AColumn.AutoWidth := False;
-          AColumn.WidthInPercent := 0;
-          AColumn.Width := AOriginalWidth + ADelta;
+          AColumn.Width := AColumn.ConstrainWidth(AOriginalWidth + ADelta);
         finally
           AColumns.EndUpdate;
         end;

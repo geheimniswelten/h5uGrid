@@ -1,127 +1,196 @@
-# Spaltenbreiten in VCL und FMX
+# Spaltenbreiten und Optionsgruppen in VCL und FMX
 
-Beide Grids verwenden dieselbe Breitenberechnung. VCL arbeitet in Pixeln, FMX
-wie bisher in logischen Einheiten. Die tatsächlich verwendete ganzzahlige Breite
-steht in `Column.LayoutWidth`; `Column.Width` bleibt der gespeicherte Pixelwert.
+Beide Grids verwenden dieselbe Berechnung. Breitenvorgaben verwenden `Th5uWidth`
+aus `h5u.Grid.Sizing`, einen eigenen Single-Typ:
 
-## Breitenmodi
+| Wert | Bedeutung | Anzeige im PropertyEditor |
+| --- | --- | --- |
+| `120` | Feste Ausgangsbreite | `120` |
+| `0` | Vorgabe übernehmen | `Default` |
+| `-25.5` | Prozentuale Ausgangsbreite | `25,5 %` bei deutschem Zahlenformat |
+| `-200` | 200 Prozent | `200 %` |
 
-| Einstellung | Verhalten |
+VCL verwendet Pixel, FMX logische Einheiten. `Column.Width` behält die Vorgabe;
+`Column.LayoutWidth` liefert das berechnete logische Ergebnis als `Single`. VCL
+und LCL runden die fertigen Zellgrenzen auf ganze Pixel; FMX behält Bruchteile.
+`Visible=False` blendet die Spalte unter Beibehaltung der Vorgabe aus.
+
+Delphi-IDE und h5u-PropertyEditor verwenden dieselbe Textkonvertierung. Zulässig
+sind `Default`, Zahlen, Prozentangaben und optional `px`. Nachkommastellen und
+Prozentwerte über 100 sind erlaubt. `Unlimited` bezeichnet die technisch begrenzte
+Obergrenze `h5uUnlimitedWidth`.
+
+## Verteilung
+
+`Grid.ColumnSizing.FitMode` steuert die Anpassung:
+
+| Modus | Verhalten |
 | --- | --- |
-| `AutoWidth = False`, `WidthInPercent = 0` | Feste Breite aus `Width`. |
-| `AutoWidth = True` | Breite anhand der formatierten Zellinhalte und des jeweiligen Editors. |
-| `AutoWidth = False`, `WidthInPercent > 0` | Anteil an der verbleibenden Breite des Views bzw. des nächsten übergeordneten Gruppenheaders. |
+| `None` | Pixel bleiben fest. Prozente beziehen sich unmittelbar auf die verfügbare View- oder Gruppenbreite; 200 Prozent können Überlauf erzeugen. |
+| `PercentColumns` | Pixel- und automatisch gemessene Breiten werden reserviert. Prozentspalten teilen den Rest nach ihren Gewichten. Dieser Standard erhält das bisherige Verhalten. |
+| `AllColumns` | Pixel-, Prozent- und automatisch gemessene Breiten sind Ausgangsgrößen für die proportionale Anpassung aller sichtbaren Spalten. |
 
-`AutoWidth` hat Vorrang vor `WidthInPercent`. `MinWidth` und `MaxWidth` an der
-Spalte gelten für alle drei Modi. `MaxWidth = 0` bedeutet unbegrenzt.
-Die bisherigen Standardwerte bleiben erhalten: `Width = 100`, `MinWidth = 24`,
-`MaxWidth = 1000`, `AutoWidth = False`, `WidthInPercent = 0`.
+Bei normalisierter Verteilung ergibt `20 % / 20 %` dieselbe Aufteilung wie
+`50 % / 50 %`. Im Modus `AllColumns` ergibt `100 px / 200 px` ein Verhältnis
+von 1:2. Gemischte Angaben werden zuerst auf derselben Bezugsebene in
+Ausgangsbreiten umgerechnet und dann gemeinsam verteilt.
 
-Prozentwerte von 0 bis 100 sind zulässig; positive Werte werden pro Ebene als
-relative Anteile normalisiert. 25/75 und 20/60 ergeben daher dieselbe Aufteilung.
-Zuerst werden feste und automatisch gemessene Breiten sowie alle Spaltenabstände
-abgezogen. Erreicht eine flexible Spalte eine Grenze, wird der Rest unter den
-anderen flexiblen Spalten verteilt. Rundungsreste werden deterministisch verteilt.
-Ausgeblendete Spalten benötigen weder Breite noch Abstand. Fixierte Spalten links
-und rechts sind Teil desselben Inhaltsbudgets.
+Abstände werden vorher abgezogen. Ausgeblendete Spalten benötigen weder Breite
+noch Abstand; links/rechts fixierte Spalten gehören zum selben Budget.
+Rundungsreste werden deterministisch verteilt.
 
-Beispiel: 503 Einheiten Inhaltsbreite, drei Spalten mit je 1 Einheit Abstand,
-erste Spalte fest 100, danach 25/75 Prozent: Die Breiten sind 100, 100 und 300.
-Ein Minimum von 150 für die zweite Spalte ergibt 100, 150 und 250.
+## Defaults und Grenzen
 
-## Gesamtbreite am Grid
+Bei `Column.Width=0` gilt: `ColumnSizing.DefaultWidth`, dann die
+`DefaultWidth` der statisch zugeordneten Editorvorlage, dann der passende
+Editor-/Typstandard. Jede Ebene mit Wert 0 wird übersprungen. Die Auflösung
+benötigt keine Datenzeilen und keine zeilenabhängigen Editorereignisse.
 
-`Grid.MinWidth` und `Grid.MaxWidth` begrenzen das Breitenbudget des gesamten
-sichtbaren Spalteninhalts einschließlich der Spaltenabstände. Sie verändern
-**nicht** `Grid.Width` bzw. die Größe der Komponente. Beide Werte sind anfangs 0
-(keine Grenze). Zeilenindikator, Außenabstände und Scrollbars zählen nicht zum
-Spalteninhalt; sie werden bereits von der verfügbaren Viewbreite abgezogen.
+Checkboxen erhalten standardmäßig Breite, Minimum und Maximum 28. Die allgemeine
+Textvorgabe ist Breite 100, Minimum 24, Maximum 3000. Editorvorlagen besitzen
+`DefaultWidth`, `DefaultMinWidth` und `DefaultMaxWidth`; die entsprechenden
+Gridvorgaben können sie überschreiben. Explizite Spaltenwerte haben Vorrang.
+
+`Column.MinWidth` bleibt eine absolute Grenze in logischen Einheiten. Ausdrücklich gesetzte
+0 bedeutet kein Minimum; eine unberührte Mindestbreite übernimmt den
+Editor-/Typstandard. `Column.MaxWidth` unterstützt Pixel und Prozent wie `Width`;
+0 übernimmt die Default-Obergrenze. Prozentuale Maxima werden gegen die verfügbare
+View- oder Gruppenbreite aufgelöst.
+
+**Minima und aufgelöste Maxima werden niemals mitskaliert.** Spalten an einer
+Grenze werden aus der weiteren Verteilung genommen. Der Rest verteilt sich auf
+die verbleibenden flexiblen Spalten. Reicht der Platz für die Minima nicht,
+entsteht horizontaler Überlauf. Erreichen alle Spalten ihr Maximum, bleibt Platz frei.
 
 ```pascal
-Grid.MinWidth := 600;
-Grid.MaxWidth := 1200;
-Grid.Columns[0].Width := 120;
-Grid.Columns[1].WidthInPercent := 40;
-Grid.Columns[2].WidthInPercent := 60;
+Grid.ColumnSizing.FitMode := Th5uColumnFitMode.AllColumns;
+Grid.ColumnSizing.DefaultMaxWidth := 3000;
+CheckColumn.MinWidth := 28;
+CheckColumn.MaxWidth := 28;
+TextColumn.Width := -100;
+TextColumn.MinWidth := 80;
+TextColumn.MaxWidth := -200;
 ```
 
-Das Grid kann durch `MinWidth` horizontal scrollbar werden, obwohl seine
-Komponente kleiner ist. `MaxWidth` kann rechts freien Platz lassen. Die Größe
-einer Komponente begrenzt man weiterhin mit ihren nativen Layout-Eigenschaften.
+`ColumnSizing.MaxWidthSource := Th5uMaxWidthSource.Monitor` verwendet die nutzbare
+Monitorbreite als allgemeine Default-Obergrenze. Explizite Spalten-, Grid- und
+Editor-Maxima haben Vorrang. Die Checkbox-Vorgabe bleibt schmal. Ein geänderter
+Bezugsbereich wird beim nächsten Layout berücksichtigt.
 
-Feste Pixelbreiten und die Grenzen der einzelnen Spalten haben bei unmöglichen
-Vorgaben Vorrang: 800 feste Einheiten passen nicht in `Grid.MaxWidth = 600`.
-In diesem Fall bleibt der Inhalt scrollbar. Umgekehrt erzeugt `MinWidth` keine
-zusätzliche Spaltenbreite, wenn es keine dehnbaren Prozent-Spalten gibt oder
-alle bereits ihr Maximum erreicht haben. Das gleiche Prinzip gilt für Gruppen.
+`ColumnSizing.MinContentWidth` und `MaxContentWidth` begrenzen das gesamte
+Spaltenbudget einschließlich innerer Abstände. 0 setzt hier keine zusätzliche
+Grenze. Sie ändern nicht die Größe der Grid-Komponente; dafür gelten `Grid.Width`
+und die nativen `Constraints`.
 
-## Gruppenheader
-
-Gruppen sind `HeaderLayout.Cells` ohne `ColumnId`. Die Zugehörigkeit folgt dem
-bestehenden mehrzeiligen Headerlayout, einschließlich der Bindung von
-Blattheadern über `ColumnId`. Prozent-Spalten werden innerhalb ihres nächsten
-umschließenden Gruppenheaders verteilt; Spalten ohne Gruppe beziehen sich auf
-den View. Das gilt rekursiv für verschachtelte Gruppen.
-
-Gruppenheader besitzen ebenfalls `Width`, `WidthInPercent`, `MinWidth` und
-`MaxWidth` (jeweils Standard 0):
-
-- `Width > 0` gibt der Gruppe eine feste Breite.
-- `WidthInPercent > 0` beteiligt die Gruppe prozentual am Platz ihres Elternheaders bzw. des Views.
-- Sind beide 0, ergibt sich die natürliche Breite aus den Kindern. Enthält die Gruppe Prozent-Kinder, übernimmt sie deren summiertes Gewicht auf ihrer Elternebene.
-- Die Gruppenbreite enthält innere Spaltenabstände; der Abstand rechts hinter der Gruppe zählt zusätzlich.
-- Die Gruppengrenzen werden mit den erreichbaren Grenzen der Kindspalten geschnitten.
-
-Eine Gruppe mit `Width = 400`, einer festen Kindspalte mit 100 und zwei
-Prozent-Kindern mit 30/70 erhält bei Abstand 0 die Kindbreiten 100/90/210.
-Außerhalb liegende Prozent-Spalten teilen den verbleibenden Viewplatz.
-
-## Zellinhalte messen
+## Automatisches Ausmessen
 
 ```pascal
 Column.AutoWidth := True;
-Grid.AutoWidthRowLimit := 1000; // Standard: erste 1000 Zeilen des aktuellen Daten-Views
-Grid.AutoWidthRowLimit := 0;    // alle Zeilen, bei großen Datenquellen entsprechend teuer
-
-// Nur berechnen, ohne Width oder den aktiven Editor zu ändern:
+Grid.ColumnSizing.AutoWidthRowLimit := 1000;
 NeededWidth := Grid.MeasureColumnWidth(Column);
 NeededWidth := Grid.MeasureColumnWidth(Column, 100, 200);
-
-// Einmal messen und danach als feste Pixelbreite übernehmen:
 Grid.AutoSizeColumn(Column);
 ```
 
-Die Messung verwendet formatierte Anzeigewerte und die Editorauflösung pro Zelle.
-Text wird ungekürzt einschließlich Innenabstand gemessen; Checkboxen verwenden
-ihre Glyphenbreite, Bilder ihre natürliche Breite plus Innenabstand. Headertexte
-sind kein Teil dieser Zellinhaltsmessung. Die Ergebnisse respektieren die
-Spaltengrenzen. Bereits offene Editoren und ungespeicherte Eingaben bleiben bei
-`MeasureColumnWidth` unverändert.
+Gemessen werden formatierte Zellwerte mit den tatsächlichen Zelleditoren und
+deren Innenabständen. Headertexte gehören nicht zur Zellinhaltsmessung.
+`AutoWidthRowLimit=0` erlaubt alle Zeilen. Sobald die Obergrenze einer Spalte
+erreicht ist, endet ihre Messung. Andere Spalten werden unabhängig weitergemessen.
+Sind Minimum und Maximum identisch, ist bereits vor dem Datenzugriff Schluss.
 
-Automatische Messwerte werden zwischengespeichert und bei Daten-, Spalten-,
-Schrift- und relevanten Layoutänderungen neu berechnet. Virtuelle Quellen werden
-in kleinen Bereichen vorbereitet; noch nicht verfügbare Zeilen werden übersprungen
-und nach einer Datenbenachrichtigung erneut berücksichtigt. Änderungen an eigenen
-Darstellungsfunktionen, Editorvorlagen oder direkt beschreibbaren Formatfeldern
-meldet man über `Grid.InvalidateColumnWidths`.
+Messwerte werden gecacht. Daten-, Schrift-, relevante Layout- und
+Editorvorgabenänderungen machen sie ungültig; die Spalte kann bei einer erneuten
+Messung auch wieder schrumpfen. Editorvorlagen und `DefaultEditors` benachrichtigen
+das Grid bei Änderungen. Änderungen eigener Darstellungsfunktionen meldet man
+über `Grid.InvalidateColumnWidths`. Die Messung aktiviert keinen Editor und
+verändert keine laufende Texteingabe.
 
-Eigene Editoren können `MeasureContentWidth(const AContext: Th5uEditorContext)`
-überschreiben oder `OnMeasureWidth` verwenden. `MeasureWidth` ruft zuerst die
-Messfunktion und danach den Callback auf. Die Breite enthält den Innenabstand,
-aber keinen Spaltenabstand. Der Kontext liefert Grid, Spalte, Zeile, Anzeigetext,
-Wert und einen plattformnativen Canvas. Ein negativer Rückgabewert verwendet die
-Textmessung als Fallback. Für individuell gezeichnete Inhalte bzw. abweichende
-Schriften ist `OnMeasureWidth` der passende Erweiterungspunkt.
+Ändert eine neue Breitenvorgabe während der Bearbeitung die Zellposition oder
+-größe, folgt das Eingabefeld beim nächsten Zeichnen der Zelle. Die laufende
+Eingabe bleibt dabei erhalten.
 
-Manuelles Ziehen einer Spaltenkante und `AutoSizeColumn` wechseln die betroffene
-Spalte in den Pixelmodus (`AutoWidth = False`, `WidthInPercent = 0`). Die
-berechneten Layoutbreiten werden nicht in DFM/FMX gespeichert; Konfiguration,
-Gruppenbreiten und Grenzen unterstützen Streaming und `Assign`.
+Eigene Editoren können `MeasureContentWidth` oder `OnMeasureWidth` verwenden.
+Ein negativer Messwert verwendet die Textmessung als Fallback. Virtuelle Quellen
+werden in kleinen Bereichen vorbereitet.
 
-## Tests
+Manuelles Ziehen und `AutoSizeColumn` setzen positive Pixelvorgaben und
+deaktivieren `AutoWidth`. Bei `AllColumns` bleibt auch diese Pixelvorgabe eine
+Ausgangsgröße für die gemeinsame Anpassung.
 
-`Build/TestCommonBehavior.dpr` prüft Verteilung, Grenzen, Gruppierung, Rundung,
-ausgeblendete/fixierte Spalten und `Assign`. `Build/TestGridEditing.inc` prüft die
-native Messung, Datenänderungen, Editorzustand, Scrollbars sowie DFM/FMX-Streaming
-für VCL und FMX. Der Parameter `--column-widths` führt nur diese nativen
-Breitentests aus. Bei visuellen Starts gilt der Countdown aus `AGENTS.md`.
+## Gruppenheader
+
+Das mehrzeilige Layout liegt unter `Grid.Header.Layout`. Seine `Cells` ohne
+`ColumnId` sind Gruppen. Blattheader bleiben über `ColumnId` mit den Spalten
+verbunden, auch beim Verschieben und Ausblenden.
+
+Gruppen unterstützen `Width`, `MinWidth` und `MaxWidth`. `Width=0` bedeutet
+natürliche Breite aus den Kindern; `MaxWidth=0` setzt bei Gruppen keine eigene
+Obergrenze. Prozentwerte der Kinder beziehen sich auf die nächste umschließende
+Gruppe. Gruppenbreiten enthalten innere Abstände; ihre Grenzen werden mit den
+erreichbaren Grenzen der Kinder kombiniert.
+
+## Aufgeräumte Optionsgruppen
+
+| Gruppe | Einstellungen |
+| --- | --- |
+| `ColumnSizing` | Defaultbreiten, Anpassungsmodus, Messlimit, Spaltenbudget |
+| `Header` | `Visible`, `RowHeight`, `Layout` |
+| `RowIndicator` | `Visible`, `Width` |
+| `Editing` | `AllowEditing`, `ImmediateEdit` |
+| `Appearance` | `Theme`, `DefaultCellColor`, `RowSpacingColor`, `ColumnSpacingColor`, `ContentPaddingColor` |
+| `Spacing` | Außen-, Zeilen- und Spaltenabstände |
+| `RowHeight` | Bestehende Höhenvorgaben und Messoptionen |
+
+Reine Farbänderungen in `Appearance` fordern nur neues Zeichnen an; Breiten- und
+Höhenmesswerte bleiben erhalten. Ein Themewechsel invalidiert Messwerte, weil er
+layoutrelevante Darstellung verändern kann.
+
+VCL-/FMX-PropertyEditor-Komponenten starten mit Breite 350 und einer Aufteilung
+von 60 Prozent für Bezeichnungen und 40 Prozent für Werte. Scrollbar und Abstände
+werden bei der verfügbaren Spaltenfläche berücksichtigt.
+
+## Kompatibilität
+
+Geometrische Einzelwerte und gemeinsame Messschnittstellen verwenden `Single`.
+Das betrifft auch `OnMeasureWidth` (`var AWidth: Single`) sowie die Rückgabewerte
+von `MeasureContentWidth` und `MeasureWidth`. Eigene Editor-Ableitungen und
+Ereignishandler müssen diese Signaturen übernehmen. Die FMX-Methode
+`MeasureColumnWidth` liefert ebenfalls `Single`; VCL und LCL liefern `Integer`.
+
+Großräumige Höhenberechnungen und vertikale Scrolloffsets behalten `Double`
+beziehungsweise `Int64`. Einzelhöhen, Abstände und ihre gemeinsamen Optionen
+verwenden `Single`. VCL und LCL wenden dieselbe Pixelrundung beim Zeichnen und
+bei der Gesamthöhenberechnung an. Eine nachträgliche Skalierung der Min-/Max-Grenzen
+findet dadurch nicht statt.
+
+`Unlimited` verwendet jetzt den exakt als `Single` darstellbaren Wert 536870912.
+Der vorherige Wert 536870911 wird beim Laden auf denselben neuen Wert abgebildet.
+
+Die bisherigen direkten Grid-Eigenschaften bleiben als weiterleitende Aliase
+verfügbar, etwa `ShowHeader`, `HeaderRowHeight`, `HeaderLayout`, `RowIndicatorWidth`,
+`AllowEditing`, `Theme` und `AutoWidthRowLimit`. IDE und automatischer
+h5u-PropertyEditor zeigen die neuen Gruppen. Manuelles Einfügen eines Alias in
+die Propertyliste bleibt möglich.
+
+Alte DFM/FMX-Dateien einschließlich Farben unter `Spacing` bleiben lesbar.
+Neue Dateien speichern die kanonischen Gruppen und die interne Kennung
+`SizingVersion`. Damit werden ausgelassene alte Spaltenvorgaben von 100/1000
+beim Laden erhalten; ein altes ausdrückliches `MaxWidth=0` wird zu `Unlimited`.
+Moderne Vorgaben von 0 bleiben Default, auch beim Zurücksetzen geerbter Vorgaben.
+
+`WidthInPercent` bleibt als öffentliche Kompatibilitätseigenschaft und als Leser
+alter Formulardaten erhalten. Im Objektinspektor wird nur noch `Width` angeboten.
+Ein Prozentwert wird direkt als negatives `Width` gespeichert.
+
+## Prüfungen
+
+`Build/test-common.ps1` prüft Verteilung, Bruchteile, Grenzen, Gruppen, Defaults,
+Textkonvertierung und vererbtes Streaming. `Build/test-sizing-options.ps1` prüft
+beide Adapter ohne sichtbare Fenster: Optionsmigration, PropertyEditor-Aufteilung,
+Messabbruch, Editorvorgaben, Farbänderungen ohne erneute Messung, Monitorgrenzen
+und native DFM/FMX-Roundtrips. `Build/test-grid-performance.ps1` prüft weiterhin
+das Scrollen großer Listen. `Build/test-editor-bounds.ps1` prüft das Anpassen
+vorhandener Eingabefelder unter Erhalt ihrer Eingabe, ohne sie zu aktivieren.
+`Build/test-geometry-precision.ps1` prüft gebrochene FMX-Messwerte, die Genauigkeit
+beim Touchscrollen großer Listen sowie die konsistente VCL-Pixelrundung von
+Spalten, Trennflächen und HitTests. Auch diese Prüfungen öffnen keine Fenster.

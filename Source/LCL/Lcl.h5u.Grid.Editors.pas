@@ -64,7 +64,7 @@ type
 
   Th5uLclTextEditor = class(Th5uLclCustomEditor)
   protected
-    function MeasureContentWidth(const AContext: Th5uEditorContext): Double; override;
+    function MeasureContentWidth(const AContext: Th5uEditorContext): Single; override;
   public
     function DrawDisplay(const AContext: Th5uEditorContext): Boolean; override;
   end;
@@ -109,7 +109,7 @@ type
 
   Th5uLclCheckBoxEditor = class(Th5uLclCustomEditor)
   protected
-    function MeasureContentWidth(const AContext: Th5uEditorContext): Double; override;
+    function MeasureContentWidth(const AContext: Th5uEditorContext): Single; override;
   public
     constructor Create(ACollection: TCollection); override;
     procedure Activate; override;
@@ -119,7 +119,7 @@ type
 
   Th5uLclImageCellEditor = class(Th5uLclCustomEditor)
   protected
-    function MeasureContentWidth(const AContext: Th5uEditorContext): Double; override;
+    function MeasureContentWidth(const AContext: Th5uEditorContext): Single; override;
   protected
     function DefaultControlClass: Th5uLclEditorControlClass; override;
     procedure ConfigureControl; override;
@@ -626,7 +626,7 @@ begin
     RequestCancel;
 end;
 
-function Th5uLclTextEditor.MeasureContentWidth(const AContext: Th5uEditorContext): Double;
+function Th5uLclTextEditor.MeasureContentWidth(const AContext: Th5uEditorContext): Single;
 var
   R: TRect;
   C: TCanvas;
@@ -639,12 +639,12 @@ begin
   Result := R.Width + 10;
 end;
 
-function Th5uLclCheckBoxEditor.MeasureContentWidth(const AContext: Th5uEditorContext): Double;
+function Th5uLclCheckBoxEditor.MeasureContentWidth(const AContext: Th5uEditorContext): Single;
 begin
   Result := 25;
 end;
 
-function Th5uLclImageCellEditor.MeasureContentWidth(const AContext: Th5uEditorContext): Double;
+function Th5uLclImageCellEditor.MeasureContentWidth(const AContext: Th5uEditorContext): Single;
 var
   P: TPicture;
   S: TBytesStream;
@@ -747,7 +747,7 @@ var
   ACanvas: TCanvas;
   LColumn: Th5uGridColumn;
   LImageRect: TRect;
-  LScale: Double;
+  LScale: Single;
   LWidth, LHeight: Integer;
   FPicture: TPicture;
 begin

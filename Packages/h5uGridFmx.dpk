@@ -38,7 +38,8 @@ requires
 contains
   Fmx.h5u.Grid.Styles in '..\Source\FMX\Fmx.h5u.Grid.Styles.pas',
   Fmx.h5u.Grid.Editors in '..\Source\FMX\Fmx.h5u.Grid.Editors.pas',
-  Fmx.h5u.Grid in '..\Source\FMX\Fmx.h5u.Grid.pas';
+  Fmx.h5u.Grid in '..\Source\FMX\Fmx.h5u.Grid.pas',
+  Fmx.h5u.FormDesigner in '..\Source\FMX\Fmx.h5u.FormDesigner.pas';
 
 end.
 

@@ -61,6 +61,10 @@
         <UnitName Value="h5u.Grid.Selection"/>
       </Item>
       <Item>
+        <Filename Value="../Source/Common/h5u.Grid.Sizing.pas"/>
+        <UnitName Value="h5u.Grid.Sizing"/>
+      </Item>
+      <Item>
         <Filename Value="../Source/Common/h5u.Grid.Types.pas"/>
         <UnitName Value="h5u.Grid.Types"/>
       </Item>

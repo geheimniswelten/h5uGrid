@@ -311,6 +311,70 @@ def test_case_inside_if_does_not_capture_outer_else() -> None:
     assert assert_safe(source) == expected
 
 
+def test_compact_methods_are_expanded_and_separated() -> None:
+    source = [
+        'procedure Th5uPropertyEditor.DoLoaded;',
+        'begin if Assigned(FOnLoaded) then FOnLoaded(Self); end;',
+        'procedure Th5uPropertyEditor.DoGetValue(AItem: Th5uPropertyItem; var AValue: TValue; var AHandled: Boolean);',
+        'begin if Assigned(FOnGetValue) then FOnGetValue(Self, AItem, AValue, AHandled); end;',
+        'procedure Th5uPropertyEditor.DoSetValue(AItem: Th5uPropertyItem; const AValue: TValue; var AHandled: Boolean);',
+        'begin if Assigned(FOnSetValue) then FOnSetValue(Self, AItem, AValue, AHandled); end;',
+    ]
+    expected = [
+        source[0], 'begin', '  if Assigned(FOnLoaded) then', '    FOnLoaded(Self);', 'end;', '',
+        source[2], 'begin', '  if Assigned(FOnGetValue) then',
+        '    FOnGetValue(Self, AItem, AValue, AHandled);', 'end;', '',
+        source[4], 'begin', '  if Assigned(FOnSetValue) then',
+        '    FOnSetValue(Self, AItem, AValue, AHandled);', 'end;',
+    ]
+    assert assert_safe(source) == expected
+
+
+def test_method_signature_and_body_are_separated() -> None:
+    source = ['procedure TExample.Run; begin First; Second; end;']
+    assert assert_safe(source) == ['procedure TExample.Run;', 'begin', '  First;', '  Second;', 'end;']
+
+
+def test_case_begin_is_not_a_split_field_declaration() -> None:
+    source = ['  case Kind of', '    tkVariant:', '      begin',
+              '        CurrentVariant := Item.Value.AsVariant;', '        VariantValue := AText;',
+              '      end;', '  end;']
+    assert assert_safe(source) == source
+    compact = ['  case Kind of',
+               '    tkVariant: begin CurrentVariant := Item.Value.AsVariant; VariantValue := AText; end;',
+               '  end;']
+    assert assert_safe(compact) == source
+
+
+def test_case_statement_is_not_a_split_field_declaration() -> None:
+    for statement in ('Result := Value;', 'Run(Value);', 'raise EArgumentException.Create(AText);'):
+        source = ['  case Kind of', '    tkVariant:', '      ' + statement, '  end;']
+        assert assert_safe(source) == source
+    # Actual split fields retain declaration compaction.
+    assert assert_safe(['  FValue:', '    Integer;']) == ['  FValue: Integer;']
+
+
+def test_wrapping_keeps_comparisons_and_calculations_together() -> None:
+    source = ['  if (ClassScore = BestClass) and (NameScore = BestName) and (TypeScore >= BestType) then']
+    result, _ = format_lines(source, 70)
+    assert result == ['  if (ClassScore = BestClass) and (NameScore = BestName)',
+                      '    and (TypeScore >= BestType) then']
+    assert format_lines(result, 70)[0] == result
+    source = ['  SetBounds(OldLeft + HorizontalOffset, OldTop + VerticalOffset, DesiredWidth, DesiredHeight);']
+    result, _ = format_lines(source, 50)
+    assert result == ['  SetBounds(OldLeft + HorizontalOffset,',
+                      '    OldTop + VerticalOffset, DesiredWidth,', '    DesiredHeight);']
+    assert format_lines(result, 50)[0] == result
+    source = ['  Result := VeryLongIdentifier + OtherVeryLongIdentifier;']
+    result, _ = format_lines(source, 50)
+    assert result == ['  Result :=', '    VeryLongIdentifier + OtherVeryLongIdentifier;']
+    assert format_lines(result, 50)[0] == result
+    source = ['  Call(FirstFlag or SecondFlag, VeryLongArgumentName, FinalArgumentName);']
+    result, _ = format_lines(source, 50)
+    assert result == ['  Call(FirstFlag or SecondFlag,', '    VeryLongArgumentName, FinalArgumentName);']
+    assert format_lines(result, 50)[0] == result
+
+
 def main() -> int:
     tests = [
         test_property_is_compacted,
@@ -341,6 +405,11 @@ def main() -> int:
         test_nested_case_default_indentation_is_additive,
         test_case_keywords_in_comments_and_literals_are_ignored,
         test_case_inside_if_does_not_capture_outer_else,
+        test_compact_methods_are_expanded_and_separated,
+        test_method_signature_and_body_are_separated,
+        test_case_begin_is_not_a_split_field_declaration,
+        test_case_statement_is_not_a_split_field_declaration,
+        test_wrapping_keeps_comparisons_and_calculations_together,
     ]
     for test in tests:
         test()

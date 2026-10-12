@@ -47,6 +47,7 @@ contains
   h5u.Grid.Resizing in '..\Source\Common\h5u.Grid.Resizing.pas',
   h5u.Grid.RowMetrics in '..\Source\Common\h5u.Grid.RowMetrics.pas',
   h5u.Grid.Selection in '..\Source\Common\h5u.Grid.Selection.pas',
+  h5u.Grid.Sizing in '..\Source\Common\h5u.Grid.Sizing.pas',
   h5u.Grid.Types in '..\Source\Common\h5u.Grid.Types.pas',
   h5u.Grid.Values in '..\Source\Common\h5u.Grid.Values.pas',
   h5u.Grid.View in '..\Source\Common\h5u.Grid.View.pas',
@@ -54,7 +55,9 @@ contains
   h5u.Grid.Data.Dataset in '..\Source\Common\h5u.Grid.Data.Dataset.pas',
   h5u.Grid.Data.Memory in '..\Source\Common\h5u.Grid.Data.Memory.pas',
   h5u.Grid.Data.Objects in '..\Source\Common\h5u.Grid.Data.Objects.pas',
-  h5u.Grid.Data.Virtual in '..\Source\Common\h5u.Grid.Data.Virtual.pas';
+  h5u.Grid.Data.Virtual in '..\Source\Common\h5u.Grid.Data.Virtual.pas',
+  h5u.FormDesigner.Properties in '..\Source\Common\h5u.FormDesigner.Properties.pas',
+  h5u.FormDesigner in '..\Source\Common\h5u.FormDesigner.pas';
 
 end.
 

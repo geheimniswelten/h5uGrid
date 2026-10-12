@@ -258,6 +258,9 @@ begin
     LColumn.Caption := LColumn.Id;
     LColumn.VisibleIndex := LIndex;
     LColumn.Width := 150;
+    // These interaction tests require resizable columns, including the checkbox.
+    LColumn.MinWidth := 24;
+    LColumn.MaxWidth := 1000;
     case LIndex of
       0: LColumn.DataType := Th5uColumnDataType.Boolean;
       1: LColumn.DataType := Th5uColumnDataType.Text;
@@ -1113,7 +1116,8 @@ procedure TestVclMouseMessages;
 var
   T: TFixture;
   P, Q: TPoint;
-  Original, Scenario: Integer;
+  Original: Double;
+  Scenario: Integer;
   Probe: TMoveProbe;
 
   procedure SendMouse(AMessage: Cardinal; const APoint: TPoint; AKeys: WPARAM = 0);
@@ -1345,14 +1349,14 @@ var
       Paint(BeforeImage);
       G.Perform(WM_MOUSEMOVE, MK_LBUTTON, MakeLParam(Q.X, Q.Y));
       Paint(DragImage);
-      for Y := G.Spacing.Top to SourceTop - 1 do
+      for Y := Round(G.Spacing.Top) to SourceTop - 1 do
         for X := SourceBounds.Left to SourceBounds.Right - 1 do
           Check(BeforeImage.Canvas.Pixels[X, Y] = DragImage.Canvas.Pixels[X, Y], 'VCL source highlight extends into its parent group header');
-      for Y := G.Spacing.Top to TargetTop - 1 do
+      for Y := Round(G.Spacing.Top) to TargetTop - 1 do
         for X := TargetBounds.Right - 8 to TargetBounds.Right + 8 do
           Check(BeforeImage.Canvas.Pixels[X, Y] = DragImage.Canvas.Pixels[X, Y], 'VCL insertion marker extends into its parent group header');
       X := SourceBounds.Left + 8;
-      Y := SourceTop + 5 + (ASourceSpan - 1) * (G.HeaderRowHeight + G.Spacing.RowSpacing);
+      Y := Round(SourceTop + 5 + (ASourceSpan - 1) * (G.HeaderRowHeight + G.Spacing.RowSpacing));
       Check(BeforeImage.Canvas.Pixels[X, Y] <> DragImage.Canvas.Pixels[X, Y], 'VCL source highlight misses the actual header cell/row span');
       Check(DragImage.Canvas.Pixels[TargetBounds.Right - 1, TargetTop + 3]
         = ColorToRGB(h5uGetVclPalette(G.Theme).SelectedBackground), 'VCL marker does not start at the target header');
@@ -1891,7 +1895,8 @@ var
   T: TFixture;
   H: TRect;
   P, Q: TPoint;
-  I, Original: Integer;
+  I: Integer;
+  Original: Double;
 begin
   T := TFixture.Create(Th5uCacheMode.None);
   try
@@ -2118,7 +2123,7 @@ procedure TestTouchBodyAfterResize;
 var
   T: TFixture;
   P, Q: TPoint;
-  Widths: array[0..2] of Integer;
+  Widths: array[0..2] of Single;
   I, Attempt: Integer;
   V, H: TScrollBar;
 begin
@@ -2148,7 +2153,8 @@ begin
     T.Grid.PointerUp(Q, [ssTouch]);
     // Android can deliver gesture-end after MouseUp.
     T.Grid.PanPoint(PointF(Q.X, Q.Y), [TInteractiveGestureFlag.gfEnd]);
-    for I := 0 to 2 do Widths[I] := T.Grid.Columns[I].Width;
+    for I := 0 to 2 do
+      Widths[I] := T.Grid.Columns[I].LayoutWidth;
     for Attempt := 0 to 3 do
     begin
       V.Value := 0;
@@ -2158,7 +2164,7 @@ begin
       case Attempt of
         1: P.X := T.Grid.HeaderBounds(1).Right;
         2: P.X := T.Grid.HeaderBounds(0).Right;
-        3: P.Y := T.Grid.HeaderBounds(0).Bottom + T.Grid.Spacing.RowSpacing;
+        3: P.Y := Round(T.Grid.HeaderBounds(0).Bottom + T.Grid.Spacing.RowSpacing);
       end;
       Q := Point(P.X - 35, P.Y - 30);
       T.Grid.PointerDown(P, [ssTouch]);
@@ -2188,7 +2194,7 @@ var
   T: TFixture;
   H: TRect;
   P, Q: TPointF;
-  Original: Integer;
+  Original: Double;
 begin
   T := TFixture.Create(Th5uCacheMode.None);
   try
@@ -3002,13 +3008,13 @@ end;
 {$IFDEF TEST_FMX}
 procedure TestLiveDemos;
 var
-  L: TFmxListDemoForm;
+  L: TFmxObjectDemoForm;
   V: TFmxVirtualDemoForm;
   G: TGridAccess;
   E: TEdit;
   I, J: Integer;
 begin
-  L := TFmxListDemoForm.Create(nil);
+  L := TFmxObjectDemoForm.Create(nil);
   try
     V := TFmxVirtualDemoForm.Create(nil);
     try
@@ -3822,10 +3828,10 @@ end;
 type
   TWidthProbe = class
     Calls: Integer;
-    procedure Measure(Sender: TObject; const AContext: Th5uEditorContext; var AWidth: Double);
+    procedure Measure(Sender: TObject; const AContext: Th5uEditorContext; var AWidth: Single);
   end;
 
-procedure TWidthProbe.Measure(Sender: TObject; const AContext: Th5uEditorContext; var AWidth: Double);
+procedure TWidthProbe.Measure(Sender: TObject; const AContext: Th5uEditorContext; var AWidth: Single);
 begin
   Inc(Calls);
   Check(Assigned(AContext.Canvas) and Assigned(AContext.Grid), 'measurement context lacks canvas or grid');
@@ -3839,7 +3845,8 @@ var
   C: Th5uGridColumn;
   P: TWidthProbe;
   E, Active: Th5uGridEditorItem;
-  Original, Measured, Total, I: Integer;
+  Original, Measured, Total: Single;
+  I: Integer;
   G, H: TGridAccess;
   Stream: TMemoryStream;
 begin
@@ -3850,7 +3857,7 @@ begin
     Original := C.Width;
     Measured := T.Grid.MeasureColumnWidth(C);
     Check((Measured > C.MinWidth) and (Measured < Original), 'native text measurement');
-    Check(T.Grid.MeasureColumnWidth(T.Grid.Columns[0]) = 25, 'checkbox measurement uses glyph size');
+    Check(T.Grid.MeasureColumnWidth(T.Grid.Columns[0]) = 25, 'checkbox measurement uses glyph size within explicit bounds');
     T.Grid.ClickAt(T.CellPoint('DESCRIPTION'), True);
     Active := T.Grid.ActiveEditor;
     T.Editor.Text := 'Uncommitted measurement draft';
@@ -3885,13 +3892,15 @@ begin
     T.Grid.MaxWidth := 450;
     T.PaintGrid;
     Total := 0;
-    for I := 0 to 2 do Inc(Total, T.Grid.Columns[I].LayoutWidth + T.Grid.Spacing.DefaultColumnRightSpacing);
+    for I := 0 to 2 do
+      Total := Total + T.Grid.Columns[I].LayoutWidth + T.Grid.Spacing.DefaultColumnRightSpacing;
     Check(Total = 450, 'native grid maximum content width');
     T.Grid.MaxWidth := 0;
     T.Grid.MinWidth := 650;
     T.PaintGrid;
     Total := 0;
-    for I := 0 to 2 do Inc(Total, T.Grid.Columns[I].LayoutWidth + T.Grid.Spacing.DefaultColumnRightSpacing);
+    for I := 0 to 2 do
+      Total := Total + T.Grid.Columns[I].LayoutWidth + T.Grid.Spacing.DefaultColumnRightSpacing;
     Check(Total = 650, 'native grid minimum content width');
     Check(Round(T.Grid.Width) = 600, 'content limits changed control width');
     T.Grid.MinWidth := 0;
@@ -3922,7 +3931,7 @@ begin
         Stream.ReadComponent(H);
         Check((H.MinWidth = 320) and (H.MaxWidth = 650) and (H.AutoWidthRowLimit = 2), 'grid width properties did not stream');
         Check(H.Columns[0].AutoWidth and (H.Columns[1].WidthInPercent = 65), 'column width modes did not stream');
-        Check((H.HeaderLayout.Cells[0].Width = 300) and (H.HeaderLayout.Cells[0].WidthInPercent = 80), 'group budget did not stream');
+        Check((H.HeaderLayout.Cells[0].Width = -80) and (H.HeaderLayout.Cells[0].WidthInPercent = 80), 'group budget did not stream');
         Check((H.HeaderLayout.Cells[0].MinWidth = 200) and (H.HeaderLayout.Cells[0].MaxWidth = 400), 'group limits did not stream');
       finally H.Free; end;
     finally

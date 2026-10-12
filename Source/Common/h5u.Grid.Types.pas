@@ -54,6 +54,9 @@ const
 
 type
   Eh5uGrid = class(Exception);
+  {$IFNDEF FPC}
+  Th5uLegacyOptionAttribute = class(TCustomAttribute);
+  {$ENDIF}
   Eh5uFactory = class(Eh5uGrid);
   Eh5uDataController = class(Eh5uGrid);
 
@@ -72,7 +75,7 @@ type
   private
     FEnabled: Boolean;
     FTimings: array[Th5uGridPerformanceStage] of Th5uGridTiming;
-    function GetStage(AIndex: Integer): Th5uGridTiming;
+    function GetStage(AIndex: Integer): Th5uGridTiming; inline;
   public
     constructor Create;
     procedure Reset;

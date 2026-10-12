@@ -30,6 +30,7 @@ type
     ChangedRow: Int64;
     Count: Int64;
     CacheHeight: Boolean;
+    InvalidSpacing: Boolean;
     ForcedHeight, RowSpacing: Integer;
     procedure RowCount(Sender: TObject; var ACount: Int64);
     procedure RowKey(Sender: TObject; ARow: Int64; var AKey: Th5uRowKey);
@@ -80,6 +81,10 @@ procedure TSource.Spacing(Sender: TObject; const AContext: THeightContext;
   var ASpacing: THeight);
 begin
   ASpacing := RowSpacing;
+  {$IFDEF TEST_FMX}
+  if InvalidSpacing then
+    ASpacing := NaN;
+  {$ENDIF}
 end;
 
 function VerticalBar(AGrid: TTestGrid): TScrollBar;
@@ -259,6 +264,12 @@ begin
     Check(Round(VerticalBar(Grid).Max) = Before + 320,
       'dynamic spacing updates the exact total including offscreen rows');
     Check(Source.HeightCalls = 0, 'dynamic spacing retains cached content heights');
+    {$IFDEF TEST_FMX}
+    Source.InvalidSpacing := True;
+    PaintOffscreen(Grid);
+    Check(Round(VerticalBar(Grid).Max) = Before,
+      'invalid floating-point row spacing falls back to the configured spacing');
+    {$ENDIF}
     Writeln('PASS: scrolling, cache invalidation and public performance counters');
   finally
     Form.Free;

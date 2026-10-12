@@ -1,0 +1,1848 @@
+object FmxMegaDemoForm: TFmxMegaDemoForm
+  Left = 0
+  Top = 0
+  Caption = 'h5u.Grid FMX - TClientDataset / Designer-Demo'
+  ClientHeight = 1148
+  ClientWidth = 1100
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  OnCreate = FormCreate
+  DesignerMasterStyle = 0
+  object Grid: Th5uFmxGrid
+    Align = Client
+    CanFocus = True
+    ClipChildren = True
+    Margins.Left = 217.000000000000000000
+    Size.Width = 883.000000000000000000
+    Size.Height = 1148.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+    DataController = DataController
+    Editors = <>
+    Columns = <
+      item
+        Id = 'id'
+        Caption = 'ID'
+        FieldName = 'ID'
+        Width = 70
+        VisibleIndex = 0
+        FixedKind = Left
+        ReadOnly = True
+        DataType = Integer
+      end
+      item
+        Id = 'name'
+        Caption = 'Name'
+        FieldName = 'NAME'
+        Width = 150
+        VisibleIndex = 1
+        DataType = Text
+        Color = 16774378
+      end
+      item
+        Id = 'category'
+        Caption = 'Kategorie'
+        FieldName = 'CATEGORY'
+        Width = 125
+        VisibleIndex = 2
+        DataType = Text
+      end
+      item
+        Id = 'description'
+        Caption = 'Beschreibung'
+        FieldName = 'DESCRIPTION'
+        Width = 310
+        VisibleIndex = 3
+        DataType = Text
+        WordWrap = True
+        AutoHeight = True
+        MaxAutoHeight = 110
+        RightSpacing = 8
+      end
+      item
+        Id = 'quantity'
+        Caption = 'Menge'
+        FieldName = 'QUANTITY'
+        Width = 80
+        VisibleIndex = 4
+        DataType = Integer
+        DisplayFormat = '0.##'
+      end
+      item
+        Id = 'unit_price'
+        Caption = 'Preis'
+        FieldName = 'UNIT_PRICE'
+        Width = 105
+        VisibleIndex = 5
+        DataType = Currency
+        DisplayFormat = '#,##0.00'
+        Highlighted = True
+      end
+      item
+        Id = 'priority'
+        Caption = 'Priorit'#228't'
+        FieldName = 'PRIORITY'
+        Width = 80
+        VisibleIndex = 6
+        DataType = Integer
+      end
+      item
+        Id = 'active'
+        Caption = 'Aktiv'
+        FieldName = 'ACTIVE'
+        Width = 65
+        VisibleIndex = 7
+        DataType = Boolean
+        EditorKind = Boolean
+        Color = 15530218
+      end
+      item
+        Id = 'updated_at'
+        Caption = 'Aktualisiert'
+        FieldName = 'UPDATED_AT'
+        Width = 145
+        VisibleIndex = 8
+        DataType = DateTime
+        DisplayFormat = 'dd.mm.yyyy hh:nn'
+      end
+      item
+        Id = 'picture'
+        Caption = 'Bild'
+        FieldName = 'PICTURE'
+        VisibleIndex = 9
+        DataType = Image
+        EditorKind = Image
+        AutoHeight = True
+        MaxAutoHeight = 90
+      end
+      item
+        Id = 'fold_group'
+        Caption = 'Faltgruppe'
+        FieldName = 'FOLD_GROUP'
+        Width = 80
+        Visible = False
+        VisibleIndex = 10
+        ReadOnly = True
+        DataType = Integer
+      end>
+    HeaderLayout.Enabled = True
+    HeaderLayout.RowCount = 2
+    HeaderLayout.Cells = <
+      item
+        Id = 'master'
+        Caption = 'Stammdaten'
+        LayoutColumn = 1
+        ColumnSpan = 3
+      end
+      item
+        Id = 'values'
+        Caption = 'Mengen und Bewertung'
+        LayoutColumn = 4
+        ColumnSpan = 3
+      end
+      item
+        Id = 'state'
+        Caption = 'Status / Medien'
+        LayoutColumn = 7
+        ColumnSpan = 3
+      end
+      item
+        Id = ''
+        Caption = 'ID'
+        ColumnId = 'id'
+        RowSpan = 2
+      end
+      item
+        Id = ''
+        Caption = 'Name'
+        ColumnId = 'name'
+        LayoutRow = 1
+        LayoutColumn = 1
+      end
+      item
+        Id = ''
+        Caption = 'Kategorie'
+        ColumnId = 'category'
+        LayoutRow = 1
+        LayoutColumn = 2
+      end
+      item
+        Id = ''
+        Caption = 'Beschreibung'
+        ColumnId = 'description'
+        LayoutRow = 1
+        LayoutColumn = 3
+      end
+      item
+        Id = ''
+        Caption = 'Menge'
+        ColumnId = 'quantity'
+        LayoutRow = 1
+        LayoutColumn = 4
+      end
+      item
+        Id = ''
+        Caption = 'Einzelpreis'
+        ColumnId = 'unit_price'
+        LayoutRow = 1
+        LayoutColumn = 5
+      end
+      item
+        Id = ''
+        Caption = 'Priorit'#228't'
+        ColumnId = 'priority'
+        LayoutRow = 1
+        LayoutColumn = 6
+      end
+      item
+        Id = ''
+        Caption = 'Aktiv'
+        ColumnId = 'active'
+        LayoutRow = 1
+        LayoutColumn = 7
+      end
+      item
+        Id = ''
+        Caption = 'Aktualisiert'
+        ColumnId = 'updated_at'
+        LayoutRow = 1
+        LayoutColumn = 8
+      end
+      item
+        Id = ''
+        Caption = 'Bild'
+        ColumnId = 'picture'
+        LayoutRow = 1
+        LayoutColumn = 9
+      end>
+    Selection.AllowedKinds = [Rows, Columns, CellRanges]
+    RowHeight.Mode = Automatic
+    ScrollHints.VerticalColumnId = 'name'
+    RowStyles.StripePeriod = 5
+    RowStyles.StripeOffset = 5
+    RowStyles.StyleKeyColumnId = 'priority'
+    RowStyles.Mappings = <
+      item
+        Value = 2
+        StyleName = 'Warning'
+      end
+      item
+        Value = 3
+        StyleName = 'Error'
+      end>
+    Appearance.DefaultCellColor = 16645629
+    Tree.Enabled = True
+    Tree.LevelColumnId = 'TREE_LEVEL'
+    Tree.BranchEndBand.Enabled = True
+    Tree.BranchEndBand.Height = 7
+    Tree.BranchEndBand.StyleName = 'TreeBranchEnd'
+    Tree.BranchEndBand.IncludeEndOfData = False
+    AdjacentGroupFolding.Enabled = True
+    AdjacentGroupFolding.IdColumnId = 'fold_group'
+    AdjacentGroupFolding.EndBand.Height = 7
+    AdjacentGroupFolding.EndBand.StyleName = 'AdjacentGroupEnd'
+    HeaderRowHeight = 30.000000000000000000
+    RowIndicatorWidth = 40.000000000000000000
+    TextSize = 12.000000000000000000
+    OnGetThumbHint = GridGetThumbHint
+    object UpdateTimer: TTimer
+      Interval = 800
+      OnTimer = UpdateTimerTimer
+      Left = 512
+      Top = 392
+    end
+  end
+  object ApplicationEvents: TApplicationEvents
+    Left = 336
+    Top = 388
+  end
+  object StyleBook: TStyleBook
+    Styles = <
+      item
+      end>
+    Left = 424
+    Top = 388
+  end
+  object MultiView1: TMultiView
+    TargetControl = Grid
+    NavigationPaneOptions.CollapsedWidth = 217.000000000000000000
+    Size.Width = 250.000000000000000000
+    Size.Height = 50.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 2
+    object Layout2: TLayout
+      Align = MostTop
+      Size.Width = 217.000000000000000000
+      Size.Height = 25.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      object AniIndicator1: TAniIndicator
+        Align = FitLeft
+        Size.Width = 25.000000000000000000
+        Size.Height = 25.000000000000000000
+        Size.PlatformDefault = False
+      end
+      object CornerButton1: TCornerButton
+        Align = Right
+        Position.X = 176.000000000000000000
+        Sides = [Top, Left, Bottom, Right]
+        Size.Width = 41.000000000000000000
+        Size.Height = 25.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 1
+        Text = 'CornerButton1'
+        XRadius = 3.000000000000000000
+        YRadius = 3.000000000000000000
+      end
+      object ToggleGroupsButton: TButton
+        Align = Right
+        Position.X = 104.000000000000000000
+        Size.Width = 72.000000000000000000
+        Size.Height = 25.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 2
+        Text = 'Alle falten'
+        OnClick = ToggleGroupsButtonClick
+      end
+    end
+    object VertScrollBox1: TVertScrollBox
+      Align = Client
+      Size.Width = 217.000000000000000000
+      Size.Height = 1123.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 1
+      Viewport.Width = 201.000000000000000000
+      Viewport.Height = 1123.000000000000000000
+      object Expander1: TExpander
+        Align = Top
+        ShowCheck = False
+        Size.Width = 201.000000000000000000
+        Size.Height = 234.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'AdjacentGroupFolding'
+        TabOrder = 0
+        ContentSize = '209'
+        object Label1: TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 1.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'IdColumn'
+          TabOrder = 8
+        end
+        object edAGFIdColumn: TEdit
+          Touch.InteractiveGestures = [LongTap, DoubleTap]
+          TabOrder = 0
+          ReadOnly = True
+          Position.X = 104.000000000000000000
+          Position.Y = -1.000000000000000000
+          Size.Width = 90.000000000000000000
+          Size.Height = 21.000000000000000000
+          Size.PlatformDefault = False
+          OnChange = edConfigChange
+        end
+        object cbAGFEnabled: TSwitch
+          IsChecked = True
+          Position.X = 104.000000000000000000
+          Position.Y = 23.000000000000000000
+          Size.Width = 44.000000000000000000
+          Size.Height = 19.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 1
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 24.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'Enabled'
+          TabOrder = 11
+        end
+        object GroupBox1: TGroupBox
+          Position.X = 8.000000000000000000
+          Position.Y = 92.000000000000000000
+          Size.Width = 186.000000000000000000
+          Size.Height = 12.000000000000000000
+          Size.PlatformDefault = False
+          Text = 'EndBand'
+          TabOrder = 4
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 112.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'Height'
+          TabOrder = 12
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 136.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'Visibility'
+          TabOrder = 13
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 160.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'Color'
+          TabOrder = 14
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 184.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'StyleName'
+          TabOrder = 15
+          object cbAGFEBStyleName: TComboEdit
+            Touch.InteractiveGestures = [LongTap, DoubleTap]
+            TabOrder = 4
+            ItemHeight = 19.000000000000000000
+            ItemIndex = -1
+            Position.X = 96.000000000000000000
+            Position.Y = -3.000000000000000000
+            Size.Width = 90.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+          end
+        end
+        object cbAGFEBVisibility: TComboBox
+          Items.Strings = (
+            'Always'
+            'Collapsed'
+            'Expanded'
+            'Never')
+          Position.X = 104.000000000000000000
+          Position.Y = 134.000000000000000000
+          Size.Width = 90.000000000000000000
+          Size.Height = 21.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 6
+        end
+        object cbAGFEBColor: TColorComboBox
+          DropDownKind = Custom
+          Color = claNull
+          DisableFocusEffect = False
+          ItemIndex = 147
+          Position.X = 104.000000000000000000
+          Position.Y = 158.000000000000000000
+          Size.Width = 90.000000000000000000
+          Size.Height = 21.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 7
+        end
+        object edAGFEBHeight: TSpinBox
+          Touch.InteractiveGestures = [LongTap, DoubleTap]
+          TabOrder = 5
+          Cursor = crIBeam
+          Position.X = 104.000000000000000000
+          Position.Y = 110.000000000000000000
+          Size.Width = 90.000000000000000000
+          Size.Height = 21.000000000000000000
+          Size.PlatformDefault = False
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 48.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'GroupEmptyValues'
+          TabOrder = 10
+        end
+        object cbAGFGroupEmptyValues: TSwitch
+          IsChecked = True
+          Position.X = 104.000000000000000000
+          Position.Y = 47.000000000000000000
+          Size.Width = 44.000000000000000000
+          Size.Height = 19.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 2
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 72.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'ShowFoldGlyph'
+          TabOrder = 9
+        end
+        object cbAGFShowFoldGlyph: TSwitch
+          IsChecked = True
+          Position.X = 104.000000000000000000
+          Position.Y = 71.000000000000000000
+          Size.Width = 44.000000000000000000
+          Size.Height = 19.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 3
+        end
+      end
+      object Expander2: TExpander
+        Align = Top
+        Enabled = False
+        Position.Y = 234.000000000000000000
+        ShowCheck = False
+        Size.Width = 201.000000000000000000
+        Size.Height = 25.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Grouping'
+        TabOrder = 2
+        ContentSize = '0'
+      end
+      object Expander3: TExpander
+        Align = Top
+        Enabled = False
+        Position.Y = 259.000000000000000000
+        ShowCheck = False
+        Size.Width = 201.000000000000000000
+        Size.Height = 25.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Sorting'
+        TabOrder = 3
+        ContentSize = '0'
+      end
+      object Expander4: TExpander
+        Align = Top
+        Position.Y = 284.000000000000000000
+        ShowCheck = False
+        Size.Width = 201.000000000000000000
+        Size.Height = 217.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Options'
+        TabOrder = 4
+        ContentSize = '192'
+        object TLabel
+          Position.X = 8.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 16.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'AllowEditing'
+          TabOrder = 9
+        end
+        object cbOptAllowEditing: TSwitch
+          IsChecked = True
+          Position.X = 104.000000000000000000
+          Position.Y = -1.000000000000000000
+          Size.Width = 44.000000000000000000
+          Size.Height = 19.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 0
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 24.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'DefaultCellColor'
+          TabOrder = 13
+        end
+        object cbOptDefaultCellColor: TColorComboBox
+          DropDownKind = Custom
+          Color = claNull
+          DisableFocusEffect = False
+          ItemIndex = 147
+          Position.X = 104.000000000000000000
+          Position.Y = 22.000000000000000000
+          Size.Width = 90.000000000000000000
+          Size.Height = 21.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 1
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 48.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'AutoWidthRowLimit'
+          TabOrder = 12
+        end
+        object edOptAutoWidthRowLimit: TSpinBox
+          Touch.InteractiveGestures = [LongTap, DoubleTap]
+          TabOrder = 2
+          Cursor = crIBeam
+          Position.X = 104.000000000000000000
+          Position.Y = 46.000000000000000000
+          Size.Width = 90.000000000000000000
+          Size.Height = 21.000000000000000000
+          Size.PlatformDefault = False
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 72.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 16.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'GridLines'
+          TabOrder = 8
+        end
+        object cbOptGridLines: TSwitch
+          IsChecked = True
+          Position.X = 104.000000000000000000
+          Position.Y = 71.000000000000000000
+          Size.Width = 44.000000000000000000
+          Size.Height = 19.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 3
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 96.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'HeaderRowHeight'
+          TabOrder = 11
+        end
+        object edOptHeaderRowHeight: TSpinBox
+          Touch.InteractiveGestures = [LongTap, DoubleTap]
+          TabOrder = 4
+          Cursor = crIBeam
+          Position.X = 103.000000000000000000
+          Position.Y = 94.000000000000000000
+          Size.Width = 90.000000000000000000
+          Size.Height = 21.000000000000000000
+          Size.PlatformDefault = False
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 120.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 16.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'ImmediateEdit'
+          TabOrder = 7
+        end
+        object cbOptImmediateEdit: TSwitch
+          IsChecked = True
+          Position.X = 104.000000000000000000
+          Position.Y = 119.000000000000000000
+          Size.Width = 44.000000000000000000
+          Size.Height = 19.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 5
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 144.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'RowIndicatorWidth'
+          TabOrder = 10
+        end
+        object edOptRowIndicatorWidth: TSpinBox
+          Touch.InteractiveGestures = [LongTap, DoubleTap]
+          TabOrder = 6
+          Cursor = crIBeam
+          Position.X = 103.000000000000000000
+          Position.Y = 142.000000000000000000
+          Size.Width = 90.000000000000000000
+          Size.Height = 21.000000000000000000
+          Size.PlatformDefault = False
+        end
+      end
+      object Expander5: TExpander
+        Align = Top
+        Position.Y = 501.000000000000000000
+        ShowCheck = False
+        Size.Width = 201.000000000000000000
+        Size.Height = 338.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Customization'
+        TabOrder = 5
+        ContentSize = '313'
+        object TLabel
+          Position.X = 8.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 16.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'AllowColumnHiding'
+          TabOrder = 25
+        end
+        object cbCustAllowColumnHiding: TSwitch
+          IsChecked = True
+          Position.X = 104.000000000000000000
+          Position.Y = -1.000000000000000000
+          Size.Width = 44.000000000000000000
+          Size.Height = 19.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 0
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 24.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 16.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'AllowColumnMoving'
+          TabOrder = 24
+        end
+        object cbCustAllowColumnMoving: TSwitch
+          IsChecked = True
+          Position.X = 104.000000000000000000
+          Position.Y = 23.000000000000000000
+          Size.Width = 44.000000000000000000
+          Size.Height = 19.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 1
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 48.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 16.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'AllowColumnResizing'
+          TabOrder = 23
+        end
+        object cbCustAllowColumnResizing: TSwitch
+          IsChecked = True
+          Position.X = 104.000000000000000000
+          Position.Y = 47.000000000000000000
+          Size.Width = 44.000000000000000000
+          Size.Height = 19.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 2
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 72.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 16.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'AllowRowMoving'
+          TabOrder = 14
+        end
+        object cbCustAllowRowMoving: TSwitch
+          IsChecked = True
+          Position.X = 104.000000000000000000
+          Position.Y = 74.000000000000000000
+          Size.Width = 44.000000000000000000
+          Size.Height = 19.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 3
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 95.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'ColumnMovingGesture'
+          TabOrder = 22
+        end
+        object cbCustColumnMovingGesture: TComboBox
+          Position.X = 104.000000000000000000
+          Position.Y = 93.000000000000000000
+          Size.Width = 90.000000000000000000
+          Size.Height = 21.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 4
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 119.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'ColumnResizeHitZoneLeft'
+          TabOrder = 20
+        end
+        object edCustColumnResizeHitZoneLeft: TSpinBox
+          Touch.InteractiveGestures = [LongTap, DoubleTap]
+          TabOrder = 5
+          Cursor = crIBeam
+          Position.X = 104.000000000000000000
+          Position.Y = 117.000000000000000000
+          Size.Width = 90.000000000000000000
+          Size.Height = 21.000000000000000000
+          Size.PlatformDefault = False
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 143.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'ColumnResizeHitZoneRight'
+          TabOrder = 18
+        end
+        object edCustColumnResizeHitZoneRight: TSpinBox
+          Touch.InteractiveGestures = [LongTap, DoubleTap]
+          TabOrder = 6
+          Cursor = crIBeam
+          Position.X = 104.000000000000000000
+          Position.Y = 141.000000000000000000
+          Size.Width = 90.000000000000000000
+          Size.Height = 21.000000000000000000
+          Size.PlatformDefault = False
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 167.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'LastColumnResizeHitZoneLeft'
+          TabOrder = 16
+        end
+        object edCustLastColumnResizeHitZoneLeft: TSpinBox
+          Touch.InteractiveGestures = [LongTap, DoubleTap]
+          TabOrder = 7
+          Cursor = crIBeam
+          Position.X = 104.000000000000000000
+          Position.Y = 165.000000000000000000
+          Size.Width = 90.000000000000000000
+          Size.Height = 21.000000000000000000
+          Size.PlatformDefault = False
+        end
+        object cbCustRowMovingGesture: TComboBox
+          Position.X = 104.000000000000000000
+          Position.Y = 189.000000000000000000
+          Size.Width = 90.000000000000000000
+          Size.Height = 21.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 8
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 191.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'RowMovingGesture'
+          TabOrder = 21
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 216.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 16.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'ShowColumnChooser'
+          TabOrder = 13
+        end
+        object cbCustShowColumnChooser: TSwitch
+          IsChecked = True
+          Position.X = 104.000000000000000000
+          Position.Y = 215.000000000000000000
+          Size.Width = 44.000000000000000000
+          Size.Height = 19.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 9
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 239.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'TouchColumnResizeHitZoneLeft'
+          TabOrder = 19
+        end
+        object edCustTouchColumnResizeHitZoneLeft: TSpinBox
+          Touch.InteractiveGestures = [LongTap, DoubleTap]
+          TabOrder = 10
+          Cursor = crIBeam
+          Position.X = 104.000000000000000000
+          Position.Y = 237.000000000000000000
+          Size.Width = 90.000000000000000000
+          Size.Height = 21.000000000000000000
+          Size.PlatformDefault = False
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 263.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'TouchColumnResizeHitZoneRight'
+          TabOrder = 17
+        end
+        object edCustTouchColumnResizeHitZoneRight: TSpinBox
+          Touch.InteractiveGestures = [LongTap, DoubleTap]
+          TabOrder = 11
+          Cursor = crIBeam
+          Position.X = 104.000000000000000000
+          Position.Y = 261.000000000000000000
+          Size.Width = 90.000000000000000000
+          Size.Height = 21.000000000000000000
+          Size.PlatformDefault = False
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 287.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'TouchLastColumnResizeHitZoneLeft'
+          TabOrder = 15
+        end
+        object edCustTouchLastColumnResizeHitZoneLeft: TSpinBox
+          Touch.InteractiveGestures = [LongTap, DoubleTap]
+          TabOrder = 12
+          Cursor = crIBeam
+          Position.X = 104.000000000000000000
+          Position.Y = 285.000000000000000000
+          Size.Width = 90.000000000000000000
+          Size.Height = 21.000000000000000000
+          Size.PlatformDefault = False
+        end
+      end
+      object Expander6: TExpander
+        Align = Top
+        Position.Y = 839.000000000000000000
+        ShowCheck = False
+        Size.Width = 201.000000000000000000
+        Size.Height = 241.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'DefaultEditors'
+        TabOrder = 8
+        ContentSize = '216'
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = -1.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'Edit'
+          TabOrder = 27
+        end
+        object ComboBox3: TComboBox
+          ItemIndex = 0
+          Position.X = 103.000000000000000000
+          Position.Y = -3.000000000000000000
+          Size.Width = 90.000000000000000000
+          Size.Height = 21.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 33
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 23.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'Integer'
+          TabOrder = 25
+        end
+        object ComboBox4: TComboBox
+          Position.X = 103.000000000000000000
+          Position.Y = 21.000000000000000000
+          Size.Width = 90.000000000000000000
+          Size.Height = 21.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 32
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 47.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'Float'
+          TabOrder = 23
+        end
+        object ComboBox5: TComboBox
+          Position.X = 103.000000000000000000
+          Position.Y = 45.000000000000000000
+          Size.Width = 90.000000000000000000
+          Size.Height = 21.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 31
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 71.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'Currency'
+          TabOrder = 21
+        end
+        object ComboBox6: TComboBox
+          Position.X = 103.000000000000000000
+          Position.Y = 69.000000000000000000
+          Size.Width = 90.000000000000000000
+          Size.Height = 21.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 30
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 95.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'Date'
+          TabOrder = 20
+        end
+        object ComboBox7: TComboBox
+          Position.X = 103.000000000000000000
+          Position.Y = 93.000000000000000000
+          Size.Width = 90.000000000000000000
+          Size.Height = 21.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 29
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 119.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'Time'
+          TabOrder = 19
+        end
+        object ComboBox8: TComboBox
+          Position.X = 103.000000000000000000
+          Position.Y = 117.000000000000000000
+          Size.Width = 90.000000000000000000
+          Size.Height = 21.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 28
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 143.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'DateTime'
+          TabOrder = 18
+        end
+        object ComboBox9: TComboBox
+          Position.X = 103.000000000000000000
+          Position.Y = 141.000000000000000000
+          Size.Width = 90.000000000000000000
+          Size.Height = 21.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 26
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 167.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'CheckBox'
+          TabOrder = 17
+        end
+        object ComboBox10: TComboBox
+          Position.X = 103.000000000000000000
+          Position.Y = 165.000000000000000000
+          Size.Width = 90.000000000000000000
+          Size.Height = 21.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 24
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 191.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'Image'
+          TabOrder = 16
+        end
+        object ComboBox11: TComboBox
+          Position.X = 103.000000000000000000
+          Position.Y = 189.000000000000000000
+          Size.Width = 90.000000000000000000
+          Size.Height = 21.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 22
+        end
+      end
+      object Expander7: TExpander
+        Align = Top
+        Position.Y = 1080.000000000000000000
+        ShowCheck = False
+        Size.Width = 201.000000000000000000
+        Size.Height = 169.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'RowHeight'
+        TabOrder = 7
+        ContentSize = '144'
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = -1.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'EstimatedHeight'
+          TabOrder = 13
+        end
+        object SpinBox9: TSpinBox
+          Touch.InteractiveGestures = [LongTap, DoubleTap]
+          TabOrder = 27
+          Cursor = crIBeam
+          Position.X = 103.000000000000000000
+          Position.Y = -3.000000000000000000
+          Size.Width = 90.000000000000000000
+          Size.Height = 21.000000000000000000
+          Size.PlatformDefault = False
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 23.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'FixedHeight'
+          TabOrder = 11
+        end
+        object SpinBox10: TSpinBox
+          Touch.InteractiveGestures = [LongTap, DoubleTap]
+          TabOrder = 24
+          Cursor = crIBeam
+          Position.X = 103.000000000000000000
+          Position.Y = 21.000000000000000000
+          Size.Width = 90.000000000000000000
+          Size.Height = 21.000000000000000000
+          Size.PlatformDefault = False
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 47.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'MaxHeight'
+          TabOrder = 9
+        end
+        object SpinBox11: TSpinBox
+          Touch.InteractiveGestures = [LongTap, DoubleTap]
+          TabOrder = 20
+          Cursor = crIBeam
+          Position.X = 104.000000000000000000
+          Position.Y = 45.000000000000000000
+          Size.Width = 90.000000000000000000
+          Size.Height = 21.000000000000000000
+          Size.PlatformDefault = False
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 71.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'MeasureScope'
+          TabOrder = 29
+        end
+        object ComboBox12: TComboBox
+          Position.X = 103.000000000000000000
+          Position.Y = 69.000000000000000000
+          Size.Width = 90.000000000000000000
+          Size.Height = 21.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 35
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 95.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'MinHeight'
+          TabOrder = 8
+        end
+        object SpinBox12: TSpinBox
+          Touch.InteractiveGestures = [LongTap, DoubleTap]
+          TabOrder = 19
+          Cursor = crIBeam
+          Position.X = 103.000000000000000000
+          Position.Y = 93.000000000000000000
+          Size.Width = 90.000000000000000000
+          Size.Height = 21.000000000000000000
+          Size.PlatformDefault = False
+        end
+        object TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 119.000000000000000000
+          Size.Width = 94.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.WordWrap = False
+          Text = 'Mode'
+          TabOrder = 28
+        end
+        object ComboBox13: TComboBox
+          Position.X = 103.000000000000000000
+          Position.Y = 117.000000000000000000
+          Size.Width = 90.000000000000000000
+          Size.Height = 21.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 34
+        end
+      end
+      object Expander8: TExpander
+        Align = Top
+        Position.Y = 1249.000000000000000000
+        ShowCheck = False
+        Size.Width = 201.000000000000000000
+        Size.Height = 97.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Expander6'
+        TabOrder = 6
+        ContentSize = '72'
+      end
+    end
+  end
+  object SampleData: Th5uSampleClientDataset
+    PersistDataPacket.Data = {
+      DA3E00009619E0BD01000000180000000C0028000000030000003C0102494404
+      000100040000000A545245455F4C4556454C04000100040000000A464F4C445F
+      47524F55500400010004000000044E414D4501004A0000000100055749445448
+      02000200A0000843415445474F525901004A0000000100055749445448020002
+      0050000B4445534352495054494F4E04004B0000000100075355425459504502
+      0049000900576964655465787400085155414E5449545904000100000000000A
+      554E49545F505249434508000400000001000753554254595045020049000600
+      4D6F6E657900064143544956450200030000000000085052494F524954590400
+      0100000000000A555044415445445F4154080008000000000007504943545552
+      4504004B0000000100075355425459504502004900070042696E617279000000
+      0000000001000000000000000100000018420061007500670072007500700070
+      006500200030003100104D0065006300680061006E0069006B00E20000004400
+      6900650073002000690073007400200044006100740065006E00730061007400
+      7A00200031002E00200044006500720020005400650078007400200064006500
+      6D006F006E00730074007200690065007200740020006100750074006F006D00
+      610074006900730063006800650020005A00650069006C0065006E006800F600
+      680065002C00200055006D0062007200750063006800200075006E0064002000
+      650069006E0020006B006F006E00660069006700750072006900650072006200
+      610072006500730020004800F600680065006E006C0069006D00690074002E00
+      080000000000000000403040010001000000009C126CF211CD42440000008950
+      4E470D0A1A0A0000000D4948445200000001000000010804000000B51C0C0200
+      00000B4944415478DA6364600000000600023081D02F0000000049454E44AE42
+      608200000080020000000100000001000000302000200055006E007400650072
+      0067007200750070007000650020002F0020005400650069006C002000300030
+      0032001445006C0065006B00740072006F006E0069006B00E200000044006900
+      650073002000690073007400200044006100740065006E007300610074007A00
+      200032002E002000440065007200200054006500780074002000640065006D00
+      6F006E00730074007200690065007200740020006100750074006F006D006100
+      74006900730063006800650020005A00650069006C0065006E006800F6006800
+      65002C00200055006D0062007200750063006800200075006E00640020006500
+      69006E0020006B006F006E006600690067007500720069006500720062006100
+      72006500730020004800F600680065006E006C0069006D00690074002E000F00
+      0000000000000000344001000200000000DC8987F211CD420000008003000000
+      02000000010000001E20002000200020004200610075007400650069006C0020
+      003000300033000E4D006F006E007400610067006500E2000000440069006500
+      73002000690073007400200044006100740065006E007300610074007A002000
+      33002E002000440065007200200054006500780074002000640065006D006F00
+      6E00730074007200690065007200740020006100750074006F006D0061007400
+      6900730063006800650020005A00650069006C0065006E006800F60068006500
+      2C00200055006D0062007200750063006800200075006E006400200065006900
+      6E0020006B006F006E0066006900670075007200690065007200620061007200
+      6500730020004800F600680065006E006C0069006D00690074002E0016000000
+      0000000000C03740010003000000001C01A3F211CD4200000080040000000200
+      0000020000001E20002000200020004200610075007400650069006C00200030
+      00300034000E50007200FC00660075006E006700E20000004400690065007300
+      2000690073007400200044006100740065006E007300610074007A0020003400
+      2E002000440065007200200054006500780074002000640065006D006F006E00
+      730074007200690065007200740020006100750074006F006D00610074006900
+      730063006800650020005A00650069006C0065006E006800F600680065002C00
+      200055006D0062007200750063006800200075006E0064002000650069006E00
+      20006B006F006E00660069006700750072006900650072006200610072006500
+      730020004800F600680065006E006C0069006D00690074002E001D0000000000
+      000000803B40000000000000005C78BEF211CD42000000000500000001000000
+      03000000302000200055006E0074006500720067007200750070007000650020
+      002F0020005400650069006C002000300030003500104D006500630068006100
+      6E0069006B00D601000044006900650073002000690073007400200044006100
+      740065006E007300610074007A00200035002E00200044006500720020005400
+      6500780074002000640065006D006F006E007300740072006900650072007400
+      20006100750074006F006D00610074006900730063006800650020005A006500
+      69006C0065006E006800F600680065002C00200055006D006200720075006300
+      6800200075006E0064002000650069006E0020006B006F006E00660069006700
+      750072006900650072006200610072006500730020004800F600680065006E00
+      6C0069006D00690074002E000D000A004A0065006400650020006600FC006E00
+      66007400650020005A00650069006C006500200065006E0074006800E4006C00
+      7400200062006500770075007300730074002000650069006E00650020007A00
+      7700650069007400650020005A00650069006C006500200075006E0064002000
+      770069007200640020007A0075007300E40074007A006C006900630068002000
+      FC006200650072002000650069006E006500200070006500720069006F006400
+      6900730063006800650020005300740079006C0065002D005200650067006500
+      6C00200068006500720076006F0072006700650068006F00620065006E002E00
+      240000000000000000403F40010001000000009CEFD9F211CD42440000008950
+      4E470D0A1A0A0000000D4948445200000001000000010804000000B51C0C0200
+      00000B4944415478DA6364600000000600023081D02F0000000049454E44AE42
+      6082000000800600000002000000030000001E20002000200020004200610075
+      007400650069006C0020003000300036001445006C0065006B00740072006F00
+      6E0069006B00E200000044006900650073002000690073007400200044006100
+      740065006E007300610074007A00200036002E00200044006500720020005400
+      6500780074002000640065006D006F006E007300740072006900650072007400
+      20006100750074006F006D00610074006900730063006800650020005A006500
+      69006C0065006E006800F600680065002C00200055006D006200720075006300
+      6800200075006E0064002000650069006E0020006B006F006E00660069006700
+      750072006900650072006200610072006500730020004800F600680065006E00
+      6C0069006D00690074002E002B000000000000000080414001000200000000DC
+      66F5F211CD42000000800700000002000000010000001E200020002000200042
+      00610075007400650069006C0020003000300037000E4D006F006E0074006100
+      67006500E2000000440069006500730020006900730074002000440061007400
+      65006E007300610074007A00200037002E002000440065007200200054006500
+      780074002000640065006D006F006E0073007400720069006500720074002000
+      6100750074006F006D00610074006900730063006800650020005A0065006900
+      6C0065006E006800F600680065002C00200055006D0062007200750063006800
+      200075006E0064002000650069006E0020006B006F006E006600690067007500
+      72006900650072006200610072006500730020004800F600680065006E006C00
+      69006D00690074002E00070000000000000000604340010003000000001CDE10
+      F311CD4200000080080000000100000001000000302000200055006E00740065
+      00720067007200750070007000650020002F0020005400650069006C00200030
+      00300038000E50007200FC00660075006E006700E20000004400690065007300
+      2000690073007400200044006100740065006E007300610074007A0020003800
+      2E002000440065007200200054006500780074002000640065006D006F006E00
+      730074007200690065007200740020006100750074006F006D00610074006900
+      730063006800650020005A00650069006C0065006E006800F600680065002C00
+      200055006D0062007200750063006800200075006E0064002000650069006E00
+      20006B006F006E00660069006700750072006900650072006200610072006500
+      730020004800F600680065006E006C0069006D00690074002E000E0000000000
+      000000404540000000000000005C552CF311CD42000000000900000000000000
+      0100000018420061007500670072007500700070006500200030003200104D00
+      65006300680061006E0069006B00E20000004400690065007300200069007300
+      7400200044006100740065006E007300610074007A00200039002E0020004400
+      65007200200054006500780074002000640065006D006F006E00730074007200
+      690065007200740020006100750074006F006D00610074006900730063006800
+      650020005A00650069006C0065006E006800F600680065002C00200055006D00
+      62007200750063006800200075006E0064002000650069006E0020006B006F00
+      6E00660069006700750072006900650072006200610072006500730020004800
+      F600680065006E006C0069006D00690074002E00150000000000000000204740
+      010001000000009CCC47F311CD424400000089504E470D0A1A0A0000000D4948
+      445200000001000000010804000000B51C0C020000000B4944415478DA636460
+      0000000600023081D02F0000000049454E44AE426082000000800A0000000100
+      000004000000302000200055006E007400650072006700720075007000700065
+      0020002F0020005400650069006C0020003000310030001445006C0065006B00
+      740072006F006E0069006B00D801000044006900650073002000690073007400
+      200044006100740065006E007300610074007A002000310030002E0020004400
+      65007200200054006500780074002000640065006D006F006E00730074007200
+      690065007200740020006100750074006F006D00610074006900730063006800
+      650020005A00650069006C0065006E006800F600680065002C00200055006D00
+      62007200750063006800200075006E0064002000650069006E0020006B006F00
+      6E00660069006700750072006900650072006200610072006500730020004800
+      F600680065006E006C0069006D00690074002E000D000A004A00650064006500
+      20006600FC006E0066007400650020005A00650069006C006500200065006E00
+      74006800E4006C00740020006200650077007500730073007400200065006900
+      6E00650020007A007700650069007400650020005A00650069006C0065002000
+      75006E0064002000770069007200640020007A0075007300E40074007A006C00
+      6900630068002000FC006200650072002000650069006E006500200070006500
+      720069006F0064006900730063006800650020005300740079006C0065002D00
+      52006500670065006C00200068006500720076006F0072006700650068006F00
+      620065006E002E001C000000000000000000494001000200000000DC4363F311
+      CD42000000800B00000002000000010000001E20002000200020004200610075
+      007400650069006C0020003000310031000E4D006F006E007400610067006500
+      E400000044006900650073002000690073007400200044006100740065006E00
+      7300610074007A002000310031002E0020004400650072002000540065007800
+      74002000640065006D006F006E00730074007200690065007200740020006100
+      750074006F006D00610074006900730063006800650020005A00650069006C00
+      65006E006800F600680065002C00200055006D00620072007500630068002000
+      75006E0064002000650069006E0020006B006F006E0066006900670075007200
+      6900650072006200610072006500730020004800F600680065006E006C006900
+      6D00690074002E00230000000000000000E04A40010003000000001CBB7EF311
+      CD42000000800C00000002000000010000001E20002000200020004200610075
+      007400650069006C0020003000310032000E50007200FC00660075006E006700
+      E400000044006900650073002000690073007400200044006100740065006E00
+      7300610074007A002000310032002E0020004400650072002000540065007800
+      74002000640065006D006F006E00730074007200690065007200740020006100
+      750074006F006D00610074006900730063006800650020005A00650069006C00
+      65006E006800F600680065002C00200055006D00620072007500630068002000
+      75006E0064002000650069006E0020006B006F006E0066006900670075007200
+      6900650072006200610072006500730020004800F600680065006E006C006900
+      6D00690074002E002A0000000000000000C04C40000000000000005C329AF311
+      CD42000000000D0000000100000001000000302000200055006E007400650072
+      0067007200750070007000650020002F0020005400650069006C002000300031
+      003300104D0065006300680061006E0069006B00E40000004400690065007300
+      2000690073007400200044006100740065006E007300610074007A0020003100
+      33002E002000440065007200200054006500780074002000640065006D006F00
+      6E00730074007200690065007200740020006100750074006F006D0061007400
+      6900730063006800650020005A00650069006C0065006E006800F60068006500
+      2C00200055006D0062007200750063006800200075006E006400200065006900
+      6E0020006B006F006E0066006900670075007200690065007200620061007200
+      6500730020004800F600680065006E006C0069006D00690074002E0006000000
+      0000000000A04E40010001000000009CA9B5F311CD424400000089504E470D0A
+      1A0A0000000D4948445200000001000000010804000000B51C0C020000000B49
+      44415478DA6364600000000600023081D02F0000000049454E44AE4260820000
+      00800E00000002000000020000001E2000200020002000420061007500740065
+      0069006C0020003000310034001445006C0065006B00740072006F006E006900
+      6B00E40000004400690065007300200069007300740020004400610074006500
+      6E007300610074007A002000310034002E002000440065007200200054006500
+      780074002000640065006D006F006E0073007400720069006500720074002000
+      6100750074006F006D00610074006900730063006800650020005A0065006900
+      6C0065006E006800F600680065002C00200055006D0062007200750063006800
+      200075006E0064002000650069006E0020006B006F006E006600690067007500
+      72006900650072006200610072006500730020004800F600680065006E006C00
+      69006D00690074002E000D000000000000000040504001000200000000DC20D1
+      F311CD42000000800F00000002000000030000001E2000200020002000420061
+      0075007400650069006C0020003000310035000E4D006F006E00740061006700
+      6500D80100004400690065007300200069007300740020004400610074006500
+      6E007300610074007A002000310035002E002000440065007200200054006500
+      780074002000640065006D006F006E0073007400720069006500720074002000
+      6100750074006F006D00610074006900730063006800650020005A0065006900
+      6C0065006E006800F600680065002C00200055006D0062007200750063006800
+      200075006E0064002000650069006E0020006B006F006E006600690067007500
+      72006900650072006200610072006500730020004800F600680065006E006C00
+      69006D00690074002E000D000A004A0065006400650020006600FC006E006600
+      7400650020005A00650069006C006500200065006E0074006800E4006C007400
+      200062006500770075007300730074002000650069006E00650020007A007700
+      650069007400650020005A00650069006C006500200075006E00640020007700
+      69007200640020007A0075007300E40074007A006C006900630068002000FC00
+      6200650072002000650069006E006500200070006500720069006F0064006900
+      730063006800650020005300740079006C0065002D0052006500670065006C00
+      200068006500720076006F0072006700650068006F00620065006E002E001400
+      00000000000000305140010003000000001C98ECF311CD420000008010000000
+      0100000003000000302000200055006E00740065007200670072007500700070
+      00650020002F0020005400650069006C0020003000310036000E50007200FC00
+      660075006E006700E40000004400690065007300200069007300740020004400
+      6100740065006E007300610074007A002000310036002E002000440065007200
+      200054006500780074002000640065006D006F006E0073007400720069006500
+      7200740020006100750074006F006D0061007400690073006300680065002000
+      5A00650069006C0065006E006800F600680065002C00200055006D0062007200
+      750063006800200075006E0064002000650069006E0020006B006F006E006600
+      69006700750072006900650072006200610072006500730020004800F6006800
+      65006E006C0069006D00690074002E001B000000000000000020524000000000
+      0000005C0F08F411CD4200000000110000000000000001000000184200610075
+      00670072007500700070006500200030003300104D0065006300680061006E00
+      69006B00E4000000440069006500730020006900730074002000440061007400
+      65006E007300610074007A002000310037002E00200044006500720020005400
+      6500780074002000640065006D006F006E007300740072006900650072007400
+      20006100750074006F006D00610074006900730063006800650020005A006500
+      69006C0065006E006800F600680065002C00200055006D006200720075006300
+      6800200075006E0064002000650069006E0020006B006F006E00660069006700
+      750072006900650072006200610072006500730020004800F600680065006E00
+      6C0069006D00690074002E00220000000000000000105340010001000000009C
+      8623F411CD424400000089504E470D0A1A0A0000000D49484452000000010000
+      00010804000000B51C0C020000000B4944415478DA6364600000000600023081
+      D02F0000000049454E44AE426082000000801200000001000000010000003020
+      00200055006E0074006500720067007200750070007000650020002F00200054
+      00650069006C0020003000310038001445006C0065006B00740072006F006E00
+      69006B00E4000000440069006500730020006900730074002000440061007400
+      65006E007300610074007A002000310038002E00200044006500720020005400
+      6500780074002000640065006D006F006E007300740072006900650072007400
+      20006100750074006F006D00610074006900730063006800650020005A006500
+      69006C0065006E006800F600680065002C00200055006D006200720075006300
+      6800200075006E0064002000650069006E0020006B006F006E00660069006700
+      750072006900650072006200610072006500730020004800F600680065006E00
+      6C0069006D00690074002E0029000000000000000000544001000200000000DC
+      FD3EF411CD42000000801300000002000000010000001E200020002000200042
+      00610075007400650069006C0020003000310039000E4D006F006E0074006100
+      67006500E4000000440069006500730020006900730074002000440061007400
+      65006E007300610074007A002000310039002E00200044006500720020005400
+      6500780074002000640065006D006F006E007300740072006900650072007400
+      20006100750074006F006D00610074006900730063006800650020005A006500
+      69006C0065006E006800F600680065002C00200055006D006200720075006300
+      6800200075006E0064002000650069006E0020006B006F006E00660069006700
+      750072006900650072006200610072006500730020004800F600680065006E00
+      6C0069006D00690074002E00050000000000000000F05440010003000000001C
+      755AF411CD42000000801400000002000000040000001E200020002000200042
+      00610075007400650069006C0020003000320030000E50007200FC0066007500
+      6E006700D8010000440069006500730020006900730074002000440061007400
+      65006E007300610074007A002000320030002E00200044006500720020005400
+      6500780074002000640065006D006F006E007300740072006900650072007400
+      20006100750074006F006D00610074006900730063006800650020005A006500
+      69006C0065006E006800F600680065002C00200055006D006200720075006300
+      6800200075006E0064002000650069006E0020006B006F006E00660069006700
+      750072006900650072006200610072006500730020004800F600680065006E00
+      6C0069006D00690074002E000D000A004A0065006400650020006600FC006E00
+      66007400650020005A00650069006C006500200065006E0074006800E4006C00
+      7400200062006500770075007300730074002000650069006E00650020007A00
+      7700650069007400650020005A00650069006C006500200075006E0064002000
+      770069007200640020007A0075007300E40074007A006C006900630068002000
+      FC006200650072002000650069006E006500200070006500720069006F006400
+      6900730063006800650020005300740079006C0065002D005200650067006500
+      6C00200068006500720076006F0072006700650068006F00620065006E002E00
+      0C0000000000000000E05540000000000000005CEC75F411CD42000000001500
+      00000100000001000000302000200055006E0074006500720067007200750070
+      007000650020002F0020005400650069006C002000300032003100104D006500
+      6300680061006E0069006B00E400000044006900650073002000690073007400
+      200044006100740065006E007300610074007A002000320031002E0020004400
+      65007200200054006500780074002000640065006D006F006E00730074007200
+      690065007200740020006100750074006F006D00610074006900730063006800
+      650020005A00650069006C0065006E006800F600680065002C00200055006D00
+      62007200750063006800200075006E0064002000650069006E0020006B006F00
+      6E00660069006700750072006900650072006200610072006500730020004800
+      F600680065006E006C0069006D00690074002E00130000000000000000D05640
+      010001000000009C6391F411CD424400000089504E470D0A1A0A0000000D4948
+      445200000001000000010804000000B51C0C020000000B4944415478DA636460
+      0000000600023081D02F0000000049454E44AE42608200000080160000000200
+      0000010000001E20002000200020004200610075007400650069006C00200030
+      00320032001445006C0065006B00740072006F006E0069006B00E40000004400
+      6900650073002000690073007400200044006100740065006E00730061007400
+      7A002000320032002E0020004400650072002000540065007800740020006400
+      65006D006F006E00730074007200690065007200740020006100750074006F00
+      6D00610074006900730063006800650020005A00650069006C0065006E006800
+      F600680065002C00200055006D0062007200750063006800200075006E006400
+      2000650069006E0020006B006F006E0066006900670075007200690065007200
+      6200610072006500730020004800F600680065006E006C0069006D0069007400
+      2E001A0000000000000000C0574001000200000000DCDAACF411CD4200000080
+      1700000002000000010000001E20002000200020004200610075007400650069
+      006C0020003000320033000E4D006F006E007400610067006500E40000004400
+      6900650073002000690073007400200044006100740065006E00730061007400
+      7A002000320033002E0020004400650072002000540065007800740020006400
+      65006D006F006E00730074007200690065007200740020006100750074006F00
+      6D00610074006900730063006800650020005A00650069006C0065006E006800
+      F600680065002C00200055006D0062007200750063006800200075006E006400
+      2000650069006E0020006B006F006E0066006900670075007200690065007200
+      6200610072006500730020004800F600680065006E006C0069006D0069007400
+      2E00210000000000000000B05840010003000000001C52C8F411CD4200000080
+      180000000100000002000000302000200055006E007400650072006700720075
+      0070007000650020002F0020005400650069006C0020003000320034000E5000
+      7200FC00660075006E006700E400000044006900650073002000690073007400
+      200044006100740065006E007300610074007A002000320034002E0020004400
+      65007200200054006500780074002000640065006D006F006E00730074007200
+      690065007200740020006100750074006F006D00610074006900730063006800
+      650020005A00650069006C0065006E006800F600680065002C00200055006D00
+      62007200750063006800200075006E0064002000650069006E0020006B006F00
+      6E00660069006700750072006900650072006200610072006500730020004800
+      F600680065006E006C0069006D00690074002E00280000000000000000A05940
+      000000000000005CC9E3F411CD42000000001900000000000000030000001842
+      0061007500670072007500700070006500200030003400104D00650063006800
+      61006E0069006B00D80100004400690065007300200069007300740020004400
+      6100740065006E007300610074007A002000320035002E002000440065007200
+      200054006500780074002000640065006D006F006E0073007400720069006500
+      7200740020006100750074006F006D0061007400690073006300680065002000
+      5A00650069006C0065006E006800F600680065002C00200055006D0062007200
+      750063006800200075006E0064002000650069006E0020006B006F006E006600
+      69006700750072006900650072006200610072006500730020004800F6006800
+      65006E006C0069006D00690074002E000D000A004A0065006400650020006600
+      FC006E0066007400650020005A00650069006C006500200065006E0074006800
+      E4006C007400200062006500770075007300730074002000650069006E006500
+      20007A007700650069007400650020005A00650069006C006500200075006E00
+      64002000770069007200640020007A0075007300E40074007A006C0069006300
+      68002000FC006200650072002000650069006E00650020007000650072006900
+      6F0064006900730063006800650020005300740079006C0065002D0052006500
+      670065006C00200068006500720076006F0072006700650068006F0062006500
+      6E002E00040000000000000000905A40010001000000009C40FFF411CD424400
+      000089504E470D0A1A0A0000000D4948445200000001000000010804000000B5
+      1C0C020000000B4944415478DA6364600000000600023081D02F000000004945
+      4E44AE426082000000801A0000000100000003000000302000200055006E0074
+      006500720067007200750070007000650020002F0020005400650069006C0020
+      003000320036001445006C0065006B00740072006F006E0069006B00E4000000
+      44006900650073002000690073007400200044006100740065006E0073006100
+      74007A002000320036002E002000440065007200200054006500780074002000
+      640065006D006F006E0073007400720069006500720074002000610075007400
+      6F006D00610074006900730063006800650020005A00650069006C0065006E00
+      6800F600680065002C00200055006D0062007200750063006800200075006E00
+      64002000650069006E0020006B006F006E006600690067007500720069006500
+      72006200610072006500730020004800F600680065006E006C0069006D006900
+      74002E000B0000000000000000805B4001000200000000DCB71AF511CD420000
+      00801B00000002000000010000001E2000200020002000420061007500740065
+      0069006C0020003000320037000E4D006F006E007400610067006500E4000000
+      44006900650073002000690073007400200044006100740065006E0073006100
+      74007A002000320037002E002000440065007200200054006500780074002000
+      640065006D006F006E0073007400720069006500720074002000610075007400
+      6F006D00610074006900730063006800650020005A00650069006C0065006E00
+      6800F600680065002C00200055006D0062007200750063006800200075006E00
+      64002000650069006E0020006B006F006E006600690067007500720069006500
+      72006200610072006500730020004800F600680065006E006C0069006D006900
+      74002E00120000000000000000705C40010003000000001C2F36F511CD420000
+      00801C00000002000000010000001E2000200020002000420061007500740065
+      0069006C0020003000320038000E50007200FC00660075006E006700E4000000
+      44006900650073002000690073007400200044006100740065006E0073006100
+      74007A002000320038002E002000440065007200200054006500780074002000
+      640065006D006F006E0073007400720069006500720074002000610075007400
+      6F006D00610074006900730063006800650020005A00650069006C0065006E00
+      6800F600680065002C00200055006D0062007200750063006800200075006E00
+      64002000650069006E0020006B006F006E006600690067007500720069006500
+      72006200610072006500730020004800F600680065006E006C0069006D006900
+      74002E00190000000000000000605D40000000000000005CA651F511CD420000
+      00001D0000000100000001000000302000200055006E00740065007200670072
+      00750070007000650020002F0020005400650069006C00200030003200390010
+      4D0065006300680061006E0069006B00E4000000440069006500730020006900
+      73007400200044006100740065006E007300610074007A002000320039002E00
+      2000440065007200200054006500780074002000640065006D006F006E007300
+      74007200690065007200740020006100750074006F006D006100740069007300
+      63006800650020005A00650069006C0065006E006800F600680065002C002000
+      55006D0062007200750063006800200075006E0064002000650069006E002000
+      6B006F006E006600690067007500720069006500720062006100720065007300
+      20004800F600680065006E006C0069006D00690074002E002000000000000000
+      00505E40010001000000009C1D6DF511CD424400000089504E470D0A1A0A0000
+      000D4948445200000001000000010804000000B51C0C020000000B4944415478
+      DA6364600000000600023081D02F0000000049454E44AE426082000000801E00
+      000002000000040000001E20002000200020004200610075007400650069006C
+      0020003000330030001445006C0065006B00740072006F006E0069006B00D801
+      000044006900650073002000690073007400200044006100740065006E007300
+      610074007A002000330030002E00200044006500720020005400650078007400
+      2000640065006D006F006E007300740072006900650072007400200061007500
+      74006F006D00610074006900730063006800650020005A00650069006C006500
+      6E006800F600680065002C00200055006D006200720075006300680020007500
+      6E0064002000650069006E0020006B006F006E00660069006700750072006900
+      650072006200610072006500730020004800F600680065006E006C0069006D00
+      690074002E000D000A004A0065006400650020006600FC006E00660074006500
+      20005A00650069006C006500200065006E0074006800E4006C00740020006200
+      6500770075007300730074002000650069006E00650020007A00770065006900
+      7400650020005A00650069006C006500200075006E0064002000770069007200
+      640020007A0075007300E40074007A006C006900630068002000FC0062006500
+      72002000650069006E006500200070006500720069006F006400690073006300
+      6800650020005300740079006C0065002D0052006500670065006C0020006800
+      6500720076006F0072006700650068006F00620065006E002E00270000000000
+      000000405F4001000200000000DC9488F511CD42000000801F00000002000000
+      010000001E20002000200020004200610075007400650069006C002000300033
+      0031000E4D006F006E007400610067006500E400000044006900650073002000
+      690073007400200044006100740065006E007300610074007A00200033003100
+      2E002000440065007200200054006500780074002000640065006D006F006E00
+      730074007200690065007200740020006100750074006F006D00610074006900
+      730063006800650020005A00650069006C0065006E006800F600680065002C00
+      200055006D0062007200750063006800200075006E0064002000650069006E00
+      20006B006F006E00660069006700750072006900650072006200610072006500
+      730020004800F600680065006E006C0069006D00690074002E00030000000000
+      000000186040010003000000001C0CA4F511CD42000000802000000001000000
+      01000000302000200055006E0074006500720067007200750070007000650020
+      002F0020005400650069006C0020003000330032000E50007200FC0066007500
+      6E006700E4000000440069006500730020006900730074002000440061007400
+      65006E007300610074007A002000330032002E00200044006500720020005400
+      6500780074002000640065006D006F006E007300740072006900650072007400
+      20006100750074006F006D00610074006900730063006800650020005A006500
+      69006C0065006E006800F600680065002C00200055006D006200720075006300
+      6800200075006E0064002000650069006E0020006B006F006E00660069006700
+      750072006900650072006200610072006500730020004800F600680065006E00
+      6C0069006D00690074002E000A0000000000000000906040000000000000805C
+      83BFF511CD420000000021000000000000000100000018420061007500670072
+      007500700070006500200030003500104D0065006300680061006E0069006B00
+      E400000044006900650073002000690073007400200044006100740065006E00
+      7300610074007A002000330033002E0020004400650072002000540065007800
+      74002000640065006D006F006E00730074007200690065007200740020006100
+      750074006F006D00610074006900730063006800650020005A00650069006C00
+      65006E006800F600680065002C00200055006D00620072007500630068002000
+      75006E0064002000650069006E0020006B006F006E0066006900670075007200
+      6900650072006200610072006500730020004800F600680065006E006C006900
+      6D00690074002E00110000000000000000086140010001000000809CFADAF511
+      CD424400000089504E470D0A1A0A0000000D4948445200000001000000010804
+      000000B51C0C020000000B4944415478DA6364600000000600023081D02F0000
+      000049454E44AE42608200000080220000000100000002000000302000200055
+      006E0074006500720067007200750070007000650020002F0020005400650069
+      006C0020003000330034001445006C0065006B00740072006F006E0069006B00
+      E400000044006900650073002000690073007400200044006100740065006E00
+      7300610074007A002000330034002E0020004400650072002000540065007800
+      74002000640065006D006F006E00730074007200690065007200740020006100
+      750074006F006D00610074006900730063006800650020005A00650069006C00
+      65006E006800F600680065002C00200055006D00620072007500630068002000
+      75006E0064002000650069006E0020006B006F006E0066006900670075007200
+      6900650072006200610072006500730020004800F600680065006E006C006900
+      6D00690074002E0018000000000000000080614001000200000080DC71F6F511
+      CD42000000802300000002000000030000001E20002000200020004200610075
+      007400650069006C0020003000330035000E4D006F006E007400610067006500
+      D801000044006900650073002000690073007400200044006100740065006E00
+      7300610074007A002000330035002E0020004400650072002000540065007800
+      74002000640065006D006F006E00730074007200690065007200740020006100
+      750074006F006D00610074006900730063006800650020005A00650069006C00
+      65006E006800F600680065002C00200055006D00620072007500630068002000
+      75006E0064002000650069006E0020006B006F006E0066006900670075007200
+      6900650072006200610072006500730020004800F600680065006E006C006900
+      6D00690074002E000D000A004A0065006400650020006600FC006E0066007400
+      650020005A00650069006C006500200065006E0074006800E4006C0074002000
+      62006500770075007300730074002000650069006E00650020007A0077006500
+      69007400650020005A00650069006C006500200075006E006400200077006900
+      7200640020007A0075007300E40074007A006C006900630068002000FC006200
+      650072002000650069006E006500200070006500720069006F00640069007300
+      63006800650020005300740079006C0065002D0052006500670065006C002000
+      68006500720076006F0072006700650068006F00620065006E002E001F000000
+      0000000000F86140010003000000801CE911F611CD4200000080240000000200
+      0000030000001E20002000200020004200610075007400650069006C00200030
+      00330036000E50007200FC00660075006E006700E40000004400690065007300
+      2000690073007400200044006100740065006E007300610074007A0020003300
+      36002E002000440065007200200054006500780074002000640065006D006F00
+      6E00730074007200690065007200740020006100750074006F006D0061007400
+      6900730063006800650020005A00650069006C0065006E006800F60068006500
+      2C00200055006D0062007200750063006800200075006E006400200065006900
+      6E0020006B006F006E0066006900670075007200690065007200620061007200
+      6500730020004800F600680065006E006C0069006D00690074002E0026000000
+      0000000000706240000000000000805C602DF611CD4200000000250000000100
+      000001000000302000200055006E007400650072006700720075007000700065
+      0020002F0020005400650069006C002000300033003700104D00650063006800
+      61006E0069006B00E40000004400690065007300200069007300740020004400
+      6100740065006E007300610074007A002000330037002E002000440065007200
+      200054006500780074002000640065006D006F006E0073007400720069006500
+      7200740020006100750074006F006D0061007400690073006300680065002000
+      5A00650069006C0065006E006800F600680065002C00200055006D0062007200
+      750063006800200075006E0064002000650069006E0020006B006F006E006600
+      69006700750072006900650072006200610072006500730020004800F6006800
+      65006E006C0069006D00690074002E00020000000000000000E8624001000100
+      0000809CD748F611CD424400000089504E470D0A1A0A0000000D494844520000
+      0001000000010804000000B51C0C020000000B4944415478DA63646000000006
+      00023081D02F0000000049454E44AE4260820000008026000000020000000100
+      00001E20002000200020004200610075007400650069006C0020003000330038
+      001445006C0065006B00740072006F006E0069006B00E4000000440069006500
+      73002000690073007400200044006100740065006E007300610074007A002000
+      330038002E002000440065007200200054006500780074002000640065006D00
+      6F006E00730074007200690065007200740020006100750074006F006D006100
+      74006900730063006800650020005A00650069006C0065006E006800F6006800
+      65002C00200055006D0062007200750063006800200075006E00640020006500
+      69006E0020006B006F006E006600690067007500720069006500720062006100
+      72006500730020004800F600680065006E006C0069006D00690074002E000900
+      0000000000000060634001000200000080DC4E64F611CD420000008027000000
+      02000000010000001E20002000200020004200610075007400650069006C0020
+      003000330039000E4D006F006E007400610067006500E4000000440069006500
+      73002000690073007400200044006100740065006E007300610074007A002000
+      330039002E002000440065007200200054006500780074002000640065006D00
+      6F006E00730074007200690065007200740020006100750074006F006D006100
+      74006900730063006800650020005A00650069006C0065006E006800F6006800
+      65002C00200055006D0062007200750063006800200075006E00640020006500
+      69006E0020006B006F006E006600690067007500720069006500720062006100
+      72006500730020004800F600680065006E006C0069006D00690074002E001000
+      00000000000000D86340010003000000801CC67FF611CD420000008028000000
+      0100000004000000302000200055006E00740065007200670072007500700070
+      00650020002F0020005400650069006C0020003000340030000E50007200FC00
+      660075006E006700D80100004400690065007300200069007300740020004400
+      6100740065006E007300610074007A002000340030002E002000440065007200
+      200054006500780074002000640065006D006F006E0073007400720069006500
+      7200740020006100750074006F006D0061007400690073006300680065002000
+      5A00650069006C0065006E006800F600680065002C00200055006D0062007200
+      750063006800200075006E0064002000650069006E0020006B006F006E006600
+      69006700750072006900650072006200610072006500730020004800F6006800
+      65006E006C0069006D00690074002E000D000A004A0065006400650020006600
+      FC006E0066007400650020005A00650069006C006500200065006E0074006800
+      E4006C007400200062006500770075007300730074002000650069006E006500
+      20007A007700650069007400650020005A00650069006C006500200075006E00
+      64002000770069007200640020007A0075007300E40074007A006C0069006300
+      68002000FC006200650072002000650069006E00650020007000650072006900
+      6F0064006900730063006800650020005300740079006C0065002D0052006500
+      670065006C00200068006500720076006F0072006700650068006F0062006500
+      6E002E00170000000000000000506440000000000000805C3D9BF611CD42}
+    Active = True
+    Aggregates = <>
+    FieldDefs = <
+      item
+        Name = 'ID'
+        Attributes = [faRequired]
+        DataType = ftInteger
+      end
+      item
+        Name = 'TREE_LEVEL'
+        Attributes = [faRequired]
+        DataType = ftInteger
+      end
+      item
+        Name = 'FOLD_GROUP'
+        Attributes = [faRequired]
+        DataType = ftInteger
+      end
+      item
+        Name = 'NAME'
+        DataType = ftWideString
+        Size = 80
+      end
+      item
+        Name = 'CATEGORY'
+        DataType = ftWideString
+        Size = 40
+      end
+      item
+        Name = 'DESCRIPTION'
+        DataType = ftWideMemo
+      end
+      item
+        Name = 'QUANTITY'
+        DataType = ftInteger
+      end
+      item
+        Name = 'UNIT_PRICE'
+        DataType = ftCurrency
+      end
+      item
+        Name = 'ACTIVE'
+        DataType = ftBoolean
+      end
+      item
+        Name = 'PRIORITY'
+        DataType = ftInteger
+      end
+      item
+        Name = 'UPDATED_AT'
+        DataType = ftDateTime
+      end
+      item
+        Name = 'PICTURE'
+        DataType = ftBlob
+      end>
+    IndexDefs = <>
+    Params = <>
+    StoreDefs = True
+    SampleRowCount = 40
+    Left = 336
+    Top = 224
+  end
+  object DataSource: TDataSource
+    DataSet = SampleData
+    Left = 424
+    Top = 224
+  end
+  object DataController: Th5uDatasetController
+    Cache.Mode = Paged
+    Cache.PageSize = 100
+    Cache.MaxMemoryBytes = 67108864
+    Pagination.PageSize = 10
+    DataSource = DataSource
+    KeyFieldName = 'ID'
+    Left = 512
+    Top = 224
+  end
+  object ObjectController: Th5uObjectListController
+    Cache.Mode = None
+    Cache.MaxMemoryBytes = 67108864
+    OwnsObjects = True
+    KeyPropertyName = 'Id'
+    Left = 360
+    Top = 304
+  end
+  object VirtualController: Th5uVirtualController
+    Cache.MaxMemoryBytes = 67108864
+    OnGetRowCount = VirtualControllerGetRowCount
+    OnGetRowKey = VirtualControllerGetRowKey
+    OnGetValue = VirtualControllerGetValue
+    OnSetValue = VirtualControllerSetValue
+    Left = 480
+    Top = 304
+  end
+end

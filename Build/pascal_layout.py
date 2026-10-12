@@ -83,6 +83,80 @@ def comment_tokens(text: str) -> list[str]:
     return [token.value for token in tokens(text) if token.kind == "comment"]
 
 
+def expand_compact_blocks(lines: list[str]) -> list[str]:
+    """Expand simple inline BEGIN blocks without guessing at complex syntax.
+
+    Existing multiline blocks stay in place. Comments, directives and compound
+    CASE/TRY/ASM statements are left for the author, since this is a lexical
+    formatter rather than a Pascal parser.
+    """
+    result: list[str] = []
+    blocked = opaque_lines(lines)
+    for index, line in enumerate(lines):
+        lexed = tokens(line)
+        words = [token.value.lower() for token in lexed if token.kind == "code"]
+        if (index in blocked or "begin" not in words
+                or any(token.kind in {"comment", "directive"} for token in lexed)
+                or any(word in {"case", "try", "asm", "record"} for word in words)):
+            result.append(line)
+            continue
+        base_indent = len(line) - len(line.lstrip())
+        indent = base_indent
+        block_indents: list[int] = []
+        start = 0
+        depth = 0
+
+        def emit(value: str, level: int) -> None:
+            value = value.strip()
+            if not value:
+                return
+            pieces = tokens(value)
+            # Keep a conditional header and its statement on separate lines.
+            # An inline ELSE needs a parser, so preserve that case unchanged.
+            if (pieces[0].value.lower() in {"if", "while", "for", "with"}
+                    and not any(token.value.lower() == "else" for token in pieces)):
+                for token in pieces:
+                    if token.kind == "code" and token.value.lower() in {"then", "do"}:
+                        if value[token.end:].strip():
+                            result.append(" " * level + value[:token.end].strip())
+                            result.append(" " * (level + 2) + value[token.end:].strip())
+                            return
+            result.append(" " * level + value)
+
+        for position, token in enumerate(lexed):
+            if token.kind != "code":
+                continue
+            word = token.value.lower()
+            if word in {"(", "["}:
+                depth += 1
+            elif word in {")", "]"}:
+                depth -= 1
+            if depth:
+                continue
+            if word == "begin":
+                prefix = line[start:token.start].strip()
+                emit(prefix, indent)
+                if prefix.endswith(":"):
+                    indent += 2
+                result.append(" " * indent + token.value)
+                block_indents.append(indent)
+                indent += 2
+                start = token.end
+            elif word == "end" and block_indents:
+                emit(line[start:token.start], indent)
+                indent = block_indents.pop()
+                end = token.end
+                if position + 1 < len(lexed) and lexed[position + 1].value in {";", "."}:
+                    end = lexed[position + 1].end
+                emit(line[token.start:end], indent)
+                start = end
+            elif word == ";" and block_indents and token.start >= start:
+                emit(line[start:token.end], indent)
+                start = token.end
+        emit(line[start:], indent)
+    return result
+
+
 def indent_case_else(lines: list[str]) -> list[str]:
     """Align a CASE default with its labels, preserving nested IF/ELSE pairs."""
     text = "\n".join(lines)
@@ -292,7 +366,7 @@ def reflow_code(lines: list[str], protected: set[int], limit: int) -> list[str]:
 
 
 def wrap_code_line(line: str, limit: int) -> list[str]:
-    """Break at token boundaries, preferring a leading binary operator."""
+    """Prefer whole conditions/arguments, keeping arithmetic together if it fits."""
     if len(line) <= limit:
         return [line]
     indent = line[:len(line) - len(line.lstrip())] + "  "
@@ -300,8 +374,13 @@ def wrap_code_line(line: str, limit: int) -> list[str]:
     current = line
     while len(current) > limit:
         lexed = tokens(current)
-        preferred, separators, spaces = [], [], []
+        logical, arguments, assignments, operators, openings, spaces = [], [], [], [], [], []
+        depth = 0
         for previous, token in zip(lexed, lexed[1:]):
+            if previous.value in {"(", "["}:
+                depth += 1
+            elif previous.value in {")", "]"}:
+                depth -= 1
             if token.start > limit or not current[:token.start].strip():
                 continue
             if token.kind in {"comment", "directive"} or previous.kind in {"comment", "directive"}:
@@ -309,13 +388,28 @@ def wrap_code_line(line: str, limit: int) -> list[str]:
             left, right = previous.value.lower(), token.value.lower()
             if left in BINARY_OPERATORS or left == "not":
                 continue
-            if right in BINARY_OPERATORS or right == "not" or right == "is":
-                preferred.append(token.start)
-            elif left in {",", ";", "(", "[", ":="}:
-                separators.append(token.start)
+            if right in {"and", "or", "xor"}:
+                logical.append((depth, token.start))
+            elif right in BINARY_OPERATORS or right == "not":
+                operators.append(token.start)
+            elif left in {",", ";"}:
+                arguments.append((depth, token.start))
+            elif left == ":=" and len(indent) + len(current[token.start:].lstrip()) <= limit:
+                assignments.append(token.start)
+            elif left in {"(", "["}:
+                openings.append(token.start)
             elif current[previous.end:token.start].isspace():
                 spaces.append(token.start)
-        choices = preferred or separators or spaces
+        # Outer boolean clauses and argument separators are logical boundaries;
+        # splitting before a comparison/arithmetic operator is a last resort.
+        boundaries = logical + arguments
+        if boundaries:
+            shallowest = min(level for level, _ in boundaries)
+            choices = [position for level, position in arguments if level == shallowest]
+            if not choices:
+                choices = [position for level, position in logical if level == shallowest]
+        else:
+            choices = assignments or operators or openings or spaces
         if not choices:
             break  # Report an indivisible token via check_file; never alter it.
         split = max(choices)

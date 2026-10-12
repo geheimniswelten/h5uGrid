@@ -45,6 +45,7 @@ type
     procedure Assign(Source: TPersistent); override;
     procedure BuildEditor; override;
     procedure ReleaseEditor; override;
+    procedure UpdateBounds(const ABounds: TRectF); override;
     procedure Show; override;
     procedure Hide; override;
     procedure Focus; override;
@@ -59,7 +60,7 @@ type
 
   Th5uVclTextEditor = class(Th5uVclCustomEditor)
   protected
-    function MeasureContentWidth(const AContext: Th5uEditorContext): Double; override;
+    function MeasureContentWidth(const AContext: Th5uEditorContext): Single; override;
   public
     function DrawDisplay(const AContext: Th5uEditorContext): Boolean; override;
   end;
@@ -104,7 +105,7 @@ type
 
   Th5uVclCheckBoxEditor = class(Th5uVclCustomEditor)
   protected
-    function MeasureContentWidth(const AContext: Th5uEditorContext): Double; override;
+    function MeasureContentWidth(const AContext: Th5uEditorContext): Single; override;
   public
     constructor Create(Collection: TCollection); override;
     procedure Activate; override;
@@ -114,7 +115,7 @@ type
 
   Th5uVclImageCellEditor = class(Th5uVclCustomEditor)
   protected
-    function MeasureContentWidth(const AContext: Th5uEditorContext): Double; override;
+    function MeasureContentWidth(const AContext: Th5uEditorContext): Single; override;
   protected
     function DefaultControlClass: Th5uVclEditorControlClass; override;
     procedure ConfigureControl; override;
@@ -412,6 +413,16 @@ begin
     TControlAccess(Control).Text := AText;
 end;
 
+procedure Th5uVclCustomEditor.UpdateBounds(const ABounds: TRectF);
+begin
+  inherited;
+  // Graphic editors may use a separate popup instead of the cell rectangle.
+  if Mode <> Th5uEditorMode.Text then
+    Exit;
+  if Assigned(Control) then
+    Control.SetBounds(Round(ABounds.Left), Round(ABounds.Top), Round(ABounds.Width), Round(ABounds.Height));
+end;
+
 procedure Th5uVclCustomEditor.Show;
 begin
   if Assigned(Control) then
@@ -624,7 +635,7 @@ begin
     RequestCancel;
 end;
 
-function Th5uVclTextEditor.MeasureContentWidth(const AContext: Th5uEditorContext): Double;
+function Th5uVclTextEditor.MeasureContentWidth(const AContext: Th5uEditorContext): Single;
 var
   R: TRect;
   C: TCanvas;
@@ -637,12 +648,12 @@ begin
   Result := R.Width + 10;
 end;
 
-function Th5uVclCheckBoxEditor.MeasureContentWidth(const AContext: Th5uEditorContext): Double;
+function Th5uVclCheckBoxEditor.MeasureContentWidth(const AContext: Th5uEditorContext): Single;
 begin
   Result := 25;
 end;
 
-function Th5uVclImageCellEditor.MeasureContentWidth(const AContext: Th5uEditorContext): Double;
+function Th5uVclImageCellEditor.MeasureContentWidth(const AContext: Th5uEditorContext): Single;
 var
   P: TPicture;
   S: TBytesStream;
@@ -745,7 +756,7 @@ var
   ACanvas: TCanvas;
   LColumn: Th5uGridColumn;
   LImageRect: TRect;
-  LScale: Double;
+  LScale: Single;
   LWidth, LHeight: Integer;
   FPicture: TPicture;
 begin

@@ -33,7 +33,7 @@ uses
 
 type
   Th5uNavigationGetRowKey = function(ARow: Int64): Th5uRowKey of object;
-  Th5uNavigationRowExtent = function(ARow: Int64): Double of object;
+  Th5uNavigationRowExtent = function(ARow: Int64): Single of object;
   Th5uNavigationPrepareRange = procedure(AFirst, ACount: Int64) of object;
   Th5uNavigationGetText = function(AColumn: Th5uGridColumn; ARow: Int64; ADisplay: Boolean): string of object;
   Th5uNavigationTryFocus = function(const ACell: Th5uCellAddress; AUpdateAnchor: Boolean): Boolean of object;
@@ -56,7 +56,7 @@ type
     procedure SelectHeaderRange(AColumns: Th5uGridColumns; ASelection: Th5uGridSelection; ARowCount: Int64; AGetRowKey: Th5uNavigationGetRowKey; AKind: Th5uSelectionKind;
       ARow: Int64; AColumn: Integer; AShift: TShiftState);
     function Navigate(AColumns: Th5uGridColumns; ASelection: Th5uGridSelection; ARowCount: Int64; AGetRowKey: Th5uNavigationGetRowKey; ARowExtent: Th5uNavigationRowExtent;
-      APageHeight: Double; AKey: Word; AShift: TShiftState; out AAction: Th5uNavigationAction): Boolean;
+      APageHeight: Single; AKey: Word; AShift: TShiftState; out AAction: Th5uNavigationAction): Boolean;
     function SearchCharacter(AColumns: Th5uGridColumns; ASelection: Th5uGridSelection; ARowCount: Int64; APrepareRange: Th5uNavigationPrepareRange; AGetText: Th5uNavigationGetText;
       const AText: string; ANow: TDateTime; out ARow: Int64; out AColumn: Integer): Boolean;
   end;
@@ -166,13 +166,13 @@ begin
 end;
 
 function Th5uGridNavigation.Navigate(AColumns: Th5uGridColumns; ASelection: Th5uGridSelection; ARowCount: Int64; AGetRowKey: Th5uNavigationGetRowKey;
-  ARowExtent: Th5uNavigationRowExtent; APageHeight: Double; AKey: Word; AShift: TShiftState; out AAction: Th5uNavigationAction): Boolean;
+  ARowExtent: Th5uNavigationRowExtent; APageHeight: Single; AKey: Word; AShift: TShiftState; out AAction: Th5uNavigationAction): Boolean;
 var
   LCell: Th5uCellAddress;
   LColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>;
   LRow, LCount: Int64;
   LColumn: Integer;
-  LDistance: Double;
+  LDistance: Single;
 begin
   AAction := Default(Th5uNavigationAction);
   Result := False;

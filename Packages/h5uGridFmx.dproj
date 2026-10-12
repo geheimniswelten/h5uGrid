@@ -126,6 +126,7 @@
         <DCCReference Include="..\Source\FMX\Fmx.h5u.Grid.Styles.pas"/>
         <DCCReference Include="..\Source\FMX\Fmx.h5u.Grid.Editors.pas"/>
         <DCCReference Include="..\Source\FMX\Fmx.h5u.Grid.pas"/>
+        <DCCReference Include="..\Source\FMX\Fmx.h5u.FormDesigner.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

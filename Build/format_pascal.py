@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Whitespace-only Delphi formatter: 150 columns, properties/signatures 180.
 
-Binary operators begin continuation lines. Literal contents, comments, compiler
-directives, BOM and existing line endings are preserved.
+Binary operators begin continuation lines; blocks and method implementations
+stay separated. Literal contents, comments, compiler directives, BOM and
+existing line endings are preserved.
 """
 from __future__ import annotations
 
@@ -14,7 +15,7 @@ from pathlib import Path
 from typing import Iterable
 
 from pascal_layout import (
-    comment_tokens, indent_case_else, leading_operators, opaque_lines, semantic_tokens,
+    comment_tokens, expand_compact_blocks, indent_case_else, leading_operators, opaque_lines, semantic_tokens,
     reflow_code, tokens, trailing_operator, wrap_code_line,
 )
 
@@ -165,6 +166,17 @@ def find_candidate(lines: list[str], start: int) -> CandidateBlock | None:
             return None
         if end > start and line.lstrip().startswith("//"):
             return None
+        # A CASE label looks like a split field declaration ("tkVariant:").
+        # Never absorb its statement or BEGIN block into a declaration.
+        if kind == "field" and end > start:
+            continuation = [token.value.lower() for token in tokens(line) if token.kind == "code"]
+            if continuation and continuation[0] in {
+                "begin", "end", "if", "case", "try", "repeat", "while", "for",
+                "with", "raise", "exit", "break", "continue", "inherited",
+            }:
+                return None
+            if any(value in {":=", "("} for value in continuation):
+                return None
         block.append(line)
         if has_top_level_semicolon(block):
             return CandidateBlock(start, end, kind)
@@ -350,6 +362,8 @@ def format_lines(
     lines: list[str], max_length: int = MAX_LINE_LENGTH,
     declaration_length: int = MAX_DECLARATION_LENGTH,
 ) -> tuple[list[str], int]:
+    original_lines = lines
+    lines = expand_compact_blocks(lines)
     result: list[str] = []
     changed_blocks = 0
     index = 0
@@ -372,7 +386,14 @@ def format_lines(
     result = leading_operators(result, protected)
     wrapped = reflow_code(result, protected, max_length)
 
-    before, after = "\n".join(lines), "\n".join(wrapped)
+    separated: list[str] = []
+    for line in wrapped:
+        if ROUTINE_START_RE.match(line) and separated and re.fullmatch(r"\s*end;\s*", separated[-1], re.I):
+            separated.append("")
+        separated.append(line)
+    wrapped = separated
+
+    before, after = "\n".join(original_lines), "\n".join(wrapped)
     if semantic_tokens(before) != semantic_tokens(after) or comment_tokens(before) != comment_tokens(after):
         raise ValueError("Formatting would change Pascal tokens, literal contents or comments")
     return wrapped, changed_blocks
@@ -393,7 +414,7 @@ def check_file(
             messages.append(f"{path}:{index + 1}: binary operator must begin the continuation line")
     proposed, _ = format_lines(lines, max_length, declaration_length)
     if proposed != lines:
-        messages.append(f"{path}: formatting differs ({max_length}/{declaration_length} limits, continuation operators or CASE/ELSE indentation)")
+        messages.append(f"{path}: formatting differs ({max_length}/{declaration_length} limits, continuation operators or block layout)")
     return messages
 
 

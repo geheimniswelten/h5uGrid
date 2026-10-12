@@ -28,6 +28,7 @@ uses
     System.SysUtils,
     System.UITypes,
   {$ENDIF}
+  h5u.Grid.Sizing,
   h5u.Grid.Types;
 
 type
@@ -49,13 +50,16 @@ type
     FId: string;
     FCaption: string;
     FFieldName: string;
-    FWidth: Integer;
+    FWidth: Th5uWidth;
     FAutoWidth: Boolean;
-    FWidthInPercent: Double;
-    FLayoutWidth: Integer;
-    FMeasuredWidth: Integer;
-    FMinWidth: Integer;
-    FMaxWidth: Integer;
+    FDefaultWidth, FDefaultMaxWidth, FReferenceWidth: Single;
+    FDefaultMinWidth: Single;
+    FWidthSpecified, FMinWidthSpecified, FMaxWidthSpecified: Boolean;
+    FLegacyWidthInPercent: Single;
+    FLayoutWidth: Single;
+    FMeasuredWidth: Single;
+    FMinWidth: Single;
+    FMaxWidth: Th5uWidth;
     FVisible: Boolean;
     FVisibleIndex: Integer;
     FFixedKind: Th5uFixedKind;
@@ -66,14 +70,14 @@ type
     FOnGetCellEditor, FOnGetRowEditor: Th5uGetCellEditorEvent;
     FWordWrap: Boolean;
     FAutoHeight: Boolean;
-    FMaxAutoHeight: Integer;
+    FMaxAutoHeight: Single;
     FMaxLines: Integer;
     FScrollHintText: string;
     FDisplayFormat: string;
     FStyleName: string;
     FHeaderStyleName: string;
     FHighlighted: Boolean;
-    FRightSpacing: Integer;
+    FRightSpacing: Single;
     FColor: TColor;
     FClassId: Th5uClassId;
     FCellClassId: Th5uClassId;
@@ -99,38 +103,56 @@ type
     procedure SetFixedKind(const AValue: Th5uFixedKind);
     procedure SetId(const AValue: string);
     procedure SetColor(const AValue: TColor);
-    procedure SetRightSpacing(const AValue: Integer);
+    procedure SetRightSpacing(const AValue: Single);
     procedure SetVisible(const AValue: Boolean);
     procedure SetVisibleIndex(const AValue: Integer);
-    procedure SetWidth(const AValue: Integer);
+    procedure SetWidth(const AValue: Th5uWidth);
     procedure SetAutoWidth(const AValue: Boolean);
-    procedure SetWidthInPercent(const AValue: Double);
-    procedure SetMinWidth(const AValue: Integer);
-    procedure SetMaxWidth(const AValue: Integer);
-    function GetLayoutWidth: Integer;
+    procedure SetWidthInPercent(const AValue: Single);
+    procedure SetMinWidth(const AValue: Single);
+    procedure SetMaxWidth(const AValue: Th5uWidth);
+    procedure SetMaxAutoHeight(const AValue: Single);
+    function GetWidthInPercent: Single;
+    function GetWidthSpecification: Single;
+    function GetMaxWidthSpecification: Single;
+    function GetResolvedWidth: Single;
+    function GetResolvedMinWidth: Single;
+    function GetResolvedMaxWidth: Single;
+    function IsMinWidthStored: Boolean;
+    procedure ReadLegacyWidthInPercent(AReader: TReader);
+    function GetLayoutWidth: Single;
     procedure SetMovePermission(AValue: Th5uColumnMovePermission);
   protected
+    procedure DefineProperties(AFiler: TFiler); override;
     function GetDisplayName: string; override;
   public
     constructor Create(ACollection: TCollection); override;
     procedure Assign(Source: TPersistent); override;
     function GetMode: string;
-    function ConstrainWidth(AValue: Integer): Integer;
-    procedure SetLayoutWidth(AValue: Integer);
-    procedure SetMeasuredWidth(AValue: Integer);
-    property LayoutWidth: Integer read GetLayoutWidth;
-    property MeasuredWidth: Integer read FMeasuredWidth;
+    function ConstrainWidth(AValue: Single): Single;
+    procedure SetWidthDefaults(AWidth: Single; AMinWidth: Single; AMaxWidth, AReferenceWidth: Single);
+    procedure SetWidthReference(AReferenceWidth: Single);
+    procedure ApplyLegacySizing;
+    property WidthSpecification: Single read GetWidthSpecification;
+    property MaxWidthSpecification: Single read GetMaxWidthSpecification;
+    property ResolvedWidth: Single read GetResolvedWidth;
+    property ResolvedMinWidth: Single read GetResolvedMinWidth;
+    property ResolvedMaxWidth: Single read GetResolvedMaxWidth;
+    property WidthInPercent: Single read GetWidthInPercent write SetWidthInPercent;
+    procedure SetLayoutWidth(AValue: Single);
+    procedure SetMeasuredWidth(AValue: Single);
+    property LayoutWidth: Single read GetLayoutWidth;
+    property MeasuredWidth: Single read FMeasuredWidth;
     function GetColumns: Th5uGridColumns;
     property Columns: Th5uGridColumns read GetColumns;
   published
     property Id: string read FId write SetId;
     property Caption: string read FCaption write SetCaption;
     property FieldName: string read FFieldName write SetFieldName;
-    property Width: Integer read FWidth write SetWidth default 100;
+    property Width: Th5uWidth read FWidth write SetWidth;
     property AutoWidth: Boolean read FAutoWidth write SetAutoWidth default False;
-    property WidthInPercent: Double read FWidthInPercent write SetWidthInPercent;
-    property MinWidth: Integer read FMinWidth write SetMinWidth default 24;
-    property MaxWidth: Integer read FMaxWidth write SetMaxWidth default 1000;
+    property MinWidth: Single read FMinWidth write SetMinWidth stored IsMinWidthStored nodefault;
+    property MaxWidth: Th5uWidth read FMaxWidth write SetMaxWidth;
     property Visible: Boolean read FVisible write SetVisible default True;
     property VisibleIndex: Integer read FVisibleIndex write SetVisibleIndex default -1;
     property FixedKind: Th5uFixedKind read FFixedKind write SetFixedKind default Th5uFixedKind.None;
@@ -144,14 +166,14 @@ type
     property EditorKind: Th5uColumnEditorKind read FEditorKind write FEditorKind default Th5uColumnEditorKind.Automatic;
     property WordWrap: Boolean read FWordWrap write FWordWrap default False;
     property AutoHeight: Boolean read FAutoHeight write FAutoHeight default False;
-    property MaxAutoHeight: Integer read FMaxAutoHeight write FMaxAutoHeight default 160;
+    property MaxAutoHeight: Single read FMaxAutoHeight write SetMaxAutoHeight nodefault;
     property MaxLines: Integer read FMaxLines write FMaxLines default 0;
     property DisplayFormat: string read FDisplayFormat write FDisplayFormat;
     property ScrollHintText: string read FScrollHintText write FScrollHintText;
     property StyleName: string read FStyleName write FStyleName;
     property HeaderStyleName: string read FHeaderStyleName write FHeaderStyleName;
     property Highlighted: Boolean read FHighlighted write FHighlighted default False;
-    property RightSpacing: Integer read FRightSpacing write SetRightSpacing default -1;
+    property RightSpacing: Single read FRightSpacing write SetRightSpacing nodefault;
     property Color: TColor read FColor write SetColor default TColorRec.SysDefault;
     {$IFnDEF FPC} [Default(h5uClassIdGridColumn)] {$ENDIF}
     property ClassId: Th5uClassId read FClassId write FClassId;
@@ -209,13 +231,16 @@ type
     FLayoutColumn: Integer;
     FRowSpan: Integer;
     FColumnSpan: Integer;
-    FWidth, FMinWidth, FMaxWidth: Integer;
-    FWidthInPercent: Double;
+    FWidth, FMaxWidth: Th5uWidth;
+    FMinWidth: Single;
+    FLegacyWidthInPercent: Single;
     FStyleName: string;
-    procedure SetWidth(const AValue: Integer);
-    procedure SetMinWidth(const AValue: Integer);
-    procedure SetMaxWidth(const AValue: Integer);
-    procedure SetWidthInPercent(const AValue: Double);
+    procedure SetWidth(const AValue: Th5uWidth);
+    procedure SetMinWidth(const AValue: Single);
+    procedure SetMaxWidth(const AValue: Th5uWidth);
+    function GetWidthInPercent: Single;
+    procedure ReadLegacyWidthInPercent(AReader: TReader);
+    procedure SetWidthInPercent(const AValue: Single);
     procedure SetLayoutRow(const AValue: Integer);
     procedure SetLayoutColumn(const AValue: Integer);
     procedure SetColumnSpan(const AValue: Integer);
@@ -223,10 +248,13 @@ type
   private
     FClassId: Th5uClassId;
   protected
+    procedure DefineProperties(AFiler: TFiler); override;
     function GetDisplayName: string; override;
   public
     constructor Create(ACollection: TCollection); override;
     procedure Assign(Source: TPersistent); override;
+    procedure ApplyLegacySizing;
+    property WidthInPercent: Single read GetWidthInPercent write SetWidthInPercent;
   published
     property Id: string read FId write FId;
     property Caption: string read FCaption write FCaption;
@@ -235,10 +263,9 @@ type
     property LayoutColumn: Integer read FLayoutColumn write SetLayoutColumn default 0;
     property RowSpan: Integer read FRowSpan write FRowSpan default 1;
     property ColumnSpan: Integer read FColumnSpan write SetColumnSpan default 1;
-    property Width: Integer read FWidth write SetWidth default 0;
-    property MinWidth: Integer read FMinWidth write SetMinWidth default 0;
-    property MaxWidth: Integer read FMaxWidth write SetMaxWidth default 0;
-    property WidthInPercent: Double read FWidthInPercent write SetWidthInPercent;
+    property Width: Th5uWidth read FWidth write SetWidth;
+    property MinWidth: Single read FMinWidth write SetMinWidth;
+    property MaxWidth: Th5uWidth read FMaxWidth write SetMaxWidth;
     property StyleName: string read FStyleName write FStyleName;
     {$IFnDEF FPC} [Default(h5uClassIdGridHeaderGroupCell)] {$ENDIF}
     property ClassId: Th5uClassId read FClassId write FClassId;
@@ -350,7 +377,14 @@ begin
     FFieldName := LSource.FFieldName;
     FWidth := LSource.FWidth;
     FAutoWidth := LSource.FAutoWidth;
-    FWidthInPercent := LSource.FWidthInPercent;
+    FDefaultWidth := LSource.FDefaultWidth;
+    FDefaultMinWidth := LSource.FDefaultMinWidth;
+    FDefaultMaxWidth := LSource.FDefaultMaxWidth;
+    FReferenceWidth := LSource.FReferenceWidth;
+    FWidthSpecified := LSource.FWidthSpecified;
+    FMinWidthSpecified := LSource.FMinWidthSpecified;
+    FMaxWidthSpecified := LSource.FMaxWidthSpecified;
+    FLegacyWidthInPercent := LSource.FLegacyWidthInPercent;
     FLayoutWidth := -1;
     FMeasuredWidth := 0;
     FMinWidth := LSource.FMinWidth;
@@ -413,10 +447,13 @@ begin
   FId := '';
   FCaption := '';
   FFieldName := '';
-  FWidth := 100;
+  FWidth := 0;
+  FDefaultWidth := 100;
+  FDefaultMinWidth := 24;
+  FDefaultMaxWidth := 3000;
   FLayoutWidth := -1;
   FMinWidth := 24;
-  FMaxWidth := 1000;
+  FMaxWidth := 0;
   FVisible := True;
   FVisibleIndex := -1;
   FFixedKind := Th5uFixedKind.None;
@@ -496,8 +533,9 @@ begin
   Changed;
 end;
 
-procedure Th5uGridColumn.SetRightSpacing(const AValue: Integer);
+procedure Th5uGridColumn.SetRightSpacing(const AValue: Single);
 begin
+  h5uValidateWidth(AValue);
   if FRightSpacing = AValue then
     Exit;
   if AValue < -1 then
@@ -530,36 +568,94 @@ begin
   FMovePermission := AValue;
   Changed;
 end;
-procedure Th5uGridColumn.SetWidth(const AValue: Integer);
+
+procedure Th5uGridColumn.SetWidth(const AValue: Th5uWidth);
 begin
+  h5uValidateWidth(AValue);
+  FWidthSpecified := True;
   if FWidth = AValue then
     Exit;
-  FWidth := ConstrainWidth(AValue);
+  FWidth := AValue;
   Changed;
 end;
 
-function Th5uGridColumn.ConstrainWidth(AValue: Integer): Integer;
+function Th5uGridColumn.GetWidthSpecification: Single;
 begin
-  Result := Max(FMinWidth, AValue);
-  if FMaxWidth > 0 then
-    Result := Min(Result, Max(FMinWidth, FMaxWidth));
+  Result := FWidth;
+  if Result = 0 then
+    Result := FDefaultWidth;
+  if Result = 0 then
+    Result := 100;
 end;
 
-function Th5uGridColumn.GetLayoutWidth: Integer;
+function Th5uGridColumn.GetResolvedWidth: Single;
+begin
+  Result := EnsureRange(h5uResolveWidth(WidthSpecification, FReferenceWidth),
+    Single(ResolvedMinWidth), Single(ResolvedMaxWidth));
+end;
+
+function Th5uGridColumn.GetResolvedMinWidth: Single;
+begin
+  if FMinWidthSpecified then
+    Result := FMinWidth
+  else
+    Result := FDefaultMinWidth;
+end;
+
+function Th5uGridColumn.GetMaxWidthSpecification: Single;
+begin
+  Result := FMaxWidth;
+  if Result = 0 then
+    Result := FDefaultMaxWidth;
+  if Result = 0 then
+    Result := 3000;
+end;
+
+function Th5uGridColumn.GetResolvedMaxWidth: Single;
+begin
+  Result := Max(ResolvedMinWidth, h5uResolveWidth(MaxWidthSpecification, FReferenceWidth));
+end;
+
+procedure Th5uGridColumn.SetWidthDefaults(AWidth: Single; AMinWidth: Single;
+  AMaxWidth, AReferenceWidth: Single);
+begin
+  h5uValidateWidth(AWidth);
+  h5uValidateWidth(AMinWidth);
+  h5uValidateWidth(AMaxWidth);
+  FDefaultWidth := AWidth;
+  FDefaultMinWidth := EnsureRange(AMinWidth, 0, h5uUnlimitedWidth);
+  FDefaultMaxWidth := AMaxWidth;
+  SetWidthReference(AReferenceWidth);
+end;
+
+procedure Th5uGridColumn.SetWidthReference(AReferenceWidth: Single);
+begin
+  h5uValidateWidth(AReferenceWidth);
+  FReferenceWidth := EnsureRange(AReferenceWidth, 0.0, Single(h5uUnlimitedWidth));
+end;
+
+function Th5uGridColumn.ConstrainWidth(AValue: Single): Single;
+begin
+  if IsNan(AValue) or IsInfinite(AValue) then
+    raise EArgumentOutOfRangeException.Create('Width must be finite.');
+  Result := EnsureRange(AValue, ResolvedMinWidth, ResolvedMaxWidth);
+end;
+
+function Th5uGridColumn.GetLayoutWidth: Single;
 begin
   if FLayoutWidth >= 0 then
     Result := FLayoutWidth
   else
-    Result := ConstrainWidth(FWidth);
+    Result := ResolvedWidth;
 end;
 
-procedure Th5uGridColumn.SetLayoutWidth(AValue: Integer);
+procedure Th5uGridColumn.SetLayoutWidth(AValue: Single);
 begin
   // Layout results are transient and must not trigger collection notifications.
   FLayoutWidth := ConstrainWidth(AValue);
 end;
 
-procedure Th5uGridColumn.SetMeasuredWidth(AValue: Integer);
+procedure Th5uGridColumn.SetMeasuredWidth(AValue: Single);
 begin
   FMeasuredWidth := ConstrainWidth(AValue);
 end;
@@ -572,33 +668,88 @@ begin
   Changed;
 end;
 
-procedure Th5uGridColumn.SetWidthInPercent(const AValue: Double);
+function Th5uGridColumn.GetWidthInPercent: Single;
 begin
-  if IsNan(AValue) or IsInfinite(AValue) or (AValue < 0) or (AValue > 100) then
-    raise EArgumentOutOfRangeException.Create('WidthInPercent muss zwischen 0 und 100 liegen.');
-  if FWidthInPercent = AValue then
+  Result := Max(0.0, -FWidth);
+end;
+
+procedure Th5uGridColumn.SetWidthInPercent(const AValue: Single);
+begin
+  h5uValidateWidth(AValue);
+  if AValue < 0 then
+    raise EArgumentOutOfRangeException.Create('WidthInPercent must not be negative.');
+  if (AValue > 0) or (FWidth < 0) then
+    SetWidth(-AValue);
+end;
+
+procedure Th5uGridColumn.SetMinWidth(const AValue: Single);
+var
+  LValue: Single;
+begin
+  h5uValidateWidth(AValue);
+  LValue := EnsureRange(AValue, 0, h5uUnlimitedWidth);
+  if FMinWidthSpecified and (FMinWidth = LValue) then
     Exit;
-  FWidthInPercent := AValue;
+  FMinWidthSpecified := True;
+  FMinWidth := LValue;
   Changed;
 end;
 
-procedure Th5uGridColumn.SetMinWidth(const AValue: Integer);
+procedure Th5uGridColumn.SetMaxWidth(const AValue: Th5uWidth);
 begin
-  if FMinWidth = Max(0, AValue) then
+  h5uValidateWidth(AValue);
+  FMaxWidthSpecified := True;
+  if FMaxWidth = AValue then
     Exit;
-  FMinWidth := Max(0, AValue);
-  if (FMaxWidth > 0) and (FMaxWidth < FMinWidth) then
-    FMaxWidth := FMinWidth;
+  FMaxWidth := AValue;
   Changed;
 end;
 
-procedure Th5uGridColumn.SetMaxWidth(const AValue: Integer);
+procedure Th5uGridColumn.SetMaxAutoHeight(const AValue: Single);
+var
+  LValue: Single;
 begin
-  if FMaxWidth = Max(0, AValue) then
+  h5uValidateWidth(AValue);
+  LValue := Max(0.0, AValue);
+  if FMaxAutoHeight = LValue then
     Exit;
-  FMaxWidth := Max(0, AValue);
-  if (FMaxWidth > 0) and (FMinWidth > FMaxWidth) then
-    FMinWidth := FMaxWidth;
+  FMaxAutoHeight := LValue;
+  Changed;
+end;
+
+function Th5uGridColumn.IsMinWidthStored: Boolean;
+begin
+  Result := FMinWidthSpecified;
+end;
+
+procedure Th5uGridColumn.DefineProperties(AFiler: TFiler);
+begin
+  inherited;
+  AFiler.DefineProperty('WidthInPercent', {$IFDEF FPC}@{$ENDIF}ReadLegacyWidthInPercent, nil, False);
+end;
+
+procedure Th5uGridColumn.ReadLegacyWidthInPercent(AReader: TReader);
+begin
+  FLegacyWidthInPercent := AReader.ReadFloat;
+  h5uValidateWidth(FLegacyWidthInPercent);
+  if (FLegacyWidthInPercent > 0) and (FWidth >= 0) then
+    FWidth := -FLegacyWidthInPercent;
+end;
+
+procedure Th5uGridColumn.ApplyLegacySizing;
+begin
+  if not FWidthSpecified and (FWidth = 0) then
+    FWidth := 100;
+  if (FLegacyWidthInPercent > 0) and (FWidth >= 0) then
+    FWidth := -FLegacyWidthInPercent;
+  if not FMaxWidthSpecified then
+    FMaxWidth := 1000
+  else if FMaxWidth = 0 then
+    FMaxWidth := h5uUnlimitedWidth;
+  FMinWidthSpecified := True;
+  FWidthSpecified := True;
+  FMaxWidthSpecified := True;
+  FLegacyWidthInPercent := 0;
   Changed;
 end;
 
@@ -814,37 +965,61 @@ begin
   FWidth := S.FWidth;
   FMinWidth := S.FMinWidth;
   FMaxWidth := S.FMaxWidth;
-  FWidthInPercent := S.FWidthInPercent;
+  FLegacyWidthInPercent := S.FLegacyWidthInPercent;
   FStyleName := S.FStyleName;
   FClassId := S.FClassId;
   Changed(False);
 end;
 
-procedure Th5uHeaderLayoutCell.SetWidth(const AValue: Integer);
+procedure Th5uHeaderLayoutCell.SetWidth(const AValue: Th5uWidth);
 begin
-  if FWidth = Max(0, AValue) then
+  h5uValidateWidth(AValue);
+  if FWidth = AValue then
     Exit;
-  FWidth := Max(0, AValue);
+  FWidth := AValue;
   Changed(False);
 end;
 
-procedure Th5uHeaderLayoutCell.SetMinWidth(const AValue: Integer);
+procedure Th5uHeaderLayoutCell.SetMinWidth(const AValue: Single);
+var
+  LValue: Single;
 begin
-  if FMinWidth = Max(0, AValue) then
+  h5uValidateWidth(AValue);
+  LValue := EnsureRange(AValue, 0, h5uUnlimitedWidth);
+  if FMinWidth = LValue then
     Exit;
-  FMinWidth := Max(0, AValue);
-  if (FMaxWidth > 0) and (FMaxWidth < FMinWidth) then
-    FMaxWidth := FMinWidth;
+  FMinWidth := LValue;
   Changed(False);
 end;
 
-procedure Th5uHeaderLayoutCell.SetMaxWidth(const AValue: Integer);
+procedure Th5uHeaderLayoutCell.SetMaxWidth(const AValue: Th5uWidth);
 begin
-  if FMaxWidth = Max(0, AValue) then
+  h5uValidateWidth(AValue);
+  if FMaxWidth = AValue then
     Exit;
-  FMaxWidth := Max(0, AValue);
-  if (FMaxWidth > 0) and (FMinWidth > FMaxWidth) then
-    FMinWidth := FMaxWidth;
+  FMaxWidth := AValue;
+  Changed(False);
+end;
+
+procedure Th5uHeaderLayoutCell.DefineProperties(AFiler: TFiler);
+begin
+  inherited;
+  AFiler.DefineProperty('WidthInPercent', {$IFDEF FPC}@{$ENDIF}ReadLegacyWidthInPercent, nil, False);
+end;
+
+procedure Th5uHeaderLayoutCell.ReadLegacyWidthInPercent(AReader: TReader);
+begin
+  FLegacyWidthInPercent := AReader.ReadFloat;
+  h5uValidateWidth(FLegacyWidthInPercent);
+  if (FLegacyWidthInPercent > 0) and (FWidth >= 0) then
+    FWidth := -FLegacyWidthInPercent;
+end;
+
+procedure Th5uHeaderLayoutCell.ApplyLegacySizing;
+begin
+  if (FLegacyWidthInPercent > 0) and (FWidth >= 0) then
+    FWidth := -FLegacyWidthInPercent;
+  FLegacyWidthInPercent := 0;
   Changed(False);
 end;
 
@@ -880,14 +1055,18 @@ begin
   Changed(False);
 end;
 
-procedure Th5uHeaderLayoutCell.SetWidthInPercent(const AValue: Double);
+function Th5uHeaderLayoutCell.GetWidthInPercent: Single;
 begin
-  if IsNan(AValue) or IsInfinite(AValue) or (AValue < 0) or (AValue > 100) then
-    raise EArgumentOutOfRangeException.Create('WidthInPercent muss zwischen 0 und 100 liegen.');
-  if FWidthInPercent = AValue then
-    Exit;
-  FWidthInPercent := AValue;
-  Changed(False);
+  Result := Max(0.0, -FWidth);
+end;
+
+procedure Th5uHeaderLayoutCell.SetWidthInPercent(const AValue: Single);
+begin
+  h5uValidateWidth(AValue);
+  if AValue < 0 then
+    raise EArgumentOutOfRangeException.Create('WidthInPercent must not be negative.');
+  if (AValue > 0) or (FWidth < 0) then
+    SetWidth(-AValue);
 end;
 
 procedure Th5uHeaderLayoutCells.Update(Item: TCollectionItem);

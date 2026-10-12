@@ -24,6 +24,7 @@ uses
   h5u.Grid.AdjacentGroups,
   h5u.Grid.Columns,
   h5u.Grid.Options,
+  h5u.Grid.Sizing,
   h5u.Grid.Types,
   h5u.Grid.View;
 
@@ -31,28 +32,28 @@ type
   Th5uColumnLayoutInfo = record
     Column: Th5uGridColumn;
     VisibleIndex: Integer;
-    Left, Right: Double;
+    Left, Right: Single;
     Visible: Boolean;
   end;
 
   Th5uRowSeparatorInfo = record
     Kind: Th5uElementKind;
-    Height: Double;
+    Height: Single;
     StyleName: string;
     TreeLevel, ClosedTreeLevels: Integer;
   end;
 
-  Th5uRowSpacingMethod = function(ARow: Int64; const AKey: Th5uRowKey): Double of object;
+  Th5uRowSpacingMethod = function(ARow: Int64; const AKey: Th5uRowKey): Single of object;
 
 // The content budget excludes the row indicator and includes column spacing.
-// Percentages are relative weights in the view or nearest enclosing header group.
-function h5uResolveColumnWidths(AColumns: Th5uGridColumns; AHeader: Th5uHeaderLayout; ADefaultSpacing: Integer; AAvailableWidth: Double; AMinWidth: Integer = 0;
-  AMaxWidth: Integer = 0): Boolean;
-function h5uColumnRightSpacing(AColumn: Th5uGridColumn; ADefault: Integer): Integer;
-function h5uBuildColumnLayout(AColumns: Th5uGridColumns; ADefaultSpacing: Integer; AViewLeft, AViewRight, AIndicatorExtent, AHorizontalOffset: Double;
+// The fitting mode controls whether percentages or all desired widths are relative weights.
+function h5uResolveColumnWidths(AColumns: Th5uGridColumns; AHeader: Th5uHeaderLayout; ADefaultSpacing: Single; AAvailableWidth: Single; AMinWidth: Single = 0;
+  AMaxWidth: Single = 0; AFitMode: Th5uColumnFitMode = Th5uColumnFitMode.PercentColumns): Boolean;
+function h5uColumnRightSpacing(AColumn: Th5uGridColumn; ADefault: Single): Single;
+function h5uBuildColumnLayout(AColumns: Th5uGridColumns; ADefaultSpacing: Single; AViewLeft, AViewRight, AIndicatorExtent, AHorizontalOffset: Single;
   AViewHasHeight: Boolean): {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uColumnLayoutInfo>;
-procedure h5uColumnViewport(AColumns: Th5uGridColumns; AColumn: Th5uGridColumn; ADefaultSpacing: Integer; AIndicatorExtent: Double; var ALeft, ARight: Double);
-function h5uHeaderHeight(ALayout: Th5uHeaderLayout; AShowHeader: Boolean; ARowHeight, ASpacing: Double): Double;
+procedure h5uColumnViewport(AColumns: Th5uGridColumns; AColumn: Th5uGridColumn; ADefaultSpacing: Single; AIndicatorExtent: Single; var ALeft, ARight: Single);
+function h5uHeaderHeight(ALayout: Th5uHeaderLayout; AShowHeader: Boolean; ARowHeight, ASpacing: Single): Single;
 function h5uRevealOffset(AOffset, AStart, ASize, AViewportSize: Double): Double;
 function h5uRowSeparator(AView: Th5uGridView; ATree: Th5uTreeOptions; AGroups: Th5uAdjacentGroupFoldingOptions; ARow: Int64; const AKey: Th5uRowKey;
   AGetSpacing: Th5uRowSpacingMethod): Th5uRowSeparatorInfo;
@@ -63,47 +64,134 @@ type
   Th5uWidthNode = record
     Column: Th5uGridColumn;
     Header: Th5uHeaderLayoutCell;
-    Parent, First, Last, Row, Spacing: Integer;
+    Parent, First, Last, Row: Integer;
+    Spacing: Single;
     Children: {$IFDEF FPC}specialize {$ENDIF}TList<Integer>;
-    Weight, Minimum, Maximum, Preferred, Width, Fraction: Double;
+    Weight, Minimum, Maximum, IntrinsicMaximum, Preferred, Width: Single;
+    AtMaximum: Boolean;
   end;
 
-function h5uResolveColumnWidths(AColumns: Th5uGridColumns; AHeader: Th5uHeaderLayout; ADefaultSpacing: Integer; AAvailableWidth: Double; AMinWidth: Integer;
-  AMaxWidth: Integer): Boolean;
+function h5uResolveColumnWidths(AColumns: Th5uGridColumns; AHeader: Th5uHeaderLayout; ADefaultSpacing: Single; AAvailableWidth: Single; AMinWidth: Single;
+  AMaxWidth: Single; AFitMode: Th5uColumnFitMode): Boolean;
 var
   LColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>;
   LNodes: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uWidthNode>;
-  I, J, K, N, LGroups, LParent, LFirst, LLast, LWidth: Integer;
-  LBudget: Double;
+  I, J, K, N, LGroups, LParent, LFirst, LLast: Integer;
+  LWidth, LBudget: Single;
 
-  procedure MeasureNode(AIndex: Integer);
+  function NodeCapacityAt(AIndex: Integer; AReferenceWidth: Single): Single;
+  var
+    LMaximum, LPreferred: Single;
+  begin
+    with LNodes[AIndex] do
+    begin
+      if Assigned(Column) then
+      begin
+        LMaximum := Max(Minimum, h5uResolveWidth(Column.MaxWidthSpecification, AReferenceWidth));
+        if Weight > 0 then
+          Exit(LMaximum);
+        if Column.AutoWidth then
+          LPreferred := Column.MeasuredWidth
+        else
+          LPreferred := h5uResolveWidth(Column.WidthSpecification, AReferenceWidth);
+      end
+      else
+      begin
+        LMaximum := IntrinsicMaximum;
+        if Header.MaxWidth <> 0 then
+          LMaximum := Min(LMaximum, h5uResolveWidth(Header.MaxWidth, AReferenceWidth));
+        LMaximum := Max(Minimum, LMaximum);
+        if Weight > 0 then
+          Exit(LMaximum);
+        if Header.Width <> 0 then
+          LPreferred := h5uResolveWidth(Header.Width, AReferenceWidth)
+        else
+          LPreferred := IntrinsicMaximum;
+      end;
+      Result := EnsureRange(LPreferred, Minimum, LMaximum);
+    end;
+  end;
+
+  function IntrinsicGroupMaximum(AIndex: Integer): Single;
+  var
+    K, LPass: Integer;
+    LLow, LHigh, LMiddle, LCapacity: Single;
+    LRelative: Boolean;
+  begin
+    LRelative := False;
+    LCapacity := -LNodes[AIndex].Spacing;
+    for K in LNodes[AIndex].Children do
+    begin
+      if Assigned(LNodes[K].Column) then
+        LRelative := LRelative or (LNodes[K].Column.MaxWidthSpecification < 0)
+      else
+        LRelative := LRelative or (LNodes[K].Header.MaxWidth < 0);
+      LCapacity := LCapacity + NodeCapacityAt(K, 0) + LNodes[K].Spacing;
+    end;
+    if not LRelative then
+      Exit(LCapacity);
+    LLow := 0;
+    LHigh := h5uUnlimitedWidth;
+    // Child percentage limits use the group's eventual width. Their sum divided
+    // by that width is nonincreasing, so the feasible upper bound can be bisected.
+    // Child groups already have their intrinsic bound: no recursive search here.
+    for LPass := 1 to 192 do
+    begin
+      LMiddle := LLow + (LHigh - LLow) / 2;
+      if (LMiddle = LLow) or (LMiddle = LHigh) then
+        Break;
+      LCapacity := -LNodes[AIndex].Spacing;
+      for K in LNodes[AIndex].Children do
+        LCapacity := LCapacity + NodeCapacityAt(K, LMiddle) + LNodes[K].Spacing;
+      if LCapacity >= LMiddle then
+        LLow := LMiddle
+      else
+        LHigh := LMiddle;
+    end;
+    Result := LLow;
+  end;
+
+  procedure MeasureNode(AIndex: Integer; AReferenceWidth: Single);
   var
     K: Integer;
-    LMin, LMax, LNatural: Double;
+    LMin, LMax, LNatural, LChildReference, LSpecification: Single;
   begin
     if Assigned(LNodes[AIndex].Column) then
     begin
       with LNodes[AIndex] do
       begin
-        Minimum := Column.MinWidth;
-        Maximum := Column.MaxWidth;
-        if Maximum = 0 then
-          Maximum := MaxInt div 4;
-        Preferred := Column.ConstrainWidth(Column.Width);
+        Column.SetWidthReference(AReferenceWidth);
+        Minimum := Column.ResolvedMinWidth;
+        Maximum := Column.ResolvedMaxWidth;
+        LSpecification := Column.WidthSpecification;
+        Preferred := Column.ResolvedWidth;
+        Weight := 0;
         if Column.AutoWidth then
           Preferred := Column.ConstrainWidth(Column.MeasuredWidth);
-        // AutoWidth takes precedence. Measured columns are fixed for distribution.
-        if not Column.AutoWidth then
-          Weight := Column.WidthInPercent;
+        case AFitMode of
+          Th5uColumnFitMode.PercentColumns:
+            if not Column.AutoWidth and (LSpecification < 0) then
+              Weight := -LSpecification;
+          Th5uColumnFitMode.AllColumns:
+            if Column.AutoWidth then
+              Weight := Preferred
+            else
+              Weight := h5uResolveWidth(LSpecification, AReferenceWidth);
+        end;
+        if Maximum = 0 then
+          Weight := 0;
       end;
       Exit;
     end;
     LMin := 0;
     LMax := 0;
     LNatural := 0;
+    LChildReference := AReferenceWidth;
+    if Assigned(LNodes[AIndex].Header) and (LNodes[AIndex].Header.Width <> 0) then
+      LChildReference := h5uResolveWidth(LNodes[AIndex].Header.Width, AReferenceWidth);
     for K in LNodes[AIndex].Children do
     begin
-      MeasureNode(K);
+      MeasureNode(K, LChildReference);
       if LNodes[K].Weight > 0 then
       begin
         LMin := LMin + LNodes[K].Minimum + LNodes[K].Spacing;
@@ -127,20 +215,32 @@ var
         Exit;
       end;
       Minimum := Max(0.0, LMin - Spacing);
-      Maximum := Max(Minimum, LMax - Spacing);
+      if AFitMode = Th5uColumnFitMode.None then
+        IntrinsicMaximum := Max(Minimum, LMax - Spacing)
+      else
+        IntrinsicMaximum := Max(Minimum, IntrinsicGroupMaximum(AIndex));
+      Maximum := IntrinsicMaximum;
       Preferred := Max(0.0, LNatural - Spacing);
+      Weight := 0;
       if Assigned(Header) then
       begin
         // Impossible group limits cannot override fixed widths or child limits.
-        Minimum := Max(Minimum, Min(Maximum, Double(Header.MinWidth)));
-        if Header.MaxWidth > 0 then
-          Maximum := Max(Minimum, Min(Maximum, Double(Header.MaxWidth)));
-        if Header.Width > 0 then
-          Preferred := Header.Width;
-        Weight := Header.WidthInPercent;
-        if (Weight = 0) and (Header.Width = 0) then
-          for K in Children do
-            Weight := Weight + LNodes[K].Weight;
+        Minimum := Max(Minimum, Min(Maximum, Single(Header.MinWidth)));
+        if Header.MaxWidth <> 0 then
+          Maximum := Max(Minimum, Min(Maximum, h5uResolveWidth(Header.MaxWidth, AReferenceWidth)));
+        if Header.Width <> 0 then
+          Preferred := h5uResolveWidth(Header.Width, AReferenceWidth);
+        case AFitMode of
+          Th5uColumnFitMode.PercentColumns:
+            begin
+              Weight := Header.WidthInPercent;
+              if Header.Width = 0 then
+                for K in Children do
+                  Weight := Weight + LNodes[K].Weight;
+            end;
+          Th5uColumnFitMode.AllColumns:
+            Weight := Preferred;
+        end;
       end;
       Preferred := EnsureRange(Preferred, Minimum, Maximum);
       if Maximum = 0 then
@@ -148,39 +248,38 @@ var
     end;
   end;
 
-  procedure AllocateNode(AIndex: Integer; AWidth: Double);
+  procedure AllocateNode(AIndex: Integer; AWidth: Single);
   var
-    K, LPass, LBest: Integer;
-    LRemaining, LMin, LMax, LLow, LHigh, LScale, LSum, LWeight, LFraction: Double;
+    K, LPass, LActive: Integer;
+    LRemaining, LMinimum, LMaximum, LMaxWeight, LLow, LHigh, LScale, LSum: Single;
+    LResidual, LBefore: Single;
+    LFrozeColumn: Boolean;
 
-    function WidthAtScale(AChild: Integer; ALogScale: Double): Double;
-    var
-      LLog: Double;
+    function WidthAtScale(AChild: Integer; AScale: Single): Single;
     begin
-      LLog := ALogScale + Ln(LNodes[AChild].Weight);
-      if LLog <= Ln(Max(1E-300, LNodes[AChild].Minimum)) then
-        Exit(LNodes[AChild].Minimum);
-      if LLog >= Ln(LNodes[AChild].Maximum) then
-        Exit(LNodes[AChild].Maximum);
-      Result := Exp(LLog);
+      Result := EnsureRange(AScale * (LNodes[AChild].Weight / LMaxWeight),
+        LNodes[AChild].Minimum, LNodes[AChild].Maximum);
     end;
 
   begin
     LNodes[AIndex].Width := AWidth;
     if Assigned(LNodes[AIndex].Column) then
       Exit;
+    for K in LNodes[AIndex].Children do
+      MeasureNode(K, AWidth);
     LRemaining := AWidth + LNodes[AIndex].Spacing;
-    LMin := 0;
-    LMax := 0;
-    LWeight := 0;
+    LMinimum := 0;
+    LMaximum := 0;
+    LActive := 0;
     for K in LNodes[AIndex].Children do
     begin
+      LNodes[K].AtMaximum := False;
       LRemaining := LRemaining - LNodes[K].Spacing;
       if LNodes[K].Weight > 0 then
       begin
-        LMin := LMin + LNodes[K].Minimum;
-        LMax := LMax + LNodes[K].Maximum;
-        LWeight := LWeight + LNodes[K].Weight;
+        LMinimum := LMinimum + LNodes[K].Minimum;
+        LMaximum := LMaximum + LNodes[K].Maximum;
+        Inc(LActive);
       end
       else
       begin
@@ -188,55 +287,92 @@ var
         LRemaining := LRemaining - LNodes[K].Width;
       end;
     end;
-    if LWeight > 0 then
+    LRemaining := EnsureRange(LRemaining, LMinimum, LMaximum);
+    if (LRemaining <= LMinimum) or (LRemaining >= LMaximum) then
     begin
-      LRemaining := EnsureRange(LRemaining, LMin, LMax);
-      LLow := 0;
-      LHigh := 0;
       for K in LNodes[AIndex].Children do
         if LNodes[K].Weight > 0 then
+          if LRemaining <= LMinimum then
+            LNodes[K].Width := LNodes[K].Minimum
+          else
+            LNodes[K].Width := LNodes[K].Maximum;
+      LActive := 0;
+    end;
+    while LActive > 0 do
+    begin
+      LMaxWeight := 0;
+      for K in LNodes[AIndex].Children do
+        if (LNodes[K].Weight > 0) and not LNodes[K].AtMaximum then
+          LMaxWeight := Max(LMaxWeight, LNodes[K].Weight);
+      LSum := 0;
+      for K in LNodes[AIndex].Children do
+        if (LNodes[K].Weight > 0) and not LNodes[K].AtMaximum then
+          LSum := LSum + WidthAtScale(K, LRemaining);
+      LFrozeColumn := False;
+      if LSum < LRemaining then
+      begin
+        // Normalizing against the largest remaining weight avoids overflowing
+        // scale factors. Saturated columns can be removed before renormalizing.
+        for K in LNodes[AIndex].Children do
+          if (LNodes[K].Weight > 0) and not LNodes[K].AtMaximum
+            and (WidthAtScale(K, LRemaining) >= LNodes[K].Maximum)
+          then
+          begin
+            LNodes[K].Width := LNodes[K].Maximum;
+            LNodes[K].AtMaximum := True;
+            Dec(LActive);
+            LFrozeColumn := True;
+          end;
+        if LFrozeColumn then
         begin
-          LLow := Min(LLow, Ln(Max(1E-300, LNodes[K].Minimum)) - Ln(LNodes[K].Weight) - 1);
-          LHigh := Max(LHigh, Ln(LNodes[K].Maximum) - Ln(LNodes[K].Weight) + 1);
+          LRemaining := AWidth + LNodes[AIndex].Spacing;
+          for K in LNodes[AIndex].Children do
+          begin
+            LRemaining := LRemaining - LNodes[K].Spacing;
+            if (LNodes[K].Weight = 0) or LNodes[K].AtMaximum then
+              LRemaining := LRemaining - LNodes[K].Width;
+          end;
+          LRemaining := Max(0.0, LRemaining);
+          Continue;
         end;
-      // Monotone bounded water filling: clamped columns release their share.
-      for LPass := 1 to 100 do
+      end;
+      LLow := 0;
+      LHigh := LRemaining;
+      for LPass := 1 to 192 do
       begin
         LScale := LLow + (LHigh - LLow) / 2;
+        if (LScale = LLow) or (LScale = LHigh) then
+          Break;
         LSum := 0;
         for K in LNodes[AIndex].Children do
-          if LNodes[K].Weight > 0 then
+          if (LNodes[K].Weight > 0) and not LNodes[K].AtMaximum then
             LSum := LSum + WidthAtScale(K, LScale);
         if LSum < LRemaining then
           LLow := LScale
         else
           LHigh := LScale;
       end;
-      LSum := 0;
+      LResidual := LRemaining;
       for K in LNodes[AIndex].Children do
-        if LNodes[K].Weight > 0 then
+        if (LNodes[K].Weight > 0) and not LNodes[K].AtMaximum then
         begin
-          LScale := WidthAtScale(K, LHigh);
-          LNodes[K].Width := Floor(LScale + 0.0000001);
-          LNodes[K].Fraction := LScale - LNodes[K].Width;
-          LSum := LSum + LNodes[K].Width;
+          LNodes[K].Width := WidthAtScale(K, LHigh);
+          LResidual := LResidual - LNodes[K].Width;
         end;
-      // Largest remainders, stable in visible order. Never lose viewport pixels.
-      for LPass := 1 to Round(LRemaining - LSum) do
-      begin
-        LBest := -1;
-        LFraction := -2;
+      // Correct the last floating-point remainder without quantizing logical
+      // widths. Native adapters round cumulative drawing boundaries as needed.
+      for LPass := 0 to 1 do
         for K in LNodes[AIndex].Children do
-          if (LNodes[K].Weight > 0) and (LNodes[K].Width < LNodes[K].Maximum) and (LNodes[K].Fraction > LFraction) then
+          if (LNodes[K].Weight > 0) and not LNodes[K].AtMaximum and (LResidual <> 0)
+            and ((LPass = 1) or ((LNodes[K].Width > LNodes[K].Minimum)
+              and (LNodes[K].Width < LNodes[K].Maximum)))
+          then
           begin
-            LBest := K;
-            LFraction := LNodes[K].Fraction;
+            LBefore := LNodes[K].Width;
+            LNodes[K].Width := EnsureRange(LBefore + LResidual, LNodes[K].Minimum, LNodes[K].Maximum);
+            LResidual := LResidual - (LNodes[K].Width - LBefore);
           end;
-        if LBest < 0 then
-          Break;
-        LNodes[LBest].Width := LNodes[LBest].Width + 1;
-        LNodes[LBest].Fraction := -2;
-      end;
+      Break;
     end;
     for K in LNodes[AIndex].Children do
       AllocateNode(K, LNodes[K].Width);
@@ -298,15 +434,15 @@ begin
           Dec(K);
         end;
       end;
-    MeasureNode(0);
-    LBudget := Max(0.0, Floor(AAvailableWidth));
+    LBudget := EnsureRange(AAvailableWidth, 0.0, h5uUnlimitedWidth);
     if AMaxWidth > 0 then
       LBudget := Min(LBudget, AMaxWidth);
     LBudget := Max(LBudget, AMinWidth);
+    MeasureNode(0, LBudget);
     AllocateNode(0, LBudget);
     for I := LGroups + 1 to N - 1 do
     begin
-      LWidth := Round(LNodes[I].Width);
+      LWidth := LNodes[I].Width;
       Result := Result or (LNodes[I].Column.LayoutWidth <> LWidth);
       LNodes[I].Column.SetLayoutWidth(LWidth);
     end;
@@ -316,7 +452,7 @@ begin
   end;
 end;
 
-function h5uColumnRightSpacing(AColumn: Th5uGridColumn; ADefault: Integer): Integer;
+function h5uColumnRightSpacing(AColumn: Th5uGridColumn; ADefault: Single): Single;
 begin
   if Assigned(AColumn) and (AColumn.RightSpacing >= 0) then
     Result := AColumn.RightSpacing
@@ -324,12 +460,13 @@ begin
     Result := ADefault;
 end;
 
-function h5uBuildColumnLayout(AColumns: Th5uGridColumns; ADefaultSpacing: Integer; AViewLeft, AViewRight, AIndicatorExtent, AHorizontalOffset: Double;
+function h5uBuildColumnLayout(AColumns: Th5uGridColumns; ADefaultSpacing: Single; AViewLeft, AViewRight, AIndicatorExtent, AHorizontalOffset: Single;
   AViewHasHeight: Boolean): {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uColumnLayoutInfo>;
 var
   LColumns: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uGridColumn>;
-  LDataLeft, LLeft, LRight, LNormal, LStart: Double;
-  LSpacing, I: Integer;
+  LDataLeft, LLeft, LRight, LNormal, LStart: Single;
+  LSpacing: Single;
+  I: Integer;
 begin
   LColumns := AColumns.VisibleColumns;
   SetLength(Result, Length(LColumns));
@@ -372,7 +509,7 @@ begin
   end;
 end;
 
-procedure h5uColumnViewport(AColumns: Th5uGridColumns; AColumn: Th5uGridColumn; ADefaultSpacing: Integer; AIndicatorExtent: Double; var ALeft, ARight: Double);
+procedure h5uColumnViewport(AColumns: Th5uGridColumns; AColumn: Th5uGridColumn; ADefaultSpacing: Single; AIndicatorExtent: Single; var ALeft, ARight: Single);
 var
   LColumn: Th5uGridColumn;
 begin
@@ -388,7 +525,7 @@ begin
   ALeft := Min(ALeft, ARight);
 end;
 
-function h5uHeaderHeight(ALayout: Th5uHeaderLayout; AShowHeader: Boolean; ARowHeight, ASpacing: Double): Double;
+function h5uHeaderHeight(ALayout: Th5uHeaderLayout; AShowHeader: Boolean; ARowHeight, ASpacing: Single): Single;
 var
   LRows: Integer;
 begin
