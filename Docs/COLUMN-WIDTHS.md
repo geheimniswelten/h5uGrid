@@ -117,6 +117,17 @@ Manuelles Ziehen und `AutoSizeColumn` setzen positive Pixelvorgaben und
 deaktivieren `AutoWidth`. Bei `AllColumns` bleibt auch diese Pixelvorgabe eine
 Ausgangsgröße für die gemeinsame Anpassung.
 
+Ein Doppelklick auf einen Spaltentrenner im Header führt `AutoSizeColumn` für
+die getroffene Spalte aus. Ist sie Teil einer Mehrfachauswahl von Spalten,
+werden alle sichtbaren, veränderbaren ausgewählten Spalten angepasst. Trifft
+der Doppelklick eine nicht ausgewählte Spalte, wird nur diese angepasst;
+die Auswahl bleibt erhalten.
+
+Es gelten dieselben Trefferzonen und Headerkanten wie beim Ziehen des Trenners.
+`Customization.AllowColumnResizing = False` beziehungsweise `Column.CanResize = False`
+verhindern auch diese automatische Anpassung. Minima, Maxima und der vorhandene
+Anpassungsmodus bleiben maßgeblich.
+
 ## Gruppenheader
 
 Das mehrzeilige Layout liegt unter `Grid.Header.Layout`. Seine `Cells` ohne
@@ -188,7 +199,8 @@ Ein Prozentwert wird direkt als negatives `Width` gespeichert.
 Textkonvertierung und vererbtes Streaming. `Build/test-sizing-options.ps1` prüft
 beide Adapter ohne sichtbare Fenster: Optionsmigration, PropertyEditor-Aufteilung,
 Messabbruch, Editorvorgaben, Farbänderungen ohne erneute Messung, Monitorgrenzen
-und native DFM/FMX-Roundtrips. `Build/test-grid-performance.ps1` prüft weiterhin
+native DFM/FMX-Roundtrips und Separator-Doppelklicks für einzelne und ausgewählte
+Spalten. `Build/test-grid-performance.ps1` prüft weiterhin
 das Scrollen großer Listen. `Build/test-editor-bounds.ps1` prüft das Anpassen
 vorhandener Eingabefelder unter Erhalt ihrer Eingabe, ohne sie zu aktivieren.
 `Build/test-geometry-precision.ps1` prüft gebrochene FMX-Messwerte, die Genauigkeit

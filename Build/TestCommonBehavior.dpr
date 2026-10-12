@@ -581,6 +581,47 @@ begin
   end;
 end;
 
+procedure TestAutoSizeTargets;
+var
+  Columns: ThiiGridColumns;
+  Selection: ThiiGridSelection;
+  A, B, C, Hidden, Removed: ThiiGridColumn;
+  Targets: {$IFDEF FPC}specialize {$ENDIF}TArray<ThiiGridColumn>;
+begin
+  Columns := ThiiGridColumns.Create(nil);
+  Selection := ThiiGridSelection.Create;
+  try
+    A := Columns.Add;
+    A.Id := 'A';
+    B := Columns.Add;
+    B.Id := 'B';
+    C := Columns.Add;
+    C.Id := 'C';
+    Hidden := Columns.Add;
+    Hidden.Id := 'Hidden';
+    Hidden.Visible := False;
+    Selection.SelectColumns(['A', 'B', 'Hidden']);
+    Targets := h5uAutoSizeColumnTargets(Columns, Selection, B);
+    Check((Length(Targets) = 2) and (Targets[0] = A) and (Targets[1] = B), 'selected targets follow collection order and exclude hidden columns');
+    Targets := h5uAutoSizeColumnTargets(Columns, Selection, C);
+    Check((Length(Targets) = 1) and (Targets[0] = C), 'unselected hit targets only itself');
+    B.CanResize := False;
+    Targets := h5uAutoSizeColumnTargets(Columns, Selection, A);
+    Check((Length(Targets) = 1) and (Targets[0] = A), 'locked selected columns are excluded');
+    Check(Length(h5uAutoSizeColumnTargets(Columns, Selection, B)) = 0, 'locked hit cannot start autosizing');
+    Check(Length(h5uAutoSizeColumnTargets(Columns, Selection, Hidden)) = 0, 'hidden hit cannot start autosizing');
+    Removed := Columns.Add;
+    Removed.Free;
+    Check(Length(h5uAutoSizeColumnTargets(Columns, Selection, Removed)) = 0, 'removed target is rejected before dereferencing');
+    Check(Length(h5uAutoSizeColumnTargets(Columns, Selection, nil)) = 0, 'missing separator has no target');
+    Check(Selection.SelectedColumnCount = 3, 'autosize planning does not change selection');
+    Writeln('PASS: autosize selection, hidden/locked/removed targets, stable order and preserved selection');
+  finally
+    Selection.Free;
+    Columns.Free;
+  end;
+end;
+
 procedure TestResizeBoundaries;
 var
   LColumns: ThiiGridColumns;
@@ -1207,6 +1248,7 @@ end;
 begin
   try
     TestResizeBoundaries;
+    TestAutoSizeTargets;
     TestNavigation;
     TestIndependentViews;
     TestRowMetrics;

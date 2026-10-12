@@ -458,6 +458,7 @@ type
     procedure UpdateSelectionDrag(X, Y: Integer);
     procedure EndSelectionDrag;
     function ColumnResizeAt(X, Y: Integer; ATouch: Boolean): ThiiGridColumn;
+    function AutoSizeColumnsAt(X, Y: Integer): Boolean;
     function IsResizeHeaderEdge(AX, AY: Single): Boolean;
     function BeginColumnResize(X, Y: Integer; ATouch: Boolean): Boolean;
     procedure UpdateColumnResize(X: Integer);
@@ -3185,6 +3186,26 @@ begin
     Cursor := FResizeCursor;
 end;
 
+function ThiiCustomGrid.AutoSizeColumnsAt(X, Y: Integer): Boolean;
+var
+  LTargets: {$IFDEF FPC}specialize {$ENDIF}TArray<ThiiGridColumn>;
+  LColumn: ThiiGridColumn;
+begin
+  LTargets := h5uAutoSizeColumnTargets(FColumns, FSelection, ColumnResizeAt(X, Y, False));
+  Result := Length(LTargets) > 0;
+  if not Result then
+    Exit;
+  EndSelectionDrag;
+  // Batch layout changes so later selected columns use the same header geometry.
+  FColumns.BeginUpdate;
+  try
+    for LColumn in LTargets do
+      AutoSizeColumn(LColumn);
+  finally
+    FColumns.EndUpdate;
+  end;
+end;
+
 function ThiiCustomGrid.BeginColumnResize(X, Y: Integer; ATouch: Boolean): Boolean;
 begin
   FResizingColumn := ColumnResizeAt(X, Y, ATouch);
@@ -3693,6 +3714,8 @@ begin
   // using the event coordinates, without taking focus back from it afterwards.
   if ssDouble in Shift then
   begin
+    if (Button = mbLeft) and AutoSizeColumnsAt(X, Y) then
+      Exit;
     FMouseDownHit := HitTest(X, Y);
     if (Button = mbLeft) and (FMouseDownHit.Kind = ThiiHitKind.DataCell)
       and CellEditorHit(FMouseDownHit.Column, FMouseDownHit.RowIndex, TRectF.Create(FMouseDownHit.Bounds), PointF(X, Y)) then

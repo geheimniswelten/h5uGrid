@@ -587,6 +587,7 @@ type
     procedure UpdateSelectionDrag(X, Y: Single);
     procedure EndSelectionDrag;
     function ColumnResizeAt(X, Y: Single; ATouch: Boolean): ThiiGridColumn;
+    function AutoSizeColumnsAt(X, Y: Single): Boolean;
     function IsResizeHeaderEdge(AX, AY: Single): Boolean;
     function BeginColumnResize(X, Y: Single; ATouch: Boolean): Boolean;
     procedure UpdateColumnResize(X: Single);
@@ -3375,7 +3376,8 @@ uses
     System.Math,
   {$ENDIF}
   h5u.Grid.Columns,
-  h5u.Grid.Options;
+  h5u.Grid.Options,
+  h5u.Grid.Selection;
 
 type
   Th5uResizeCandidate = record
@@ -3389,6 +3391,8 @@ type
 function h5uColumnResizeAt(AOptions: ThiiCustomizationOptions; const ACandidates: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uResizeCandidate>;
   ALastVisibleIndex: Integer; X, Y: Single; ATouch: Boolean; AHeaderEdge: Th5uResizeHeaderEdgeTest): ThiiGridColumn;
 function h5uTryResizeColumn(AColumns: ThiiGridColumns; AColumn: ThiiGridColumn; AOriginalWidth, ADelta: Single): Boolean;
+function h5uAutoSizeColumnTargets(AColumns: ThiiGridColumns; ASelection: ThiiGridSelection;
+  AColumn: ThiiGridColumn): {$IFDEF FPC}specialize {$ENDIF}TArray<ThiiGridColumn>;
 ```
 
 ## `h5u.Grid.RowMetrics`
@@ -4860,6 +4864,7 @@ type
     procedure UpdateSelectionDrag(X, Y: Integer);
     procedure EndSelectionDrag;
     function ColumnResizeAt(X, Y: Integer; ATouch: Boolean): ThiiGridColumn;
+    function AutoSizeColumnsAt(X, Y: Integer): Boolean;
     function IsResizeHeaderEdge(AX, AY: Single): Boolean;
     function BeginColumnResize(X, Y: Integer; ATouch: Boolean): Boolean;
     procedure UpdateColumnResize(X: Integer);
@@ -5987,6 +5992,7 @@ type
     procedure UpdateSelectionDrag(X, Y: Integer);
     procedure EndSelectionDrag;
     function ColumnResizeAt(X, Y: Integer; ATouch: Boolean): ThiiGridColumn;
+    function AutoSizeColumnsAt(X, Y: Integer): Boolean;
     function IsResizeHeaderEdge(AX, AY: Single): Boolean;
     function BeginColumnResize(X, Y: Integer; ATouch: Boolean): Boolean;
     procedure UpdateColumnResize(X: Integer);

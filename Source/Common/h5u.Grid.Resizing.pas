@@ -18,7 +18,8 @@ uses
     System.Math,
   {$ENDIF}
   h5u.Grid.Columns,
-  h5u.Grid.Options;
+  h5u.Grid.Options,
+  h5u.Grid.Selection;
 
 type
   Th5uResizeCandidate = record
@@ -32,8 +33,42 @@ type
 function h5uColumnResizeAt(AOptions: ThiiCustomizationOptions; const ACandidates: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uResizeCandidate>;
   ALastVisibleIndex: Integer; X, Y: Single; ATouch: Boolean; AHeaderEdge: Th5uResizeHeaderEdgeTest): ThiiGridColumn;
 function h5uTryResizeColumn(AColumns: ThiiGridColumns; AColumn: ThiiGridColumn; AOriginalWidth, ADelta: Single): Boolean;
+function h5uAutoSizeColumnTargets(AColumns: ThiiGridColumns; ASelection: ThiiGridSelection;
+  AColumn: ThiiGridColumn): {$IFDEF FPC}specialize {$ENDIF}TArray<ThiiGridColumn>;
 
 implementation
+
+function h5uAutoSizeColumnTargets(AColumns: ThiiGridColumns; ASelection: ThiiGridSelection;
+  AColumn: ThiiGridColumn): {$IFDEF FPC}specialize {$ENDIF}TArray<ThiiGridColumn>;
+var
+  I, J, LCount: Integer;
+  LSelected: Boolean;
+  LColumn: ThiiGridColumn;
+begin
+  Result := nil;
+  // Verify collection membership before reading a possibly removed column.
+  for I := 0 to AColumns.Count - 1 do
+    if AColumns[I] = AColumn then
+    begin
+      if not AColumn.Visible or not AColumn.CanResize then
+        Exit;
+      LSelected := (ASelection.SelectedColumnCount > 1) and ASelection.IsColumnSelected(AColumn.Id);
+      SetLength(Result, AColumns.Count);
+      LCount := 0;
+      for J := 0 to AColumns.Count - 1 do
+      begin
+        LColumn := AColumns[J];
+        if LColumn.Visible and LColumn.CanResize
+          and (((not LSelected) and (LColumn = AColumn)) or (LSelected and ASelection.IsColumnSelected(LColumn.Id))) then
+        begin
+          Result[LCount] := LColumn;
+          Inc(LCount);
+        end;
+      end;
+      SetLength(Result, LCount);
+      Exit;
+    end;
+end;
 
 function h5uColumnResizeAt(AOptions: ThiiCustomizationOptions; const ACandidates: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uResizeCandidate>;
   ALastVisibleIndex: Integer; X, Y: Single; ATouch: Boolean; AHeaderEdge: Th5uResizeHeaderEdgeTest): ThiiGridColumn;

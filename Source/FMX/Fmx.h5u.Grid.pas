@@ -478,6 +478,7 @@ type
     procedure UpdateSelectionDrag(X, Y: Single);
     procedure EndSelectionDrag;
     function ColumnResizeAt(X, Y: Single; ATouch: Boolean): ThiiGridColumn;
+    function AutoSizeColumnsAt(X, Y: Single): Boolean;
     function IsResizeHeaderEdge(AX, AY: Single): Boolean;
     function BeginColumnResize(X, Y: Single; ATouch: Boolean): Boolean;
     procedure UpdateColumnResize(X: Single);
@@ -2034,6 +2035,8 @@ var
   LHit: ThiiHitTestInfo;
 begin
   inherited;
+  if AutoSizeColumnsAt(FLastMousePoint.X, FLastMousePoint.Y) then
+    Exit;
   LHit := GridHitTest(FLastMousePoint.X, FLastMousePoint.Y);
   if (LHit.Kind = ThiiHitKind.DataCell) and CellEditorHit(LHit.Column, LHit.RowIndex, LHit.Bounds, FLastMousePoint) then
     StartEdit(LHit);
@@ -3210,6 +3213,26 @@ begin
   else
     if Cursor = crHSplit then
       Cursor := FResizeCursor;
+end;
+
+function ThiiCustomGrid.AutoSizeColumnsAt(X, Y: Single): Boolean;
+var
+  LTargets: {$IFDEF FPC}specialize {$ENDIF}TArray<ThiiGridColumn>;
+  LColumn: ThiiGridColumn;
+begin
+  LTargets := h5uAutoSizeColumnTargets(FColumns, FSelection, ColumnResizeAt(X, Y, False));
+  Result := Length(LTargets) > 0;
+  if not Result then
+    Exit;
+  EndSelectionDrag;
+  // Batch layout changes so later selected columns use the same header geometry.
+  FColumns.BeginUpdate;
+  try
+    for LColumn in LTargets do
+      AutoSizeColumn(LColumn);
+  finally
+    FColumns.EndUpdate;
+  end;
 end;
 
 function ThiiCustomGrid.BeginColumnResize(X, Y: Single; ATouch: Boolean): Boolean;

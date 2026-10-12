@@ -7,7 +7,7 @@ uses
   FMX.Forms, FMX.Graphics, FMX.Controls, FMX.Types,
   Fmx.h5u.Grid, Fmx.h5u.PropertyEditor, Fmx.h5u.FormDesigner;
   {$ELSE}
-  Vcl.Forms, Vcl.Graphics, Vcl.Controls,
+  Winapi.Windows, Winapi.Messages, Vcl.Forms, Vcl.Graphics, Vcl.Controls,
   Vcl.h5u.Grid, Vcl.h5u.PropertyEditor, Vcl.h5u.FormDesigner;
   {$ENDIF}
 
@@ -25,6 +25,11 @@ type
   THeightContext = ThiiGetRowHeightContext;
   THeight = Integer;
   {$ENDIF}
+
+  TDoubleClickGrid = class(TTestGrid)
+  public
+    procedure DoubleClickAt(const APoint: TPoint);
+  end;
 
   TMeasureSource = class
     HeightCalls, MeasureCalls, ValueCalls: Integer;
@@ -112,6 +117,43 @@ begin
     LText.Free;
     LBinary.Free;
   end;
+end;
+
+procedure TDoubleClickGrid.DoubleClickAt(const APoint: TPoint);
+begin
+  {$IFDEF TEST_FMX}
+  MouseDown(TMouseButton.mbLeft, [ssDouble], APoint.X, APoint.Y);
+  MouseUp(TMouseButton.mbLeft, [ssDouble], APoint.X, APoint.Y);
+  {$ELSE}
+  Perform(WM_LBUTTONDBLCLK, MK_LBUTTON, MakeLParam(APoint.X, APoint.Y));
+  Perform(WM_LBUTTONUP, 0, MakeLParam(APoint.X, APoint.Y));
+  {$ENDIF}
+end;
+
+function HeaderPoint(AGrid: TDoubleClickGrid; AColumn: ThiiGridColumn; ADivider: Boolean): TPoint;
+var
+  X, Y: Integer;
+  Hit: ThiiHitTestInfo;
+begin
+  PaintOffscreen(AGrid);
+  Y := Round(AGrid.Spacing.Top + AGrid.Header.RowHeight / 2);
+  for X := 0 to Trunc(AGrid.Width) - 1 do
+  begin
+    {$IFDEF TEST_FMX}
+    Hit := AGrid.GridHitTest(X, Y);
+    {$ELSE}
+    Hit := AGrid.HitTest(X, Y);
+    {$ENDIF}
+    if (Hit.Kind = ThiiHitKind.Header) and (Hit.Column = AColumn) then
+    begin
+      if ADivider then
+        Result := Point(Round(Hit.Bounds.Right), Y)
+      else
+        Result := Point(Round((Hit.Bounds.Left + Hit.Bounds.Right) / 2), Y);
+      Exit;
+    end;
+  end;
+  raise Exception.Create('Column header not found for double-click test');
 end;
 
 procedure TestInheritedOptionDefaults;
@@ -555,17 +597,106 @@ begin
   end;
 end;
 
+
+procedure TestSeparatorDoubleClick;
+var
+  Form: TForm;
+  Grid: TDoubleClickGrid;
+  Source: TMeasureSource;
+  Controller: ThiiVirtualController;
+  A, B, C: ThiiGridColumn;
+  ExpectedA, ExpectedB, ExpectedC: Single;
+
+  procedure ResetWidths;
+  begin
+    A.Width := 100;
+    B.Width := 100;
+    C.Width := 100;
+  end;
+
+begin
+  Form := TForm.CreateNew(nil);
+  Source := TMeasureSource.Create;
+  Source.Count := 3;
+  try
+    Grid := TDoubleClickGrid.Create(Form);
+    Grid.Parent := Form;
+    Grid.Width := 640;
+    Grid.Height := 320;
+    Grid.ScrollHints.Enabled := False;
+    Grid.ColumnSizing.FitMode := ThiiColumnFitMode.None;
+    A := Grid.Columns.Add;
+    A.Id := 'A';
+    A.FieldName := 'A';
+    A.MaxWidth := 160;
+    B := Grid.Columns.Add;
+    B.Id := 'B';
+    B.FieldName := 'B';
+    B.MaxWidth := 200;
+    C := Grid.Columns.Add;
+    C.Id := 'C';
+    C.FieldName := 'C';
+    C.MaxWidth := 240;
+    ResetWidths;
+    Controller := ThiiVirtualController.Create(Form);
+    Controller.OnGetRowCount := Source.RowCount;
+    Controller.OnGetRowKey := Source.RowKey;
+    Controller.OnGetValue := Source.Value;
+    Grid.DataController := Controller;
+    PaintOffscreen(Grid);
+    ExpectedA := Grid.MeasureColumnWidth(A);
+    ExpectedB := Grid.MeasureColumnWidth(B);
+    ExpectedC := Grid.MeasureColumnWidth(C);
+    Check((ExpectedA > 100) and (ExpectedB > 100) and (ExpectedC > 100), 'double-click fixture requires wider content');
+
+    Grid.DoubleClickAt(HeaderPoint(Grid, A, True));
+    CheckNear(ExpectedA, A.Width, 1, 'separator double-click sizes the hit column');
+    Check((B.Width = 100) and (C.Width = 100), 'single-column autosizing leaves other columns intact');
+    ResetWidths;
+    Grid.Selection.SelectColumns(['A', 'B']);
+    Grid.DoubleClickAt(HeaderPoint(Grid, B, True));
+    CheckNear(ExpectedA, A.Width, 1, 'selected separator double-click sizes the first selected column');
+    CheckNear(ExpectedB, B.Width, 1, 'selected separator double-click sizes the hit selected column');
+    Check((C.Width = 100) and (Grid.Selection.SelectedColumnCount = 2), 'batch autosizing preserves unrelated width and selection');
+    ResetWidths;
+    Grid.DoubleClickAt(HeaderPoint(Grid, C, True));
+    CheckNear(ExpectedC, C.Width, 1, 'unselected last-column separator sizes only that column');
+    Check((A.Width = 100) and (B.Width = 100), 'unselected separator does not resize the selection');
+    ResetWidths;
+    Grid.Customization.AllowColumnResizing := False;
+    Grid.DoubleClickAt(HeaderPoint(Grid, A, True));
+    Check((A.Width = 100) and (B.Width = 100), 'disabled resizing also disables separator autosizing');
+    Grid.Customization.AllowColumnResizing := True;
+    B.CanResize := False;
+    Grid.DoubleClickAt(HeaderPoint(Grid, A, True));
+    CheckNear(ExpectedA, A.Width, 1, 'resizable selected column is autosized');
+    Check(B.Width = 100, 'locked selected column is not autosized');
+    B.CanResize := True;
+    ResetWidths;
+    Grid.Selection.ClearColumns;
+    Grid.DoubleClickAt(HeaderPoint(Grid, A, False));
+    Check(A.Width = 100, 'header caption double-click is not a resize boundary');
+    B.Width := -30;
+    Grid.DoubleClickAt(HeaderPoint(Grid, B, True));
+    CheckNear(ExpectedB, B.Width, 1, 'separator autosizing converts percentage sizing to pixels');
+  finally
+    Form.Free;
+    Source.Free;
+  end;
+end;
+
 begin
   try
     Application.Initialize;
     RegisterColorIntegerConsts;
-    RegisterClass(TTestGrid);
+    System.Classes.RegisterClass(TTestGrid);
     TestInheritedOptionDefaults;
     TestGroupedOptionsAndStreaming;
     TestPropertyEditorWidths;
     TestSingleGeometryStreaming;
     TestMeasurementAndAppearance;
     TestWidthDistribution;
+    TestSeparatorDoubleClick;
     Writeln('PASS: sizing, grouped options, streaming, runtime property editor and measurement bounds');
   except
     on E: Exception do

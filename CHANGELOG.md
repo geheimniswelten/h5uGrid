@@ -2,6 +2,7 @@
 
 ## Unreleased – 2026-10-12
 
+- VCL/FMX/LCL: Doppelklick auf einen Spaltentrenner passt die Spalte automatisch an; bei einem Treffer auf eine mehrfach ausgewählte Spalte werden alle sichtbaren, veränderbaren ausgewählten Spalten angepasst. Auswahl, Resize-Sperren und Größenlimits bleiben erhalten.
 - Produktname `hiiGrid`; öffentliche Klassen und Typen verwenden `Thii…`, während Units, Packages und interne Helfer `h5u…` behalten.
 - VCL, FMX und LCL verwenden jeweils `ThiiGrid` und `ThiiCustomGrid`; die Haupt-Units bieten Aliase für ihre zugehörige öffentliche API.
 - PropertyEditor in eigenständige VCL-/FMX-Runtime-Units ausgelagert; Property-Modell, Werteditoren und Listencontroller in `h5u.PropertyEditor` zusammengeführt.
