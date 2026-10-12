@@ -47,6 +47,7 @@ uses
   h5u.Grid.Factory,
   h5u.Grid.Options,
   h5u.Grid.Selection,
+  h5u.Grid.Sizing,
   h5u.Grid.Types,
   h5u.Grid.Data.Dataset,
   Lcl.h5u.Grid.Editors,
@@ -169,7 +170,7 @@ type
   ThiiFactoryScope = h5u.Grid.Factory.ThiiFactoryScope;
   ThiiClassFactory = h5u.Grid.Factory.ThiiClassFactory;
 
-  ThiiGrid = class;
+  ThiiCustomGrid = class;
   ThiiLclVisualCell = class;
   ThiiLclVisualCellClass = class of ThiiLclVisualCell;
 
@@ -177,7 +178,7 @@ type
   ThiiHitKind = (None, Header, RowIndicator, DataCell, AdjacentGroupGlyph);
 
   ThiiGetRowHeightContext = record
-    Grid: ThiiGrid;
+    Grid: ThiiCustomGrid;
     DataController: ThiiCustomDataController;
     RowKey: ThiiRowKey;
     ViewRowIndex: Int64;
@@ -189,7 +190,7 @@ type
   ThiiGetRowSpacingEvent = procedure(Sender: TObject; const AContext: ThiiGetRowHeightContext; var ASpacing: Integer) of object;
 
   ThiiThumbHintContext = record
-    Grid: ThiiGrid;
+    Grid: ThiiCustomGrid;
     DataController: ThiiCustomDataController;
     Axis: ThiiScrollAxis;
     Trigger: ThiiScrollHintTrigger;
@@ -253,14 +254,14 @@ type
     FAppearance: ThiiResolvedAppearance;
     FInUse: Boolean;
   protected
-    procedure PrepareCanvas(AGrid: ThiiGrid; ACanvas: TCanvas; APart: ThiiElementPaintPart);
-    procedure PaintDefault(AGrid: ThiiGrid; ACanvas: TCanvas); virtual;
-    function EffectiveBackground(AGrid: ThiiGrid): TColor;
-    function EffectiveForeground(AGrid: ThiiGrid): TColor;
+    procedure PrepareCanvas(AGrid: ThiiCustomGrid; ACanvas: TCanvas; APart: ThiiElementPaintPart);
+    procedure PaintDefault(AGrid: ThiiCustomGrid; ACanvas: TCanvas); virtual;
+    function EffectiveBackground(AGrid: ThiiCustomGrid): TColor;
+    function EffectiveForeground(AGrid: ThiiCustomGrid): TColor;
   public
     procedure BindCell(const AContext: ThiiFactoryContext; const ABounds: TRect; const AValue: TValue; const ADisplayText: string;
       const AAppearance: ThiiResolvedAppearance); virtual;
-    procedure Paint(AGrid: ThiiGrid; ACanvas: TCanvas); virtual;
+    procedure Paint(AGrid: ThiiCustomGrid; ACanvas: TCanvas); virtual;
 
     property Context: ThiiFactoryContext read FContext;
     property Bounds: TRect read FBounds;
@@ -273,26 +274,26 @@ type
   // and the tree branch-end band. Its ClassId is resolved per grid instance.
   Th5uLclSpacingCell = class(ThiiLclVisualCell)
   protected
-    procedure PaintDefault(AGrid: ThiiGrid; ACanvas: TCanvas); override;
+    procedure PaintDefault(AGrid: ThiiCustomGrid; ACanvas: TCanvas); override;
   end;
 
   ThiiLclDataCell = class(ThiiLclVisualCell)
   private
     FPicture: TPicture;
     FPictureSignature: Integer;
-    FPaintGrid: ThiiGrid;
+    FPaintGrid: ThiiCustomGrid;
     FPaintCanvas: TCanvas;
     procedure EditorPreparePaint(APart: ThiiElementPaintPart);
     procedure EnsurePicture;
   protected
-    procedure PaintDefault(AGrid: ThiiGrid; ACanvas: TCanvas); override;
+    procedure PaintDefault(AGrid: ThiiCustomGrid; ACanvas: TCanvas); override;
   public
     destructor Destroy; override;
   end;
 
   ThiiLclHeaderCell = class(ThiiLclVisualCell)
   protected
-    procedure PaintDefault(AGrid: ThiiGrid; ACanvas: TCanvas); override;
+    procedure PaintDefault(AGrid: ThiiCustomGrid; ACanvas: TCanvas); override;
   end;
 
   ThiiLclFixedCell = class(ThiiLclDataCell);
@@ -301,7 +302,7 @@ type
   // The class is resolved through the per-grid FactoryScope.
   Th5uLclAdjacentGroupGlyphCell = class(ThiiLclVisualCell)
   protected
-    procedure PaintDefault(AGrid: ThiiGrid; ACanvas: TCanvas); override;
+    procedure PaintDefault(AGrid: ThiiCustomGrid; ACanvas: TCanvas); override;
   end;
 
   ThiiCustomGrid = class(TCustomControl)
@@ -840,7 +841,7 @@ begin
   FAppearance := AAppearance;
 end;
 
-function ThiiLclVisualCell.EffectiveBackground(AGrid: ThiiGrid): TColor;
+function ThiiLclVisualCell.EffectiveBackground(AGrid: ThiiCustomGrid): TColor;
 var
   LPalette: ThiiLclPalette;
 begin
@@ -851,7 +852,7 @@ begin
     Result := AGrid.ResolveDefaultCellColor;
 end;
 
-function ThiiLclVisualCell.EffectiveForeground(AGrid: ThiiGrid): TColor;
+function ThiiLclVisualCell.EffectiveForeground(AGrid: ThiiCustomGrid): TColor;
 var
   LPalette: ThiiLclPalette;
 begin
@@ -862,7 +863,7 @@ begin
     Result := LPalette.CellText;
 end;
 
-procedure ThiiLclVisualCell.PrepareCanvas(AGrid: ThiiGrid; ACanvas: TCanvas; APart: ThiiElementPaintPart);
+procedure ThiiLclVisualCell.PrepareCanvas(AGrid: ThiiCustomGrid; ACanvas: TCanvas; APart: ThiiElementPaintPart);
 var
   LContext: ThiiLclDrawContext;
 begin
@@ -875,7 +876,7 @@ begin
   AGrid.FOnPrepareElement(AGrid, Self, ACanvas, LContext, APart);
 end;
 
-procedure ThiiGrid.PrepareGridCanvas(const ABounds: TRect; AKind: ThiiElementKind);
+procedure ThiiCustomGrid.PrepareGridCanvas(const ABounds: TRect; AKind: ThiiElementKind);
 var
   LContext: ThiiLclDrawContext;
 begin
@@ -888,7 +889,7 @@ begin
   FOnPrepareElement(Self, Self, Canvas, LContext, ThiiElementPaintPart.Background);
 end;
 
-procedure ThiiLclVisualCell.Paint(AGrid: ThiiGrid; ACanvas: TCanvas);
+procedure ThiiLclVisualCell.Paint(AGrid: ThiiCustomGrid; ACanvas: TCanvas);
 var
   LDrawContext: ThiiLclDrawContext;
   LDrawDefault: Boolean;
@@ -924,7 +925,7 @@ begin
   end;
 end;
 
-procedure ThiiLclVisualCell.PaintDefault(AGrid: ThiiGrid; ACanvas: TCanvas);
+procedure ThiiLclVisualCell.PaintDefault(AGrid: ThiiCustomGrid; ACanvas: TCanvas);
 begin
   // Separators are independent layout elements. Painting them around every
   // cell would double their width and would make per-column spacing impossible.
@@ -936,7 +937,7 @@ end;
 
 { Th5uLclSpacingCell }
 
-procedure Th5uLclSpacingCell.PaintDefault(AGrid: ThiiGrid; ACanvas: TCanvas);
+procedure Th5uLclSpacingCell.PaintDefault(AGrid: ThiiCustomGrid; ACanvas: TCanvas);
 begin
   if not Appearance.HasBackground then
     Exit;
@@ -948,7 +949,7 @@ end;
 
 { Th5uLclAdjacentGroupGlyphCell }
 
-procedure Th5uLclAdjacentGroupGlyphCell.PaintDefault(AGrid: ThiiGrid; ACanvas: TCanvas);
+procedure Th5uLclAdjacentGroupGlyphCell.PaintDefault(AGrid: ThiiCustomGrid; ACanvas: TCanvas);
 var
   LPalette: ThiiLclPalette;
   LRect: TRect;
@@ -1029,7 +1030,7 @@ begin
   end;
 end;
 
-procedure ThiiLclDataCell.PaintDefault(AGrid: ThiiGrid; ACanvas: TCanvas);
+procedure ThiiLclDataCell.PaintDefault(AGrid: ThiiCustomGrid; ACanvas: TCanvas);
 var
   LEditor: ThiiGridEditorItem;
   LEditorContext: ThiiEditorContext;
@@ -1127,7 +1128,7 @@ end;
 
 { ThiiLclHeaderCell }
 
-procedure ThiiLclHeaderCell.PaintDefault(AGrid: ThiiGrid; ACanvas: TCanvas);
+procedure ThiiLclHeaderCell.PaintDefault(AGrid: ThiiCustomGrid; ACanvas: TCanvas);
 var
   LPalette: ThiiLclPalette;
   LTextRect, LSymbolRect: TRect;
@@ -1178,7 +1179,7 @@ begin
   ACanvas.Brush.Style := bsSolid;
 end;
 
-function ThiiGrid.AcquireVisualCell(const AContext: ThiiFactoryContext; ADefaultClass: ThiiLclVisualCellClass): ThiiLclVisualCell;
+function ThiiCustomGrid.AcquireVisualCell(const AContext: ThiiFactoryContext; ADefaultClass: ThiiLclVisualCellClass): ThiiLclVisualCell;
 var
   LClass: ThiiLclVisualCellClass;
   LCell: ThiiLclVisualCell;
@@ -1203,7 +1204,7 @@ begin
   FFactoryScope.BindInstance(AContext, Result);
 end;
 
-procedure ThiiGrid.AutoCreateColumnsFromDataset(AClearExisting: Boolean);
+procedure ThiiCustomGrid.AutoCreateColumnsFromDataset(AClearExisting: Boolean);
 var
   LController: ThiiDatasetController;
   LField: TField;
@@ -1290,7 +1291,7 @@ begin
   RebuildAfterLayoutChange;
 end;
 
-procedure ThiiGrid.BeginVisualPass;
+procedure ThiiCustomGrid.BeginVisualPass;
 var
   LCell: ThiiLclVisualCell;
 begin
@@ -1302,7 +1303,7 @@ begin
     end;
 end;
 
-function ThiiGrid.BuildThumbHintText(AAxis: ThiiScrollAxis; ATrigger: ThiiScrollHintTrigger; out AContext: ThiiThumbHintContext): string;
+function ThiiCustomGrid.BuildThumbHintText(AAxis: ThiiScrollAxis; ATrigger: ThiiScrollHintTrigger; out AContext: ThiiThumbHintContext): string;
 var
   LTop: Integer;
   LRowIndex: Int64;
@@ -1380,7 +1381,7 @@ begin
   end;
 end;
 
-procedure ThiiGrid.SetMinWidth(const AValue: Integer);
+procedure ThiiCustomGrid.SetMinWidth(const AValue: Integer);
 begin
   if FMinWidth = Max(0, AValue) then
     Exit;
@@ -1390,7 +1391,7 @@ begin
   OptionsChanged(Self);
 end;
 
-procedure ThiiGrid.SetMaxWidth(const AValue: Integer);
+procedure ThiiCustomGrid.SetMaxWidth(const AValue: Integer);
 begin
   if FMaxWidth = Max(0, AValue) then
     Exit;
@@ -1400,7 +1401,7 @@ begin
   OptionsChanged(Self);
 end;
 
-procedure ThiiGrid.SetAutoWidthRowLimit(const AValue: Integer);
+procedure ThiiCustomGrid.SetAutoWidthRowLimit(const AValue: Integer);
 begin
   if FAutoWidthRowLimit = Max(0, AValue) then
     Exit;
@@ -1408,13 +1409,13 @@ begin
   InvalidateColumnWidths;
 end;
 
-procedure ThiiGrid.InvalidateColumnWidths;
+procedure ThiiCustomGrid.InvalidateColumnWidths;
 begin
   FAutoWidthsDirty := True;
   Invalidate;
 end;
 
-procedure ThiiGrid.AutoSizeColumn(AColumn: ThiiGridColumn; AFirstRow, ARowCount: Int64);
+procedure ThiiCustomGrid.AutoSizeColumn(AColumn: ThiiGridColumn; AFirstRow, ARowCount: Int64);
 var
   LWidth: Integer;
 begin
@@ -1429,7 +1430,7 @@ begin
   end;
 end;
 
-procedure ThiiGrid.MeasureAutoWidths;
+procedure ThiiCustomGrid.MeasureAutoWidths;
 var
   LColumn: ThiiGridColumn;
   LFont: string;
@@ -1456,13 +1457,13 @@ begin
   end;
 end;
 
-procedure ThiiGrid.ResolveColumnWidths(AAvailableWidth: Single);
+procedure ThiiCustomGrid.ResolveColumnWidths(AAvailableWidth: Single);
 begin
   if h5uResolveColumnWidths(FColumns, FHeaderLayout, FSpacing.DefaultColumnRightSpacing, AAvailableWidth - IndicatorExtent, FMinWidth, FMaxWidth) then
      InvalidateAllRowHeights;
 end;
 
-function ThiiGrid.MeasureColumnWidth(AColumn: ThiiGridColumn; AFirstRow, ARowCount: Int64): Integer;
+function ThiiCustomGrid.MeasureColumnWidth(AColumn: ThiiGridColumn; AFirstRow, ARowCount: Int64): Integer;
 var
   LBitmap: TBitmap;
   LContext: ThiiEditorContext;
@@ -1538,7 +1539,7 @@ begin
   end;
 end;
 
-procedure ThiiGrid.BuildColumnLayout;
+procedure ThiiCustomGrid.BuildColumnLayout;
 var
   LLayout: specialize TArray<Th5uColumnLayoutInfo>;
   LView: TRect;
@@ -1567,19 +1568,19 @@ begin
   SetLength(FVisibleColumns, LVisibleCount);
 end;
 
-function ThiiGrid.IndicatorExtent: Single;
+function ThiiCustomGrid.IndicatorExtent: Single;
 begin
   Result := 0;
   if FShowRowIndicator then
     Result := FRowIndicatorWidth + FSpacing.DefaultColumnRightSpacing;
 end;
 
-procedure ThiiGrid.CancelEditor;
+procedure ThiiCustomGrid.CancelEditor;
 begin
   FinishEditor(False);
 end;
 
-procedure ThiiGrid.ColumnChooserClick(Sender: TObject);
+procedure ThiiCustomGrid.ColumnChooserClick(Sender: TObject);
 var
   LItem: TMenuItem;
   LColumn: ThiiGridColumn;
@@ -1593,7 +1594,7 @@ begin
   SetColumnVisible(LColumn, not LColumn.Visible);
 end;
 
-function ThiiGrid.ColumnInfoAtPoint(X, Y: Integer; out AInfo: ThiiVisibleColumnInfo): Boolean;
+function ThiiCustomGrid.ColumnInfoAtPoint(X, Y: Integer; out AInfo: ThiiVisibleColumnInfo): Boolean;
 var
   LInfo: ThiiVisibleColumnInfo;
 begin
@@ -1606,7 +1607,7 @@ begin
   Result := False;
 end;
 
-procedure ThiiGrid.SetShowColumnModes(AValue: Boolean);
+procedure ThiiCustomGrid.SetShowColumnModes(AValue: Boolean);
 begin
   if FShowColumnModes = AValue then
     Exit;
@@ -1614,27 +1615,27 @@ begin
   Invalidate;
 end;
 
-procedure ThiiGrid.GetColumnMode(AColumn: ThiiGridColumn; var AMode: string);
+procedure ThiiCustomGrid.GetColumnMode(AColumn: ThiiGridColumn; var AMode: string);
 begin
   AMode := h5uColumnMode(AColumn, FDataController, FTree.LevelColumnId, FAdjacentGroupFolding.IdColumnId, FRowStyles.StyleKeyColumnId,
     FScrollHints.VerticalColumnId);
 end;
 
-function ThiiGrid.ColumnModeSymbols(AColumn: ThiiGridColumn): string;
+function ThiiCustomGrid.ColumnModeSymbols(AColumn: ThiiGridColumn): string;
 begin
   Result := '';
   if Assigned(AColumn) and (FShowColumnModes or (csDesigning in ComponentState)) then
     Result := h5uColumnModeSymbols(AColumn.Mode);
 end;
 
-procedure ThiiGrid.ColumnsChanged(Sender: TObject; AColumn: ThiiGridColumn);
+procedure ThiiCustomGrid.ColumnsChanged(Sender: TObject; AColumn: ThiiGridColumn);
 begin
   FAutoWidthsDirty := True;
   InvalidateAdjacentGroupMap(False);
   RebuildAfterLayoutChange;
 end;
 
-function ThiiGrid.TryFocusCell(const ACell: ThiiCellAddress; AUpdateAnchor: Boolean): Boolean;
+function ThiiCustomGrid.TryFocusCell(const ACell: ThiiCellAddress; AUpdateAnchor: Boolean): Boolean;
 var
   LColumn: ThiiGridColumn;
   LAllow: Boolean;
@@ -1659,7 +1660,7 @@ begin
   Result := True;
 end;
 
-function ThiiGrid.AllowCellEdit(AColumn: ThiiGridColumn; ARow: Int64): Boolean;
+function ThiiCustomGrid.AllowCellEdit(AColumn: ThiiGridColumn; ARow: Int64): Boolean;
 begin
   Result := False;
   if not CanUpdateLayout then
@@ -1668,20 +1669,20 @@ begin
     AColumn.OnCanEdit, FOnCanEdit);
 end;
 
-function ThiiGrid.GetCellValue(AColumn: ThiiGridColumn; ARow: Int64; ADisplay: Boolean): TValue;
+function ThiiCustomGrid.GetCellValue(AColumn: ThiiGridColumn; ARow: Int64; ADisplay: Boolean): TValue;
 begin
   Result := GetViewValue(ARow, AColumn.FieldName);
   if CanUpdateLayout then
     h5uOverrideCellValue(Self, AColumn, ARow, ADisplay, FOnGetValue, Result);
 end;
 
-function ThiiGrid.GetCellText(AColumn: ThiiGridColumn; ARow: Int64; ADisplay: Boolean): string;
+function ThiiCustomGrid.GetCellText(AColumn: ThiiGridColumn; ARow: Int64; ADisplay: Boolean): string;
 begin
   Result := h5uCellText(AColumn, ARow, ADisplay, Assigned(AColumn.OnGetValue) or Assigned(FOnGetValue), @GetCellValue, @GetViewValue,
     @GetViewDisplayText);
 end;
 
-procedure ThiiGrid.PutCellValue(AColumn: ThiiGridColumn; ARow: Int64; const AValue: TValue);
+procedure ThiiCustomGrid.PutCellValue(AColumn: ThiiGridColumn; ARow: Int64; const AValue: TValue);
 var
   LValue: TValue;
 begin
@@ -1691,13 +1692,13 @@ begin
   SetViewValue(ARow, AColumn.FieldName, LValue);
 end;
 
-procedure ThiiGrid.NotifyCellClick(AColumn: ThiiGridColumn; ARow: Int64; AHeader, AIndicator: Boolean);
+procedure ThiiCustomGrid.NotifyCellClick(AColumn: ThiiGridColumn; ARow: Int64; AHeader, AIndicator: Boolean);
 begin
   if CanUpdateLayout then
     h5uNotifyCellClick(Self, AColumn, ARow, AHeader, AIndicator, FOnCellClick, FOnColumnHeaderClick, FOnRowIndicatorClick);
 end;
 
-procedure ThiiGrid.CommitEditor;
+procedure ThiiCustomGrid.CommitEditor;
 var
   LValue: TValue;
 begin
@@ -1730,60 +1731,60 @@ begin
   end;
 end;
 
-function ThiiGrid.GetOnGetAdjacentGroupId: ThiiGetAdjacentGroupIdEvent;
+function ThiiCustomGrid.GetOnGetAdjacentGroupId: ThiiGetAdjacentGroupIdEvent;
 begin
   Result := nil;
   if Assigned(FView) then
     Result := FView.OnGetAdjacentGroupId;
 end;
 
-procedure ThiiGrid.SetOnGetAdjacentGroupId(const AValue: ThiiGetAdjacentGroupIdEvent);
+procedure ThiiCustomGrid.SetOnGetAdjacentGroupId(const AValue: ThiiGetAdjacentGroupIdEvent);
 begin
   FView.OnGetAdjacentGroupId := AValue;
 end;
 
-function ThiiGrid.GetOnGetTreeLevel: ThiiGetTreeLevelEvent;
+function ThiiCustomGrid.GetOnGetTreeLevel: ThiiGetTreeLevelEvent;
 begin
   Result := nil;
   if Assigned(FView) then
     Result := FView.OnGetTreeLevel;
 end;
 
-procedure ThiiGrid.SetOnGetTreeLevel(const AValue: ThiiGetTreeLevelEvent);
+procedure ThiiCustomGrid.SetOnGetTreeLevel(const AValue: ThiiGetTreeLevelEvent);
 begin
   FView.OnGetTreeLevel := AValue;
 end;
 
-function ThiiGrid.GetOnGetTreeBranchEnd: ThiiGetTreeBranchEndEvent;
+function ThiiCustomGrid.GetOnGetTreeBranchEnd: ThiiGetTreeBranchEndEvent;
 begin
   Result := nil;
   if Assigned(FView) then
     Result := FView.OnGetTreeBranchEnd;
 end;
 
-procedure ThiiGrid.SetOnGetTreeBranchEnd(const AValue: ThiiGetTreeBranchEndEvent);
+procedure ThiiCustomGrid.SetOnGetTreeBranchEnd(const AValue: ThiiGetTreeBranchEndEvent);
 begin
   FView.OnGetTreeBranchEnd := AValue;
 end;
 
-function ThiiGrid.GetOnAdjacentGroupStateChanged: ThiiAdjacentGroupStateChangedEvent;
+function ThiiCustomGrid.GetOnAdjacentGroupStateChanged: ThiiAdjacentGroupStateChangedEvent;
 begin
   Result := nil;
   if Assigned(FView) then
     Result := FView.OnAdjacentGroupStateChanged;
 end;
 
-procedure ThiiGrid.SetOnAdjacentGroupStateChanged(const AValue: ThiiAdjacentGroupStateChangedEvent);
+procedure ThiiCustomGrid.SetOnAdjacentGroupStateChanged(const AValue: ThiiAdjacentGroupStateChangedEvent);
 begin
   FView.OnAdjacentGroupStateChanged := AValue;
 end;
 
-function ThiiGrid.ViewDataController: ThiiCustomDataController;
+function ThiiCustomGrid.ViewDataController: ThiiCustomDataController;
 begin
   Result := FDataController;
 end;
 
-constructor ThiiGrid.Create(AOwner: TComponent);
+constructor ThiiCustomGrid.Create(AOwner: TComponent);
 begin
   inherited;
   // Our interaction handlers own capture. LCL's automatic release happens before
@@ -1883,7 +1884,7 @@ begin
   LayoutScrollBars;
 end;
 
-procedure ThiiGrid.DataChanged(Sender: TObject; const AChange: ThiiDataChange);
+procedure ThiiCustomGrid.DataChanged(Sender: TObject; const AChange: ThiiDataChange);
 begin
   FAutoWidthsDirty := True;
   // Unknown row changes may reorder positional keys; abandon the pending drop.
@@ -1901,7 +1902,7 @@ begin
   Invalidate;
 end;
 
-destructor ThiiGrid.Destroy;
+destructor ThiiCustomGrid.Destroy;
 begin
   CancelEditor;
   FEditorCache.Free;
@@ -1930,13 +1931,13 @@ begin
   inherited;
 end;
 
-procedure ThiiGrid.DoCustomDraw(ACanvas: TCanvas; const AContext: ThiiLclDrawContext; AStage: ThiiCustomDrawStage; var ADrawDefault: Boolean);
+procedure ThiiCustomGrid.DoCustomDraw(ACanvas: TCanvas; const AContext: ThiiLclDrawContext; AStage: ThiiCustomDrawStage; var ADrawDefault: Boolean);
 begin
   if Assigned(FOnCustomDraw) then
     FOnCustomDraw(Self, ACanvas, AContext, AStage, ADrawDefault);
 end;
 
-function ThiiGrid.DoMouseWheel(Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint): Boolean;
+function ThiiCustomGrid.DoMouseWheel(Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint): Boolean;
 var
   LDelta: Integer;
 begin
@@ -1962,7 +1963,7 @@ begin
   Result := True;
 end;
 
-procedure ThiiGrid.DrawCustomHeaderLayout;
+procedure ThiiCustomGrid.DrawCustomHeaderLayout;
 var
   I, LFirst, LLast: Integer;
   LCellDef: ThiiHeaderLayoutCell;
@@ -2025,7 +2026,7 @@ begin
   end;
 end;
 
-procedure ThiiGrid.DrawDefaultHeaders;
+procedure ThiiCustomGrid.DrawDefaultHeaders;
 var
   LInfo: ThiiVisibleColumnInfo;
   LRect: TRect;
@@ -2080,7 +2081,7 @@ begin
   end;
 end;
 
-procedure ThiiGrid.DrawContentPadding;
+procedure ThiiCustomGrid.DrawContentPadding;
 var
   LOuterRect: TRect;
   LInnerRect: TRect;
@@ -2116,7 +2117,7 @@ begin
   end;
 end;
 
-procedure ThiiGrid.DrawHeaders;
+procedure ThiiCustomGrid.DrawHeaders;
 var
   LRect: TRect;
   LSeparatorRect: TRect;
@@ -2168,7 +2169,7 @@ begin
   end;
 end;
 
-procedure ThiiGrid.DrawRowIndicator(const ARowInfo: ThiiVisibleRowInfo; ASelected: Boolean);
+procedure ThiiCustomGrid.DrawRowIndicator(const ARowInfo: ThiiVisibleRowInfo; ASelected: Boolean);
 var
   LRect: TRect;
   LSeparatorRect: TRect;
@@ -2216,7 +2217,7 @@ begin
   end;
 end;
 
-function ThiiGrid.GetAdjacentGroupGlyphRect(const ARowInfo: ThiiVisibleRowInfo): TRect;
+function ThiiCustomGrid.GetAdjacentGroupGlyphRect(const ARowInfo: ThiiVisibleRowInfo): TRect;
 var
   LInfo: Th5uAdjacentGroupRowInfo;
   LLeft: Integer;
@@ -2242,7 +2243,7 @@ begin
   IntersectRect(Result, Result, GetDataViewportRect);
 end;
 
-procedure ThiiGrid.DrawAdjacentGroupGlyph(const ARowInfo: ThiiVisibleRowInfo; ASelected: Boolean);
+procedure ThiiCustomGrid.DrawAdjacentGroupGlyph(const ARowInfo: ThiiVisibleRowInfo; ASelected: Boolean);
 var
   LBounds: TRect;
   LContext: ThiiFactoryContext;
@@ -2273,7 +2274,7 @@ begin
   LCell.Paint(Self, Canvas);
 end;
 
-procedure ThiiGrid.DrawRows;
+procedure ThiiCustomGrid.DrawRows;
 var
   LDataRect: TRect;
   LTop: Integer;
@@ -2439,8 +2440,8 @@ begin
   end;
 end;
 
-procedure ThiiGrid.DrawSpacingRect(const ABounds: TRect; AElementKind: ThiiElementKind; AColumn: ThiiGridColumn; AViewRowIndex: Int64; const ARowKey: ThiiRowKey; AColor: TColor;
-  const AStyleName: string; ATreeLevel: Integer; AClosedTreeLevels: Integer);
+procedure ThiiCustomGrid.DrawSpacingRect(const ABounds: TRect; AElementKind: ThiiElementKind; AColumn: ThiiGridColumn; AViewRowIndex: Int64; const ARowKey: ThiiRowKey;
+  AColor: TColor; const AStyleName: string; ATreeLevel: Integer; AClosedTreeLevels: Integer);
 var
   LClassId: ThiiClassId;
   LFactoryContext: ThiiFactoryContext;
@@ -2491,7 +2492,7 @@ begin
   LCell.Paint(Self, Canvas);
 end;
 
-function ThiiGrid.GetColumnViewportRect(AColumn: ThiiGridColumn): TRect;
+function ThiiCustomGrid.GetColumnViewportRect(AColumn: ThiiGridColumn): TRect;
 var
   LLeft, LRight: Single;
 begin
@@ -2503,7 +2504,7 @@ begin
   Result.Right := Round(LRight);
 end;
 
-function ThiiGrid.GetVisibleCellBounds(AColumn: ThiiGridColumn; const AColumnBounds, ARowBounds: TRect): TRect;
+function ThiiCustomGrid.GetVisibleCellBounds(AColumn: ThiiGridColumn; const AColumnBounds, ARowBounds: TRect): TRect;
 begin
   // Painting, pointer hit testing and cell editors must use the same clipped
   // rectangle, including rows partially scrolled underneath the header.
@@ -2514,14 +2515,14 @@ begin
   IntersectRect(Result, Result, AColumnBounds);
 end;
 
-procedure ThiiGrid.EditorChanged(Sender: TObject);
+procedure ThiiCustomGrid.EditorChanged(Sender: TObject);
 begin
   // A changed value permits another automatic commit. Showing a validation
   // dialog, and the focus changes it causes, must not retry the failed value.
   FEditorExitBlocked := False;
 end;
 
-procedure ThiiGrid.EditorExit(Sender: TObject);
+procedure ThiiCustomGrid.EditorExit(Sender: TObject);
 begin
   if Assigned(FActiveEditor) and FActiveEditor.DeferExit then
     Exit;
@@ -2529,7 +2530,7 @@ begin
     CommitEditor;
 end;
 
-procedure ThiiGrid.EditorKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+procedure ThiiCustomGrid.EditorKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
   case Key of
     VK_RETURN:
@@ -2546,7 +2547,7 @@ begin
   end;
 end;
 
-function ThiiGrid.FindFirstVisibleRow(AOffset: Int64; out ATop: Integer): Int64;
+function ThiiCustomGrid.FindFirstVisibleRow(AOffset: Int64; out ATop: Integer): Int64;
 begin
   Result := -1;
   ATop := GetDataViewportRect.Top;
@@ -2554,7 +2555,7 @@ begin
     Result := h5uFindFirstVisibleRow(GetViewRowCount, AOffset, GetDataViewportRect.Top, @MetricRowExtent, ATop);
 end;
 
-function ThiiGrid.GetDataCellClass(const AContext: ThiiFactoryContext): ThiiLclVisualCellClass;
+function ThiiCustomGrid.GetDataCellClass(const AContext: ThiiFactoryContext): ThiiLclVisualCellClass;
 begin
   if ThiiElementFlag.FixedColumn in AContext.ElementFlags then
     Result := GetFixedCellClass(AContext)
@@ -2562,13 +2563,13 @@ begin
     Result := ThiiLclDataCell;
 end;
 
-function ThiiGrid.GetDataViewportRect: TRect;
+function ThiiCustomGrid.GetDataViewportRect: TRect;
 begin
   Result := GetViewportRect;
   Inc(Result.Top, GetHeaderHeight);
 end;
 
-function ThiiGrid.GetEstimatedTotalRowHeight: Int64;
+function ThiiCustomGrid.GetEstimatedTotalRowHeight: Int64;
 var
   LTotal: Th5uTotalRowHeight;
   LVariableSpacing: Boolean;
@@ -2582,47 +2583,47 @@ begin
   Result := LTotal.Whole;
 end;
 
-function ThiiGrid.GetFixedCellClass(const AContext: ThiiFactoryContext): ThiiLclVisualCellClass;
+function ThiiCustomGrid.GetFixedCellClass(const AContext: ThiiFactoryContext): ThiiLclVisualCellClass;
 begin
   Result := ThiiLclFixedCell;
 end;
 
-function ThiiGrid.GetHeaderCellClass(const AContext: ThiiFactoryContext): ThiiLclVisualCellClass;
+function ThiiCustomGrid.GetHeaderCellClass(const AContext: ThiiFactoryContext): ThiiLclVisualCellClass;
 begin
   Result := ThiiLclHeaderCell;
 end;
 
-function ThiiGrid.GetHeaderHeight: Integer;
+function ThiiCustomGrid.GetHeaderHeight: Integer;
 begin
   Result := Round(h5uHeaderHeight(FHeaderLayout, FShowHeader, FHeaderRowHeight, Round(FSpacing.RowSpacing)));
 end;
 
-function ThiiGrid.GetOnConfigureInstance: ThiiConfigureInstanceEvent;
+function ThiiCustomGrid.GetOnConfigureInstance: ThiiConfigureInstanceEvent;
 begin
   Result := FFactoryScope.OnConfigureInstance;
 end;
 
-function ThiiGrid.GetOnCreateInstance: ThiiCreateInstanceEvent;
+function ThiiCustomGrid.GetOnCreateInstance: ThiiCreateInstanceEvent;
 begin
   Result := FFactoryScope.OnCreateInstance;
 end;
 
-function ThiiGrid.GetOnGetClass: ThiiGetClassEvent;
+function ThiiCustomGrid.GetOnGetClass: ThiiGetClassEvent;
 begin
   Result := FFactoryScope.OnGetClass;
 end;
 
-function ThiiGrid.GetRowHeightFor(AViewRowIndex: Int64; const ARowKey: ThiiRowKey; AAllowMeasure: Boolean): Integer;
+function ThiiCustomGrid.GetRowHeightFor(AViewRowIndex: Int64; const ARowKey: ThiiRowKey; AAllowMeasure: Boolean): Integer;
 begin
   Result := Round(FRowMetrics.GetHeight(FRowHeight, FColumns, AViewRowIndex, ARowKey, AAllowMeasure, @MetricCellHeight, @MetricAdjustHeight));
 end;
 
-function ThiiGrid.MetricCellHeight(ARow: Int64; AColumn: ThiiGridColumn): Single;
+function ThiiCustomGrid.MetricCellHeight(ARow: Int64; AColumn: ThiiGridColumn): Single;
 begin
   Result := MeasureCellHeight(ARow, AColumn);
 end;
 
-procedure ThiiGrid.MetricAdjustHeight(ARow: Int64; const AKey: ThiiRowKey; AEstimated: Boolean; var AHeight: Single; var ACacheResult: Boolean);
+procedure ThiiCustomGrid.MetricAdjustHeight(ARow: Int64; const AKey: ThiiRowKey; AEstimated: Boolean; var AHeight: Single; var ACacheResult: Boolean);
 var
   LContext: ThiiGetRowHeightContext;
   LHeight: Integer;
@@ -2641,7 +2642,7 @@ begin
   AHeight := LHeight;
 end;
 
-function ThiiGrid.MetricRowExtent(ARow: Int64; AAllowMeasure: Boolean): Single;
+function ThiiCustomGrid.MetricRowExtent(ARow: Int64; AAllowMeasure: Boolean): Single;
 var
   LKey: ThiiRowKey;
   LKind: ThiiElementKind;
@@ -2653,12 +2654,12 @@ begin
   Result := GetRowHeightFor(ARow, LKey, AAllowMeasure) + GetEffectiveRowSeparatorFor(ARow, LKey, LKind, LColor, LStyle, LLevel, LClosed);
 end;
 
-function ThiiGrid.MetricRowSpacing(ARow: Int64; const AKey: ThiiRowKey): Single;
+function ThiiCustomGrid.MetricRowSpacing(ARow: Int64; const AKey: ThiiRowKey): Single;
 begin
   Result := GetRowSpacingFor(ARow, AKey);
 end;
 
-function ThiiGrid.GetRowStyle(AViewRowIndex: Int64; out AStyleKey: TValue): string;
+function ThiiCustomGrid.GetRowStyle(AViewRowIndex: Int64; out AStyleKey: TValue): string;
 var
   LColumn: ThiiGridColumn;
   LInteger: Integer;
@@ -2684,7 +2685,7 @@ begin
   Result := FRowStyles.ResolveStyle(AViewRowIndex, LInteger, LHasKey);
 end;
 
-function ThiiGrid.GetIndicatorRightSpacing: Integer;
+function ThiiCustomGrid.GetIndicatorRightSpacing: Integer;
 var
   LLeft: Integer;
 begin
@@ -2692,67 +2693,67 @@ begin
   Result := Round(LLeft + IndicatorExtent) - LLeft - FRowIndicatorWidth;
 end;
 
-procedure ThiiGrid.InvalidateAdjacentGroupMap(AClearStates: Boolean);
+procedure ThiiCustomGrid.InvalidateAdjacentGroupMap(AClearStates: Boolean);
 begin
   FView.InvalidateAdjacentGroupMap(AClearStates);
 end;
 
-function ThiiGrid.GetViewRowCount: Int64;
+function ThiiCustomGrid.GetViewRowCount: Int64;
 begin
   Result := FView.GetViewRowCount;
 end;
 
-function ThiiGrid.GetViewSourceRowIndex(AViewRowIndex: Int64): Int64;
+function ThiiCustomGrid.GetViewSourceRowIndex(AViewRowIndex: Int64): Int64;
 begin
   Result := FView.GetViewSourceRowIndex(AViewRowIndex);
 end;
 
-function ThiiGrid.GetViewRowKey(AViewRowIndex: Int64): ThiiRowKey;
+function ThiiCustomGrid.GetViewRowKey(AViewRowIndex: Int64): ThiiRowKey;
 begin
   Result := FView.GetViewRowKey(AViewRowIndex);
 end;
 
-function ThiiGrid.GetViewValue(AViewRowIndex: Int64; const AFieldName: string): TValue;
+function ThiiCustomGrid.GetViewValue(AViewRowIndex: Int64; const AFieldName: string): TValue;
 begin
   Result := FView.GetViewValue(AViewRowIndex, AFieldName);
 end;
 
-procedure ThiiGrid.SetViewValue(AViewRowIndex: Int64; const AFieldName: string; const AValue: TValue);
+procedure ThiiCustomGrid.SetViewValue(AViewRowIndex: Int64; const AFieldName: string; const AValue: TValue);
 begin
   FView.SetViewValue(AViewRowIndex, AFieldName, AValue);
 end;
 
-function ThiiGrid.CanEditViewValue(AViewRowIndex: Int64; const AFieldName: string): Boolean;
+function ThiiCustomGrid.CanEditViewValue(AViewRowIndex: Int64; const AFieldName: string): Boolean;
 begin
   Result := FView.CanEditViewValue(AViewRowIndex, AFieldName);
 end;
 
-function ThiiGrid.GetViewDisplayText(AViewRowIndex: Int64; const AFieldName, ADisplayFormat: string): string;
+function ThiiCustomGrid.GetViewDisplayText(AViewRowIndex: Int64; const AFieldName, ADisplayFormat: string): string;
 begin
   Result := FView.GetViewDisplayText(AViewRowIndex, AFieldName, ADisplayFormat);
 end;
 
-procedure ThiiGrid.PrepareViewRange(AFirstViewRow, ACount: Int64);
+procedure ThiiCustomGrid.PrepareViewRange(AFirstViewRow, ACount: Int64);
 begin
   FView.PrepareViewRange(AFirstViewRow, ACount);
 end;
 
-function ThiiGrid.TryGetAdjacentGroupRowInfo(AViewRowIndex: Int64; out AInfo: Th5uAdjacentGroupRowInfo): Boolean;
+function ThiiCustomGrid.TryGetAdjacentGroupRowInfo(AViewRowIndex: Int64; out AInfo: Th5uAdjacentGroupRowInfo): Boolean;
 begin
   Result := FView.TryGetAdjacentGroupRowInfo(AViewRowIndex, AInfo);
 end;
 
-procedure ThiiGrid.PopulateAdjacentGroupContext(var AContext: ThiiFactoryContext; AViewRowIndex: Int64);
+procedure ThiiCustomGrid.PopulateAdjacentGroupContext(var AContext: ThiiFactoryContext; AViewRowIndex: Int64);
 begin
   FView.PopulateAdjacentGroupContext(AContext, AViewRowIndex);
 end;
 
-procedure ThiiGrid.DoAdjacentGroupStateChanged(const AInfo: Th5uAdjacentGroupRowInfo);
+procedure ThiiCustomGrid.DoAdjacentGroupStateChanged(const AInfo: Th5uAdjacentGroupRowInfo);
 begin
   FView.DoAdjacentGroupStateChanged(AInfo);
 end;
 
-function ThiiGrid.GetRowSpacingFor(AViewRowIndex: Int64; const ARowKey: ThiiRowKey): Integer;
+function ThiiCustomGrid.GetRowSpacingFor(AViewRowIndex: Int64; const ARowKey: ThiiRowKey): Integer;
 var
   LContext: ThiiGetRowHeightContext;
 begin
@@ -2770,7 +2771,7 @@ begin
   Result := EnsureRange(Result, 0, 1000);
 end;
 
-function ThiiGrid.GetEffectiveRowSeparatorFor(AViewRowIndex: Int64; const ARowKey: ThiiRowKey; out AElementKind: ThiiElementKind; out AColor: TColor; out AStyleName: string;
+function ThiiCustomGrid.GetEffectiveRowSeparatorFor(AViewRowIndex: Int64; const ARowKey: ThiiRowKey; out AElementKind: ThiiElementKind; out AColor: TColor; out AStyleName: string;
   out ATreeLevel: Integer; out AClosedTreeLevels: Integer): Integer;
 var
   LSeparator: Th5uRowSeparatorInfo;
@@ -2791,7 +2792,7 @@ begin
   end;
 end;
 
-function ThiiGrid.GetGridLines: Boolean;
+function ThiiCustomGrid.GetGridLines: Boolean;
 begin
   // Explicit per-column RightSpacing values are intentionally independent
   // from this compatibility property. Horizontal subpixel gaps can still
@@ -2800,7 +2801,7 @@ begin
     or (Round(FSpacing.RowSpacing) > 0) or (FSpacing.DefaultColumnRightSpacing > 0);
 end;
 
-function ThiiGrid.GetTotalColumnWidth: Integer;
+function ThiiCustomGrid.GetTotalColumnWidth: Integer;
 var
   LColumn: ThiiGridColumn;
   LWidth: Single;
@@ -2813,7 +2814,7 @@ begin
   Result := Round(LWidth);
 end;
 
-function ThiiGrid.GetUnpaddedViewportRect: TRect;
+function ThiiCustomGrid.GetUnpaddedViewportRect: TRect;
 begin
   Result := ClientRect;
   if FVScrollBar.Visible then
@@ -2822,7 +2823,7 @@ begin
     Dec(Result.Bottom, FHScrollBar.Height);
 end;
 
-function ThiiGrid.GetViewportRect: TRect;
+function ThiiCustomGrid.GetViewportRect: TRect;
 begin
   Result := GetUnpaddedViewportRect;
 
@@ -2837,7 +2838,7 @@ begin
     Result.Bottom := Result.Top;
 end;
 
-function ThiiGrid.ResolveColor(const AColor: TColor; AFallback: TColor): TColor;
+function ThiiCustomGrid.ResolveColor(const AColor: TColor; AFallback: TColor): TColor;
 begin
   if AColor = clDefault then
     Result := AFallback
@@ -2845,27 +2846,27 @@ begin
     Result := AColor;
 end;
 
-function ThiiGrid.ResolveDefaultCellColor: TColor;
+function ThiiCustomGrid.ResolveDefaultCellColor: TColor;
 begin
   Result := ResolveColor(FAppearance.DefaultCellColor, h5uGetLclPalette(FTheme).CellBackground);
 end;
 
-function ThiiGrid.ResolveRowSpacingColor: TColor;
+function ThiiCustomGrid.ResolveRowSpacingColor: TColor;
 begin
   Result := ResolveColor(FSpacing.RowSpacingColor, h5uGetLclPalette(FTheme).CellBorder);
 end;
 
-function ThiiGrid.ResolveColumnSpacingColor: TColor;
+function ThiiCustomGrid.ResolveColumnSpacingColor: TColor;
 begin
   Result := ResolveColor(FSpacing.ColumnSpacingColor, h5uGetLclPalette(FTheme).CellBorder);
 end;
 
-function ThiiGrid.ResolveContentPaddingColor: TColor;
+function ThiiCustomGrid.ResolveContentPaddingColor: TColor;
 begin
   Result := ResolveColor(FSpacing.ContentPaddingColor, h5uGetLclPalette(FTheme).CellBorder);
 end;
 
-function ThiiGrid.ResolveTreeBranchEndColor(AViewRowIndex: Int64; const ARowKey: ThiiRowKey): TColor;
+function ThiiCustomGrid.ResolveTreeBranchEndColor(AViewRowIndex: Int64; const ARowKey: ThiiRowKey): TColor;
 var
   LAppearance: ThiiResolvedAppearance;
 begin
@@ -2885,7 +2886,7 @@ begin
   Result := ResolveRowSpacingColor;
 end;
 
-function ThiiGrid.ResolveAdjacentGroupEndColor(AViewRowIndex: Int64; const ARowKey: ThiiRowKey): TColor;
+function ThiiCustomGrid.ResolveAdjacentGroupEndColor(AViewRowIndex: Int64; const ARowKey: ThiiRowKey): TColor;
 var
   LAppearance: ThiiResolvedAppearance;
 begin
@@ -2905,14 +2906,14 @@ begin
   Result := ResolveRowSpacingColor;
 end;
 
-function ThiiGrid.GetVisualCellClass(const AContext: ThiiFactoryContext; ADefaultClass: ThiiLclVisualCellClass): ThiiLclVisualCellClass;
+function ThiiCustomGrid.GetVisualCellClass(const AContext: ThiiFactoryContext; ADefaultClass: ThiiLclVisualCellClass): ThiiLclVisualCellClass;
 var
   LCacheScope: ThiiFactoryCacheScope;
 begin
   Result := ThiiLclVisualCellClass(FFactoryScope.ResolveClass(AContext, ThiiLclVisualCell, ADefaultClass, LCacheScope));
 end;
 
-function ThiiGrid.HitTest(X, Y: Integer): ThiiHitTestInfo;
+function ThiiCustomGrid.HitTest(X, Y: Integer): ThiiHitTestInfo;
 var
   LFirst, LLast: Integer;
   LColumnInfo: ThiiVisibleColumnInfo;
@@ -2980,25 +2981,25 @@ begin
   end;
 end;
 
-procedure ThiiGrid.HideThumbHint;
+procedure ThiiCustomGrid.HideThumbHint;
 begin
   FThumbHintTimer.Enabled := False;
   if Assigned(FThumbHint) then
     FThumbHint.Visible := False;
 end;
 
-procedure ThiiGrid.InvalidateAllRowHeights;
+procedure ThiiCustomGrid.InvalidateAllRowHeights;
 begin
   FRowMetrics.Clear;
 end;
 
-procedure ThiiGrid.InvalidateRowHeight(const ARowKey: ThiiRowKey);
+procedure ThiiCustomGrid.InvalidateRowHeight(const ARowKey: ThiiRowKey);
 begin
   FRowMetrics.Remove(ARowKey.ToString);
   Invalidate;
 end;
 
-procedure ThiiGrid.InvalidateVisibleRowHeights;
+procedure ThiiCustomGrid.InvalidateVisibleRowHeights;
 var
   LRow: ThiiVisibleRowInfo;
 begin
@@ -3007,7 +3008,7 @@ begin
   Invalidate;
 end;
 
-function ThiiGrid.CanUpdateLayout: Boolean;
+function ThiiCustomGrid.CanUpdateLayout: Boolean;
 var
   LComponent: TComponent;
 begin
@@ -3025,7 +3026,7 @@ begin
   Result := True;
 end;
 
-procedure ThiiGrid.GetChildren(Proc: TGetChildProc; Root: TComponent);
+procedure ThiiCustomGrid.GetChildren(Proc: TGetChildProc; Root: TComponent);
 var
   I: Integer;
 begin
@@ -3035,7 +3036,7 @@ begin
       Proc(Controls[I]);
 end;
 
-procedure ThiiGrid.Loaded;
+procedure ThiiCustomGrid.Loaded;
 begin
   inherited;
   LayoutScrollBars;
@@ -3043,7 +3044,7 @@ begin
   Invalidate;
 end;
 
-procedure ThiiGrid.LayoutScrollBars;
+procedure ThiiCustomGrid.LayoutScrollBars;
 var
   LVWidth: Integer;
   LHHeight: Integer;
@@ -3065,7 +3066,7 @@ begin
     FActiveEditor.BringToFront;
 end;
 
-function ThiiGrid.MeasureCellHeight(AViewRowIndex: Int64; AColumn: ThiiGridColumn): Integer;
+function ThiiCustomGrid.MeasureCellHeight(AViewRowIndex: Int64; AColumn: ThiiGridColumn): Integer;
 var
   LText: string;
   LRect: TRect;
@@ -3111,7 +3112,7 @@ begin
     Result := Min(Result, Round(AColumn.MaxAutoHeight));
 end;
 
-procedure ThiiGrid.CMCursorChanged(var Message: TLMessage);
+procedure ThiiCustomGrid.CMCursorChanged(var Message: TLMessage);
 var
   LCursor: TCursor;
 begin
@@ -3125,14 +3126,14 @@ begin
   LCLIntf.SetCursor(Screen.Cursors[LCursor]);
 end;
 
-procedure ThiiGrid.CMMouseLeave(var Message: TLMessage);
+procedure ThiiCustomGrid.CMMouseLeave(var Message: TLMessage);
 begin
   if not Assigned(FResizingColumn) then
     SetResizeCursor(False);
   inherited;
 end;
 
-function ThiiGrid.ColumnResizeAt(X, Y: Integer; ATouch: Boolean): ThiiGridColumn;
+function ThiiCustomGrid.ColumnResizeAt(X, Y: Integer; ATouch: Boolean): ThiiGridColumn;
 var
   LCandidates: specialize TArray<Th5uResizeCandidate>;
   LView: TRect;
@@ -3157,7 +3158,7 @@ begin
   Result := h5uColumnResizeAt(FCustomization, LCandidates, High(FAllColumns), X, Y, ATouch, @IsResizeHeaderEdge);
 end;
 
-function ThiiGrid.IsResizeHeaderEdge(AX, AY: Single): Boolean;
+function ThiiCustomGrid.IsResizeHeaderEdge(AX, AY: Single): Boolean;
 var
   LHeader: ThiiHeaderLayoutCell;
 begin
@@ -3169,7 +3170,7 @@ begin
   end;
 end;
 
-procedure ThiiGrid.SetResizeCursor(AActive: Boolean);
+procedure ThiiCustomGrid.SetResizeCursor(AActive: Boolean);
 begin
   if AActive = FResizeCursorActive then
     Exit;
@@ -3184,7 +3185,7 @@ begin
     Cursor := FResizeCursor;
 end;
 
-function ThiiGrid.BeginColumnResize(X, Y: Integer; ATouch: Boolean): Boolean;
+function ThiiCustomGrid.BeginColumnResize(X, Y: Integer; ATouch: Boolean): Boolean;
 begin
   FResizingColumn := ColumnResizeAt(X, Y, ATouch);
   Result := Assigned(FResizingColumn);
@@ -3197,7 +3198,7 @@ begin
     SetResizeCursor(True);
 end;
 
-procedure ThiiGrid.UpdateColumnResize(X: Integer);
+procedure ThiiCustomGrid.UpdateColumnResize(X: Integer);
 begin
   if not Assigned(FResizingColumn) then
     Exit;
@@ -3207,7 +3208,7 @@ begin
   EndSelectionDrag;
 end;
 
-procedure ThiiGrid.SelectRightClickCell(const AHit: ThiiHitTestInfo);
+procedure ThiiCustomGrid.SelectRightClickCell(const AHit: ThiiHitTestInfo);
 var
   LCell: ThiiCellAddress;
 begin
@@ -3220,23 +3221,23 @@ begin
   h5uSelectRightClick(FSelection, LCell, AHit.Column.CanSelect, @TryFocusCell);
 end;
 
-function ThiiGrid.CanMoveColumn(AColumn: ThiiGridColumn): Boolean;
+function ThiiCustomGrid.CanMoveColumn(AColumn: ThiiGridColumn): Boolean;
 begin
   Result := h5uCanMoveColumn(FColumns, FCustomization.AllowColumnMoving, AColumn);
 end;
 
-function ThiiGrid.IsColumnMoveGesture(AColumn: ThiiGridColumn; AShift: TShiftState): Boolean;
+function ThiiCustomGrid.IsColumnMoveGesture(AColumn: ThiiGridColumn; AShift: TShiftState): Boolean;
 begin
   Result := h5uMoveGestureAllowed(CanMoveColumn(AColumn), FCustomization.ColumnMovingGesture = ThiiColumnRowMovingGesture.AltDrag, AShift);
 end;
 
-function ThiiGrid.IsRowMoveGesture(AShift: TShiftState): Boolean;
+function ThiiCustomGrid.IsRowMoveGesture(AShift: TShiftState): Boolean;
 begin
   Result := h5uMoveGestureAllowed(Assigned(FOnRowsMoved) and FCustomization.AllowRowMoving,
     FCustomization.RowMovingGesture = ThiiColumnRowMovingGesture.AltDrag, AShift);
 end;
 
-function ThiiGrid.GetHeaderCellBounds(ACell: ThiiHeaderLayoutCell): TRect;
+function ThiiCustomGrid.GetHeaderCellBounds(ACell: ThiiHeaderLayoutCell): TRect;
 var
   LFirst, LLast, LSpan: Integer;
 begin
@@ -3250,7 +3251,7 @@ begin
   Result.Bottom := Result.Top + LSpan * FHeaderRowHeight + (LSpan - 1) * Round(FSpacing.RowSpacing);
 end;
 
-function ThiiGrid.GetHeaderCellViewport(ACell: ThiiHeaderLayoutCell): TRect;
+function ThiiCustomGrid.GetHeaderCellViewport(ACell: ThiiHeaderLayoutCell): TRect;
 var
   LFirst, LLast: Integer;
 begin
@@ -3261,7 +3262,7 @@ begin
   Result.Bottom := Min(Result.Bottom, GetDataViewportRect.Top);
 end;
 
-function ThiiGrid.HeaderCellAtPoint(X, Y: Integer): ThiiHeaderLayoutCell;
+function ThiiCustomGrid.HeaderCellAtPoint(X, Y: Integer): ThiiHeaderLayoutCell;
 var
   I: Integer;
   LRect: TRect;
@@ -3279,7 +3280,7 @@ begin
   end;
 end;
 
-function ThiiGrid.BeginColumnMove(AColumnIndex: Integer; X, Y: Integer): Boolean;
+function ThiiCustomGrid.BeginColumnMove(AColumnIndex: Integer; X, Y: Integer): Boolean;
 var
   LPlan: Th5uColumnMovePlan;
   LHit: ThiiHitTestInfo;
@@ -3300,7 +3301,7 @@ begin
   Result := True;
 end;
 
-function ThiiGrid.BeginRowMove(ARowIndex: Int64; X, Y: Integer): Boolean;
+function ThiiCustomGrid.BeginRowMove(ARowIndex: Int64; X, Y: Integer): Boolean;
 var
   LPlan: Th5uRowMovePlan;
 begin
@@ -3316,7 +3317,7 @@ begin
   Result := True;
 end;
 
-procedure ThiiGrid.UpdateHeaderMove(X, Y: Integer);
+procedure ThiiCustomGrid.UpdateHeaderMove(X, Y: Integer);
 begin
   if (Length(FMovingColumns) = 0) and (Length(FMovingRowKeys) = 0) then
     Exit;
@@ -3342,7 +3343,7 @@ begin
   Invalidate;
 end;
 
-function ThiiGrid.GetColumnMoveHeaderBounds(const AInfo: ThiiVisibleColumnInfo): TRect;
+function ThiiCustomGrid.GetColumnMoveHeaderBounds(const AInfo: ThiiVisibleColumnInfo): TRect;
 var
   LCell: ThiiHeaderLayoutCell;
   LFirst, LLast, I: Integer;
@@ -3374,7 +3375,7 @@ begin
   Result.Bottom := Min(Result.Bottom, GetDataViewportRect.Top);
 end;
 
-function ThiiGrid.ColumnMoveTarget(X, Y: Integer; out ANewIndex, AMarkerX, AMarkerTop: Integer): Boolean;
+function ThiiCustomGrid.ColumnMoveTarget(X, Y: Integer; out ANewIndex, AMarkerX, AMarkerTop: Integer): Boolean;
 var
   LHit: ThiiHitTestInfo;
   LAfter: Boolean;
@@ -3402,7 +3403,7 @@ begin
   end;
 end;
 
-procedure ThiiGrid.DrawColumnMoveFeedback;
+procedure ThiiCustomGrid.DrawColumnMoveFeedback;
 var
   LPalette: ThiiLclPalette;
   LCanvas: TCanvas;
@@ -3508,7 +3509,7 @@ begin
   end;
 end;
 
-function ThiiGrid.FinishHeaderMove(X, Y: Integer): Boolean;
+function ThiiCustomGrid.FinishHeaderMove(X, Y: Integer): Boolean;
 var
   LHit: ThiiHitTestInfo;
   LMovingColumns: specialize TArray<ThiiGridColumn>;
@@ -3560,7 +3561,7 @@ begin
   end;
 end;
 
-procedure ThiiGrid.BeginSelectionDrag(AKind: ThiiSelectionKind; X, Y: Integer; AShift: TShiftState);
+procedure ThiiCustomGrid.BeginSelectionDrag(AKind: ThiiSelectionKind; X, Y: Integer; AShift: TShiftState);
 begin
   FSelectingRange := True;
   FSelectionDragging := False;
@@ -3571,7 +3572,7 @@ begin
   MouseCapture := True;
 end;
 
-procedure ThiiGrid.EndSelectionDrag;
+procedure ThiiCustomGrid.EndSelectionDrag;
 var
   LCaptured: Boolean;
 begin
@@ -3595,7 +3596,7 @@ begin
      MouseCapture := False;
 end;
 
-procedure ThiiGrid.UpdateSelectionDrag(X, Y: Integer);
+procedure ThiiCustomGrid.UpdateSelectionDrag(X, Y: Integer);
 var
   LHit: ThiiHitTestInfo;
   LCell: ThiiCellAddress;
@@ -3652,32 +3653,32 @@ begin
   FSelectionDragLast := LCell;
 end;
 
-procedure ThiiGrid.SelectHeaderRange(AKind: ThiiSelectionKind; ARow: Int64; AColumn: Integer; AShift: TShiftState);
+procedure ThiiCustomGrid.SelectHeaderRange(AKind: ThiiSelectionKind; ARow: Int64; AColumn: Integer; AShift: TShiftState);
 begin
   if CanUpdateLayout then
     FNavigation.SelectHeaderRange(FColumns, FSelection, GetViewRowCount, @GetViewRowKey, AKind, ARow, AColumn, AShift);
 end;
 
-procedure ThiiGrid.DoExit;
+procedure ThiiCustomGrid.DoExit;
 begin
   EndSelectionDrag;
   inherited;
 end;
 
-procedure ThiiGrid.WMCancelMode(var Message: TLMNoParams);
+procedure ThiiCustomGrid.WMCancelMode(var Message: TLMNoParams);
 begin
   EndSelectionDrag;
   inherited;
 end;
 
-procedure ThiiGrid.WMCaptureChanged(var Message: TLMessage);
+procedure ThiiCustomGrid.WMCaptureChanged(var Message: TLMessage);
 begin
   if Message.LParam <> LPARAM(Handle) then
     EndSelectionDrag;
   inherited;
 end;
 
-procedure ThiiGrid.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+procedure ThiiCustomGrid.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 var
   LCell: ThiiCellAddress;
   LRange: ThiiCellRange;
@@ -3774,7 +3775,7 @@ begin
   end;
 end;
 
-procedure ThiiGrid.MouseMove(Shift: TShiftState; X, Y: Integer);
+procedure ThiiCustomGrid.MouseMove(Shift: TShiftState; X, Y: Integer);
 begin
   if Assigned(FActiveEditor) and (FActiveEditor.Mode = ThiiEditorMode.Graphic) then
     FActiveEditor.MouseMove(Shift, PointF(X, Y));
@@ -3800,7 +3801,7 @@ begin
   end;
 end;
 
-procedure ThiiGrid.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+procedure ThiiCustomGrid.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 var
   LHit: ThiiHitTestInfo;
   LDragged, LEdit: Boolean;
@@ -3865,7 +3866,7 @@ begin
   FSelectingRange := False;
 end;
 
-procedure ThiiGrid.MoveColumn(AColumn: ThiiGridColumn; ANewVisibleIndex: Integer);
+procedure ThiiCustomGrid.MoveColumn(AColumn: ThiiGridColumn; ANewVisibleIndex: Integer);
 begin
   if not CanMoveColumn(AColumn) then
     Exit;
@@ -3873,7 +3874,7 @@ begin
   RebuildAfterLayoutChange;
 end;
 
-procedure ThiiGrid.ToggleAdjacentGroup(AViewRowIndex: Int64);
+procedure ThiiCustomGrid.ToggleAdjacentGroup(AViewRowIndex: Int64);
 var
   LInfo: Th5uAdjacentGroupRowInfo;
 begin
@@ -3889,7 +3890,7 @@ begin
   end;
 end;
 
-procedure ThiiGrid.SetAdjacentGroupCollapsed(AViewRowIndex: Int64; ACollapsed: Boolean);
+procedure ThiiCustomGrid.SetAdjacentGroupCollapsed(AViewRowIndex: Int64; ACollapsed: Boolean);
 var
   LInfo: Th5uAdjacentGroupRowInfo;
 begin
@@ -3904,7 +3905,7 @@ begin
   end;
 end;
 
-procedure ThiiGrid.ExpandAllAdjacentGroups;
+procedure ThiiCustomGrid.ExpandAllAdjacentGroups;
 var
   LChanged: specialize TArray<Th5uAdjacentGroupRowInfo>;
   LInfo: Th5uAdjacentGroupRowInfo;
@@ -3921,7 +3922,7 @@ begin
   Invalidate;
 end;
 
-procedure ThiiGrid.CollapseAllAdjacentGroups;
+procedure ThiiCustomGrid.CollapseAllAdjacentGroups;
 var
   LChanged: specialize TArray<Th5uAdjacentGroupRowInfo>;
   LInfo: Th5uAdjacentGroupRowInfo;
@@ -3938,7 +3939,7 @@ begin
   Invalidate;
 end;
 
-procedure ThiiGrid.ResetAdjacentGroupStates;
+procedure ThiiCustomGrid.ResetAdjacentGroupStates;
 begin
   FAutoWidthsDirty := True;
   FView.ResetAdjacentGroupStates;
@@ -3948,12 +3949,12 @@ begin
   Invalidate;
 end;
 
-function ThiiGrid.IsAdjacentGroupCollapsed(AViewRowIndex: Int64): Boolean;
+function ThiiCustomGrid.IsAdjacentGroupCollapsed(AViewRowIndex: Int64): Boolean;
 begin
   Result := FView.IsAdjacentGroupCollapsed(AViewRowIndex);
 end;
 
-procedure ThiiGrid.Notification(AComponent: TComponent; Operation: TOperation);
+procedure ThiiCustomGrid.Notification(AComponent: TComponent; Operation: TOperation);
 begin
   inherited;
   if Operation <> opRemove then
@@ -3965,7 +3966,7 @@ begin
     SharedClassFactory := nil;
 end;
 
-procedure ThiiGrid.OptionsChanged(Sender: TObject);
+procedure ThiiCustomGrid.OptionsChanged(Sender: TObject);
 begin
   FAutoWidthsDirty := True;
   if Sender = FAdjacentGroupFolding then
@@ -3973,7 +3974,7 @@ begin
   RebuildAfterLayoutChange;
 end;
 
-procedure ThiiGrid.Paint;
+procedure ThiiCustomGrid.Paint;
 var
   LPalette: ThiiLclPalette;
   LViewRect: TRect;
@@ -4013,7 +4014,7 @@ begin
     FOnAfterDraw(Self, Canvas);
 end;
 
-procedure ThiiGrid.RebuildAfterLayoutChange;
+procedure ThiiCustomGrid.RebuildAfterLayoutChange;
 begin
   CancelEditor;
   InvalidateAllRowHeights;
@@ -4021,7 +4022,7 @@ begin
   Invalidate;
 end;
 
-procedure ThiiGrid.Resize;
+procedure ThiiCustomGrid.Resize;
 begin
   inherited;
   if not CanUpdateLayout then
@@ -4036,7 +4037,7 @@ begin
   RebuildAfterLayoutChange;
 end;
 
-function ThiiGrid.ResolveCellAppearance(const AContext: ThiiFactoryContext; AColumn: ThiiGridColumn; const ARowAppearance: ThiiResolvedAppearance;
+function ThiiCustomGrid.ResolveCellAppearance(const AContext: ThiiFactoryContext; AColumn: ThiiGridColumn; const ARowAppearance: ThiiResolvedAppearance;
   ASelected, AFocused: Boolean): ThiiResolvedAppearance;
 var
   LPalette: ThiiLclPalette;
@@ -4074,7 +4075,7 @@ begin
     FOnGetCellAppearance(Self, AContext, Result);
 end;
 
-function ThiiGrid.ResolveRowAppearance(AViewRowIndex: Int64; const ARowKey: ThiiRowKey; const AStyleName: string): ThiiResolvedAppearance;
+function ThiiCustomGrid.ResolveRowAppearance(AViewRowIndex: Int64; const ARowKey: ThiiRowKey; const AStyleName: string): ThiiResolvedAppearance;
 var
   LPalette: ThiiLclPalette;
 begin
@@ -4104,7 +4105,7 @@ begin
     FOnGetRowAppearance(Self, AViewRowIndex, ARowKey, Result);
 end;
 
-function ThiiGrid.RowInfoAtPoint(X, Y: Integer; out AInfo: ThiiVisibleRowInfo): Boolean;
+function ThiiCustomGrid.RowInfoAtPoint(X, Y: Integer; out AInfo: ThiiVisibleRowInfo): Boolean;
 var
   LInfo: ThiiVisibleRowInfo;
 begin
@@ -4117,7 +4118,7 @@ begin
   Result := False;
 end;
 
-procedure ThiiGrid.ScrollBarScroll(Sender: TObject; ScrollCode: TScrollCode; var ScrollPos: Integer);
+procedure ThiiCustomGrid.ScrollBarScroll(Sender: TObject; ScrollCode: TScrollCode; var ScrollPos: Integer);
 var
   LTop: Integer;
   LRowIndex: Int64;
@@ -4159,7 +4160,7 @@ begin
   end;
 end;
 
-procedure ThiiGrid.SelectionChanged(Sender: TObject);
+procedure ThiiCustomGrid.SelectionChanged(Sender: TObject);
 var
   LOld, LNew: ThiiCellAddress;
 begin
@@ -4172,34 +4173,34 @@ begin
   h5uNotifyFocusChange(Self, FColumns, LOld, LNew, FOnCellExit, FOnCellEnter, FOnSelectionChange);
 end;
 
-procedure ThiiGrid.SetColumns(const AValue: ThiiGridColumns);
+procedure ThiiCustomGrid.SetColumns(const AValue: ThiiGridColumns);
 begin
   FColumns.Assign(AValue);
 end;
 
-procedure ThiiGrid.SetCustomization(const AValue: ThiiCustomizationOptions);
+procedure ThiiCustomGrid.SetCustomization(const AValue: ThiiCustomizationOptions);
 begin
   FCustomization.Assign(AValue);
 end;
 
-procedure ThiiGrid.SetAppearance(const AValue: ThiiGridAppearanceOptions);
+procedure ThiiCustomGrid.SetAppearance(const AValue: ThiiGridAppearanceOptions);
 begin
   FAppearance.Assign(AValue);
 end;
 
-procedure ThiiGrid.SetTree(const AValue: ThiiTreeOptions);
+procedure ThiiCustomGrid.SetTree(const AValue: ThiiTreeOptions);
 begin
   if Assigned(AValue) then
     FTree.Assign(AValue);
 end;
 
-procedure ThiiGrid.SetAdjacentGroupFolding(const AValue: ThiiAdjacentGroupFoldingOptions);
+procedure ThiiCustomGrid.SetAdjacentGroupFolding(const AValue: ThiiAdjacentGroupFoldingOptions);
 begin
   if Assigned(AValue) then
     FAdjacentGroupFolding.Assign(AValue);
 end;
 
-procedure ThiiGrid.SetGridLines(const AValue: Boolean);
+procedure ThiiCustomGrid.SetGridLines(const AValue: Boolean);
 begin
   if AValue then
     FSpacing.SetAllSeparators(1)
@@ -4207,12 +4208,12 @@ begin
     FSpacing.SetAllSeparators(0);
 end;
 
-procedure ThiiGrid.SetSpacing(const AValue: ThiiGridSpacingOptions);
+procedure ThiiCustomGrid.SetSpacing(const AValue: ThiiGridSpacingOptions);
 begin
   FSpacing.Assign(AValue);
 end;
 
-procedure ThiiGrid.SetDataController(const AValue: ThiiCustomDataController);
+procedure ThiiCustomGrid.SetDataController(const AValue: ThiiCustomDataController);
 begin
   if FDataController = AValue then
     Exit;
@@ -4236,68 +4237,68 @@ begin
   Invalidate;
 end;
 
-procedure ThiiGrid.SetHeaderLayout(const AValue: ThiiHeaderLayout);
+procedure ThiiCustomGrid.SetHeaderLayout(const AValue: ThiiHeaderLayout);
 begin
   FHeaderLayout.Assign(AValue);
   RebuildAfterLayoutChange;
 end;
 
-procedure ThiiGrid.SetHeaderRowHeight(const AValue: Integer);
+procedure ThiiCustomGrid.SetHeaderRowHeight(const AValue: Integer);
 begin
   FHeaderRowHeight := EnsureRange(AValue, 16, 200);
   RebuildAfterLayoutChange;
 end;
 
-procedure ThiiGrid.SetOnConfigureInstance(const AValue: ThiiConfigureInstanceEvent);
+procedure ThiiCustomGrid.SetOnConfigureInstance(const AValue: ThiiConfigureInstanceEvent);
 begin
   FFactoryScope.OnConfigureInstance := AValue;
 end;
 
-procedure ThiiGrid.SetOnCreateInstance(const AValue: ThiiCreateInstanceEvent);
+procedure ThiiCustomGrid.SetOnCreateInstance(const AValue: ThiiCreateInstanceEvent);
 begin
   FFactoryScope.OnCreateInstance := AValue;
 end;
 
-procedure ThiiGrid.SetOnGetClass(const AValue: ThiiGetClassEvent);
+procedure ThiiCustomGrid.SetOnGetClass(const AValue: ThiiGetClassEvent);
 begin
   FFactoryScope.OnGetClass := AValue;
 end;
 
-procedure ThiiGrid.SetRowHeight(const AValue: ThiiRowHeightOptions);
+procedure ThiiCustomGrid.SetRowHeight(const AValue: ThiiRowHeightOptions);
 begin
   FRowHeight.Assign(AValue);
 end;
 
-procedure ThiiGrid.SetRowIndicatorWidth(const AValue: Integer);
+procedure ThiiCustomGrid.SetRowIndicatorWidth(const AValue: Integer);
 begin
   FRowIndicatorWidth := EnsureRange(AValue, 0, 300);
   RebuildAfterLayoutChange;
 end;
 
-procedure ThiiGrid.SetRowStyles(const AValue: ThiiRowStyleOptions);
+procedure ThiiCustomGrid.SetRowStyles(const AValue: ThiiRowStyleOptions);
 begin
   FRowStyles.Assign(AValue);
   Invalidate;
 end;
 
-procedure ThiiGrid.SetScrolling(const AValue: ThiiScrollingOptions);
+procedure ThiiCustomGrid.SetScrolling(const AValue: ThiiScrollingOptions);
 begin
   FScrolling.Assign(AValue);
   RebuildAfterLayoutChange;
 end;
 
-procedure ThiiGrid.SetScrollHints(const AValue: ThiiScrollHintOptions);
+procedure ThiiCustomGrid.SetScrollHints(const AValue: ThiiScrollHintOptions);
 begin
   FScrollHints.Assign(AValue);
 end;
 
-procedure ThiiGrid.SetSelection(const AValue: ThiiGridSelection);
+procedure ThiiCustomGrid.SetSelection(const AValue: ThiiGridSelection);
 begin
   FSelection.Assign(AValue);
   Invalidate;
 end;
 
-procedure ThiiGrid.SetSharedClassFactory(const AValue: ThiiClassFactory);
+procedure ThiiCustomGrid.SetSharedClassFactory(const AValue: ThiiClassFactory);
 begin
   if FSharedClassFactory = AValue then
     Exit;
@@ -4319,7 +4320,7 @@ begin
   Invalidate;
 end;
 
-procedure ThiiGrid.SetTheme(const AValue: ThiiGridTheme);
+procedure ThiiCustomGrid.SetTheme(const AValue: ThiiGridTheme);
 var
   LPalette: ThiiLclPalette;
 begin
@@ -4332,7 +4333,7 @@ begin
   Invalidate;
 end;
 
-procedure ThiiGrid.SetColumnVisible(AColumn: ThiiGridColumn; AVisible: Boolean);
+procedure ThiiCustomGrid.SetColumnVisible(AColumn: ThiiGridColumn; AVisible: Boolean);
 begin
   if not Assigned(AColumn) then
     Exit;
@@ -4346,7 +4347,7 @@ begin
   RebuildAfterLayoutChange;
 end;
 
-procedure ThiiGrid.ShowColumnChooser;
+procedure ThiiCustomGrid.ShowColumnChooser;
 var
   LMenu: TPopupMenu;
   LItem: TMenuItem;
@@ -4374,7 +4375,7 @@ begin
   end;
 end;
 
-procedure ThiiGrid.ShowThumbHint(AAxis: ThiiScrollAxis; ATrigger: ThiiScrollHintTrigger);
+procedure ThiiCustomGrid.ShowThumbHint(AAxis: ThiiScrollAxis; ATrigger: ThiiScrollHintTrigger);
 var
   LContext: ThiiThumbHintContext;
   LText: string;
@@ -4454,12 +4455,12 @@ begin
   FThumbHintTimer.Enabled := True;
 end;
 
-function ThiiGrid.FocusedCellHit(out AHit: ThiiHitTestInfo): Boolean;
+function ThiiCustomGrid.FocusedCellHit(out AHit: ThiiHitTestInfo): Boolean;
 begin
   Result := CellHit(FSelection.FocusedCell, AHit);
 end;
 
-function ThiiGrid.CellHit(const LCell: ThiiCellAddress; out AHit: ThiiHitTestInfo): Boolean;
+function ThiiCustomGrid.CellHit(const LCell: ThiiCellAddress; out AHit: ThiiHitTestInfo): Boolean;
 var
   LColumns: specialize TArray<ThiiGridColumn>;
   LView: TRect;
@@ -4515,7 +4516,7 @@ begin
   Result := True;
 end;
 
-function ThiiGrid.FocusCell(ARow: Int64; AColumn: Integer; AExtend, AEdit: Boolean; AAdd: Boolean): Boolean;
+function ThiiCustomGrid.FocusCell(ARow: Int64; AColumn: Integer; AExtend, AEdit: Boolean; AAdd: Boolean): Boolean;
 var
   LCell: ThiiCellAddress;
   LRange: ThiiCellRange;
@@ -4534,7 +4535,7 @@ begin
     EditFocusedCell(True);
 end;
 
-procedure ThiiGrid.EditFocusedCell(AAutomatic: Boolean);
+procedure ThiiCustomGrid.EditFocusedCell(AAutomatic: Boolean);
 var
   LHit: ThiiHitTestInfo;
 begin
@@ -4545,12 +4546,12 @@ begin
   StartEdit(LHit);
 end;
 
-function ThiiGrid.NavigationRowExtent(ARow: Int64): Single;
+function ThiiCustomGrid.NavigationRowExtent(ARow: Int64): Single;
 begin
   Result := GetRowHeightFor(ARow, GetViewRowKey(ARow)) + Round(FSpacing.RowSpacing);
 end;
 
-function ThiiGrid.HandleNavigationKey(AKey: Word; AShift: TShiftState): Boolean;
+function ThiiCustomGrid.HandleNavigationKey(AKey: Word; AShift: TShiftState): Boolean;
 var
   LAction: Th5uNavigationAction;
   LHit: ThiiHitTestInfo;
@@ -4585,7 +4586,7 @@ begin
   end;
 end;
 
-procedure ThiiGrid.SearchCharacter(const AText: string);
+procedure ThiiCustomGrid.SearchCharacter(const AText: string);
 var
   LRow: Int64;
   LColumn: Integer;
@@ -4596,20 +4597,20 @@ begin
     FocusCell(LRow, LColumn, False, False);
 end;
 
-procedure ThiiGrid.WMGetDlgCode(var Message: TLMGetDlgCode);
+procedure ThiiCustomGrid.WMGetDlgCode(var Message: TLMGetDlgCode);
 begin
   inherited;
   Message.Result := Message.Result or DLGC_WANTARROWS or DLGC_WANTCHARS;
 end;
 
-procedure ThiiGrid.CMWantSpecialKey(var Message: TLMKey);
+procedure ThiiCustomGrid.CMWantSpecialKey(var Message: TLMKey);
 begin
   inherited;
   if Message.CharCode = VK_ESCAPE then
     Message.Result := 1;
 end;
 
-procedure ThiiGrid.KeyDown(var Key: Word; Shift: TShiftState);
+procedure ThiiCustomGrid.KeyDown(var Key: Word; Shift: TShiftState);
 var
   C: Char;
 begin
@@ -4624,7 +4625,7 @@ begin
     Key := 0;
 end;
 
-procedure ThiiGrid.UTF8KeyPress(var UTF8Key: TUTF8Char);
+procedure ThiiCustomGrid.UTF8KeyPress(var UTF8Key: TUTF8Char);
 begin
   inherited;
   if (UTF8Key <> '') and (UTF8Key[1] >= #32) then
@@ -4635,7 +4636,7 @@ begin
   end;
 end;
 
-procedure ThiiGrid.StartEdit(const AHit: ThiiHitTestInfo);
+procedure ThiiCustomGrid.StartEdit(const AHit: ThiiHitTestInfo);
 var
   LEditor: ThiiGridEditorItem;
   LCell: ThiiCellAddress;
@@ -4688,12 +4689,12 @@ begin
   Invalidate;
 end;
 
-procedure ThiiGrid.ThumbHintTimer(Sender: TObject);
+procedure ThiiCustomGrid.ThumbHintTimer(Sender: TObject);
 begin
   HideThumbHint;
 end;
 
-procedure ThiiGrid.UpdateScrollBars;
+procedure ThiiCustomGrid.UpdateScrollBars;
 var
   LPass: Integer;
   LNeedH, LNeedV: Boolean;
@@ -4756,7 +4757,7 @@ begin
   end;
 end;
 
-procedure ThiiGrid.SetEditors(AValue: ThiiLclGridEditors);
+procedure ThiiCustomGrid.SetEditors(AValue: ThiiLclGridEditors);
 begin
   CancelEditor;
   FEditors.Assign(AValue);
@@ -4764,7 +4765,7 @@ begin
   Invalidate;
 end;
 
-procedure ThiiGrid.SetDefaultEditors(AValue: ThiiDefaultEditors);
+procedure ThiiCustomGrid.SetDefaultEditors(AValue: ThiiDefaultEditors);
 begin
   CancelEditor;
   FDefaultEditors.Assign(AValue);
@@ -4772,7 +4773,7 @@ begin
   Invalidate;
 end;
 
-procedure ThiiGrid.ClearEditorCache;
+procedure ThiiCustomGrid.ClearEditorCache;
 var
   I: Integer;
 begin
@@ -4783,12 +4784,12 @@ begin
     FEditors[I].ReleaseEditor;
 end;
 
-function ThiiGrid.CachedEditor(const AName: string): ThiiGridEditorItem;
+function ThiiCustomGrid.CachedEditor(const AName: string): ThiiGridEditorItem;
 begin
   Result := FEditorCache.Get(ThiiEditorPlatform.LCL, AName, '', FEditors.Find(AName));
 end;
 
-function ThiiGrid.GetCellEditor(AColumn: ThiiGridColumn; ARow: Int64): ThiiGridEditorItem;
+function ThiiCustomGrid.GetCellEditor(AColumn: ThiiGridColumn; ARow: Int64): ThiiGridEditorItem;
 var
   LName, LScope: string;
   LColumnScoped: Boolean;
@@ -4806,7 +4807,7 @@ begin
   Result := FEditorCache.Get(ThiiEditorPlatform.LCL, LName, LScope, FEditors.Find(LName));
 end;
 
-function ThiiGrid.CellEditorAutoEdit(AColumn: ThiiGridColumn; ARow: Int64): Boolean;
+function ThiiCustomGrid.CellEditorAutoEdit(AColumn: ThiiGridColumn; ARow: Int64): Boolean;
 var
   E: ThiiGridEditorItem;
 begin
@@ -4814,7 +4815,7 @@ begin
   Result := Assigned(E) and E.CanAutoEdit;
 end;
 
-function ThiiGrid.CellEditorHit(AColumn: ThiiGridColumn; ARow: Int64; const ABounds: TRectF; const APoint: TPointF): Boolean;
+function ThiiCustomGrid.CellEditorHit(AColumn: ThiiGridColumn; ARow: Int64; const ABounds: TRectF; const APoint: TPointF): Boolean;
 var
   E: ThiiGridEditorItem;
 begin
@@ -4822,7 +4823,7 @@ begin
   Result := Assigned(E) and E.HitTest(ABounds, APoint);
 end;
 
-function ThiiGrid.CellEditorContext(AColumn: ThiiGridColumn; ARow: Int64; const ABounds: TRectF): ThiiEditorContext;
+function ThiiCustomGrid.CellEditorContext(AColumn: ThiiGridColumn; ARow: Int64; const ABounds: TRectF): ThiiEditorContext;
 begin
   Result := Default(ThiiEditorContext);
   Result.Grid := Self;
@@ -4836,7 +4837,7 @@ begin
   Result.Background := TAlphaColor(h5uGetLclPalette(FTheme).CellBackground);
 end;
 
-procedure ThiiGrid.FinishEditor(ACommitted: Boolean);
+procedure ThiiCustomGrid.FinishEditor(ACommitted: Boolean);
 var
   E: ThiiGridEditorItem;
 begin
@@ -4852,23 +4853,23 @@ begin
       E.Cancel;
 end;
 
-procedure ThiiGrid.EditorRequestCommit(Sender: TObject);
+procedure ThiiCustomGrid.EditorRequestCommit(Sender: TObject);
 begin
   CommitEditor;
 end;
 
-procedure ThiiGrid.EditorRequestCancel(Sender: TObject);
+procedure ThiiCustomGrid.EditorRequestCancel(Sender: TObject);
 begin
   CancelEditor;
   Invalidate;
 end;
 
-procedure ThiiGrid.ProcessEditorKey(Sender: TObject; var Key: Word; var KeyChar: Char; Shift: TShiftState);
+procedure ThiiCustomGrid.ProcessEditorKey(Sender: TObject; var Key: Word; var KeyChar: Char; Shift: TShiftState);
 begin
   EditorKeyDown(Sender, Key, Shift);
 end;
 
-function ThiiGrid.CellEditorClick(AColumn: ThiiGridColumn; ARow: Int64): Boolean;
+function ThiiCustomGrid.CellEditorClick(AColumn: ThiiGridColumn; ARow: Int64): Boolean;
 var
   E: ThiiGridEditorItem;
 begin

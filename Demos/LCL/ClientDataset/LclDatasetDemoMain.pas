@@ -27,7 +27,7 @@ uses
 type
   TPriorityDemoCell = class(ThiiLclDataCell)
   protected
-    procedure PaintDefault(AGrid: ThiiGrid; ACanvas: TCanvas); override;
+    procedure PaintDefault(AGrid: ThiiCustomGrid; ACanvas: TCanvas); override;
   end;
 
   TLclDatasetDemoForm = class(TForm)
@@ -86,7 +86,7 @@ begin
   Result := (AContext.Column is ThiiGridColumn) and SameText(ThiiGridColumn(AContext.Column).Id, 'priority');
 end;
 
-procedure TPriorityDemoCell.PaintDefault(AGrid: ThiiGrid; ACanvas: TCanvas);
+procedure TPriorityDemoCell.PaintDefault(AGrid: ThiiCustomGrid; ACanvas: TCanvas);
 var
   LPriority: Integer;
   LRect: TRect;

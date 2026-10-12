@@ -296,8 +296,14 @@ begin
       LDescription :=
         Format('Dies ist Datensatz %d. Der Text demonstriert automatische ' + 'Zeilenhöhe, Umbruch und ein konfigurierbares Höhenlimit.', [I]);
       if (I mod 5) = 0 then
+        {$IFDEF FPC}
+        // Encode only the Unicode suffix; retain the existing UTF-8 description bytes.
+        LDescription := LDescription + sLineBreak + UTF8Encode(UnicodeString('Jede fünfte Zeile enthält bewusst eine zweite Zeile und wird ')
+          + 'zusätzlich über eine periodische Style-Regel hervorgehoben.');
+        {$ELSE}
         LDescription := LDescription + sLineBreak + 'Jede fünfte Zeile enthält bewusst eine zweite Zeile und wird '
           + 'zusätzlich über eine periodische Style-Regel hervorgehoben.';
+        {$ENDIF}
 
       FieldByName('DESCRIPTION').{$IFDEF FPC}AsUTF8String{$ELSE}AsString{$ENDIF} := LDescription;
       FieldByName('QUANTITY').AsInteger := 1 + ((I * 7) mod 43);

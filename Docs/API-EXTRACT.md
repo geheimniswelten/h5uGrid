@@ -2312,6 +2312,7 @@ uses
     DesignIntf,
     DesignEditors,
     ToolsAPI,
+    h5u.FormDesigner,
   {$ENDIF}
   h5u.Grid.Factory,
   h5u.Grid.Sizing,
@@ -2319,8 +2320,7 @@ uses
   h5u.Grid.Data.Memory,
   h5u.Grid.Data.Objects,
   h5u.Grid.Data.Virtual,
-  h5u.Grid.SampleData,
-  h5u.FormDesigner;
+  h5u.Grid.SampleData;
 
 procedure Register;
 ```
@@ -4449,6 +4449,7 @@ uses
   h5u.Grid.Factory,
   h5u.Grid.Options,
   h5u.Grid.Selection,
+  h5u.Grid.Sizing,
   h5u.Grid.Types,
   h5u.Grid.Data.Dataset,
   Lcl.h5u.Grid.Editors,
@@ -4571,7 +4572,7 @@ type
   ThiiFactoryScope = h5u.Grid.Factory.ThiiFactoryScope;
   ThiiClassFactory = h5u.Grid.Factory.ThiiClassFactory;
 
-  ThiiGrid = class;
+  ThiiCustomGrid = class;
   ThiiLclVisualCell = class;
   ThiiLclVisualCellClass = class of ThiiLclVisualCell;
 
@@ -4579,7 +4580,7 @@ type
   ThiiHitKind = (None, Header, RowIndicator, DataCell, AdjacentGroupGlyph);
 
   ThiiGetRowHeightContext = record
-    Grid: ThiiGrid;
+    Grid: ThiiCustomGrid;
     DataController: ThiiCustomDataController;
     RowKey: ThiiRowKey;
     ViewRowIndex: Int64;
@@ -4591,7 +4592,7 @@ type
   ThiiGetRowSpacingEvent = procedure(Sender: TObject; const AContext: ThiiGetRowHeightContext; var ASpacing: Integer) of object;
 
   ThiiThumbHintContext = record
-    Grid: ThiiGrid;
+    Grid: ThiiCustomGrid;
     DataController: ThiiCustomDataController;
     Axis: ThiiScrollAxis;
     Trigger: ThiiScrollHintTrigger;
@@ -4655,14 +4656,14 @@ type
     FAppearance: ThiiResolvedAppearance;
     FInUse: Boolean;
   protected
-    procedure PrepareCanvas(AGrid: ThiiGrid; ACanvas: TCanvas; APart: ThiiElementPaintPart);
-    procedure PaintDefault(AGrid: ThiiGrid; ACanvas: TCanvas); virtual;
-    function EffectiveBackground(AGrid: ThiiGrid): TColor;
-    function EffectiveForeground(AGrid: ThiiGrid): TColor;
+    procedure PrepareCanvas(AGrid: ThiiCustomGrid; ACanvas: TCanvas; APart: ThiiElementPaintPart);
+    procedure PaintDefault(AGrid: ThiiCustomGrid; ACanvas: TCanvas); virtual;
+    function EffectiveBackground(AGrid: ThiiCustomGrid): TColor;
+    function EffectiveForeground(AGrid: ThiiCustomGrid): TColor;
   public
     procedure BindCell(const AContext: ThiiFactoryContext; const ABounds: TRect; const AValue: TValue; const ADisplayText: string;
       const AAppearance: ThiiResolvedAppearance); virtual;
-    procedure Paint(AGrid: ThiiGrid; ACanvas: TCanvas); virtual;
+    procedure Paint(AGrid: ThiiCustomGrid; ACanvas: TCanvas); virtual;
 
     property Context: ThiiFactoryContext read FContext;
     property Bounds: TRect read FBounds;
@@ -4675,26 +4676,26 @@ type
   // and the tree branch-end band. Its ClassId is resolved per grid instance.
   Th5uLclSpacingCell = class(ThiiLclVisualCell)
   protected
-    procedure PaintDefault(AGrid: ThiiGrid; ACanvas: TCanvas); override;
+    procedure PaintDefault(AGrid: ThiiCustomGrid; ACanvas: TCanvas); override;
   end;
 
   ThiiLclDataCell = class(ThiiLclVisualCell)
   private
     FPicture: TPicture;
     FPictureSignature: Integer;
-    FPaintGrid: ThiiGrid;
+    FPaintGrid: ThiiCustomGrid;
     FPaintCanvas: TCanvas;
     procedure EditorPreparePaint(APart: ThiiElementPaintPart);
     procedure EnsurePicture;
   protected
-    procedure PaintDefault(AGrid: ThiiGrid; ACanvas: TCanvas); override;
+    procedure PaintDefault(AGrid: ThiiCustomGrid; ACanvas: TCanvas); override;
   public
     destructor Destroy; override;
   end;
 
   ThiiLclHeaderCell = class(ThiiLclVisualCell)
   protected
-    procedure PaintDefault(AGrid: ThiiGrid; ACanvas: TCanvas); override;
+    procedure PaintDefault(AGrid: ThiiCustomGrid; ACanvas: TCanvas); override;
   end;
 
   ThiiLclFixedCell = class(ThiiLclDataCell);
@@ -4703,7 +4704,7 @@ type
   // The class is resolved through the per-grid FactoryScope.
   Th5uLclAdjacentGroupGlyphCell = class(ThiiLclVisualCell)
   protected
-    procedure PaintDefault(AGrid: ThiiGrid; ACanvas: TCanvas); override;
+    procedure PaintDefault(AGrid: ThiiCustomGrid; ACanvas: TCanvas); override;
   end;
 
   ThiiCustomGrid = class(TCustomControl)

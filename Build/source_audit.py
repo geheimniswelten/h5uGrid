@@ -376,6 +376,32 @@ def write_report(root: Path, findings: list[Finding], parser_name: str) -> None:
     )
 
 
+def check_grid_contract(root: Path, findings: list[Finding]) -> None:
+    """Check main-unit aliases and implementation owners after API refactoring."""
+    for framework, folder in (("Vcl", "VCL"), ("Fmx", "FMX"), ("Lcl", "LCL")):
+        path = root / "Source" / folder / f"{framework}.h5u.Grid.pas"
+        text = path.read_text(encoding="utf-8-sig")
+        uses = text.split("\nuses\n", 1)[1].split("\ntype\n", 1)[0]
+        for unit in set(re.findall(r"^  \w+ = ([\w.]+)\.\w+;", text, re.M)):
+            if not re.search(r"\b" + re.escape(unit) + r"\b", uses, re.I):
+                findings.append(Finding("error", rel(path, root), 1, f"alias source unit is not directly imported: {unit}"))
+        for owner in ("ThiiCustomGrid", "ThiiGrid"):
+            block = re.search(r"^  " + owner + r" = class\([^\n]+\)\n(.*?)^  end;", text, re.M | re.S)
+            if not block:
+                findings.append(Finding("error", rel(path, root), 1, f"grid class declaration missing: {owner}"))
+                continue
+            declarations = set(re.findall(
+                r"^\s*(?:class\s+)?(?:procedure|function|constructor|destructor)\s+(\w+)", block[1], re.M
+            ))
+            implementations = set(re.findall(
+                r"^(?:procedure|function|constructor|destructor) " + owner + r"\.(\w+)", text, re.M
+            ))
+            for method in sorted(declarations - implementations):
+                findings.append(Finding("error", rel(path, root), 1, f"grid implementation missing: {owner}.{method}"))
+            for method in sorted(implementations - declarations):
+                findings.append(Finding("error", rel(path, root), 1, f"grid method implemented on the wrong class: {owner}.{method}"))
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1])
@@ -384,6 +410,7 @@ def main() -> int:
     root = args.root.resolve()
 
     findings: list[Finding] = []
+    check_grid_contract(root, findings)
     for path in sorted(p for p in root.rglob("*.pas") if p.is_file()):
         check_pascal_file(path, root, findings)
     for path in sorted(p for p in root.rglob("*.dpk") if p.is_file()):

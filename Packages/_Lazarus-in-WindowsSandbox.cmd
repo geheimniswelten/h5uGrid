@@ -11,11 +11,13 @@ set store=\_dcu
 
 ::del "%root%%store%\%setup%"
 md "%root%%store%" 2>NUL
+if /I "%~1" == "--generate-only" goto generate
 robocopy "%root%%store%" "%temp%" "*.exe" /MOV /MAX:1048576
 if not exist "%root%%store%\%setup%"   curl.exe -L -o "%root%%store%\%setup%" %download%
 
+:generate
 (
-echo TITLE Install and Start Lazarus + h5uGrid
+echo TITLE Install and Start Lazarus + hiiGrid
 echo.
 echo if not "%%username%%" == "WDAGUtilityAccount" @^( echo not in sandbox ^& pause ^& exit /b 1 ^)
 echo.
@@ -28,48 +30,49 @@ echo if "%%1" == "--rebuild"   goto rebuild
 echo   setx PATH "%%PATH%%" /M
 echo   echo cmd /k "%%compdir%%%store%\lazarus_sandbox.cmd" --rebuild ^> "%%USERPROFILE%%\Desktop\rebuild-h5uGrid.cmd"
 echo   "%%compdir%%%store%\%setup%" /SILENT /SUPPRESSMSGBOXES /NORESTART /DIR="%%lazdir%%" /LOG="%%lazdir%%-setup.log"
+echo if errorlevel 1   ^( echo Setup failed ^& pause ^& exit /b 1 ^)
 echo.
 echo :rebuild
 echo   taskkill /im lazarus.exe
 echo.
 echo @echo ########################################################################
 echo "%%lazdir%%\lazbuild.exe" --build-all "%%compdir%%\Packages\h5uGridCoreLazarus.lpk"
-echo if errorlevel 1   ^( echo ERROR %%errorlevel%% ^& pause ^)
+echo if errorlevel 1   ^( echo ERROR %%errorlevel%% ^& pause ^& exit /b 1 ^)
 echo.
 echo @echo ########################################################################
 echo "%%lazdir%%\lazbuild.exe" --build-all "%%compdir%%\Packages\h5uGridLcl.lpk"
-echo if errorlevel 1   ^( echo ERROR %%errorlevel%% ^& pause ^)
+echo if errorlevel 1   ^( echo ERROR %%errorlevel%% ^& pause ^& exit /b 1 ^)
 echo.
 echo @echo ########################################################################
 echo "%%lazdir%%\lazbuild.exe" --build-all --add-package "%%compdir%%\Packages\h5uGridCoreLazarusDesign.lpk"
-echo if errorlevel 1   ^( echo ERROR %%errorlevel%% ^& pause ^)
+echo if errorlevel 1   ^( echo ERROR %%errorlevel%% ^& pause ^& exit /b 1 ^)
 echo.
 echo @echo ########################################################################
 echo "%%lazdir%%\lazbuild.exe" --build-all --add-package "%%compdir%%\Packages\h5uGridLclDesign.lpk"
-echo if errorlevel 1   ^( echo ERROR %%errorlevel%% ^& pause ^)
+echo if errorlevel 1   ^( echo ERROR %%errorlevel%% ^& pause ^& exit /b 1 ^)
 echo.
 echo @echo ########################################################################
 echo "%%lazdir%%\lazbuild.exe" --build-all "%%compdir%%\Demos\LCL\ClientDataset\GridLclClientDatasetDemo.lpr"
-echo if errorlevel 1   ^( echo ERROR %%errorlevel%% ^& pause ^)
+echo if errorlevel 1   ^( echo ERROR %%errorlevel%% ^& pause ^& exit /b 1 ^)
 echo.
 echo @echo ########################################################################
 echo "%%lazdir%%\lazbuild.exe" --build-all "%%compdir%%\Demos\LCL\ObjectList\GridLclObjectListDemo.lpr"
-echo if errorlevel 1   ^( echo ERROR %%errorlevel%% ^& pause ^)
+echo if errorlevel 1   ^( echo ERROR %%errorlevel%% ^& pause ^& exit /b 1 ^)
 echo.
 echo @echo ########################################################################
 echo "%%lazdir%%\lazbuild.exe" --build-all "%%compdir%%\Demos\LCL\VirtualLive\GridLclVirtualLiveDemo.lpr"
-echo if errorlevel 1   ^( echo ERROR %%errorlevel%% ^& pause ^)
+echo if errorlevel 1   ^( echo ERROR %%errorlevel%% ^& pause ^& exit /b 1 ^)
 echo.
 echo @echo ########################################################################
 echo :: "%%lazdir%%\lazbuild.exe" --build-ide=""
 echo :: "%%lazdir%%\lazbuild.exe" --build-ide=-dKeepInstalledPackages
-echo :: cd "%%lazdir%%" & make all        Minimal-IDE
-echo :: cd "%%lazdir%%" & make bigide     Base-IDE with Default-Packages ^(ignoriert Externes und Configs^)
-echo :: cd "%%lazdir%%" & make useride    Final-IDE with Default- and Installed-Packages
+echo :: cd "%%lazdir%%" ^& make all        Minimal-IDE
+echo :: cd "%%lazdir%%" ^& make bigide     Base-IDE with Default-Packages ^(ignoriert Externes und Configs^)
+echo :: cd "%%lazdir%%" ^& make useride    Final-IDE with Default- and Installed-Packages
 echo ::
 echo cd "%%lazdir%%"
 echo make useride
-echo if errorlevel 1   ^( echo ERROR %%errorlevel%% ^& pause ^)
+echo if errorlevel 1   ^( echo ERROR %%errorlevel%% ^& pause ^& exit /b 1 ^)
 echo.
 echo cd "%%compdir%%"
 echo REM start "" "%%compdir%%\Packages\h5uGridCoreLazarus.lpk"
@@ -97,4 +100,5 @@ echo   ^</LogonCommand^>
 echo ^</Configuration^>
 ) > "%root%%store%\lazarus_sandbox.wsb"
 
+if /I "%~1" == "--generate-only" exit /b 0
 "%root%%store%\lazarus_sandbox.wsb"

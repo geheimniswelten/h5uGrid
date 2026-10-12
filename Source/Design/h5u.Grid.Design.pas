@@ -21,6 +21,7 @@ uses
     DesignIntf,
     DesignEditors,
     ToolsAPI,
+    h5u.FormDesigner,
   {$ENDIF}
   h5u.Grid.Factory,
   h5u.Grid.Sizing,
@@ -28,8 +29,7 @@ uses
   h5u.Grid.Data.Memory,
   h5u.Grid.Data.Objects,
   h5u.Grid.Data.Virtual,
-  h5u.Grid.SampleData,
-  h5u.FormDesigner;
+  h5u.Grid.SampleData;
 
 procedure Register;
 
@@ -85,7 +85,9 @@ begin
   {$ENDIF}
   RegisterComponents('hiiGrid',
     [ThiiClassFactory, ThiiDatasetController, ThiiMemoryController, ThiiObjectListController, ThiiVirtualController, ThiiSampleClientDataset]);
+  {$IFNDEF FPC}
   RegisterComponents('hii FormDesign', [ThiiFormDesigner]);
+  {$ENDIF}
 
   {$IFnDEF FPC}
     Icon := TPngImage.Create;
