@@ -34,11 +34,13 @@ uses
   FMX.SpinBox,
   FMX.MultiView,
   FMX.ApplicationEvents,
+  h5u.Grid.Data.Core,
   h5u.Grid.Data.DataSet,  // for ThiiDatasetController + TDataSource + TDataSet(ThiiSampleClientDataset)
   h5u.Grid.Data.Objects,  // for ThiiObjectListController + TDataRow(RTTI)
   h5u.Grid.Data.Virtual,  // for ThiiVirtualController + TDataRow(manual)
   h5u.Grid.SampleData,
-  Fmx.h5u.Grid;
+  Fmx.h5u.Grid,
+  Fmx.h5u.PropertyEditor;
 
 type
   TDataRow = class  // for ThiiObjectListController
@@ -82,65 +84,13 @@ type
     ApplicationEvents: TApplicationEvents;
     StyleBook: TStyleBook;
     CornerButton1: TCornerButton;
-    Expander1: TExpander;
     Layout2: TLayout;
-    Expander2: TExpander;
-    Expander3: TExpander;
-    Expander4: TExpander;
-    Expander5: TExpander;
-    Label1: TLabel;
-    edAGFIdColumn: TEdit;
-    cbAGFEnabled: TSwitch;
-    cbAGFEBVisibility: TComboBox;
-    cbAGFEBColor: TColorComboBox;
-    edAGFEBHeight: TSpinBox;
-    cbOptAllowEditing: TSwitch;
-    cbOptDefaultCellColor: TColorComboBox;
-    edOptAutoWidthRowLimit: TSpinBox;
-    VertScrollBox1: TVertScrollBox;
-    cbCustAllowColumnHiding: TSwitch;
-    cbCustAllowColumnMoving: TSwitch;
-    cbCustAllowColumnResizing: TSwitch;
-    cbCustAllowRowMoving: TSwitch;
-    cbCustColumnMovingGesture: TComboBox;
-    edCustColumnResizeHitZoneLeft: TSpinBox;
-    edCustColumnResizeHitZoneRight: TSpinBox;
-    edCustLastColumnResizeHitZoneLeft: TSpinBox;
-    cbCustRowMovingGesture: TComboBox;
-    cbCustShowColumnChooser: TSwitch;
-    edCustTouchColumnResizeHitZoneLeft: TSpinBox;
-    edCustTouchColumnResizeHitZoneRight: TSpinBox;
-    edCustTouchLastColumnResizeHitZoneLeft: TSpinBox;
-    Expander6: TExpander;
-    Expander7: TExpander;
-    Expander8: TExpander;
     ObjectController: ThiiObjectListController;
     VirtualController: ThiiVirtualController;
     UpdateTimer: TTimer;
-    ComboBox3: TComboBox;
-    ComboBox4: TComboBox;
-    ComboBox5: TComboBox;
-    ComboBox6: TComboBox;
-    ComboBox7: TComboBox;
-    ComboBox8: TComboBox;
-    ComboBox9: TComboBox;
-    ComboBox10: TComboBox;
-    ComboBox11: TComboBox;
-    cbOptGridLines: TSwitch;
-    edOptHeaderRowHeight: TSpinBox;
-    cbOptImmediateEdit: TSwitch;
-    SpinBox9: TSpinBox;
-    SpinBox10: TSpinBox;
-    SpinBox11: TSpinBox;
-    ComboBox12: TComboBox;
-    SpinBox12: TSpinBox;
-    ComboBox13: TComboBox;
-    edOptRowIndicatorWidth: TSpinBox;
-    cbAGFGroupEmptyValues: TSwitch;
-    cbAGFShowFoldGlyph: TSwitch;
-    GroupBox1: TGroupBox;
-    cbAGFEBStyleName: TComboEdit;
     ToggleGroupsButton: TButton;
+    Properties: ThiiPropertyEditor;
+    Splitter1: TSplitter;
     {$ENDREGION}
     {$REGION 'Events'}
     procedure FormCreate(Sender: TObject);

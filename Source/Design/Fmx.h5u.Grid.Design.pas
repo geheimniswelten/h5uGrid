@@ -12,17 +12,18 @@ implementation
 
 procedure Register;
 begin
-  RegisterPropertyEditor(nil, ThiiCustomGrid, 'MinWidth', nil);
-  RegisterPropertyEditor(nil, ThiiCustomGrid, 'MaxWidth', nil);
-  RegisterPropertyEditor(nil, ThiiCustomGrid, 'AutoWidthRowLimit', nil);
-  RegisterPropertyEditor(nil, ThiiCustomGrid, 'HeaderLayout', nil);
-  RegisterPropertyEditor(nil, ThiiCustomGrid, 'Theme', nil);
-  RegisterPropertyEditor(nil, ThiiCustomGrid, 'HeaderRowHeight', nil);
-  RegisterPropertyEditor(nil, ThiiCustomGrid, 'RowIndicatorWidth', nil);
-  RegisterPropertyEditor(nil, ThiiCustomGrid, 'ShowHeader', nil);
-  RegisterPropertyEditor(nil, ThiiCustomGrid, 'ShowRowIndicator', nil);
-  RegisterPropertyEditor(nil, ThiiCustomGrid, 'AllowEditing', nil);
-  RegisterPropertyEditor(nil, ThiiCustomGrid, 'ImmediateEdit', nil);
+  // A nil editor hides legacy aliases; the property type must remain valid.
+  RegisterPropertyEditor(TypeInfo(Single), ThiiCustomGrid, 'MinWidth', nil);
+  RegisterPropertyEditor(TypeInfo(Single), ThiiCustomGrid, 'MaxWidth', nil);
+  RegisterPropertyEditor(TypeInfo(Integer), ThiiCustomGrid, 'AutoWidthRowLimit', nil);
+  RegisterPropertyEditor(TypeInfo(ThiiHeaderLayout), ThiiCustomGrid, 'HeaderLayout', nil);
+  RegisterPropertyEditor(TypeInfo(ThiiGridTheme), ThiiCustomGrid, 'Theme', nil);
+  RegisterPropertyEditor(TypeInfo(Single), ThiiCustomGrid, 'HeaderRowHeight', nil);
+  RegisterPropertyEditor(TypeInfo(Single), ThiiCustomGrid, 'RowIndicatorWidth', nil);
+  RegisterPropertyEditor(TypeInfo(Boolean), ThiiCustomGrid, 'ShowHeader', nil);
+  RegisterPropertyEditor(TypeInfo(Boolean), ThiiCustomGrid, 'ShowRowIndicator', nil);
+  RegisterPropertyEditor(TypeInfo(Boolean), ThiiCustomGrid, 'AllowEditing', nil);
+  RegisterPropertyEditor(TypeInfo(Boolean), ThiiCustomGrid, 'ImmediateEdit', nil);
 
   RegisterComponents('hiiGrid', [ThiiGrid]);
   RegisterComponents('hii FormDesign', [ThiiStructureView, ThiiPropertyEditor]);

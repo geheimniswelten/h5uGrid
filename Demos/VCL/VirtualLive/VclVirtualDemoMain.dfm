@@ -109,64 +109,93 @@ object VclVirtualDemoForm: TVclVirtualDemoForm
         Id = 'id'
         Caption = 'ID'
         FieldName = 'ID'
-        Width = 70
+        Width = 70.000000000000000000
+        MinWidth = 24.000000000000000000
+        MaxWidth = 1000.000000000000000000
         VisibleIndex = 0
         FixedKind = Left
         ReadOnly = True
         DataType = Integer
+        MaxAutoHeight = 160.000000000000000000
+        RightSpacing = -1.000000000000000000
       end
       item
         Id = 'timestamp'
         Caption = 'Zeit'
         FieldName = 'TIMESTAMP'
-        Width = 145
+        Width = 145.000000000000000000
+        MinWidth = 24.000000000000000000
+        MaxWidth = 1000.000000000000000000
         VisibleIndex = 1
         ReadOnly = True
         DataType = DateTime
+        MaxAutoHeight = 160.000000000000000000
         DisplayFormat = 'dd.mm.yyyy hh:nn:ss'
+        RightSpacing = -1.000000000000000000
       end
       item
         Id = 'source'
         Caption = 'Quelle'
         FieldName = 'SOURCE'
-        Width = 115
+        Width = 115.000000000000000000
+        MinWidth = 24.000000000000000000
+        MaxWidth = 1000.000000000000000000
         VisibleIndex = 2
         ReadOnly = True
         DataType = Text
+        MaxAutoHeight = 160.000000000000000000
+        RightSpacing = -1.000000000000000000
       end
       item
         Id = 'message'
         Caption = 'Meldung'
         FieldName = 'MESSAGE'
-        Width = 560
+        Width = 560.000000000000000000
+        MinWidth = 24.000000000000000000
+        MaxWidth = 1000.000000000000000000
         VisibleIndex = 3
         DataType = Text
         WordWrap = True
         AutoHeight = True
-        MaxAutoHeight = 100
+        MaxAutoHeight = 100.000000000000000000
         MaxLines = 4
+        RightSpacing = -1.000000000000000000
       end
       item
         Id = 'severity'
         Caption = 'Stufe'
         FieldName = 'SEVERITY'
-        Width = 70
+        Width = 70.000000000000000000
+        MinWidth = 24.000000000000000000
+        MaxWidth = 1000.000000000000000000
         VisibleIndex = 4
         ReadOnly = True
         DataType = Integer
+        MaxAutoHeight = 160.000000000000000000
+        RightSpacing = -1.000000000000000000
       end
       item
         Id = 'ack'
         Caption = 'Quittiert'
         FieldName = 'ACK'
-        Width = 80
+        Width = 80.000000000000000000
+        MinWidth = 24.000000000000000000
+        MaxWidth = 1000.000000000000000000
         VisibleIndex = 5
         DataType = Boolean
         EditorKind = Boolean
+        MaxAutoHeight = 160.000000000000000000
+        RightSpacing = -1.000000000000000000
       end>
-    HeaderLayout.Cells = <>
+    Header.RowHeight = 26.000000000000000000
+    Header.Layout.Cells = <>
+    RowIndicator.Width = 34.000000000000000000
     Selection.AllowedKinds = [Rows, Columns, CellRanges]
     RowHeight.Mode = Automatic
+    RowHeight.FixedHeight = 24.000000000000000000
+    RowHeight.MinHeight = 20.000000000000000000
+    RowHeight.MaxHeight = 180.000000000000000000
+    RowHeight.EstimatedHeight = 24.000000000000000000
     ScrollHints.VerticalColumnId = 'message'
     RowStyles.StripePeriod = 5
     RowStyles.StripeOffset = 5
@@ -180,6 +209,21 @@ object VclVirtualDemoForm: TVclVirtualDemoForm
         Value = 3
         StyleName = 'Error'
       end>
+    Customization.ColumnResizeHitZoneLeft = 4.000000000000000000
+    Customization.ColumnResizeHitZoneRight = 4.000000000000000000
+    Customization.TouchColumnResizeHitZoneLeft = 12.000000000000000000
+    Customization.TouchColumnResizeHitZoneRight = 12.000000000000000000
+    Customization.LastColumnResizeHitZoneLeft = -1.000000000000000000
+    Customization.TouchLastColumnResizeHitZoneLeft = -1.000000000000000000
+    Spacing.Left = 1.000000000000000000
+    Spacing.Top = 1.000000000000000000
+    Spacing.Right = 1.000000000000000000
+    Spacing.Bottom = 1.000000000000000000
+    Spacing.RowSpacing = 1.000000000000000000
+    Spacing.DefaultColumnRightSpacing = 1.000000000000000000
+    AdjacentGroupFolding.EndBand.Height = 6.000000000000000000
+    Tree.BranchEndBand.Height = 6.000000000000000000
+    SizingVersion = 1
   end
   object VirtualController: ThiiVirtualController
     Cache.MaxMemoryBytes = 67108864

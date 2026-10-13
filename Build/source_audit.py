@@ -43,6 +43,8 @@ USES_PATH_RE = re.compile(
 )
 
 KNOWN_BAD_PATTERNS = [
+    (re.compile(r"\bRegisterPropertyEditor\s*\(\s*nil\s*,"),
+     "nil property type can crash Delphi designer property lookup; only the editor class may be nil"),
     (re.compile(r"(?m)^\s*begin\s*$\n\s*begin\s*$"),
      "duplicate begin block is likely a Delphi syntax error"),
     (re.compile(r"\bread\s+GetCollection\s*;"), "typed property still reads TCollection.GetCollection"),

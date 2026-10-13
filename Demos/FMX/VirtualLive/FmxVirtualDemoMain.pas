@@ -14,6 +14,7 @@ uses
   FMX.Forms,
   FMX.StdCtrls,
   FMX.Types,
+  h5u.Grid.Data.Core,
   h5u.Grid.Data.Virtual,
   Fmx.h5u.Grid;
 

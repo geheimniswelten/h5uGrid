@@ -83,79 +83,116 @@ object VclObjectDemoForm: TVclObjectDemoForm
         Id = 'id'
         Caption = 'ID'
         FieldName = 'Id'
-        Width = 64
+        Width = 64.000000000000000000
+        MinWidth = 24.000000000000000000
+        MaxWidth = 1000.000000000000000000
         VisibleIndex = 0
         FixedKind = Left
         ReadOnly = True
         DataType = Integer
+        MaxAutoHeight = 160.000000000000000000
+        RightSpacing = -1.000000000000000000
       end
       item
         Id = 'name'
         Caption = 'Name'
         FieldName = 'Name'
-        Width = 150
+        Width = 150.000000000000000000
+        MinWidth = 24.000000000000000000
+        MaxWidth = 1000.000000000000000000
         VisibleIndex = 1
         DataType = Text
+        MaxAutoHeight = 160.000000000000000000
+        RightSpacing = -1.000000000000000000
       end
       item
         Id = 'department'
         Caption = 'Abteilung'
         FieldName = 'Department'
-        Width = 120
+        Width = 120.000000000000000000
+        MinWidth = 24.000000000000000000
+        MaxWidth = 1000.000000000000000000
         VisibleIndex = 2
         DataType = Text
+        MaxAutoHeight = 160.000000000000000000
+        RightSpacing = -1.000000000000000000
       end
       item
         Id = 'notes'
         Caption = 'Hinweis'
         FieldName = 'Notes'
-        Width = 320
+        Width = 320.000000000000000000
+        MinWidth = 24.000000000000000000
+        MaxWidth = 1000.000000000000000000
         VisibleIndex = 3
         DataType = Text
         WordWrap = True
         AutoHeight = True
-        MaxAutoHeight = 95
+        MaxAutoHeight = 95.000000000000000000
         MaxLines = 4
+        RightSpacing = -1.000000000000000000
       end
       item
         Id = 'amount'
         Caption = 'Betrag'
         FieldName = 'Amount'
-        Width = 110
+        Width = 110.000000000000000000
+        MinWidth = 24.000000000000000000
+        MaxWidth = 1000.000000000000000000
         VisibleIndex = 4
         DataType = Currency
+        MaxAutoHeight = 160.000000000000000000
         DisplayFormat = '#,##0.00'
         Highlighted = True
+        RightSpacing = -1.000000000000000000
       end
       item
         Id = 'active'
         Caption = 'Aktiv'
         FieldName = 'Active'
-        Width = 64
+        Width = 64.000000000000000000
+        MinWidth = 24.000000000000000000
+        MaxWidth = 1000.000000000000000000
         VisibleIndex = 5
         DataType = Boolean
         EditorKind = Boolean
+        MaxAutoHeight = 160.000000000000000000
+        RightSpacing = -1.000000000000000000
       end
       item
         Id = 'priority'
         Caption = 'Priorit'#228't'
         FieldName = 'Priority'
-        Width = 80
+        Width = 80.000000000000000000
+        MinWidth = 24.000000000000000000
+        MaxWidth = 1000.000000000000000000
         VisibleIndex = 6
         DataType = Integer
+        MaxAutoHeight = 160.000000000000000000
+        RightSpacing = -1.000000000000000000
       end
       item
         Id = 'updated'
         Caption = 'Ge'#228'ndert'
         FieldName = 'UpdatedAt'
-        Width = 140
+        Width = 140.000000000000000000
+        MinWidth = 24.000000000000000000
+        MaxWidth = 1000.000000000000000000
         VisibleIndex = 7
         DataType = DateTime
+        MaxAutoHeight = 160.000000000000000000
         DisplayFormat = 'dd.mm.yyyy hh:nn:ss'
+        RightSpacing = -1.000000000000000000
       end>
-    HeaderLayout.Cells = <>
+    Header.RowHeight = 26.000000000000000000
+    Header.Layout.Cells = <>
+    RowIndicator.Width = 34.000000000000000000
     Selection.AllowedKinds = [Rows, Columns, CellRanges]
     RowHeight.Mode = Automatic
+    RowHeight.FixedHeight = 24.000000000000000000
+    RowHeight.MinHeight = 20.000000000000000000
+    RowHeight.MaxHeight = 180.000000000000000000
+    RowHeight.EstimatedHeight = 24.000000000000000000
     ScrollHints.VerticalColumnId = 'name'
     RowStyles.StripePeriod = 3
     RowStyles.StripeOffset = 3
@@ -169,6 +206,21 @@ object VclObjectDemoForm: TVclObjectDemoForm
         Value = 3
         StyleName = 'Error'
       end>
+    Customization.ColumnResizeHitZoneLeft = 4.000000000000000000
+    Customization.ColumnResizeHitZoneRight = 4.000000000000000000
+    Customization.TouchColumnResizeHitZoneLeft = 12.000000000000000000
+    Customization.TouchColumnResizeHitZoneRight = 12.000000000000000000
+    Customization.LastColumnResizeHitZoneLeft = -1.000000000000000000
+    Customization.TouchLastColumnResizeHitZoneLeft = -1.000000000000000000
+    Spacing.Left = 1.000000000000000000
+    Spacing.Top = 1.000000000000000000
+    Spacing.Right = 1.000000000000000000
+    Spacing.Bottom = 1.000000000000000000
+    Spacing.RowSpacing = 1.000000000000000000
+    Spacing.DefaultColumnRightSpacing = 1.000000000000000000
+    AdjacentGroupFolding.EndBand.Height = 6.000000000000000000
+    Tree.BranchEndBand.Height = 6.000000000000000000
+    SizingVersion = 1
   end
   object ObjectController: ThiiObjectListController
     Cache.Mode = None

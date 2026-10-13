@@ -124,6 +124,9 @@ der Doppelklick eine nicht ausgewählte Spalte, wird nur diese angepasst;
 die Auswahl bleibt erhalten.
 
 Es gelten dieselben Trefferzonen und Headerkanten wie beim Ziehen des Trenners.
+Bei ausgeblendetem Header werden die Spaltentrenner innerhalb der Datenzellen
+zum Ziehen und für Doppelklick-AutoSize verwendet. Leere Flächen unter den Daten,
+Zeilenabstände und Zellinhalte außerhalb der Trenner bieten keine Resize-Zone.
 `Customization.AllowColumnResizing = False` beziehungsweise `Column.CanResize = False`
 verhindern auch diese automatische Anpassung. Minima, Maxima und der vorhandene
 Anpassungsmodus bleiben maßgeblich.

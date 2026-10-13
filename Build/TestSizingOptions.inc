@@ -29,16 +29,18 @@ type
   TDoubleClickGrid = class(TTestGrid)
   public
     procedure DoubleClickAt(const APoint: TPoint);
+    procedure HoverAt(const APoint: TPoint);
   end;
 
   TMeasureSource = class
-    HeightCalls, MeasureCalls, ValueCalls: Integer;
+    HeightCalls, MeasureCalls, ValueCalls, ClickCalls: Integer;
     Count: Int64;
     procedure RowCount(Sender: TObject; var ACount: Int64);
     procedure RowKey(Sender: TObject; ARow: Int64; var AKey: ThiiRowKey);
     procedure Value(Sender: TObject; ARow: Int64; const AField: string; var AValue: TValue);
     procedure Measure(Sender: TObject; const AContext: ThiiEditorContext; var AWidth: Single);
     procedure Height(Sender: TObject; const AContext: THeightContext; var AHeight: THeight; var ACacheResult: Boolean);
+    procedure CellClick(Sender: TObject; AColumn: ThiiGridColumn; ARowIndex: Int64);
   end;
 
 procedure Check(ACondition: Boolean; const AMessage: string);
@@ -128,6 +130,37 @@ begin
   Perform(WM_LBUTTONDBLCLK, MK_LBUTTON, MakeLParam(APoint.X, APoint.Y));
   Perform(WM_LBUTTONUP, 0, MakeLParam(APoint.X, APoint.Y));
   {$ENDIF}
+end;
+
+procedure TDoubleClickGrid.HoverAt(const APoint: TPoint);
+begin
+  MouseMove([], APoint.X, APoint.Y);
+end;
+
+function DataPoint(AGrid: TDoubleClickGrid; AColumn: ThiiGridColumn; ADivider: Boolean): TPoint;
+var
+  X, Y: Integer;
+  Hit: ThiiHitTestInfo;
+begin
+  PaintOffscreen(AGrid);
+  for Y := 0 to Trunc(AGrid.Height) - 1 do
+    for X := 0 to Trunc(AGrid.Width) - 1 do
+    begin
+      {$IFDEF TEST_FMX}
+      Hit := AGrid.GridHitTest(X, Y);
+      {$ELSE}
+      Hit := AGrid.HitTest(X, Y);
+      {$ENDIF}
+      if (Hit.Kind = ThiiHitKind.DataCell) and (Hit.Column = AColumn) then
+      begin
+        if ADivider then
+          Result := Point(Round(Hit.Bounds.Right), Round((Hit.Bounds.Top + Hit.Bounds.Bottom) / 2))
+        else
+          Result := Point(Round((Hit.Bounds.Left + Hit.Bounds.Right) / 2), Round((Hit.Bounds.Top + Hit.Bounds.Bottom) / 2));
+        Exit;
+      end;
+    end;
+  raise Exception.Create('Data cell not found for hidden-header resize test');
 end;
 
 function HeaderPoint(AGrid: TDoubleClickGrid; AColumn: ThiiGridColumn; ADivider: Boolean): TPoint;
@@ -421,6 +454,11 @@ begin
   Inc(MeasureCalls);
 end;
 
+procedure TMeasureSource.CellClick(Sender: TObject; AColumn: ThiiGridColumn; ARowIndex: Int64);
+begin
+  Inc(ClickCalls);
+end;
+
 procedure TMeasureSource.Height(Sender: TObject; const AContext: THeightContext; var AHeight: THeight; var ACacheResult: Boolean);
 begin
   Inc(HeightCalls);
@@ -606,6 +644,7 @@ var
   Controller: ThiiVirtualController;
   A, B, C: ThiiGridColumn;
   ExpectedA, ExpectedB, ExpectedC: Single;
+  Point: TPoint;
 
   procedure ResetWidths;
   begin
@@ -679,6 +718,44 @@ begin
     B.Width := -30;
     Grid.DoubleClickAt(HeaderPoint(Grid, B, True));
     CheckNear(ExpectedB, B.Width, 1, 'separator autosizing converts percentage sizing to pixels');
+    ResetWidths;
+    Grid.HoverAt(DataPoint(Grid, A, True));
+    Check(Grid.Cursor <> crHSplit, 'visible header keeps resizing restricted to header separators');
+    Grid.Header.Visible := False;
+    Point := DataPoint(Grid, A, True);
+    Grid.HoverAt(Point);
+    Check(Grid.Cursor = crHSplit, 'hidden header exposes data-cell separators for resizing');
+    Grid.DoubleClickAt(Point);
+    CheckNear(ExpectedA, A.Width, 1, 'hidden-header separator double-click autosizes the hit column');
+    Check((B.Width = 100) and (C.Width = 100), 'hidden-header single autosizing leaves other columns intact');
+    Grid.OnCellClick := Source.CellClick;
+    Point := DataPoint(Grid, A, True);
+    Inc(Point.X, 2);
+    Grid.DoubleClickAt(Point);
+    Check(Source.ClickCalls = 0, 'resize-zone double-click does not trigger the adjacent data-cell click event');
+    ResetWidths;
+    Grid.Selection.SelectColumns(['A', 'B']);
+    Grid.Header.Layout.Cells.Add.Caption := 'Hidden group header';
+    Grid.Header.Layout.Enabled := True;
+    Grid.DoubleClickAt(DataPoint(Grid, B, True));
+    CheckNear(ExpectedA, A.Width, 1, 'hidden-header selected separator autosizes the first selected column');
+    CheckNear(ExpectedB, B.Width, 1, 'hidden-header resizing ignores inactive group-header boundaries');
+    Check(Grid.Selection.SelectedColumnCount = 2, 'hidden-header autosizing preserves column selection');
+    ResetWidths;
+    B.CanResize := False;
+    Grid.HoverAt(DataPoint(Grid, B, True));
+    Check(Grid.Cursor <> crHSplit, 'locked data-cell separator does not expose resizing');
+    B.CanResize := True;
+    Grid.Customization.AllowColumnResizing := False;
+    Grid.HoverAt(DataPoint(Grid, A, True));
+    Check(Grid.Cursor <> crHSplit, 'resize permission also applies without a header');
+    Grid.Customization.AllowColumnResizing := True;
+    Grid.HoverAt(DataPoint(Grid, A, False));
+    Check(Grid.Cursor <> crHSplit, 'cell content does not expose resizing');
+    Point := DataPoint(Grid, A, True);
+    Point.Y := Trunc(Grid.Height) - 30;
+    Grid.HoverAt(Point);
+    Check(Grid.Cursor <> crHSplit, 'empty space below data does not expose resizing');
   finally
     Form.Free;
     Source.Free;

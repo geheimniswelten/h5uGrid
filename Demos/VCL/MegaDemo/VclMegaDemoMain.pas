@@ -21,11 +21,13 @@ uses
   Vcl.ComCtrls,
   Vcl.WinXCtrls,
   Vcl.FormTabsBar,
+  h5u.Grid.Data.Core,
   h5u.Grid.Data.DataSet,
   h5u.Grid.Factory,
   h5u.Grid.SampleData,
   Vcl.h5u.Grid.Styles,
-  Vcl.h5u.Grid;
+  Vcl.h5u.Grid,
+  Vcl.h5u.PropertyEditor;
 
 type
   TPriorityDemoCell = class(ThiiVclDataCell)
@@ -56,11 +58,9 @@ type
     DataController: ThiiDatasetController;
     Grid: ThiiGrid;
     SplitView1: TSplitView;
-    CategoryPanelGroup1: TCategoryPanelGroup;
-    CategoryPanel1: TCategoryPanel;
-    CategoryPanel2: TCategoryPanel;
+    Properties: ThiiPropertyEditor;
+    Splitter1: TSplitter;
     Panel1: TPanel;
-    ToggleSwitch1: TToggleSwitch;
     ActivityIndicator1: TActivityIndicator;
     Button1: TButton;
     procedure FormCreate(Sender: TObject);

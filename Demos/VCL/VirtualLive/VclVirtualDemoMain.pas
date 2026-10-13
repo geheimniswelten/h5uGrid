@@ -14,6 +14,7 @@ uses
   Vcl.ExtCtrls,
   Vcl.Forms,
   Vcl.StdCtrls,
+  h5u.Grid.Data.Core,
   h5u.Grid.Data.Virtual,
   Vcl.h5u.Grid;
 

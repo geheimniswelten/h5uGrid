@@ -3448,9 +3448,9 @@ var
   I: Integer;
 begin
   Result := nil;
-  if not CanUpdateLayout or not FHeader.Visible or not FCustomization.AllowColumnResizing then
+  if not CanUpdateLayout or not FCustomization.AllowColumnResizing then
     Exit;
-  if not GetViewportRect.Contains(Point(X, Y)) or (Y >= GetDataViewportRect.Top) then
+  if not GetViewportRect.Contains(Point(X, Y)) or (FHeader.Visible and (Y >= GetDataViewportRect.Top)) then
     Exit;
   BuildColumnLayout;
   SetLength(LCandidates, Length(FVisibleColumns));
@@ -3470,6 +3470,9 @@ function ThiiCustomGrid.IsResizeHeaderEdge(AX, AY: Single): Boolean;
 var
   LHeader: ThiiHeaderLayoutCell;
 begin
+  // Without a header the vertical edge must belong to an actual data cell.
+  if not FHeader.Visible then
+    Exit(HitTest(Round(AX - 1), Round(AY)).Kind = ThiiHitKind.DataCell);
   Result := True;
   if FHeaderLayout.Enabled and (FHeaderLayout.Cells.Count > 0) then
   begin
@@ -4032,7 +4035,10 @@ begin
   if ssDouble in Shift then
   begin
     if (Button = mbLeft) and AutoSizeColumnsAt(X, Y) then
+    begin
+      FMouseDownHit := ThiiHitTestInfo.Empty;
       Exit;
+    end;
     FMouseDownHit := HitTest(X, Y);
     if (Button = mbLeft) and (FMouseDownHit.Kind = ThiiHitKind.DataCell)
       and CellEditorHit(FMouseDownHit.Column, FMouseDownHit.RowIndex, TRectF.Create(FMouseDownHit.Bounds), PointF(X, Y)) then

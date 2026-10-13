@@ -18,6 +18,7 @@ uses
   Vcl.Forms,
   Vcl.Graphics,
   Vcl.StdCtrls,
+  h5u.Grid.Data.Core,
   h5u.Grid.Data.DataSet,
   h5u.Grid.Factory,
   h5u.Grid.SampleData,

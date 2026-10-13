@@ -19,6 +19,7 @@ uses
   FMX.Edit,
   FMX.Types,
   FMX.Controls.Presentation,
+  h5u.Grid.Data.Core,
   h5u.Grid.Data.DataSet,
   h5u.Grid.SampleData,
   Fmx.h5u.Grid;
