@@ -208,43 +208,43 @@ end;
   {$ENDREGION}
 
   { AdjacentGroupFolding }
-  Grid.AdjacentGroupFolding.IdColumnId         := edAGFIdColumn.Text;
-  Grid.AdjacentGroupFolding.Enabled            := cbAGFEnabled.IsChecked;
-  Grid.AdjacentGroupFolding.GroupEmptyValues   := cbAGFGroupEmptyValues.IsChecked;
-  Grid.AdjacentGroupFolding.ShowFoldGlyph      := cbAGFShowFoldGlyph.IsChecked;
-  Grid.AdjacentGroupFolding.EndBand.Height     := Round(edAGFEBHeight.Value);
-  Grid.AdjacentGroupFolding.EndBand.Visibility := ThiiAdjacentGroupEndBandVisibility(cbAGFEBVisibility.ItemIndex);
-  Grid.AdjacentGroupFolding.EndBand.Color      := cbAGFEBColor.Color;
-  Grid.AdjacentGroupFolding.EndBand.StyleName  := cbAGFEBStyleName.Text;
-  ToggleGroupsButton.Enabled                   := cbAGFEnabled.IsChecked;
+//  Grid.AdjacentGroupFolding.IdColumnId         := edAGFIdColumn.Text;
+//  Grid.AdjacentGroupFolding.Enabled            := cbAGFEnabled.IsChecked;
+//  Grid.AdjacentGroupFolding.GroupEmptyValues   := cbAGFGroupEmptyValues.IsChecked;
+//  Grid.AdjacentGroupFolding.ShowFoldGlyph      := cbAGFShowFoldGlyph.IsChecked;
+//  Grid.AdjacentGroupFolding.EndBand.Height     := Round(edAGFEBHeight.Value);
+//  Grid.AdjacentGroupFolding.EndBand.Visibility := ThiiAdjacentGroupEndBandVisibility(cbAGFEBVisibility.ItemIndex);
+//  Grid.AdjacentGroupFolding.EndBand.Color      := cbAGFEBColor.Color;
+//  Grid.AdjacentGroupFolding.EndBand.StyleName  := cbAGFEBStyleName.Text;
+//  ToggleGroupsButton.Enabled                   := cbAGFEnabled.IsChecked;
 
   { Grouping }
 
   { Sorting }
 
   { Options }
-  Grid.AllowEditing                := cbOptAllowEditing.IsChecked;
-  Grid.Appearance.DefaultCellColor := cbOptDefaultCellColor.Color;
-  Grid.AutoWidthRowLimit           := Round(edOptAutoWidthRowLimit.Value);
-  Grid.GridLines                   := cbOptGridLines.IsChecked;
-  Grid.HeaderRowHeight             := edOptHeaderRowHeight.Value;
-  Grid.ImmediateEdit               := cbOptImmediateEdit.IsChecked;
-  Grid.RowIndicatorWidth           := edOptRowIndicatorWidth.Value;
+//  Grid.AllowEditing                := cbOptAllowEditing.IsChecked;
+//  Grid.Appearance.DefaultCellColor := cbOptDefaultCellColor.Color;
+//  Grid.AutoWidthRowLimit           := Round(edOptAutoWidthRowLimit.Value);
+//  Grid.GridLines                   := cbOptGridLines.IsChecked;
+//  Grid.HeaderRowHeight             := edOptHeaderRowHeight.Value;
+//  Grid.ImmediateEdit               := cbOptImmediateEdit.IsChecked;
+//  Grid.RowIndicatorWidth           := edOptRowIndicatorWidth.Value;
 
   { Customization }
-  Grid.Customization.AllowColumnHiding                := cbCustAllowColumnHiding.IsChecked;
-  Grid.Customization.AllowColumnMoving                := cbCustAllowColumnMoving.IsChecked;
-  Grid.Customization.AllowColumnResizing              := cbCustAllowColumnResizing.IsChecked;
-  Grid.Customization.AllowRowMoving                   := cbCustAllowRowMoving.IsChecked;
-  Grid.Customization.ColumnMovingGesture              := ThiiColumnRowMovingGesture(cbCustColumnMovingGesture.ItemIndex);
-  Grid.Customization.ColumnResizeHitZoneLeft          := Round(edCustColumnResizeHitZoneLeft.Value);
-  Grid.Customization.ColumnResizeHitZoneRight         := Round(edCustColumnResizeHitZoneRight.Value);
-  Grid.Customization.LastColumnResizeHitZoneLeft      := Round(edCustLastColumnResizeHitZoneLeft.Value);
-  Grid.Customization.RowMovingGesture                 := ThiiColumnRowMovingGesture(cbCustRowMovingGesture.ItemIndex);
-  Grid.Customization.ShowColumnChooser                := cbCustShowColumnChooser.IsChecked;
-  Grid.Customization.TouchColumnResizeHitZoneLeft     := Round(edCustTouchColumnResizeHitZoneLeft.Value);
-  Grid.Customization.TouchColumnResizeHitZoneRight    := Round(edCustTouchColumnResizeHitZoneRight.Value);
-  Grid.Customization.TouchLastColumnResizeHitZoneLeft := Round(edCustTouchLastColumnResizeHitZoneLeft.Value);
+//  Grid.Customization.AllowColumnHiding                := cbCustAllowColumnHiding.IsChecked;
+//  Grid.Customization.AllowColumnMoving                := cbCustAllowColumnMoving.IsChecked;
+//  Grid.Customization.AllowColumnResizing              := cbCustAllowColumnResizing.IsChecked;
+//  Grid.Customization.AllowRowMoving                   := cbCustAllowRowMoving.IsChecked;
+//  Grid.Customization.ColumnMovingGesture              := ThiiColumnRowMovingGesture(cbCustColumnMovingGesture.ItemIndex);
+//  Grid.Customization.ColumnResizeHitZoneLeft          := Round(edCustColumnResizeHitZoneLeft.Value);
+//  Grid.Customization.ColumnResizeHitZoneRight         := Round(edCustColumnResizeHitZoneRight.Value);
+//  Grid.Customization.LastColumnResizeHitZoneLeft      := Round(edCustLastColumnResizeHitZoneLeft.Value);
+//  Grid.Customization.RowMovingGesture                 := ThiiColumnRowMovingGesture(cbCustRowMovingGesture.ItemIndex);
+//  Grid.Customization.ShowColumnChooser                := cbCustShowColumnChooser.IsChecked;
+//  Grid.Customization.TouchColumnResizeHitZoneLeft     := Round(edCustTouchColumnResizeHitZoneLeft.Value);
+//  Grid.Customization.TouchColumnResizeHitZoneRight    := Round(edCustTouchColumnResizeHitZoneRight.Value);
+//  Grid.Customization.TouchLastColumnResizeHitZoneLeft := Round(edCustTouchLastColumnResizeHitZoneLeft.Value);
 
   if Sender = nil then
     Grid.InvalidateAllRowHeights;
@@ -332,11 +332,11 @@ begin
   FLoading := True;
 
   { AdjacentGroupFolding }
-  cbAGFEBVisibility.Items.Text := GetEnumNames(TypeInfo(ThiiAdjacentGroupEndBandVisibility));
-  cbAGFEBStyleName.Items.Text  := GetStyleNames;
+//  cbAGFEBVisibility.Items.Text := GetEnumNames(TypeInfo(ThiiAdjacentGroupEndBandVisibility));
+//  cbAGFEBStyleName.Items.Text  := GetStyleNames;
   { Customization }
-  cbCustColumnMovingGesture.Items.Text := GetEnumNames(TypeInfo(ThiiColumnRowMovingGesture));
-  cbCustRowMovingGesture.Items.Text    := GetEnumNames(TypeInfo(ThiiColumnRowMovingGesture));
+//  cbCustColumnMovingGesture.Items.Text := GetEnumNames(TypeInfo(ThiiColumnRowMovingGesture));
+//  cbCustRowMovingGesture.Items.Text    := GetEnumNames(TypeInfo(ThiiColumnRowMovingGesture));
 
   for var C in Self do
     if C is TCustomEdit then
@@ -368,43 +368,43 @@ begin
   FLoading := True;
 
   { AdjacentGroupFolding }
-  edAGFIdColumn.Text              := Grid.AdjacentGroupFolding.IdColumnId;
-  cbAGFEnabled.IsChecked          := Grid.AdjacentGroupFolding.Enabled;
-  cbAGFGroupEmptyValues.IsChecked := Grid.AdjacentGroupFolding.GroupEmptyValues;
-  cbAGFShowFoldGlyph.IsChecked    := Grid.AdjacentGroupFolding.ShowFoldGlyph;
-  edAGFEBHeight.Value             := Grid.AdjacentGroupFolding.EndBand.Height;
-  cbAGFEBVisibility.ItemIndex     := Ord(Grid.AdjacentGroupFolding.EndBand.Visibility);
-  cbAGFEBColor.Color              := Grid.AdjacentGroupFolding.EndBand.Color;
-  cbAGFEBStyleName.Text           := Grid.AdjacentGroupFolding.EndBand.StyleName;
-  ToggleGroupsButton.Enabled      := cbAGFEnabled.IsChecked;
+//  edAGFIdColumn.Text              := Grid.AdjacentGroupFolding.IdColumnId;
+//  cbAGFEnabled.IsChecked          := Grid.AdjacentGroupFolding.Enabled;
+//  cbAGFGroupEmptyValues.IsChecked := Grid.AdjacentGroupFolding.GroupEmptyValues;
+//  cbAGFShowFoldGlyph.IsChecked    := Grid.AdjacentGroupFolding.ShowFoldGlyph;
+//  edAGFEBHeight.Value             := Grid.AdjacentGroupFolding.EndBand.Height;
+//  cbAGFEBVisibility.ItemIndex     := Ord(Grid.AdjacentGroupFolding.EndBand.Visibility);
+//  cbAGFEBColor.Color              := Grid.AdjacentGroupFolding.EndBand.Color;
+//  cbAGFEBStyleName.Text           := Grid.AdjacentGroupFolding.EndBand.StyleName;
+//  ToggleGroupsButton.Enabled      := cbAGFEnabled.IsChecked;
 
   { Grouping }
 
   { Sorting }
 
   { Options }
-  cbOptAllowEditing.IsChecked  := Grid.AllowEditing;
-  cbOptDefaultCellColor.Color  := Grid.Appearance.DefaultCellColor;
-  edOptAutoWidthRowLimit.Value := Grid.AutoWidthRowLimit;
-  cbOptGridLines.IsChecked     := Grid.GridLines;
-  edOptHeaderRowHeight.Value   := Grid.HeaderRowHeight;
-  cbOptImmediateEdit.IsChecked := Grid.ImmediateEdit;
-  edOptRowIndicatorWidth.Value := Grid.RowIndicatorWidth;
+//  cbOptAllowEditing.IsChecked  := Grid.AllowEditing;
+//  cbOptDefaultCellColor.Color  := Grid.Appearance.DefaultCellColor;
+//  edOptAutoWidthRowLimit.Value := Grid.AutoWidthRowLimit;
+//  cbOptGridLines.IsChecked     := Grid.GridLines;
+//  edOptHeaderRowHeight.Value   := Grid.HeaderRowHeight;
+//  cbOptImmediateEdit.IsChecked := Grid.ImmediateEdit;
+//  edOptRowIndicatorWidth.Value := Grid.RowIndicatorWidth;
 
   { Customization }
-  cbCustAllowColumnHiding.IsChecked            := Grid.Customization.AllowColumnHiding;
-  cbCustAllowColumnMoving.IsChecked            := Grid.Customization.AllowColumnMoving;
-  cbCustAllowColumnResizing.IsChecked          := Grid.Customization.AllowColumnResizing;
-  cbCustAllowRowMoving.IsChecked               := Grid.Customization.AllowRowMoving;
-  cbCustColumnMovingGesture.ItemIndex          := Ord(Grid.Customization.ColumnMovingGesture);
-  edCustColumnResizeHitZoneLeft.Value          := Grid.Customization.ColumnResizeHitZoneLeft;
-  edCustColumnResizeHitZoneRight.Value         := Grid.Customization.ColumnResizeHitZoneRight;
-  edCustLastColumnResizeHitZoneLeft.Value      := Grid.Customization.LastColumnResizeHitZoneLeft;
-  cbCustRowMovingGesture.ItemIndex             := Ord(Grid.Customization.RowMovingGesture);
-  cbCustShowColumnChooser.IsChecked            := Grid.Customization.ShowColumnChooser;
-  edCustTouchColumnResizeHitZoneLeft.Value     := Grid.Customization.TouchColumnResizeHitZoneLeft;
-  edCustTouchColumnResizeHitZoneRight.Value    := Grid.Customization.TouchColumnResizeHitZoneRight;
-  edCustTouchLastColumnResizeHitZoneLeft.Value := Grid.Customization.TouchLastColumnResizeHitZoneLeft;
+//  cbCustAllowColumnHiding.IsChecked            := Grid.Customization.AllowColumnHiding;
+//  cbCustAllowColumnMoving.IsChecked            := Grid.Customization.AllowColumnMoving;
+//  cbCustAllowColumnResizing.IsChecked          := Grid.Customization.AllowColumnResizing;
+//  cbCustAllowRowMoving.IsChecked               := Grid.Customization.AllowRowMoving;
+//  cbCustColumnMovingGesture.ItemIndex          := Ord(Grid.Customization.ColumnMovingGesture);
+//  edCustColumnResizeHitZoneLeft.Value          := Grid.Customization.ColumnResizeHitZoneLeft;
+//  edCustColumnResizeHitZoneRight.Value         := Grid.Customization.ColumnResizeHitZoneRight;
+//  edCustLastColumnResizeHitZoneLeft.Value      := Grid.Customization.LastColumnResizeHitZoneLeft;
+//  cbCustRowMovingGesture.ItemIndex             := Ord(Grid.Customization.RowMovingGesture);
+//  cbCustShowColumnChooser.IsChecked            := Grid.Customization.ShowColumnChooser;
+//  edCustTouchColumnResizeHitZoneLeft.Value     := Grid.Customization.TouchColumnResizeHitZoneLeft;
+//  edCustTouchColumnResizeHitZoneRight.Value    := Grid.Customization.TouchColumnResizeHitZoneRight;
+//  edCustTouchLastColumnResizeHitZoneLeft.Value := Grid.Customization.TouchLastColumnResizeHitZoneLeft;
 
   FLoading := False;
 end;

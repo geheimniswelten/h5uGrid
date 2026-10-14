@@ -14,6 +14,7 @@ uses
   h5u.Grid.Resizing in '..\..\..\Source\Common\h5u.Grid.Resizing.pas',
   h5u.Grid.RowMetrics in '..\..\..\Source\Common\h5u.Grid.RowMetrics.pas',
   h5u.Grid.Selection in '..\..\..\Source\Common\h5u.Grid.Selection.pas',
+  h5u.Grid.Sizing in '..\..\..\Source\Common\h5u.Grid.Sizing.pas',
   h5u.Grid.Types in '..\..\..\Source\Common\h5u.Grid.Types.pas',
   h5u.Grid.Values in '..\..\..\Source\Common\h5u.Grid.Values.pas',
   h5u.Grid.View in '..\..\..\Source\Common\h5u.Grid.View.pas',
@@ -23,11 +24,12 @@ uses
   h5u.Grid.Data.Objects in '..\..\..\Source\Common\h5u.Grid.Data.Objects.pas',
   h5u.Grid.Data.Virtual in '..\..\..\Source\Common\h5u.Grid.Data.Virtual.pas',
   h5u.Grid.SampleData in '..\..\..\Source\Design\h5u.Grid.SampleData.pas',
+  h5u.PropertyEditor in '..\..\..\Source\Common\h5u.PropertyEditor.pas',
   Fmx.h5u.Grid.Styles in '..\..\..\Source\FMX\Fmx.h5u.Grid.Styles.pas',
   Fmx.h5u.Grid.Editors in '..\..\..\Source\FMX\Fmx.h5u.Grid.Editors.pas',
   Fmx.h5u.Grid in '..\..\..\Source\FMX\Fmx.h5u.Grid.pas',
-  FmxMegaDemoMain in 'FmxMegaDemoMain.pas' {FmxMegaDemoForm},
-  h5u.Grid.Sizing in '..\..\..\Source\Common\h5u.Grid.Sizing.pas';
+  Fmx.h5u.PropertyEditor in '..\..\..\Source\FMX\Fmx.h5u.PropertyEditor.pas',
+  FmxMegaDemoMain in 'FmxMegaDemoMain.pas' {FmxMegaDemoForm};
 
 {$R *.res}
 

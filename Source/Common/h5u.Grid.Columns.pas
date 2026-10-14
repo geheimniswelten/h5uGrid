@@ -294,6 +294,8 @@ type
     procedure SetCells(const AValue: ThiiHeaderLayoutCells);
     procedure SetRowCount(const AValue: Integer);
     function UsesColumnBindings(ACell: ThiiHeaderLayoutCell): Boolean;
+  protected
+    function GetOwner: TPersistent; override;
   public
     constructor Create(AOwner: TPersistent);
     destructor Destroy; override;
@@ -1109,6 +1111,11 @@ begin
 end;
 
 { ThiiHeaderLayout }
+
+function ThiiHeaderLayout.GetOwner: TPersistent;
+begin
+  Result := FOwner;
+end;
 
 function ThiiHeaderLayout.ContainsCell(ACell: ThiiHeaderLayoutCell): Boolean;
 var

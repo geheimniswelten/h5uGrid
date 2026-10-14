@@ -403,7 +403,7 @@ type
     procedure PaintDefault(AGrid: ThiiCustomGrid; ACanvas: TCanvas); override;
   end;
 
-  ThiiCustomGrid = class(TStyledControl)
+  ThiiCustomGrid = class(TStyledControl, IControl)
   private
     FShowColumnModes: Boolean;
     FColumns: ThiiGridColumns;
@@ -500,6 +500,7 @@ type
     FResizingColumn: ThiiGridColumn;
     FResizeStartX: Single;
     FResizeOriginalWidth: Single;
+    FResizeHasMoved: Boolean;
     FResizeCursorActive: Boolean;
     FResizeCursor: TCursor;
     FHeaderInteraction: Boolean;
@@ -717,6 +718,14 @@ type
     function GetVisualCellClass(const AContext: ThiiFactoryContext; ADefaultClass: ThiiFmxVisualCellClass): ThiiFmxVisualCellClass; virtual;
     procedure DoCustomDraw(ACanvas: TCanvas; const AContext: ThiiFmxDrawContext; AStage: ThiiCustomDrawStage; var ADrawDefault: Boolean);
   protected
+    function IControl.GetDesignInteractive = GetGridDesignInteractive;
+    function IControl.GetCursor = GetGridCursor;
+    function GetGridCursor: TCursor;
+    function GetGridDesignInteractive: Boolean;
+    function DesignerInteractiveAt(const APoint: TPointF): Boolean;
+    function IsDesignerColumnHit(const AHit: ThiiHitTestInfo): Boolean;
+    procedure SelectDesignerColumn(AColumn: ThiiGridColumn); virtual;
+    procedure DesignerColumnsModified; virtual;
     function GetViewSourceRowIndex(AViewRowIndex: Int64): Int64;
     procedure DoExit; override;
     procedure DoMouseLeave; override;
@@ -1779,6 +1788,8 @@ type
     procedure SetCells(const AValue: ThiiHeaderLayoutCells);
     procedure SetRowCount(const AValue: Integer);
     function UsesColumnBindings(ACell: ThiiHeaderLayoutCell): Boolean;
+  protected
+    function GetOwner: TPersistent; override;
   public
     constructor Create(AOwner: TPersistent);
     destructor Destroy; override;
@@ -2782,6 +2793,8 @@ uses
 type
   Th5uMoveGetRowKey = function(ARow: Int64): ThiiRowKey of object;
   Th5uMoveGetSourceRow = function(ARow: Int64): Int64 of object;
+  Th5uDesignColumnSelect = procedure(AColumn: ThiiGridColumn) of object;
+  Th5uDesignColumnClickObserver = procedure(AGrid: TComponent; AColumn: ThiiGridColumn; ASelect: Th5uDesignColumnSelect);
 
   Th5uColumnMovePlan = record
     Columns: {$IFDEF FPC}specialize {$ENDIF}TArray<ThiiGridColumn>;
@@ -2795,6 +2808,8 @@ type
   end;
 
 function h5uCanMoveColumn(AColumns: ThiiGridColumns; AAllowByDefault: Boolean; AColumn: ThiiGridColumn): Boolean;
+function h5uDesignColumnMoveTarget(AColumns: ThiiGridColumns; ALayout: ThiiHeaderLayout; AColumn, ATarget: ThiiGridColumn; out ANewIndex: Integer): Boolean;
+function h5uMoveDesignColumn(AColumns: ThiiGridColumns; ALayout: ThiiHeaderLayout; AColumn: ThiiGridColumn; ANewIndex: Integer): Boolean;
 function h5uMoveGestureAllowed(AEnabled, AAltDrag: Boolean; AShift: TShiftState; ATouchWithoutAlt: Boolean = False): Boolean;
 function h5uPlanColumnMove(AColumns: ThiiGridColumns; AHeaderLayout: ThiiHeaderLayout; ASelection: ThiiGridSelection; ACustomization: ThiiCustomizationOptions;
   AColumnIndex: Integer; AHeaderCell: ThiiHeaderLayoutCell; out APlan: Th5uColumnMovePlan): Boolean;
@@ -2804,6 +2819,10 @@ function h5uColumnMoveTarget(AColumns: ThiiGridColumns; AHeaderLayout: ThiiHeade
 function h5uPlanRowMove(ASelection: ThiiGridSelection; ARowIndex, ARowCount: Int64; AGetRowKey: Th5uMoveGetRowKey; out APlan: Th5uRowMovePlan): Boolean;
 function h5uRowMoveTarget(ARowCount, ATargetRowIndex: Int64; const ATargetRowKey: ThiiRowKey; AGetRowKey: Th5uMoveGetRowKey; AGetSourceRow: Th5uMoveGetSourceRow;
   var AContext: ThiiRowsMovedContext): Boolean;
+
+var
+  // Installed only by the Delphi design-time package. Native designer drags remain unhandled.
+  h5uObserveDesignColumnClick: Th5uDesignColumnClickObserver;
 ```
 
 ## `h5u.Grid.Navigation`
@@ -2906,6 +2925,7 @@ type
   private
     FOwner: TPersistent;
     FVisible: Boolean;
+    FHighlightInteractive: Boolean;
     FRowHeight: Single;
     FLayout: ThiiHeaderLayout;
     FAssigning: Boolean;
@@ -2915,6 +2935,7 @@ type
     procedure SetLayout(const AValue: ThiiHeaderLayout);
     procedure SetRowHeight(const AValue: Single);
     procedure SetVisible(const AValue: Boolean);
+    procedure SetHighlightInteractive(const AValue: Boolean);
   protected
     function GetOwner: TPersistent; override;
   public
@@ -2924,6 +2945,7 @@ type
     property OnChanged: ThiiOptionsChangedEvent read FOnChanged write FOnChanged;
   published
     property Visible: Boolean read FVisible write SetVisible default True;
+    property HighlightInteractive: Boolean read FHighlightInteractive write SetHighlightInteractive default False;
     property RowHeight: Single read FRowHeight write SetRowHeight nodefault;
     property Layout: ThiiHeaderLayout read FLayout write SetLayout;
   end;
@@ -3390,7 +3412,8 @@ type
 
 function h5uColumnResizeAt(AOptions: ThiiCustomizationOptions; const ACandidates: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uResizeCandidate>;
   ALastVisibleIndex: Integer; X, Y: Single; ATouch: Boolean; AHeaderEdge: Th5uResizeHeaderEdgeTest): ThiiGridColumn;
-function h5uTryResizeColumn(AColumns: ThiiGridColumns; AColumn: ThiiGridColumn; AOriginalWidth, ADelta: Single): Boolean;
+function h5uTryResizeColumn(AColumns: ThiiGridColumns; AColumn: ThiiGridColumn; AOriginalWidth, ADelta: Single): Boolean; overload;
+function h5uTryResizeColumn(AColumns: ThiiGridColumns; AColumn: ThiiGridColumn; AOriginalWidth, ADelta: Single; out AChanged: Boolean): Boolean; overload;
 function h5uAutoSizeColumnTargets(AColumns: ThiiGridColumns; ASelection: ThiiGridSelection;
   AColumn: ThiiGridColumn): {$IFDEF FPC}specialize {$ENDIF}TArray<ThiiGridColumn>;
 ```
@@ -5959,6 +5982,7 @@ type
     FResizingColumn: ThiiGridColumn;
     FResizeStartX: Integer;
     FResizeOriginalWidth: Integer;
+    FResizeHasMoved: Boolean;
     FResizeCursorActive: Boolean;
     FResizeCursor: TCursor;
 
@@ -6135,6 +6159,10 @@ type
 
     procedure DoCustomDraw(ACanvas: TCanvas; const AContext: ThiiVclDrawContext; AStage: ThiiCustomDrawStage; var ADrawDefault: Boolean);
   protected
+    function IsDesignerColumnHit(const AHit: ThiiHitTestInfo): Boolean;
+    function DesignWndProc(var Message: TMessage): Boolean; override;
+    procedure SelectDesignerColumn(AColumn: ThiiGridColumn); virtual;
+    procedure DesignerColumnsModified; virtual;
     function GetViewSourceRowIndex(AViewRowIndex: Int64): Int64;
     procedure DoExit; override;
     procedure CMMouseLeave(var Message: TMessage); message CM_MOUSELEAVE;
@@ -6142,6 +6170,8 @@ type
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
     procedure KeyPress(var Key: Char); override;
     procedure WMGetDlgCode(var Message: TWMGetDlgCode); message WM_GETDLGCODE;
+    procedure CMDesignHitTest(var Message: TCMDesignHitTest); message CM_DESIGNHITTEST;
+    procedure WMSetCursor(var Message: TWMSetCursor); message WM_SETCURSOR;
     procedure WMCancelMode(var Message: TWMCancelMode); message WM_CANCELMODE;
     procedure WMCaptureChanged(var Message: TMessage); message WM_CAPTURECHANGED;
     procedure CMWantSpecialKey(var Message: TCMWantSpecialKey); message CM_WANTSPECIALKEY;
@@ -6355,6 +6385,12 @@ type
     property OnMouseMove;
     property OnMouseUp;
   end;
+
+type
+  Th5uVclDesignerColumnSelect = procedure(AGrid: ThiiCustomGrid; AColumn: ThiiGridColumn);
+
+var
+  h5uVclDesignerColumnSelect: Th5uVclDesignerColumnSelect;
 ```
 
 ## `Vcl.h5u.Grid.Design`

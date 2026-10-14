@@ -6,6 +6,7 @@ uses
   h5u.Grid.Columns in '..\..\..\Source\Common\h5u.Grid.Columns.pas',
   h5u.Grid.Editors in '..\..\..\Source\Common\h5u.Grid.Editors.pas',
   h5u.Grid.Factory in '..\..\..\Source\Common\h5u.Grid.Factory.pas',
+  h5u.Grid.Sizing in '..\..\..\Source\Common\h5u.Grid.Sizing.pas',
   h5u.Grid.Layout in '..\..\..\Source\Common\h5u.Grid.Layout.pas',
   h5u.Grid.Moving in '..\..\..\Source\Common\h5u.Grid.Moving.pas',
   h5u.Grid.Navigation in '..\..\..\Source\Common\h5u.Grid.Navigation.pas',
@@ -21,12 +22,13 @@ uses
   h5u.Grid.Data.Memory in '..\..\..\Source\Common\h5u.Grid.Data.Memory.pas',
   h5u.Grid.Data.Objects in '..\..\..\Source\Common\h5u.Grid.Data.Objects.pas',
   h5u.Grid.Data.Virtual in '..\..\..\Source\Common\h5u.Grid.Data.Virtual.pas',
+  h5u.PropertyEditor in '..\..\..\Source\Common\h5u.PropertyEditor.pas',
   h5u.Grid.SampleData in '..\..\..\Source\Design\h5u.Grid.SampleData.pas',
   Vcl.h5u.Grid.Styles in '..\..\..\Source\Vcl\Vcl.h5u.Grid.Styles.pas',
   Vcl.h5u.Grid.Editors in '..\..\..\Source\Vcl\Vcl.h5u.Grid.Editors.pas',
   Vcl.h5u.Grid in '..\..\..\Source\Vcl\Vcl.h5u.Grid.pas',
-  VclMegaDemoMain in 'VclMegaDemoMain.pas' {VclMegaDemoForm},
-  h5u.Grid.Sizing in '..\..\..\Source\Common\h5u.Grid.Sizing.pas';
+  Vcl.h5u.PropertyEditor in '..\..\..\Source\VCL\Vcl.h5u.PropertyEditor.pas',
+  VclMegaDemoMain in 'VclMegaDemoMain.pas' {VclMegaDemoForm};
 
 {$R *.res}
 

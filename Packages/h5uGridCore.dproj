@@ -144,8 +144,8 @@
         <DCCReference Include="..\Source\Common\h5u.Grid.Data.Memory.pas"/>
         <DCCReference Include="..\Source\Common\h5u.Grid.Data.Objects.pas"/>
         <DCCReference Include="..\Source\Common\h5u.Grid.Data.Virtual.pas"/>
-        <DCCReference Include="..\Source\Common\h5u.PropertyEditor.pas"/>
         <DCCReference Include="..\Source\Common\h5u.FormDesigner.pas"/>
+        <DCCReference Include="..\Source\Common\h5u.PropertyEditor.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

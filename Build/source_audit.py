@@ -393,7 +393,8 @@ def check_grid_contract(root: Path, findings: list[Finding]) -> None:
                 findings.append(Finding("error", rel(path, root), 1, f"grid class declaration missing: {owner}"))
                 continue
             declarations = set(re.findall(
-                r"^\s*(?:class\s+)?(?:procedure|function|constructor|destructor)\s+(\w+)", block[1], re.M
+                # Explicit interface mappings (IControl.Method = Handler) are not method bodies.
+                r"^\s*(?:class\s+)?(?:procedure|function|constructor|destructor)\s+(\w+)\b(?!\.)", block[1], re.M
             ))
             implementations = set(re.findall(
                 r"^(?:procedure|function|constructor|destructor) " + owner + r"\.(\w+)", text, re.M

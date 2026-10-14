@@ -2,6 +2,11 @@
 
 ## Unreleased – 2026-10-12
 
+- VCL/FMX: Spaltenheader tragen im Designer dauerhaft eine Akzentlinie und an sichtbaren, veränderbaren Trennern einen Resize-Griff. Zur Laufzeit aktivierbar mit `Header.HighlightInteractive` (Default `False`). Die native Cursor-Behandlung zeigt den Resize-Cursor bereits beim Überfahren des Trenners.
+- VCL/FMX: `Header.Layout.Cells` lässt sich mit dem Standard-Collection-Editor bearbeiten. `ThiiHeaderLayout.GetOwner` vervollständigt die Owner-Kette zum Grid; bisher konnte der Editor wegen des fehlenden Komponenten-Owners ohne sichtbare Fehlermeldung abbrechen.
+- Delphi VCL/FMX: Spaltenbreiten lassen sich im Designer über Header-Trenner ändern. Resize hat Vorrang vor Spalten-Drag, berücksichtigt Größenlimits und Sperren und markiert das Formular bei Änderungen. Datenzellen bleiben Flächen zum normalen Verschieben der Grid-Komponente.
+- Delphi VCL/FMX: Spaltenheader wählen im Designer ihren Collection-Eintrag im Objektinspektor aus. Header-Drag ab vier Pixeln verschiebt auch den tatsächlichen Collection-Index. Bei verborgenem Header wählt ein Datenzellen-Klick die Spalte; Ziehen auf Datenzellen und freien Flächen bleibt beim normalen Verschieben der Grid-Komponente.
+- Delphi VCL/FMX: Beide internen Scrollbars sind im FormDesigner bedienbar. Umschalt+Mausrad scrollt horizontal, das normale Mausrad weiterhin vertikal; gezielte Tests prüfen Designer-Interaktion sowie Hin- und Zurückscrollen.
 - VCL/FMX/LCL: Bei ausgeblendetem Header können Spalten über die Trenner der Datenzellen in der Breite verändert und per Doppelklick automatisch angepasst werden. Resize-Sperren, Clipping und Mehrfachauswahl bleiben berücksichtigt.
 - DesignTime VCL/FMX: Legacy-Properties werden mit ihrem tatsächlichen RTTI-Typ ausgeblendet. Die bisherigen nil-Typregistrierungen konnten beim Laden eines Formulars in `DesignEditors.GetEditorClass` abstürzen. SDK-Registrierungs- und Property-Lookup-Tests ergänzt.
 - VCL/FMX/LCL: Doppelklick auf einen Spaltentrenner passt die Spalte automatisch an; bei einem Treffer auf eine mehrfach ausgewählte Spalte werden alle sichtbaren, veränderbaren ausgewählten Spalten angepasst. Auswahl, Resize-Sperren und Größenlimits bleiben erhalten.

@@ -2,12 +2,12 @@ uses
   System.Classes, System.SysUtils, System.Rtti, System.Types, System.Math,
   System.UITypes, System.UIConsts,
   h5u.Grid.Columns, h5u.Grid.Types, h5u.Grid.Options, h5u.Grid.Sizing,
-  h5u.Grid.Editors, h5u.Grid.Data.Virtual, h5u.PropertyEditor,
+  h5u.Grid.Editors, h5u.Grid.Data.Virtual, h5u.Grid.Moving, h5u.PropertyEditor,
   {$IFDEF TEST_FMX}
-  FMX.Forms, FMX.Graphics, FMX.Controls, FMX.Types,
+  FMX.Forms, FMX.Graphics, FMX.Controls, FMX.Types, FMX.StdCtrls,
   Fmx.h5u.Grid, Fmx.h5u.PropertyEditor, Fmx.h5u.FormDesigner;
   {$ELSE}
-  Winapi.Windows, Winapi.Messages, Vcl.Forms, Vcl.Graphics, Vcl.Controls,
+  Winapi.Windows, Winapi.Messages, Vcl.Forms, Vcl.Graphics, Vcl.Controls, Vcl.StdCtrls,
   Vcl.h5u.Grid, Vcl.h5u.PropertyEditor, Vcl.h5u.FormDesigner;
   {$ENDIF}
 
@@ -30,6 +30,21 @@ type
   public
     procedure DoubleClickAt(const APoint: TPoint);
     procedure HoverAt(const APoint: TPoint);
+    procedure DesignMode;
+    procedure Wheel(AShift: TShiftState; ADelta: Integer);
+  end;
+
+  TDesignerGrid = class(TDoubleClickGrid)
+  protected
+    procedure SelectDesignerColumn(AColumn: ThiiGridColumn); override;
+    procedure DesignerColumnsModified; override;
+  public
+    SelectedColumn: ThiiGridColumn;
+    SelectionCalls, ModifiedCalls: Integer;
+    procedure DownAt(const APoint: TPoint);
+    procedure DragAt(const APoint: TPoint);
+    procedure UpAt(const APoint: TPoint);
+    function DesignerHitAt(const APoint: TPoint): Boolean;
   end;
 
   TMeasureSource = class
@@ -135,6 +150,61 @@ end;
 procedure TDoubleClickGrid.HoverAt(const APoint: TPoint);
 begin
   MouseMove([], APoint.X, APoint.Y);
+end;
+
+procedure TDoubleClickGrid.DesignMode;
+begin
+  SetDesigning(True, True);
+end;
+
+procedure TDoubleClickGrid.Wheel(AShift: TShiftState; ADelta: Integer);
+{$IFDEF TEST_FMX}
+var
+  Handled: Boolean;
+{$ENDIF}
+begin
+  {$IFDEF TEST_FMX}
+  Handled := False;
+  MouseWheel(AShift, ADelta, Handled);
+  Check(Handled, 'grid handles wheel scrolling');
+  {$ELSE}
+  Check(DoMouseWheel(AShift, ADelta, Point(0, 0)), 'grid handles wheel scrolling');
+  {$ENDIF}
+end;
+
+procedure TDesignerGrid.SelectDesignerColumn(AColumn: ThiiGridColumn);
+begin
+  SelectedColumn := AColumn;
+  Inc(SelectionCalls);
+end;
+
+procedure TDesignerGrid.DesignerColumnsModified;
+begin
+  Inc(ModifiedCalls);
+end;
+
+procedure TDesignerGrid.DownAt(const APoint: TPoint);
+begin
+  MouseDown(TMouseButton.mbLeft, [], APoint.X, APoint.Y);
+end;
+
+procedure TDesignerGrid.DragAt(const APoint: TPoint);
+begin
+  MouseMove([ssLeft], APoint.X, APoint.Y);
+end;
+
+procedure TDesignerGrid.UpAt(const APoint: TPoint);
+begin
+  MouseUp(TMouseButton.mbLeft, [], APoint.X, APoint.Y);
+end;
+
+function TDesignerGrid.DesignerHitAt(const APoint: TPoint): Boolean;
+begin
+  {$IFDEF TEST_FMX}
+  Result := DesignerInteractiveAt(PointF(APoint.X, APoint.Y));
+  {$ELSE}
+  Result := Perform(CM_DESIGNHITTEST, 0, MakeLParam(APoint.X, APoint.Y)) = 1;
+  {$ENDIF}
 end;
 
 function DataPoint(AGrid: TDoubleClickGrid; AColumn: ThiiGridColumn; ADivider: Boolean): TPoint;
@@ -762,6 +832,431 @@ begin
   end;
 end;
 
+var
+  DesignerObserverCalls: Integer;
+  DesignerObservedColumn: ThiiGridColumn;
+  DesignerObservedSelect: Th5uDesignColumnSelect;
+
+procedure ObserveDesignerClick(AGrid: TComponent; AColumn: ThiiGridColumn; ASelect: Th5uDesignColumnSelect);
+begin
+  Inc(DesignerObserverCalls);
+  DesignerObservedColumn := AColumn;
+  DesignerObservedSelect := ASelect;
+end;
+
+procedure TestDesignerColumns;
+var
+  Form: TForm;
+  Grid: TDesignerGrid;
+  Source: TMeasureSource;
+  Controller: ThiiVirtualController;
+  A, B, C, Hidden: ThiiGridColumn;
+  StartPoint, EndPoint, CellPoint: TPoint;
+  SavedObserver: Th5uDesignColumnClickObserver;
+  Text: string;
+  Reloaded: TTestGrid;
+  BeforeCalls: Integer;
+  {$IFDEF TEST_FMX}
+  DesignControl: IControl;
+  {$ENDIF}
+
+  function AddColumn(const Id: string): ThiiGridColumn;
+  begin
+    Result := Grid.Columns.Add;
+    Result.Id := Id;
+    Result.FieldName := Id;
+    Result.Width := 100;
+  end;
+
+begin
+  SavedObserver := h5uObserveDesignColumnClick;
+  h5uObserveDesignColumnClick := ObserveDesignerClick;
+  Form := TForm.CreateNew(nil);
+  Source := TMeasureSource.Create;
+  try
+    Source.Count := 3;
+    Grid := TDesignerGrid.Create(Form);
+    Grid.Parent := Form;
+    Grid.Width := 640;
+    Grid.Height := 320;
+    Grid.ScrollHints.Enabled := False;
+    Grid.ColumnSizing.FitMode := ThiiColumnFitMode.None;
+    A := AddColumn('A');
+    Hidden := AddColumn('Hidden');
+    Hidden.Visible := False;
+    B := AddColumn('B');
+    C := AddColumn('C');
+    Controller := ThiiVirtualController.Create(Form);
+    Controller.OnGetRowCount := Source.RowCount;
+    Controller.OnGetRowKey := Source.RowKey;
+    Controller.OnGetValue := Source.Value;
+    Grid.DataController := Controller;
+    PaintOffscreen(Grid);
+    StartPoint := HeaderPoint(Grid, A, False);
+    Check(not Grid.DesignerHitAt(StartPoint), 'runtime headers do not opt into designer handling');
+    Grid.DesignMode;
+    Check(Grid.DesignerHitAt(StartPoint), 'column header accepts designer interaction');
+    Grid.DownAt(StartPoint);
+    {$IFDEF TEST_FMX}
+    Check(Supports(Grid, IControl, DesignControl) and DesignControl.DesignInteractive, 'FMX IControl routes the captured header gesture to the grid');
+    {$ENDIF}
+    EndPoint := Point(StartPoint.X + 2, StartPoint.Y + 1);
+    Grid.DragAt(EndPoint);
+    Grid.UpAt(EndPoint);
+    Check((Grid.SelectedColumn = A) and (Grid.SelectionCalls = 1), 'header click selects the existing collection item');
+    Check((A.Index = 0) and (Grid.ModifiedCalls = 0), 'small mouse movement does not reorder or modify the form');
+    // Designer movement is independent of the application's Alt-drag/default moving options.
+    Grid.Customization.AllowColumnMoving := False;
+    Grid.Selection.SelectColumns(['A', 'B']);
+    Grid.DownAt(StartPoint);
+    EndPoint := HeaderPoint(Grid, C, False);
+    Grid.DragAt(EndPoint);
+    Grid.UpAt(EndPoint);
+    Check((A.Index = 3) and (Grid.Columns[3] = A), 'designer drag changes the actual collection index');
+    Check((Grid.Columns[0] = Hidden) and (Grid.Columns[1] = B) and (Grid.Columns[2] = C),
+      'designer drag preserves hidden items and other item identities');
+    Check((Grid.Columns.VisibleColumns[0] = B) and (Grid.Columns.VisibleColumns[2] = A), 'designer drag also updates the displayed order');
+    Check((Grid.ModifiedCalls = 1) and (Grid.SelectedColumn = A),
+      'successful designer drag marks the form modified and keeps the moved item selected');
+    Text := WriteGridText(Grid);
+    Reloaded := ReadGridText(Form, Text);
+    Check((Reloaded.Columns[3].Id = 'A') and (Reloaded.Columns[0].Id = 'Hidden'), 'collection order survives form streaming');
+    Reloaded.Customization.AllowColumnMoving := True;
+    Reloaded.MoveColumn(Reloaded.Columns[3], 0);
+    Check((Reloaded.Columns[3].Id = 'A') and (Reloaded.Columns.VisibleColumns[0].Id = 'A'), 'runtime column movement preserves the creation index');
+    Grid.DownAt(HeaderPoint(Grid, C, False));
+    EndPoint := HeaderPoint(Grid, B, False);
+    Grid.DragAt(EndPoint);
+    Grid.UpAt(EndPoint);
+    Check((C.Index = 1) and (Grid.Columns[1] = C), 'backward designer drag also moves the collection item');
+    A.MovePermission := ThiiColumnMovePermission.Deny;
+    Check(not h5uMoveDesignColumn(Grid.Columns, Grid.Header.Layout, A, 0), 'explicit column move denial applies in the designer');
+    A.MovePermission := ThiiColumnMovePermission.Default;
+    BeforeCalls := Grid.SelectionCalls;
+    CellPoint := DataPoint(Grid, B, False);
+    Check(not Grid.DesignerHitAt(CellPoint), 'visible-header data cells remain native component-drag surfaces');
+    Grid.DownAt(CellPoint);
+    Grid.DragAt(Point(CellPoint.X + 30, CellPoint.Y));
+    Grid.UpAt(Point(CellPoint.X + 30, CellPoint.Y));
+    Check((Grid.SelectionCalls = BeforeCalls) and (A.Index = 3), 'data cells do not select or drag columns when headers are visible');
+    Check(not Grid.DesignerHitAt(Point(500, 200)), 'blank grid area remains a native component-drag surface');
+    Grid.Header.Visible := False;
+    PaintOffscreen(Grid);
+    CellPoint := DataPoint(Grid, B, False);
+    DesignerObserverCalls := 0;
+    Check(not Grid.DesignerHitAt(CellPoint), 'hidden-header data cells also retain native designer drag handling');
+    Check((DesignerObserverCalls = 1) and (DesignerObservedColumn = B),
+      'hidden-header cell click is observed without consuming native designer input');
+    DesignerObservedSelect(B);
+    Check(Grid.SelectedColumn = B, 'completed native cell click selects its collection item');
+    Grid.DownAt(CellPoint);
+    Grid.DragAt(Point(CellPoint.X + 40, CellPoint.Y));
+    Grid.UpAt(Point(CellPoint.X + 40, CellPoint.Y));
+    Check((C.Index = 1) and (A.Index = 3), 'hidden-header data-cell drag does not reorder columns');
+    Grid.Header.Visible := True;
+    PaintOffscreen(Grid);
+    B.MinWidth := 60;
+    B.MaxWidth := 180;
+    StartPoint := HeaderPoint(Grid, B, True);
+    Grid.HoverAt(StartPoint);
+    Check(Grid.Cursor = crHSplit, 'designer header separator exposes the resize cursor');
+    Check(Grid.DesignerHitAt(StartPoint), 'designer header separator accepts resize input');
+    BeforeCalls := Grid.ModifiedCalls;
+    Grid.DownAt(StartPoint);
+    EndPoint := Point(StartPoint.X + 35, StartPoint.Y + 70);
+    Check(Grid.DesignerHitAt(EndPoint), 'captured designer resize continues outside the header');
+    {$IFDEF TEST_FMX}
+    Check(Supports(Grid, IControl, DesignControl) and (DesignControl.Cursor = crHSplit), 'native FMX cursor query returns the resize cursor');
+    {$ENDIF}
+    Grid.DragAt(EndPoint);
+    Grid.UpAt(EndPoint);
+    CheckNear(135, B.Width, 0.01, 'designer separator drag changes the column width');
+    Check((B.Index = 2) and (C.Index = 1) and (A.Index = 3), 'designer resize does not reorder columns');
+    Check((Grid.ModifiedCalls > BeforeCalls) and (Grid.SelectedColumn = B), 'designer resize marks the form modified and selects the resized item');
+    StartPoint := HeaderPoint(Grid, B, True);
+    Grid.DownAt(StartPoint);
+    EndPoint := Point(StartPoint.X + 300, StartPoint.Y);
+    Grid.DragAt(EndPoint);
+    Grid.UpAt(EndPoint);
+    CheckNear(180, B.Width, 0.01, 'designer resize respects maximum width');
+    StartPoint := HeaderPoint(Grid, B, True);
+    Grid.DownAt(StartPoint);
+    EndPoint := Point(StartPoint.X - 300, StartPoint.Y);
+    Grid.DragAt(EndPoint);
+    Grid.UpAt(EndPoint);
+    CheckNear(60, B.Width, 0.01, 'designer resize respects minimum width');
+    B.AutoWidth := True;
+    PaintOffscreen(Grid);
+    StartPoint := HeaderPoint(Grid, B, True);
+    BeforeCalls := Grid.ModifiedCalls;
+    Grid.DownAt(StartPoint);
+    Grid.UpAt(StartPoint);
+    Check(B.AutoWidth and (Grid.ModifiedCalls = BeforeCalls), 'separator click without dragging preserves automatic sizing and clean state');
+    B.AutoWidth := False;
+    B.Width := 100;
+    B.CanResize := False;
+    StartPoint := HeaderPoint(Grid, B, True);
+    Grid.HoverAt(StartPoint);
+    Check(Grid.Cursor <> crHSplit, 'locked designer separator does not expose resizing');
+    Grid.DownAt(StartPoint);
+    EndPoint := Point(StartPoint.X + 40, StartPoint.Y + 70);
+    Grid.DragAt(EndPoint);
+    Grid.UpAt(EndPoint);
+    CheckNear(100, B.Width, 0.01, 'locked designer column keeps its width');
+    B.CanResize := True;
+    Grid.Header.Visible := False;
+    PaintOffscreen(Grid);
+    CellPoint := DataPoint(Grid, B, True);
+    Check(not Grid.DesignerHitAt(CellPoint), 'hidden-header cell separators remain native component-drag surfaces in the designer');
+    Grid.DownAt(CellPoint);
+    EndPoint := Point(CellPoint.X + 40, CellPoint.Y);
+    Grid.DragAt(EndPoint);
+    Grid.UpAt(EndPoint);
+    CheckNear(100, B.Width, 0.01, 'hidden-header data drag does not resize a designer column');
+    Grid.Header.Visible := True;
+    Grid.Header.Layout.Cells.Add.Caption := 'Group';
+    Grid.Header.Layout.Cells[0].ColumnSpan := 3;
+    Grid.Header.Layout.Enabled := True;
+    PaintOffscreen(Grid);
+    StartPoint := Point(50, Round(Grid.Spacing.Top + Grid.Header.RowHeight / 2));
+    Check(not Grid.DesignerHitAt(StartPoint), 'group headers do not select or drag an arbitrary child column');
+    Check(not h5uMoveDesignColumn(Grid.Columns, Grid.Header.Layout, A, -1), 'invalid designer target leaves the collection intact');
+  finally
+    h5uObserveDesignColumnClick := SavedObserver;
+    Form.Free;
+    Source.Free;
+  end;
+end;
+
+procedure TestHeaderInteractionHighlight;
+var
+  Form: TForm;
+  Grid: TDesignerGrid;
+  Column: ThiiGridColumn;
+  Baseline, Highlighted, DesignerImage: TBitmap;
+  Point, HintPoint: TPoint;
+  Text: string;
+  Reloaded: TTestGrid;
+
+  function Snapshot: TBitmap;
+  begin
+    {$IFDEF TEST_FMX}
+    Result := Grid.MakeScreenshot;
+    {$ELSE}
+    Result := TBitmap.Create;
+    Result.SetSize(Grid.Width, Grid.Height);
+    Grid.PaintTo(Result.Canvas.Handle, 0, 0);
+    {$ENDIF}
+  end;
+
+  function Pixel(Image: TBitmap; const At: TPoint): Cardinal;
+  {$IFDEF TEST_FMX}
+  var
+    Data: TBitmapData;
+  {$ENDIF}
+  begin
+    {$IFDEF TEST_FMX}
+    if not Image.Map(TMapAccess.Read, Data) then raise Exception.Create('Cannot map header highlight image');
+    try Result := Data.GetPixel(At.X, At.Y); finally Image.Unmap(Data); end;
+    {$ELSE}
+    Result := ColorToRGB(Image.Canvas.Pixels[At.X, At.Y]);
+    {$ENDIF}
+  end;
+
+begin
+  Form := TForm.CreateNew(nil);
+  Baseline := nil;
+  Highlighted := nil;
+  DesignerImage := nil;
+  try
+    Grid := TDesignerGrid.Create(Form);
+    Grid.Parent := Form;
+    Grid.Width := 420;
+    Grid.Height := 180;
+    Grid.Theme := ThiiGridTheme.Modern;
+    Grid.ColumnSizing.FitMode := ThiiColumnFitMode.None;
+    Grid.Header.RowHeight := 32;
+    Column := Grid.Columns.Add;
+    Column.Id := 'Name';
+    Column.Caption := 'Name';
+    Column.Width := 150;
+    Grid.Columns.Add.Caption := 'Value';
+    Check(not Grid.Header.HighlightInteractive, 'interactive header highlight defaults to off at runtime');
+    Baseline := Snapshot;
+    Point := HeaderPoint(Grid, Column, False);
+    HintPoint := Point;
+    HintPoint.Y := Round(Grid.Spacing.Top + Grid.Header.RowHeight) - 3;
+    Text := WriteGridText(Grid);
+    Check(Pos('HighlightInteractive', Text) = 0, 'default header hint is omitted from form streaming');
+    Grid.Header.HighlightInteractive := True;
+    Highlighted := Snapshot;
+    Check(Pixel(Baseline, HintPoint) <> Pixel(Highlighted, HintPoint), 'enabled runtime property paints a persistent header accent');
+    Text := WriteGridText(Grid);
+    Check(Pos('Header.HighlightInteractive = True', Text) > 0, 'enabled header hint uses the grouped Header streaming path');
+    Reloaded := ReadGridText(Form, Text);
+    Check(Reloaded.Header.HighlightInteractive, 'runtime header hint survives form streaming');
+    Reloaded.Header.Assign(Grid.Header);
+    Check(Reloaded.Header.HighlightInteractive, 'header assignment preserves the interaction highlight');
+    Grid.Header.HighlightInteractive := False;
+    Grid.DesignMode;
+    DesignerImage := Snapshot;
+    Check(Pixel(DesignerImage, HintPoint) = Pixel(Highlighted, HintPoint), 'designer paints the header hint without enabling the runtime property');
+    Check(not Grid.Header.HighlightInteractive, 'designer hint does not alter the stored runtime setting');
+    Text := WriteGridText(Grid);
+    Check(Pos('HighlightInteractive', Text) = 0, 'designer-only hint remains absent from saved form properties');
+    Point := HeaderPoint(Grid, Column, True);
+    Check(Grid.DesignerHitAt(Point) and (Grid.Cursor = crHSplit), 'designer separator cursor is prepared before MouseDown');
+    Grid.DesignerHitAt(TPoint.Create(350, 100));
+    Check(Grid.Cursor <> crHSplit, 'leaving the header separator restores the component cursor');
+    {$IFDEF TEST_FMX}
+    DesignerImage.SaveToFile(ChangeFileExt(ParamStr(0), '.HeaderHighlight.png'));
+    {$ELSE}
+    DesignerImage.SaveToFile(ChangeFileExt(ParamStr(0), '.HeaderHighlight.bmp'));
+    {$ENDIF}
+  finally
+    DesignerImage.Free;
+    Highlighted.Free;
+    Baseline.Free;
+    Form.Free;
+  end;
+end;
+
+procedure TestDesignerScrolling;
+var
+  Form: TForm;
+  Grid: TDoubleClickGrid;
+  Source: TMeasureSource;
+  Controller: ThiiVirtualController;
+  Horizontal, Vertical, Bar: TScrollBar;
+  First: ThiiGridColumn;
+  I: Integer;
+  CellPoint: TPoint;
+  Hit: ThiiHitTestInfo;
+  {$IFDEF TEST_FMX}
+  Control: IControl;
+  {$ELSE}
+  BarPoint: TPoint;
+  {$ENDIF}
+
+  function Position(ABar: TScrollBar): Double;
+  begin
+    {$IFDEF TEST_FMX}
+    Result := ABar.Value;
+    {$ELSE}
+    Result := ABar.Position;
+    {$ENDIF}
+  end;
+
+  procedure ScrollToEnd(ABar: TScrollBar; AEnd: Boolean);
+  begin
+    {$IFDEF TEST_FMX}
+    if AEnd then
+      ABar.Value := Max(0, ABar.Max - ABar.ViewportSize)
+    else
+      ABar.Value := 0;
+    {$ELSE}
+    if AEnd then
+      ABar.Perform(CN_HSCROLL, SB_BOTTOM, 0)
+    else
+      ABar.Perform(CN_HSCROLL, SB_TOP, 0);
+    {$ENDIF}
+  end;
+
+begin
+  Source := TMeasureSource.Create;
+  Form := TForm.CreateNew(nil);
+  try
+    Source.Count := 100;
+    Grid := TDoubleClickGrid.Create(Form);
+    Grid.Parent := Form;
+    Grid.Width := 400;
+    Grid.Height := 180;
+    Grid.ScrollHints.Enabled := False;
+    Grid.ColumnSizing.FitMode := ThiiColumnFitMode.None;
+    First := nil;
+    for I := 1 to 6 do
+    begin
+      with Grid.Columns.Add do
+      begin
+        Id := 'C' + IntToStr(I);
+        FieldName := Id;
+        Width := 200;
+      end;
+    end;
+    First := Grid.Columns[0];
+    Controller := ThiiVirtualController.Create(Form);
+    Controller.OnGetRowCount := Source.RowCount;
+    Controller.OnGetRowKey := Source.RowKey;
+    Controller.OnGetValue := Source.Value;
+    Grid.DataController := Controller;
+    PaintOffscreen(Grid);
+    Grid.DesignMode;
+    Horizontal := nil;
+    Vertical := nil;
+    for I := 0 to Grid.ComponentCount - 1 do
+      if Grid.Components[I] is TScrollBar then
+      begin
+        Bar := TScrollBar(Grid.Components[I]);
+        {$IFDEF TEST_FMX}
+        if Bar.Orientation = TOrientation.Horizontal then
+        {$ELSE}
+        if Bar.Kind = sbHorizontal then
+        {$ENDIF}
+          Horizontal := Bar
+        else
+          Vertical := Bar;
+      end;
+    Check(Assigned(Horizontal) and Assigned(Vertical), 'grid owns both scrollbars');
+    Check(Horizontal.Visible and Vertical.Visible, 'designer fixture overflows in both directions');
+    CellPoint := DataPoint(Grid, First, False);
+    {$IFDEF TEST_FMX}
+    Check(Supports(Horizontal, IControl, Control) and Control.DesignInteractive, 'horizontal scrollbar is designer-interactive');
+    Check(Supports(Vertical, IControl, Control) and Control.DesignInteractive, 'vertical scrollbar is designer-interactive');
+    {$ELSE}
+    for I := 0 to 1 do
+    begin
+      if I = 0 then Bar := Horizontal else Bar := Vertical;
+      BarPoint := Bar.BoundsRect.CenterPoint;
+      Check(Grid.Perform(CM_DESIGNHITTEST, 0, MakeLParam(BarPoint.X, BarPoint.Y)) = 1, 'grid routes scrollbar clicks through the designer');
+      Check(Bar.Perform(CM_DESIGNHITTEST, 0, MakeLParam(2, 2)) = 1, 'scrollbar accepts designer clicks');
+    end;
+    Check(Grid.Perform(CM_DESIGNHITTEST, 0, MakeLParam(CellPoint.X, CellPoint.Y)) = 0, 'data cells retain normal designer selection');
+    {$ENDIF}
+    ScrollToEnd(Horizontal, True);
+    PaintOffscreen(Grid);
+    Check(Position(Horizontal) > 0, 'designer scrollbar scrolls horizontally');
+    {$IFDEF TEST_FMX}
+    Hit := Grid.GridHitTest(CellPoint.X, CellPoint.Y);
+    {$ELSE}
+    Hit := Grid.HitTest(CellPoint.X, CellPoint.Y);
+    {$ENDIF}
+    Check((Hit.Kind = ThiiHitKind.DataCell) and (Hit.Column <> First), 'horizontal scrollbar reveals other columns');
+    ScrollToEnd(Horizontal, False);
+    PaintOffscreen(Grid);
+    {$IFDEF TEST_FMX}
+    Hit := Grid.GridHitTest(CellPoint.X, CellPoint.Y);
+    {$ELSE}
+    Hit := Grid.HitTest(CellPoint.X, CellPoint.Y);
+    {$ENDIF}
+    Check(Hit.Column = First, 'horizontal scrollbar returns to the first column');
+    ScrollToEnd(Vertical, True);
+    Check(Position(Vertical) > 0, 'designer scrollbar scrolls vertically');
+    ScrollToEnd(Vertical, False);
+    CheckNear(0, Position(Vertical), 0.01, 'vertical scrollbar returns to the top');
+    Grid.Wheel([ssShift], -120);
+    Check((Position(Horizontal) > 0) and (Position(Vertical) = 0), 'shift-wheel scrolls only horizontally');
+    Grid.Wheel([ssShift], 120);
+    CheckNear(0, Position(Horizontal), 0.01, 'shift-wheel returns horizontally');
+    Grid.Wheel([], -120);
+    Check((Position(Vertical) > 0) and (Position(Horizontal) = 0), 'normal wheel scrolls only vertically');
+    Grid.Wheel([], 120);
+    CheckNear(0, Position(Vertical), 0.01, 'normal wheel returns vertically');
+  finally
+    Form.Free;
+    Source.Free;
+  end;
+end;
+
 begin
   try
     Application.Initialize;
@@ -774,6 +1269,9 @@ begin
     TestMeasurementAndAppearance;
     TestWidthDistribution;
     TestSeparatorDoubleClick;
+    TestDesignerScrolling;
+    TestDesignerColumns;
+    TestHeaderInteractionHighlight;
     Writeln('PASS: sizing, grouped options, streaming, runtime property editor and measurement bounds');
   except
     on E: Exception do

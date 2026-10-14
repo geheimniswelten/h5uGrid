@@ -39,6 +39,7 @@ type
   private
     FOwner: TPersistent;
     FVisible: Boolean;
+    FHighlightInteractive: Boolean;
     FRowHeight: Single;
     FLayout: ThiiHeaderLayout;
     FAssigning: Boolean;
@@ -48,6 +49,7 @@ type
     procedure SetLayout(const AValue: ThiiHeaderLayout);
     procedure SetRowHeight(const AValue: Single);
     procedure SetVisible(const AValue: Boolean);
+    procedure SetHighlightInteractive(const AValue: Boolean);
   protected
     function GetOwner: TPersistent; override;
   public
@@ -57,6 +59,7 @@ type
     property OnChanged: ThiiOptionsChangedEvent read FOnChanged write FOnChanged;
   published
     property Visible: Boolean read FVisible write SetVisible default True;
+    property HighlightInteractive: Boolean read FHighlightInteractive write SetHighlightInteractive default False;
     property RowHeight: Single read FRowHeight write SetRowHeight nodefault;
     property Layout: ThiiHeaderLayout read FLayout write SetLayout;
   end;
@@ -509,6 +512,7 @@ begin
     FAssigning := True;
     try
       FVisible := LSource.FVisible;
+      FHighlightInteractive := LSource.FHighlightInteractive;
       FRowHeight := LSource.FRowHeight;
       FLayout.Assign(LSource.FLayout);
     finally
@@ -584,6 +588,13 @@ begin
   if FVisible = AValue then
     Exit;
   FVisible := AValue;
+  Changed;
+end;
+
+procedure ThiiGridHeaderOptions.SetHighlightInteractive(const AValue: Boolean);
+begin
+  if FHighlightInteractive = AValue then Exit;
+  FHighlightInteractive := AValue;
   Changed;
 end;
 

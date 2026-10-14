@@ -296,6 +296,37 @@ Der Cache wird unter anderem bei Wert-, Breiten-, Font-, DPI-, Style- und Theme�
 
 ## 10. Scrolling
 
+In VCL und FMX sind beide internen Scrollbars auch im Delphi-FormDesigner bedienbar,
+um verdeckte Spalten zu erreichen und wieder zum Anfang zu scrollen. Das Mausrad
+scrollt vertikal; mit gedrückter Umschalttaste scrollt es horizontal. Diese
+Tastenbelegung gilt auch zur Laufzeit.
+
+Im Delphi-FormDesigner (`csDesigning`) wählt ein Klick auf einen echten
+Spaltenheader den zugehörigen `Columns`-Collection-Eintrag im Objektinspektor aus.
+Ab vier Pixeln Mausbewegung wird daraus ein Spalten-Drag: Er ändert sowohl die
+sichtbare Reihenfolge als auch den tatsächlichen Collection-Index, der im
+Formular gespeichert wird. Gruppenheader verschieben keine einzelnen Spalten;
+Move-Sperren und feste Bereiche bleiben berücksichtigt. Die Designer-Geste
+benötigt weder die Laufzeitoption `AllowColumnMoving` noch die Alt-Taste.
+
+Bei verborgenem Header wählt ein Datenzellen-Klick den Collection-Eintrag nach
+dem Loslassen aus. Ziehen auf Datenzellen oder freien Flächen wird vom normalen
+Designer behandelt und verschiebt die gesamte Grid-Komponente.
+
+An den Trennern sichtbarer Spaltenheader hat das Ändern der Breite Vorrang vor
+dem Spaltenverschieben. Der Designer zeigt dort den Resize-Cursor, beachtet
+`AllowColumnResizing`, `CanResize` und die Größenlimits und markiert das Formular
+bei einer Änderung. Ein Trenner-Klick ohne Bewegung ändert weder Breite noch
+AutoWidth. Bei verborgenem Header bleiben auch Datenzell-Trenner Flächen zum
+normalen Verschieben der gesamten Grid-Komponente im Designer.
+
+VCL/FMX zeigen im Designer dauerhaft eine Akzentlinie unter den Spaltenheadern
+und einen kleinen Griff an sichtbaren, veränderbaren rechten Trennern.
+Gruppenheader und die Eckzelle erhalten diese Markierung nicht. Zur Laufzeit
+schaltet `Header.HighlightInteractive := True` den Hinweis ein; Default ist
+`False`. Die Designer-Darstellung verändert den gespeicherten Property-Wert
+nicht. Der Resize-Cursor erscheint bereits beim Überfahren des Trenners.
+
 Vertikal und horizontal stehen konzeptionell drei Modi bereit:
 
 - `Pixel`: frei und pixelgenau

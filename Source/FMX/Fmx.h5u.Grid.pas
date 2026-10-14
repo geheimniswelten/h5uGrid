@@ -294,7 +294,7 @@ type
     procedure PaintDefault(AGrid: ThiiCustomGrid; ACanvas: TCanvas); override;
   end;
 
-  ThiiCustomGrid = class(TStyledControl)
+  ThiiCustomGrid = class(TStyledControl, IControl)
   private
     FShowColumnModes: Boolean;
     FColumns: ThiiGridColumns;
@@ -391,6 +391,7 @@ type
     FResizingColumn: ThiiGridColumn;
     FResizeStartX: Single;
     FResizeOriginalWidth: Single;
+    FResizeHasMoved: Boolean;
     FResizeCursorActive: Boolean;
     FResizeCursor: TCursor;
     FHeaderInteraction: Boolean;
@@ -608,6 +609,14 @@ type
     function GetVisualCellClass(const AContext: ThiiFactoryContext; ADefaultClass: ThiiFmxVisualCellClass): ThiiFmxVisualCellClass; virtual;
     procedure DoCustomDraw(ACanvas: TCanvas; const AContext: ThiiFmxDrawContext; AStage: ThiiCustomDrawStage; var ADrawDefault: Boolean);
   protected
+    function IControl.GetDesignInteractive = GetGridDesignInteractive;
+    function IControl.GetCursor = GetGridCursor;
+    function GetGridCursor: TCursor;
+    function GetGridDesignInteractive: Boolean;
+    function DesignerInteractiveAt(const APoint: TPointF): Boolean;
+    function IsDesignerColumnHit(const AHit: ThiiHitTestInfo): Boolean;
+    procedure SelectDesignerColumn(AColumn: ThiiGridColumn); virtual;
+    procedure DesignerColumnsModified; virtual;
     function GetViewSourceRowIndex(AViewRowIndex: Int64): Int64;
     procedure DoExit; override;
     procedure DoMouseLeave; override;
@@ -824,6 +833,18 @@ type
   end;
 
 implementation
+
+type
+  Th5uFmxDesignScrollBar = class(TScrollBar)
+  public
+    constructor Create(AOwner: TComponent); override;
+  end;
+
+constructor Th5uFmxDesignScrollBar.Create(AOwner: TComponent);
+begin
+  inherited;
+  FDesignInteractive := True;
+end;
 
 function h5uRectFIntersects(const A, B: TRectF): Boolean;
 begin
@@ -1308,6 +1329,7 @@ var
   LRect, LSymbolRect: TRectF;
   LSymbols: string;
   LState: TCanvasSaveState;
+  LMiddle: Single;
 begin
   LPalette := h5uGetFmxPalette(AGrid.Theme);
   ACanvas.Fill.Kind := TBrushKind.Solid;
@@ -1338,6 +1360,16 @@ begin
   PrepareCanvas(AGrid, ACanvas, ThiiElementPaintPart.Text);
   ACanvas.FillText(LRect, DisplayText, False, 1, [], TTextAlign.Center, TTextAlign.Center);
   ACanvas.Font.Style := [];
+  if (Context.ElementKind = ThiiElementKind.ColumnHeaderCell) and Assigned(Context.Column)
+    and (not (Context.HeaderCell is ThiiHeaderLayoutCell) or (ThiiHeaderLayoutCell(Context.HeaderCell).ColumnSpan = 1))
+    and ((csDesigning in AGrid.ComponentState) or AGrid.Header.HighlightInteractive) then
+  begin
+    LMiddle := (Bounds.Top + Bounds.Bottom) / 2;
+    ACanvas.Fill.Color := LPalette.SelectedBackground;
+    ACanvas.FillRect(RectF(Bounds.Left + 2, Max(Bounds.Top, Bounds.Bottom - 4), Bounds.Right - 2, Bounds.Bottom - 2), 0, 0, AllCorners, 1);
+    if (Abs(ContentBounds.Right - Bounds.Right) < 0.1) and ThiiGridColumn(Context.Column).CanResize and AGrid.Customization.AllowColumnResizing then
+      ACanvas.FillRect(RectF(Bounds.Right - 4, Max(Bounds.Top, LMiddle - 6), Bounds.Right - 2, Min(Bounds.Bottom, LMiddle + 6)), 0, 0, AllCorners, 1);
+  end;
 end;
 
 { ThiiCustomGrid }
@@ -1923,13 +1955,13 @@ begin
   FTextSize := 12;
   FEditRowIndex := -1;
 
-  FVScrollBar := TScrollBar.Create(Self);
+  FVScrollBar := Th5uFmxDesignScrollBar.Create(Self);
   FVScrollBar.Stored := False;
   FVScrollBar.Parent := Self;
   FVScrollBar.Orientation := TOrientation.Vertical;
   FVScrollBar.OnChange := ScrollChanged;
 
-  FHScrollBar := TScrollBar.Create(Self);
+  FHScrollBar := Th5uFmxDesignScrollBar.Create(Self);
   FHScrollBar.Stored := False;
   FHScrollBar.Parent := Self;
   FHScrollBar.Orientation := TOrientation.Horizontal;
@@ -2034,6 +2066,7 @@ procedure ThiiCustomGrid.DblClick;
 var
   LHit: ThiiHitTestInfo;
 begin
+  if csDesigning in ComponentState then Exit;
   inherited;
   if AutoSizeColumnsAt(FLastMousePoint.X, FLastMousePoint.Y) then
   begin
@@ -3249,6 +3282,7 @@ begin
     Exit;
   FHeaderInteraction := True;
   FResizeStartX := X;
+  FResizeHasMoved := False;
   FResizeOriginalWidth := FResizingColumn.LayoutWidth;
   if not ATouch then
     SetResizeCursor(True);
@@ -3256,12 +3290,19 @@ begin
 end;
 
 procedure ThiiCustomGrid.UpdateColumnResize(X: Single);
+var
+  Changed: Boolean;
 begin
   if not Assigned(FResizingColumn) then
     Exit;
+  if (csDesigning in ComponentState) and not FResizeHasMoved and (X = FResizeStartX) then Exit;
   if CanUpdateLayout and FCustomization.AllowColumnResizing and ((Root <> nil) and (Root.Captured <> nil) and (Root.Captured.GetObject = Self)) then
-    if h5uTryResizeColumn(FColumns, FResizingColumn, FResizeOriginalWidth, X - FResizeStartX) then
+    if h5uTryResizeColumn(FColumns, FResizingColumn, FResizeOriginalWidth, X - FResizeStartX, Changed) then
+    begin
+      FResizeHasMoved := True;
+      if (csDesigning in ComponentState) and Changed then DesignerColumnsModified;
       Exit;
+    end;
   EndSelectionDrag;
 end;
 
@@ -3276,6 +3317,55 @@ begin
   LCell.ColumnIndex := AHit.ColumnIndex;
   LCell.ColumnId := AHit.Column.Id;
   h5uSelectRightClick(FSelection, LCell, AHit.Column.CanSelect, TryFocusCell);
+end;
+
+function ThiiCustomGrid.IsDesignerColumnHit(const AHit: ThiiHitTestInfo): Boolean;
+begin
+  Result := (AHit.Kind = ThiiHitKind.Header) and Assigned(AHit.Column)
+    and (not Assigned(AHit.HeaderCell) or ((AHit.HeaderCell.ColumnId <> '') and (AHit.HeaderCell.ColumnSpan = 1)));
+end;
+
+function ThiiCustomGrid.DesignerInteractiveAt(const APoint: TPointF): Boolean;
+var
+  Hit: ThiiHitTestInfo;
+begin
+  Result := False;
+  if not (csDesigning in ComponentState) or not CanUpdateLayout then Exit;
+  if (Length(FMovingColumns) > 0) or Assigned(FResizingColumn) then Exit(True);
+  Hit := GridHitTest(APoint.X, APoint.Y);
+  SetResizeCursor(FHeader.Visible and Assigned(ColumnResizeAt(APoint.X, APoint.Y, False)));
+  Result := IsDesignerColumnHit(Hit) or (FHeader.Visible and Assigned(ColumnResizeAt(APoint.X, APoint.Y, False)));
+  if not Result and not FHeader.Visible and (Hit.Kind = ThiiHitKind.DataCell) and Assigned(h5uObserveDesignColumnClick) then
+    h5uObserveDesignColumnClick(Self, Hit.Column, SelectDesignerColumn);
+end;
+
+function ThiiCustomGrid.GetGridDesignInteractive: Boolean;
+begin
+  Result := DesignerInteractiveAt(ScreenToLocal(Screen.MousePos));
+end;
+
+function ThiiCustomGrid.GetGridCursor: TCursor;
+var
+  Point: TPointF;
+begin
+  if (csDesigning in ComponentState) and CanUpdateLayout and (Length(FMovingColumns) = 0) and not Assigned(FResizingColumn) then
+  begin
+    Point := ScreenToLocal(Screen.MousePos);
+    SetResizeCursor(FHeader.Visible and Assigned(ColumnResizeAt(Point.X, Point.Y, False)));
+  end;
+  Result := Cursor;
+end;
+
+procedure ThiiCustomGrid.SelectDesignerColumn(AColumn: ThiiGridColumn);
+begin
+  if (csDesigning in ComponentState) and (Root is TCommonCustomForm) and Assigned(TCommonCustomForm(Root).Designer) then
+    TCommonCustomForm(Root).Designer.SelectComponent(AColumn);
+end;
+
+procedure ThiiCustomGrid.DesignerColumnsModified;
+begin
+  if (csDesigning in ComponentState) and (Root is TCommonCustomForm) and Assigned(TCommonCustomForm(Root).Designer) then
+    TCommonCustomForm(Root).Designer.Modified;
 end;
 
 function ThiiCustomGrid.CanMoveColumn(AColumn: ThiiGridColumn): Boolean;
@@ -3345,6 +3435,15 @@ var
 begin
   Result := False;
   LHit := GridHitTest(X, Y);
+  if csDesigning in ComponentState then
+  begin
+    if not IsDesignerColumnHit(LHit) then Exit;
+    LPlan := Default(Th5uColumnMovePlan);
+    LPlan.Columns := [LHit.Column];
+    LPlan.HeaderCell := LHit.HeaderCell;
+    LPlan.Caption := LHit.Column.Caption;
+  end
+  else
   if not h5uPlanColumnMove(FColumns, FHeaderLayout, FSelection, FCustomization, AColumnIndex, LHit.HeaderCell, LPlan) then
     Exit;
   FMovingColumns := LPlan.Columns;
@@ -3453,6 +3552,13 @@ begin
   LHit := GridHitTest(X, Y);
   if (LHit.Kind <> ThiiHitKind.Header) or not Assigned(LHit.Column) then
     Exit;
+  if csDesigning in ComponentState then
+  begin
+    if not IsDesignerColumnHit(LHit) then Exit;
+    Result := h5uDesignColumnMoveTarget(FColumns, FHeaderLayout, FMovingColumns[0], LHit.Column, ANewIndex);
+    LAfter := LHit.ColumnIndex > FClickDownHit.ColumnIndex;
+  end
+  else
   Result := h5uColumnMoveTarget(FColumns, FHeaderLayout, FCustomization, FMovingColumns, FMovingHeaderCell, LHit.Column, LHit.ColumnIndex,
     LHit.HeaderCell, ANewIndex, LAfter);
   if Result then
@@ -3577,6 +3683,22 @@ begin
   if not CanUpdateLayout then
      Exit;
   LHit := GridHitTest(X, Y);
+  if csDesigning in ComponentState then
+  begin
+    if Length(LMovingColumns) <> 1 then Exit;
+    if LDragging then
+    begin
+      if LColumnTargetValid and h5uMoveDesignColumn(FColumns, FHeaderLayout, LMovingColumns[0], LNewIndex) then
+      begin
+        DesignerColumnsModified;
+        Repaint;
+        SelectDesignerColumn(LMovingColumns[0]);
+      end;
+    end
+    else if IsDesignerColumnHit(LHit) and (LHit.Column = LMovingColumns[0]) then
+      SelectDesignerColumn(LMovingColumns[0]);
+    Exit;
+  end;
   if not LDragging then
   begin
     if (Length(LMovingColumns) > 0) and (LHit.Kind = ThiiHitKind.Header) and (LHit.Column = FClickDownHit.Column) then
@@ -3716,6 +3838,15 @@ var
   LRange: ThiiCellRange;
   LTouch: Boolean;
 begin
+  if csDesigning in ComponentState then
+  begin
+    EndSelectionDrag;
+    FClickDownHit := GridHitTest(X, Y);
+    if (Button = TMouseButton.mbLeft) and FHeader.Visible and BeginColumnResize(X, Y, False) then Exit;
+    if (Button = TMouseButton.mbLeft) and IsDesignerColumnHit(FClickDownHit) then
+      BeginColumnMove(FClickDownHit.ColumnIndex, X, Y);
+    Exit;
+  end;
   if Assigned(FActiveEditor) and (FActiveEditor.Mode = ThiiEditorMode.Graphic) then
     FActiveEditor.MouseDown(Button, Shift, PointF(X, Y));
   EndSelectionDrag;
@@ -3823,8 +3954,33 @@ end;
 procedure ThiiCustomGrid.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Single);
 var
   LHit: ThiiHitTestInfo;
+  LColumn: ThiiGridColumn;
+  I: Integer;
   LDragged, LEdit: Boolean;
 begin
+  if csDesigning in ComponentState then
+  begin
+    if (Button = TMouseButton.mbLeft) and Assigned(FResizingColumn) then
+    begin
+      LColumn := FResizingColumn;
+      try
+        UpdateColumnResize(X);
+      finally
+        EndSelectionDrag;
+      end;
+      for I := 0 to FColumns.Count - 1 do
+        if FColumns[I] = LColumn then
+        begin
+          SelectDesignerColumn(LColumn);
+          Break;
+        end;
+      FClickDownHit := ThiiHitTestInfo.Empty;
+      Exit;
+    end;
+    if Button = TMouseButton.mbLeft then FinishHeaderMove(X, Y);
+    FClickDownHit := ThiiHitTestInfo.Empty;
+    Exit;
+  end;
   if Assigned(FActiveEditor) and (FActiveEditor.Mode = ThiiEditorMode.Graphic) then
     FActiveEditor.MouseUp(Button, Shift, PointF(X, Y));
   if (Button = TMouseButton.mbLeft) and Assigned(FResizingColumn) then
@@ -3906,6 +4062,16 @@ end;
 
 procedure ThiiCustomGrid.MouseMove(Shift: TShiftState; X, Y: Single);
 begin
+  if csDesigning in ComponentState then
+  begin
+    if Assigned(FResizingColumn) then
+      UpdateColumnResize(X)
+    else if Length(FMovingColumns) > 0 then
+      UpdateHeaderMove(X, Y)
+    else
+      SetResizeCursor(FHeader.Visible and Assigned(ColumnResizeAt(X, Y, False)));
+    Exit;
+  end;
   if Assigned(FActiveEditor) and (FActiveEditor.Mode = ThiiEditorMode.Graphic) then
     FActiveEditor.MouseMove(Shift, PointF(X, Y));
   inherited;
@@ -3940,6 +4106,18 @@ var
 begin
   inherited;
   LDelta := FScrolling.WheelRows * (FRowHeight.EstimatedHeight + FSpacing.RowSpacing);
+  if ssShift in Shift then
+  begin
+    if WheelDelta > 0 then
+      FHorizontalOffset := FHorizontalOffset - LDelta
+    else
+      FHorizontalOffset := FHorizontalOffset + LDelta;
+    FHorizontalOffset := EnsureRange(FHorizontalOffset, 0, Max(0.0, FHScrollBar.Max - FHScrollBar.ViewportSize));
+    FHScrollBar.Value := FHorizontalOffset;
+    Repaint;
+    Handled := True;
+    Exit;
+  end;
   if WheelDelta > 0 then
     FVerticalOffset := FVerticalOffset - LDelta
   else

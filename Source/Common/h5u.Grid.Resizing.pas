@@ -32,7 +32,8 @@ type
 
 function h5uColumnResizeAt(AOptions: ThiiCustomizationOptions; const ACandidates: {$IFDEF FPC}specialize {$ENDIF}TArray<Th5uResizeCandidate>;
   ALastVisibleIndex: Integer; X, Y: Single; ATouch: Boolean; AHeaderEdge: Th5uResizeHeaderEdgeTest): ThiiGridColumn;
-function h5uTryResizeColumn(AColumns: ThiiGridColumns; AColumn: ThiiGridColumn; AOriginalWidth, ADelta: Single): Boolean;
+function h5uTryResizeColumn(AColumns: ThiiGridColumns; AColumn: ThiiGridColumn; AOriginalWidth, ADelta: Single): Boolean; overload;
+function h5uTryResizeColumn(AColumns: ThiiGridColumns; AColumn: ThiiGridColumn; AOriginalWidth, ADelta: Single; out AChanged: Boolean): Boolean; overload;
 function h5uAutoSizeColumnTargets(AColumns: ThiiGridColumns; ASelection: ThiiGridSelection;
   AColumn: ThiiGridColumn): {$IFDEF FPC}specialize {$ENDIF}TArray<ThiiGridColumn>;
 
@@ -118,19 +119,30 @@ end;
 
 function h5uTryResizeColumn(AColumns: ThiiGridColumns; AColumn: ThiiGridColumn; AOriginalWidth, ADelta: Single): Boolean;
 var
+  Changed: Boolean;
+begin
+  Result := h5uTryResizeColumn(AColumns, AColumn, AOriginalWidth, ADelta, Changed);
+end;
+
+function h5uTryResizeColumn(AColumns: ThiiGridColumns; AColumn: ThiiGridColumn; AOriginalWidth, ADelta: Single; out AChanged: Boolean): Boolean;
+var
   I: Integer;
+  NewWidth: Single;
 begin
   Result := False;
+  AChanged := False;
   // Compare identities before reading a column that may have been removed during a drag.
   for I := 0 to AColumns.Count - 1 do
     if AColumns[I] = AColumn then
     begin
       if AColumn.Visible and AColumn.CanResize then
       begin
+        NewWidth := AColumn.ConstrainWidth(AOriginalWidth + ADelta);
+        AChanged := AColumn.AutoWidth or (AColumn.Width <> NewWidth);
         AColumns.BeginUpdate;
         try
           AColumn.AutoWidth := False;
-          AColumn.Width := AColumn.ConstrainWidth(AOriginalWidth + ADelta);
+          AColumn.Width := NewWidth;
         finally
           AColumns.EndUpdate;
         end;

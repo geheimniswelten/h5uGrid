@@ -10,6 +10,20 @@ procedure Register;
 
 implementation
 
+uses
+  System.SysUtils, Vcl.Forms;
+
+procedure SelectGridColumn(AGrid: ThiiCustomGrid; AColumn: ThiiGridColumn);
+var
+  Form: TCustomForm;
+  Designer: IDesigner;
+begin
+  if not (csDesigning in AGrid.ComponentState) then Exit;
+  Form := GetParentForm(AGrid);
+  if Assigned(Form) and Supports(Form.Designer, IDesigner, Designer) then
+    Designer.SelectComponent(AColumn);
+end;
+
 procedure Register;
 begin
   // A nil editor hides legacy aliases; the property type must remain valid.
@@ -28,6 +42,12 @@ begin
   RegisterComponents('hiiGrid', [ThiiGrid]);
   RegisterComponents('hii FormDesign', [ThiiStructureView, ThiiPropertyEditor]);
 end;
+
+initialization
+  h5uVclDesignerColumnSelect := SelectGridColumn;
+
+finalization
+  h5uVclDesignerColumnSelect := nil;
 
 end.
 

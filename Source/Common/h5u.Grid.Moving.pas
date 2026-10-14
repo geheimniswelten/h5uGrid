@@ -30,6 +30,8 @@ uses
 type
   Th5uMoveGetRowKey = function(ARow: Int64): ThiiRowKey of object;
   Th5uMoveGetSourceRow = function(ARow: Int64): Int64 of object;
+  Th5uDesignColumnSelect = procedure(AColumn: ThiiGridColumn) of object;
+  Th5uDesignColumnClickObserver = procedure(AGrid: TComponent; AColumn: ThiiGridColumn; ASelect: Th5uDesignColumnSelect);
 
   Th5uColumnMovePlan = record
     Columns: {$IFDEF FPC}specialize {$ENDIF}TArray<ThiiGridColumn>;
@@ -43,6 +45,8 @@ type
   end;
 
 function h5uCanMoveColumn(AColumns: ThiiGridColumns; AAllowByDefault: Boolean; AColumn: ThiiGridColumn): Boolean;
+function h5uDesignColumnMoveTarget(AColumns: ThiiGridColumns; ALayout: ThiiHeaderLayout; AColumn, ATarget: ThiiGridColumn; out ANewIndex: Integer): Boolean;
+function h5uMoveDesignColumn(AColumns: ThiiGridColumns; ALayout: ThiiHeaderLayout; AColumn: ThiiGridColumn; ANewIndex: Integer): Boolean;
 function h5uMoveGestureAllowed(AEnabled, AAltDrag: Boolean; AShift: TShiftState; ATouchWithoutAlt: Boolean = False): Boolean;
 function h5uPlanColumnMove(AColumns: ThiiGridColumns; AHeaderLayout: ThiiHeaderLayout; ASelection: ThiiGridSelection; ACustomization: ThiiCustomizationOptions;
   AColumnIndex: Integer; AHeaderCell: ThiiHeaderLayoutCell; out APlan: Th5uColumnMovePlan): Boolean;
@@ -53,7 +57,66 @@ function h5uPlanRowMove(ASelection: ThiiGridSelection; ARowIndex, ARowCount: Int
 function h5uRowMoveTarget(ARowCount, ATargetRowIndex: Int64; const ATargetRowKey: ThiiRowKey; AGetRowKey: Th5uMoveGetRowKey; AGetSourceRow: Th5uMoveGetSourceRow;
   var AContext: ThiiRowsMovedContext): Boolean;
 
+var
+  // Installed only by the Delphi design-time package. Native designer drags remain unhandled.
+  h5uObserveDesignColumnClick: Th5uDesignColumnClickObserver;
+
 implementation
+
+function h5uDesignColumnMoveTarget(AColumns: ThiiGridColumns; ALayout: ThiiHeaderLayout; AColumn, ATarget: ThiiGridColumn; out ANewIndex: Integer): Boolean;
+var
+  Columns: {$IFDEF FPC}specialize {$ENDIF}TArray<ThiiGridColumn>;
+  SourceIndex, I: Integer;
+begin
+  Result := False;
+  ANewIndex := -1;
+  SourceIndex := -1;
+  Columns := AColumns.VisibleColumns;
+  for I := 0 to High(Columns) do
+  begin
+    if Columns[I] = AColumn then SourceIndex := I;
+    if Columns[I] = ATarget then ANewIndex := I;
+  end;
+  if (SourceIndex < 0) or (ANewIndex < 0) or (SourceIndex = ANewIndex) then Exit;
+  if not h5uCanMoveColumn(AColumns, True, AColumn) or (AColumn.FixedKind <> ATarget.FixedKind) then Exit;
+  if ALayout.Enabled and not ALayout.CanMoveColumns(Columns, SourceIndex, 1, ANewIndex) then Exit;
+  Result := True;
+end;
+
+function h5uMoveDesignColumn(AColumns: ThiiGridColumns; ALayout: ThiiHeaderLayout; AColumn: ThiiGridColumn; ANewIndex: Integer): Boolean;
+var
+  Columns: {$IFDEF FPC}specialize {$ENDIF}TArray<ThiiGridColumn>;
+  NewCollectionIndex: Integer;
+  Anchor: ThiiGridColumn;
+begin
+  Result := False;
+  Columns := AColumns.VisibleColumns;
+  if (ANewIndex < 0) or (ANewIndex > High(Columns)) or (Columns[ANewIndex] = AColumn) then Exit;
+  if not h5uDesignColumnMoveTarget(AColumns, ALayout, AColumn, Columns[ANewIndex], ANewIndex) then Exit;
+  AColumns.BeginUpdate;
+  try
+    AColumns.MoveColumns([AColumn], ANewIndex, ALayout);
+    Columns := AColumns.VisibleColumns;
+    if Columns[ANewIndex] <> AColumn then Exit;
+    // Move the existing collection item, preserving its identity and hidden siblings.
+    if ANewIndex < High(Columns) then
+    begin
+      Anchor := Columns[ANewIndex + 1];
+      NewCollectionIndex := Anchor.Index;
+      if AColumn.Index < NewCollectionIndex then Dec(NewCollectionIndex);
+    end
+    else
+    begin
+      Anchor := Columns[ANewIndex - 1];
+      NewCollectionIndex := Anchor.Index;
+      if AColumn.Index > NewCollectionIndex then Inc(NewCollectionIndex);
+    end;
+    AColumn.Index := NewCollectionIndex;
+    Result := True;
+  finally
+    AColumns.EndUpdate;
+  end;
+end;
 
 function h5uCanMoveColumn(AColumns: ThiiGridColumns; AAllowByDefault: Boolean; AColumn: ThiiGridColumn): Boolean;
 var

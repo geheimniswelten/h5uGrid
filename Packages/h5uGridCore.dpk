@@ -56,8 +56,8 @@ contains
   h5u.Grid.Data.Memory in '..\Source\Common\h5u.Grid.Data.Memory.pas',
   h5u.Grid.Data.Objects in '..\Source\Common\h5u.Grid.Data.Objects.pas',
   h5u.Grid.Data.Virtual in '..\Source\Common\h5u.Grid.Data.Virtual.pas',
-  h5u.PropertyEditor in '..\Source\Common\h5u.PropertyEditor.pas',
-  h5u.FormDesigner in '..\Source\Common\h5u.FormDesigner.pas';
+  h5u.FormDesigner in '..\Source\Common\h5u.FormDesigner.pas',
+  h5u.PropertyEditor in '..\Source\Common\h5u.PropertyEditor.pas';
 
 end.
 
