@@ -32,6 +32,9 @@ type
     FSampleRowCount: Integer;
     FUpdatingSampleData: Boolean;
     FRecreateAfterLoading: Boolean;
+    {$IFnDEF FPC}
+    function IsActiveStored: Boolean;
+    {$ENDIF}
     procedure SetAutoCreateSampleData(const AValue: Boolean);
     procedure SetIncludeImages(const AValue: Boolean);
     procedure SetSampleRowCount(const AValue: Integer);
@@ -40,11 +43,19 @@ type
     procedure WriteSampleImage(AField: TField; AIndex: Integer);
   protected
     procedure Loaded; override;
+    {$IFnDEF FPC}
+    procedure ReadState(Reader: TReader); override;
+    {$ENDIF}
   public
     constructor Create(AOwner: TComponent); override;
     procedure RecreateSampleData;
     procedure EnsureSampleData;
   published
+    {$IFnDEF FPC}
+    // Generated sample rows are recreated from the options instead of streamed.
+    property PersistDataPacket stored False;
+    property Active stored IsActiveStored;
+    {$ENDIF}
     property AutoCreateSampleData: Boolean read FAutoCreateSampleData write SetAutoCreateSampleData default True;
     property IncludeImages: Boolean read FIncludeImages write SetIncludeImages default True;
     property SampleRowCount: Integer read FSampleRowCount write SetSampleRowCount default 25;
@@ -71,6 +82,23 @@ begin
   if not Assigned(AOwner) or not (csLoading in AOwner.ComponentState) then
     EnsureSampleData;
 end;
+
+{$IFnDEF FPC}
+function ThiiSampleClientDataset.IsActiveStored: Boolean;
+begin
+  Result := not FAutoCreateSampleData;
+end;
+
+procedure ThiiSampleClientDataset.ReadState(Reader: TReader);
+begin
+  inherited;
+  // Legacy forms may still stream Active=True without a data packet. Defer
+  // activation to our Loaded, after the base dataset has finished loading.
+  // During csReading this resets only TDataSet's pending streamed activation.
+  if FAutoCreateSampleData then
+    Active := False;
+end;
+{$ENDIF}
 
 procedure ThiiSampleClientDataset.Loaded;
 begin

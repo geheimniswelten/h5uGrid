@@ -10,7 +10,7 @@
 interface
 
 // FPC/LCL support awaits its extended RTTI implementation.
-{$IFNDEF FPC}
+{$IFnDEF FPC}
 uses
   System.Classes, System.SysUtils, System.Generics.Collections, System.Masks;
 
@@ -131,7 +131,7 @@ type
 
 implementation
 
-{$IFNDEF FPC}
+{$IFnDEF FPC}
 function SameNotifyEvent(A, B: TNotifyEvent): Boolean;
 begin
   Result := (TMethod(A).Code = TMethod(B).Code) and (TMethod(A).Data = TMethod(B).Data);

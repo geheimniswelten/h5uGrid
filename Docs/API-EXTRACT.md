@@ -1,4 +1,4 @@
-# hiiGrid – öffentlicher API-Auszug
+﻿# hiiGrid – öffentlicher API-Auszug
 
 > Automatisch aus den vollständigen `interface`-Abschnitten des ausgelieferten Quellstands erzeugt. Maßgeblich bleiben die Pascal-Units.
 
@@ -164,7 +164,7 @@ type
   // Types used by the grid API; these are aliases, not additional runtime classes.
   ThiiClassId = h5u.Grid.Types.ThiiClassId;
   EhiiGrid = h5u.Grid.Types.EhiiGrid;
-  {$IFNDEF FPC}
+  {$IFnDEF FPC}
   ThiiLegacyOptionAttribute = h5u.Grid.Types.ThiiLegacyOptionAttribute;
   {$ENDIF}
   EhiiFactory = h5u.Grid.Types.EhiiFactory;
@@ -1277,7 +1277,7 @@ Quelle: `Source/Common/h5u.FormDesigner.pas`
 
 ```pascal
 // FPC/LCL support awaits its extended RTTI implementation.
-{$IFNDEF FPC}
+{$IFnDEF FPC}
 uses
   System.Classes, System.SysUtils, System.Generics.Collections, System.Masks;
 
@@ -3056,15 +3056,15 @@ type
     procedure SetAllSeparators(const ASize: Single);
     property OnChanged: ThiiOptionsChangedEvent read FOnChanged write FOnChanged;
     // Source and streaming compatibility; bound grids store colors in Appearance.
-    {$IFNDEF FPC}
+    {$IFnDEF FPC}
     [ThiiLegacyOption]
     {$ENDIF}
     property RowSpacingColor: TColor read GetRowSpacingColor write SetRowSpacingColor;
-    {$IFNDEF FPC}
+    {$IFnDEF FPC}
     [ThiiLegacyOption]
     {$ENDIF}
     property ColumnSpacingColor: TColor read GetColumnSpacingColor write SetColumnSpacingColor;
-    {$IFNDEF FPC}
+    {$IFnDEF FPC}
     [ThiiLegacyOption]
     {$ENDIF}
     property ContentPaddingColor: TColor read GetContentPaddingColor write SetContentPaddingColor;
@@ -3769,7 +3769,7 @@ const
 
 type
   EhiiGrid = class(Exception);
-  {$IFNDEF FPC}
+  {$IFnDEF FPC}
   ThiiLegacyOptionAttribute = class(TCustomAttribute);
   {$ENDIF}
   EhiiFactory = class(EhiiGrid);
@@ -4143,7 +4143,7 @@ type
 Quelle: `Source/Common/h5u.PropertyEditor.pas`
 
 ```pascal
-{$IFNDEF FPC}
+{$IFnDEF FPC}
 
 uses
   System.Classes, System.SysUtils, System.TypInfo, System.Rtti,
@@ -4486,7 +4486,7 @@ type
   // Types used by the grid API; these are aliases, not additional runtime classes.
   ThiiClassId = h5u.Grid.Types.ThiiClassId;
   EhiiGrid = h5u.Grid.Types.EhiiGrid;
-  {$IFNDEF FPC}
+  {$IFnDEF FPC}
   ThiiLegacyOptionAttribute = h5u.Grid.Types.ThiiLegacyOptionAttribute;
   {$ENDIF}
   EhiiFactory = h5u.Grid.Types.EhiiFactory;
@@ -5594,7 +5594,7 @@ type
   // Types used by the grid API; these are aliases, not additional runtime classes.
   ThiiClassId = h5u.Grid.Types.ThiiClassId;
   EhiiGrid = h5u.Grid.Types.EhiiGrid;
-  {$IFNDEF FPC}
+  {$IFnDEF FPC}
   ThiiLegacyOptionAttribute = h5u.Grid.Types.ThiiLegacyOptionAttribute;
   {$ENDIF}
   EhiiFactory = h5u.Grid.Types.EhiiFactory;

@@ -2,7 +2,7 @@
 
 interface
 
-{$IFNDEF FPC}
+{$IFnDEF FPC}
 
 uses
   System.Classes, System.SysUtils, System.TypInfo, System.Rtti,
@@ -45,14 +45,14 @@ type
   private
     FOwner: ThiiPropertyModel;
     FInstance: Pointer;
-    FName, FCaption, FGroupName, FDeclaringClassName, FTypeName, FReadError: string;
+    FName, FPath, FCaption, FGroupName, FDeclaringClassName, FTypeName, FReadError: string;
     FDeclaringClass: TClass;
     FValueTypeInfo: PTypeInfo;
     FProperty: TRttiProperty;
     FField: TRttiField;
     FManual: ThiiManualProperty;
     FCachedValue: TValue;
-    FCacheValid, FReadOnly, FHidden, FIsManual: Boolean;
+    FCacheValid, FReadOnly, FHidden, FIsManual, FObjectGroup: Boolean;
     FID, FParentID, FClassOrder, FMemberOrder: Integer;
     function GetValue: TValue;
     procedure SetValue(const AValue: TValue);
@@ -73,6 +73,8 @@ type
     property ID: Integer read FID;
     property ParentID: Integer read FParentID;
     property Name: string read FName;
+    property Path: string read FPath;
+    property ObjectGroup: Boolean read FObjectGroup;
     property Caption: string read FCaption write FCaption;
     property GroupName: string read FGroupName write FGroupName;
     property DisplayValue: string read GetDisplayValue write SetDisplayValue;
@@ -159,6 +161,8 @@ type
     FPublishedProperties, FPublicProperties, FPublicFields, FPrivateFields: Boolean;
     FLimitClass: TClass;
     FSortOrder: ThiiPropertySortOrder;
+    FExpandSubProperties: Boolean;
+    FRootGroupName: string;
     FClassMask, FNameMask, FTypeMask: string;
     FFilters: ThiiPropertyFilters;
     FManualProperties: ThiiManualProperties;
@@ -167,6 +171,8 @@ type
     FOnGetValue: ThiiGetPropertyValueEvent;
     FOnSetValue: ThiiSetPropertyValueEvent;
     FReloading, FDestroying: Boolean;
+    procedure SetExpandSubProperties(AValue: Boolean);
+    procedure SetRootGroupName(const AValue: string);
     procedure SetDataObject(AValue: TObject);
     procedure SetSelection(AIndex: Integer; AValue: Boolean);
     procedure SetLimitClass(AValue: TClass);
@@ -229,6 +235,8 @@ type
     property PublicProperties: Boolean index 1 read FPublicProperties write SetSelection default False;
     property PublicFields: Boolean index 2 read FPublicFields write SetSelection default False;
     property PrivateFields: Boolean index 3 read FPrivateFields write SetSelection default False;
+    property ExpandSubProperties: Boolean read FExpandSubProperties write SetExpandSubProperties default False;
+    property RootGroupName: string read FRootGroupName write SetRootGroupName;
     property SortOrder: ThiiPropertySortOrder read FSortOrder write SetSortOrder default psoName;
     property ClassMask: string index 0 read FClassMask write SetMask;
     property NameMask: string index 1 read FNameMask write SetMask;
@@ -260,6 +268,7 @@ type
     FGroupRows: TObjectList<TObject>;
     FGroupIDs: TDictionary<string, Integer>;
     FNextGroupID: Integer;
+    FShowGroups: Boolean;
     FOnGetValue: ThiiGetPropertyValueEvent;
     FOnSetValue: ThiiSetPropertyValueEvent;
     function PropertyItem(ASourceRowIndex: Int64): ThiiPropertyItem;
@@ -272,7 +281,7 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure Refresh;
-    procedure RebuildItems(AShowGroups: Boolean = True);
+    procedure RebuildItems(AShowGroups: Boolean = True; ACollapsedGroups: TDictionary<Integer, Boolean> = nil);
     property HasGroups: Boolean read GetHasGroups;
     property PropertyEditor: ThiiPropertyModel read FPropertyEditor;
   published
@@ -290,7 +299,7 @@ procedure h5uUnregisterPropertyEditor(ARegistration: Integer);
 
 implementation
 
-{$IFNDEF FPC}
+{$IFnDEF FPC}
 
 type
   Th5uEditorRegistration = class
@@ -780,7 +789,7 @@ begin
     derived declaration. The overload makes either storage slot accessible. }
   Result := nil;
   for I := 0 to FItems.Count - 1 do
-    if SameText(FItems[I].Name, AName) then
+    if SameText(FItems[I].Path, AName) then
       if (Result = nil) or (Result.DeclaringClass = nil)
         or ((FItems[I].DeclaringClass <> nil) and FItems[I].DeclaringClass.InheritsFrom(Result.DeclaringClass)) then
         Result := FItems[I];
@@ -816,6 +825,7 @@ begin
   Result.FOwner := Self;
   Result.FInstance := AInstance;
   Result.FName := AName;
+  Result.FPath := AName;
   Result.FCaption := AName;
   Result.FDeclaringClass := AClass;
   Result.FDeclaringClassName := ModelClassName(AClass);
@@ -999,6 +1009,12 @@ begin
         if C = 0 then
           C := A.FMemberOrder - B.FMemberOrder;
       end;
+      if FExpandSubProperties or (FRootGroupName <> '') then
+      begin
+        if (A.GroupName = FRootGroupName) and (B.GroupName <> FRootGroupName) then C := -1
+        else if (B.GroupName = FRootGroupName) and (A.GroupName <> FRootGroupName) then C := 1
+        else if A.GroupName <> B.GroupName then C := CompareText(A.GroupName, B.GroupName);
+      end;
       if C <= 0 then
         Break;
       FItems.Exchange(J - 1, J);
@@ -1007,8 +1023,29 @@ begin
   end;
 end;
 
+
+procedure ThiiPropertyModel.SetExpandSubProperties(AValue: Boolean);
+begin
+  if FExpandSubProperties = AValue then
+    Exit;
+  FExpandSubProperties := AValue;
+  Reload;
+end;
+
+procedure ThiiPropertyModel.SetRootGroupName(const AValue: string);
+begin
+  if FRootGroupName = AValue then
+    Exit;
+  FRootGroupName := AValue;
+  Reload;
+end;
+
 procedure ThiiPropertyModel.Reload;
 var
+  Stack: TList<TObject>;
+
+  procedure ReadObject(AObject: TObject; const APath: string; AParentID, ADepth: Integer);
+  var
   Hierarchy: TList<TClass>;
   MemberCounts: TArray<Integer>;
   Properties: TArray<TRttiProperty>;
@@ -1020,28 +1057,32 @@ var
   F: TRttiField;
   Item: ThiiPropertyItem;
   M: ThiiManualProperty;
-begin
-  if FDestroying or FReloading or (csLoading in ComponentState) then
-    Exit;
-  FReloading := True;
-  Hierarchy := TList<TClass>.Create;
-  try
-    NotifyChanging;
-    FItems.Clear;
-    if FDataObject <> nil then
-    begin
-      C := FDataObject.ClassType;
+    LimitClass: TClass;
+    FirstItem, LastItem, ChildStart: Integer;
+    Child: TObject;
+    Value: TValue;
+    Group: string;
+  begin
+    if (AObject = nil) or Stack.Contains(AObject) or (ADepth > 8) then
+      Exit;
+    Stack.Add(AObject);
+    Hierarchy := TList<TClass>.Create;
+    try
+      FirstItem := FItems.Count;
+      LimitClass := nil;
+      if ADepth = 0 then LimitClass := FLimitClass;
+      C := AObject.ClassType;
       while C <> nil do
       begin
         Hierarchy.Insert(0, C);
-        if C = FLimitClass then
+        if C = LimitClass then
           Break;
         C := C.ClassParent;
       end;
-      if (FLimitClass <> nil) and not FDataObject.InheritsFrom(FLimitClass) then
+      if (LimitClass <> nil) and not AObject.InheritsFrom(LimitClass) then
         Hierarchy.Clear;
       SetLength(MemberCounts, Hierarchy.Count);
-      R := FContext.GetType(FDataObject.ClassType);
+      R := FContext.GetType(AObject.ClassType);
       if FSortOrder = psoDeclaration then
       begin
         Fields := R.GetFieldsInDeclOrder;
@@ -1060,7 +1101,7 @@ begin
         I := Hierarchy.IndexOf(C);
         if (I < 0) or not (((F.Visibility = mvPublic) and FPublicFields) or ((F.Visibility = mvPrivate) and FPrivateFields)) then
           Continue;
-        Item := AddField(Pointer(FDataObject), F);
+        Item := AddField(Pointer(AObject), F);
         Item.FIsManual := False;
         Item.FClassOrder := I;
         Item.FMemberOrder := MemberCounts[I];
@@ -1075,7 +1116,7 @@ begin
           Continue;
         if (R.GetProperty(P.Name) <> P) or P.HasAttribute<ThiiLegacyOptionAttribute> then
           Continue;
-        Item := AddProperty(Pointer(FDataObject), P);
+        Item := AddProperty(Pointer(AObject), P);
         Item.FIsManual := False;
         Item.FClassOrder := I;
         Item.FMemberOrder := MemberCounts[I];
@@ -1087,12 +1128,12 @@ begin
         for J := 0 to FManualProperties.Count - 1 do
         begin
           M := ThiiManualProperty(FManualProperties.Items[J]);
-          if (M.PropertyName = '') or not ((M.TargetClass = C) or ((M.TargetClass = nil) and (I = Hierarchy.Count - 1))) then
+          if (M.PropertyName = '') or not ((M.TargetClass = C) or ((M.TargetClass = nil) and (ADepth = 0) and (I = Hierarchy.Count - 1))) then
             Continue;
-          Item := FindProperty(Pointer(FDataObject), M.PropertyName);
+          Item := FindProperty(Pointer(AObject), M.PropertyName);
           if Item = nil then
           begin
-            Item := NewItem(Pointer(FDataObject), M.PropertyName, C, M.ValueTypeInfo);
+            Item := NewItem(Pointer(AObject), M.PropertyName, C, M.ValueTypeInfo);
             Item.FCachedValue := M.DefaultValue;
             Item.FClassOrder := I;
             Item.FMemberOrder := MemberCounts[I];
@@ -1103,12 +1144,56 @@ begin
           Item.FCacheValid := False;
         end;
       end;
-      SortItems;
+
+      LastItem := FItems.Count - 1;
+      Group := APath;
+      if ADepth = 0 then Group := FRootGroupName;
+      for I := FirstItem to LastItem do
+      begin
+        Item := FItems[I];
+        Item.FGroupName := Group;
+        Item.FParentID := AParentID;
+        if APath <> '' then Item.FPath := APath + '.' + Item.Name;
+      end;
+      if FExpandSubProperties then
+        for I := FirstItem to LastItem do
+        begin
+          Item := FItems[I];
+          if Item.Hidden or (Item.ValueTypeInfo = nil) or (Item.ValueTypeInfo.Kind <> tkClass) then Continue;
+          try
+            Value := ReadMember(Item);
+          except
+            // An unreadable getter remains a regular property with its read error.
+            Continue;
+          end;
+          if Value.IsEmpty then Continue;
+          Child := Value.AsObject;
+          // References and collections keep their own lifetime/editing semantics.
+          if not (Child is TPersistent) or (Child is TComponent) or (Child is TCollection) then Continue;
+          ChildStart := FItems.Count;
+          ReadObject(Child, Item.Path, Item.ID, ADepth + 1);
+          Item.FObjectGroup := FItems.Count > ChildStart;
+        end;
+    finally
+      Hierarchy.Free;
+      Stack.Delete(Stack.Count - 1);
     end;
+  end;
+
+begin
+  if FDestroying or FReloading or (csLoading in ComponentState) then
+    Exit;
+  FReloading := True;
+  Stack := TList<TObject>.Create;
+  try
+    NotifyChanging;
+    FItems.Clear;
+    ReadObject(FDataObject, '', -1, 0);
+    SortItems;
     DoLoaded;
     PrepareItems;
   finally
-    Hierarchy.Free;
+    Stack.Free;
     FReloading := False;
     NotifyChanged;
   end;
@@ -1418,7 +1503,28 @@ var
   Snapshot: TArray<ThiiPropertyItem>;
   Item: ThiiPropertyItem;
   ItemChanged, AnyChanged: Boolean;
+  Value: TValue;
 begin
+  // Check object references before accessing child items from a previous reload.
+  if FExpandSubProperties then
+    for Item in FItems do
+      if (Item.ValueTypeInfo <> nil) and (Item.ValueTypeInfo.Kind = tkClass) then
+      begin
+        try
+          Value := ReadMember(Item);
+        except
+          Reload;
+          Exit;
+        end;
+        if not ValuesEqual(Value, Item.FCachedValue)
+          and (Item.ObjectGroup
+          or (not Value.IsEmpty and (Value.AsObject is TPersistent) and not (Value.AsObject is TComponent)
+          and not (Value.AsObject is TCollection))) then
+        begin
+          Reload;
+          Exit;
+        end;
+      end;
   AnyChanged := False;
   Snapshot := FItems.ToArray;
   for Item in Snapshot do
@@ -1818,7 +1924,8 @@ type
 function Th5uPropertyGroupRow.GetCaption: string;
 begin
   // Leave room for the grid's fold glyph when the row indicator is hidden.
-  Result := '     ' + FGroupName;
+  Result := '     ' + StringOfChar(' ', 2 * (Length(FGroupName) - Length(FGroupName.Replace('.', ''))))
+    + Copy(FGroupName, LastDelimiter('.', FGroupName) + 1, MaxInt);
 end;
 
 function Th5uPropertyGroupRow.GetDisplayValue: string;
@@ -1876,14 +1983,36 @@ begin
   Result := FGroupRows.Count > 0;
 end;
 
-procedure ThiiPropertyListController.RebuildItems(AShowGroups: Boolean);
+procedure ThiiPropertyListController.RebuildItems(AShowGroups: Boolean; ACollapsedGroups: TDictionary<Integer, Boolean>);
 var
   LItem: ThiiPropertyItem;
   LHeader: Th5uPropertyGroupRow;
   LPreviousGroup, LKey: string;
   LOccurrences: TDictionary<string, Integer>;
   LOccurrence, LID: Integer;
+
+  function ParentCollapsed(const AGroup: string): Boolean;
+  var
+    Parent: string;
+    ID, Dot: Integer;
+    Collapsed: Boolean;
+  begin
+    Result := False;
+    if not AShowGroups or (ACollapsedGroups = nil) then
+      Exit;
+    Parent := AGroup;
+    Dot := LastDelimiter('.', Parent);
+    while Dot > 0 do
+    begin
+      Parent := Copy(Parent, 1, Dot - 1);
+      if FGroupIDs.TryGetValue(Parent + #0 + '1', ID) and ACollapsedGroups.TryGetValue(ID, Collapsed) and Collapsed then
+        Exit(True);
+      Dot := LastDelimiter('.', Parent);
+    end;
+  end;
+
 begin
+  FShowGroups := AShowGroups;
   LOccurrences := TDictionary<string, Integer>.Create;
   BeginUpdate;
   try
@@ -1892,7 +2021,7 @@ begin
     LPreviousGroup := '';
     for LItem in FPropertyEditor.Items do
     begin
-      if LItem.Hidden then
+      if LItem.Hidden or LItem.ObjectGroup or ParentCollapsed(LItem.GroupName) then
         Continue;
       if AShowGroups and (LItem.GroupName <> '') and (LItem.GroupName <> LPreviousGroup) then
       begin
@@ -1936,6 +2065,8 @@ begin
   LItem := PropertyItem(ASourceRowIndex);
   if LItem <> nil then
   begin
+    if not FShowGroups and SameText(AFieldName, 'Caption') and FPropertyEditor.ExpandSubProperties then
+      Exit(TValue.From<string>(LItem.Path));
     if SameText(AFieldName, 'Value') then
       Exit(LItem.Value);
     if SameText(AFieldName, 'DisplayValue') then

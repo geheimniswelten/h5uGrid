@@ -7,6 +7,7 @@ interface
 
 uses
   System.Classes,
+  System.Types,
   System.Math,
   System.SysUtils,
   System.StrUtils,
@@ -33,6 +34,7 @@ uses
   FMX.NumberBox,
   FMX.SpinBox,
   FMX.MultiView,
+  FMX.MultiView.Types,
   FMX.ApplicationEvents,
   h5u.Grid.Data.Core,
   h5u.Grid.Data.DataSet,  // for ThiiDatasetController + TDataSource + TDataSet(ThiiSampleClientDataset)
@@ -108,12 +110,24 @@ type
     FRows: TObjectList<TDataRow>;  // for TDataRow/ThiiVirtualController
     FNextId: Integer;              // for TDataRow/ThiiObjectListController
     FAllAdjacentGroupsCollapsed: Boolean;
+    FSidebarReady: Boolean;
+    FSidebarOverlay: Boolean;
+    FSidebarUpdating: Boolean;
+    FSidebarButton: TButton;
+    procedure InitializePropertyEditor;
+    procedure InitializeSidebar;
+    procedure SidebarToggle(Sender: TObject);
+    procedure SidebarFocusChanged(Sender: TObject);
     procedure InitOptions;
     procedure LoadOptions;
     procedure ApplyOptions(Sender: TObject);
   private
     function GetEnumNames(Enum: PTypeInfo): string;
     function GetStyleNames: string;
+  protected
+    procedure Resize; override;
+  public
+    procedure SetSidebarWidth(AWidth: Single);
   end;
 
 var
@@ -122,6 +136,157 @@ var
 implementation
 
 {$R *.fmx}
+
+type
+  TSidebarSplitter = class(TSplitter)
+  private
+    FDragging: Boolean;
+    FStartX: Single;
+    FStartWidth: Single;
+  protected
+    procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Single); override;
+    procedure MouseMove(Shift: TShiftState; X, Y: Single); override;
+    procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Single); override;
+  end;
+
+procedure TSidebarSplitter.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Single);
+begin
+  if Button <> TMouseButton.mbLeft then
+    Exit;
+  FStartX := LocalToAbsolute(TPointF.Create(X, Y)).X;
+  FStartWidth := TFmxMegaDemoForm(Owner).MultiView1.Width;
+  FDragging := True;
+  Capture;
+end;
+
+procedure TSidebarSplitter.MouseMove(Shift: TShiftState; X, Y: Single);
+begin
+  if FDragging then
+    TFmxMegaDemoForm(Owner).SetSidebarWidth(FStartWidth + LocalToAbsolute(TPointF.Create(X, Y)).X - FStartX);
+end;
+
+procedure TSidebarSplitter.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Single);
+begin
+  if Button <> TMouseButton.mbLeft then
+    Exit;
+  FDragging := False;
+  ReleaseCapture;
+end;
+
+procedure TFmxMegaDemoForm.InitializePropertyEditor;
+const
+  CHiddenProperties = 'Name,Tag,Left,Top,Width,Height,Align,AlignWithMargins,Anchors,Constraints,Margins,Padding,Position,Size,Scale,'
+    + 'RotationAngle,RotationCenter,TabOrder,TabStop,CanFocus,HitTest,AutoCapture,ClipChildren,ClipParent,Visible,'
+    + 'DragMode,DragKind,DragCursor,Touch,Action,PopupMenu,Hint,ShowHint,ParentShowHint,CustomHint,ParentCustomHint,'
+    + 'HelpContext,HelpKeyword,HelpType,StyleName,StyleLookup,Locked,Stored,DataController,SharedClassFactory,On*';
+var
+  LName: string;
+  LFilter: ThiiPropertyFilter;
+begin
+  // Only the grid component's integration properties are hidden; widths/heights
+  // inside grid options (headers, bands, columns) remain available.
+  for LName in CHiddenProperties.Split([',']) do
+  begin
+    LFilter := Properties.PropertyEditor.Filters.Add;
+    LFilter.ClassMask := 'ThiiCustomGrid';
+    LFilter.NameMask := LName;
+    LFilter.Hidden := True;
+  end;
+  Properties.DataObject := Grid;
+end;
+
+procedure TFmxMegaDemoForm.InitializeSidebar;
+begin
+  Splitter1.Free;
+  Splitter1 := TSidebarSplitter.Create(Self);
+  Splitter1.Name := 'Splitter1';
+  Splitter1.Parent := MultiView1;
+  Splitter1.Align := TAlignLayout.Right;
+  Splitter1.Width := 8;
+  Splitter1.Cursor := crHSplit;
+  Splitter1.HitTest := True;
+  Grid.Margins.Left := 0;
+  MultiView1.Mode := TMultiViewMode.Panel;
+  MultiView1.Width := 300;
+  MultiView1.DrawerOptions.Placement := TPanelPlacement.Left;
+  MultiView1.DrawerOptions.Mode := TSlidingMode.OverlapDetailView;
+  MultiView1.DrawerOptions.DurationSliding := 0;
+  CornerButton1.Text := '×';
+  CornerButton1.OnClick := SidebarToggle;
+  FSidebarButton := TButton.Create(Self);
+  FSidebarButton.Name := 'SidebarToggleButton';
+  FSidebarButton.Parent := Self;
+  FSidebarButton.Align := TAlignLayout.Top;
+  FSidebarButton.Height := 32;
+  FSidebarButton.Text := 'Grid-Eigenschaften';
+  // Drawer presentation manages the master button's click and visibility.
+  MultiView1.MasterButton := FSidebarButton;
+  OnFocusChanged := SidebarFocusChanged;
+  FSidebarReady := True;
+  Resize;
+end;
+
+procedure TFmxMegaDemoForm.SetSidebarWidth(AWidth: Single);
+begin
+  MultiView1.Width := EnsureRange(AWidth, Min(180.0, Max(80.0, ClientWidth - 40.0)), Max(80.0, ClientWidth - IfThen(FSidebarOverlay, 40.0, 280.0)));
+  MultiView1.UpdateAlignment;
+end;
+
+procedure TFmxMegaDemoForm.Resize;
+var
+  Overlay: Boolean;
+begin
+  inherited;
+  if not FSidebarReady or FSidebarUpdating then
+    Exit;
+  FSidebarUpdating := True;
+  try
+    Overlay := ClientWidth < 700;
+    {$IF DEFINED(ANDROID) OR DEFINED(IOS)}
+    Overlay := Overlay or (ClientWidth < ClientHeight);
+    {$ENDIF}
+    if Overlay then
+    begin
+      if MultiView1.Mode <> TMultiViewMode.Drawer then
+      begin
+        MultiView1.Mode := TMultiViewMode.Drawer;
+        MultiView1.HideMaster;
+      end;
+    end
+    else
+    begin
+      if MultiView1.Mode <> TMultiViewMode.Panel then MultiView1.Mode := TMultiViewMode.Panel;
+      MultiView1.ShowMaster;
+    end;
+    FSidebarOverlay := Overlay;
+    CornerButton1.Visible := Overlay;
+    SetSidebarWidth(MultiView1.Width);
+  finally
+    FSidebarUpdating := False;
+  end;
+end;
+
+procedure TFmxMegaDemoForm.SidebarToggle(Sender: TObject);
+begin
+  if MultiView1.IsShowed then MultiView1.HideMaster else MultiView1.ShowMaster;
+end;
+
+procedure TFmxMegaDemoForm.SidebarFocusChanged(Sender: TObject);
+var
+  Control: TFmxObject;
+begin
+  if not FSidebarOverlay or not MultiView1.IsShowed or (Focused = nil) then
+    Exit;
+  Control := Focused.GetObject;
+  while Control <> nil do
+  begin
+    if (Control = MultiView1) or (Control = FSidebarButton) then
+      Exit;
+    Control := Control.Parent;
+  end;
+  MultiView1.HideMaster;
+end;
+
 
 procedure TFmxMegaDemoForm.ApplyOptions(Sender: TObject);
 var
@@ -305,6 +470,8 @@ end;
   LoadOptions;
   ApplyOptions(nil);  // für die alten Options in der ToolBar
   FLoading := False;
+  InitializePropertyEditor;
+  InitializeSidebar;
 end;
 
 function TFmxMegaDemoForm.GetEnumNames(Enum: PTypeInfo): string;

@@ -952,5 +952,18 @@ initialization
   h5uRegisterEditor(ThiiEditorPlatform.VCL, 'ImageEditor', ThiiVclImageCellEditor);
   h5uRegisterEditor(ThiiEditorPlatform.VCL, 'CustomEditor', ThiiVclCustomEditor);
 
+finalization
+  // The shared core can remain loaded after this framework package is unloaded.
+  h5uUnregisterEditor(ThiiEditorPlatform.VCL, 'TextEditor', ThiiVclTextEditor);
+  h5uUnregisterEditor(ThiiEditorPlatform.VCL, 'IntegerEditor', ThiiVclIntegerEditor);
+  h5uUnregisterEditor(ThiiEditorPlatform.VCL, 'FloatEditor', ThiiVclFloatEditor);
+  h5uUnregisterEditor(ThiiEditorPlatform.VCL, 'CurrencyEditor', ThiiVclCurrencyEditor);
+  h5uUnregisterEditor(ThiiEditorPlatform.VCL, 'DateEditor', ThiiVclDateEditor);
+  h5uUnregisterEditor(ThiiEditorPlatform.VCL, 'TimeEditor', ThiiVclTimeEditor);
+  h5uUnregisterEditor(ThiiEditorPlatform.VCL, 'DateTimeEditor', ThiiVclDateTimeEditor);
+  h5uUnregisterEditor(ThiiEditorPlatform.VCL, 'CheckBoxEditor', ThiiVclCheckBoxEditor);
+  h5uUnregisterEditor(ThiiEditorPlatform.VCL, 'ImageEditor', ThiiVclImageCellEditor);
+  h5uUnregisterEditor(ThiiEditorPlatform.VCL, 'CustomEditor', ThiiVclCustomEditor);
+
 end.
 

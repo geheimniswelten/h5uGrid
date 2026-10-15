@@ -1,7 +1,7 @@
 object VclVirtualDemoForm: TVclVirtualDemoForm
   Left = 0
   Top = 0
-  Caption = 'h5u.Grid VCL - VirtualSource / Live-Ereignisse'
+  Caption = 'hiiGrid VCL - VirtualSource / Live-Events'
   ClientHeight = 630
   ClientWidth = 1080
   Color = clBtnFace

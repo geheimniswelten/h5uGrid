@@ -170,15 +170,15 @@ type
     procedure SetAllSeparators(const ASize: Single);
     property OnChanged: ThiiOptionsChangedEvent read FOnChanged write FOnChanged;
     // Source and streaming compatibility; bound grids store colors in Appearance.
-    {$IFNDEF FPC}
+    {$IFnDEF FPC}
     [ThiiLegacyOption]
     {$ENDIF}
     property RowSpacingColor: TColor read GetRowSpacingColor write SetRowSpacingColor;
-    {$IFNDEF FPC}
+    {$IFnDEF FPC}
     [ThiiLegacyOption]
     {$ENDIF}
     property ColumnSpacingColor: TColor read GetColumnSpacingColor write SetColumnSpacingColor;
-    {$IFNDEF FPC}
+    {$IFnDEF FPC}
     [ThiiLegacyOption]
     {$ENDIF}
     property ContentPaddingColor: TColor read GetContentPaddingColor write SetContentPaddingColor;

@@ -1,7 +1,7 @@
 object FmxVirtualDemoForm: TFmxVirtualDemoForm
   Left = 0
   Top = 0
-  Caption = 'h5u.Grid FMX - VirtualSource / Live'
+  Caption = 'hiiGrid FMX - VirtualSource / Live-Events'
   ClientHeight = 610
   ClientWidth = 1040
   FormFactor.Width = 320

@@ -5,25 +5,12 @@ interface
 {$SCOPEDENUMS ON}
 
 uses
-  h5u.Grid.Types,
-  System.Math,
-  System.Classes,
-  System.Rtti,
-  System.SysUtils,
-  Winapi.Windows,
-  Data.DB,
-  Datasnap.DBClient,
-  Vcl.Controls,
-  Vcl.ExtCtrls,
-  Vcl.Forms,
-  Vcl.Graphics,
-  Vcl.StdCtrls,
-  h5u.Grid.Data.Core,
-  h5u.Grid.Data.DataSet,
-  h5u.Grid.Factory,
+  System.Math, System.Classes, System.Rtti, System.SysUtils,
+  Winapi.Windows, Data.DB, Datasnap.DBClient,
+  Vcl.Controls, Vcl.ExtCtrls, Vcl.Forms, Vcl.Graphics, Vcl.StdCtrls,
+  h5u.Grid.Types, h5u.Grid.Data.Core, h5u.Grid.Data.DataSet, h5u.Grid.Factory,
   h5u.Grid.SampleData,
-  Vcl.h5u.Grid.Styles,
-  Vcl.h5u.Grid;
+  Vcl.h5u.Grid.Styles, Vcl.h5u.Grid;
 
 type
   TPriorityDemoCell = class(ThiiVclDataCell)

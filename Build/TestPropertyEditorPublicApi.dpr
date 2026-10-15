@@ -10,6 +10,64 @@ uses
   Vcl.Forms, Vcl.h5u.PropertyEditor;
   {$ENDIF}
 
+type
+  TChildOptions = class(TPersistent)
+  private
+    FEnabled: Boolean;
+    FParent: TPersistent;
+  published
+    property Enabled: Boolean read FEnabled write FEnabled;
+    property Parent: TPersistent read FParent write FParent;
+  end;
+
+  TGroupedObject = class(TPersistent)
+  private
+    FChild: TChildOptions;
+  public
+    destructor Destroy; override;
+  published
+    property Child: TChildOptions read FChild write FChild;
+  end;
+
+destructor TGroupedObject.Destroy;
+begin
+  FChild.Free;
+  inherited;
+end;
+
+procedure TestNestedObjects;
+var
+  Model: ThiiPropertyModel;
+  Obj: TGroupedObject;
+  Previous: TChildOptions;
+begin
+  Model := ThiiPropertyModel.Create(nil);
+  Obj := TGroupedObject.Create;
+  try
+    Obj.Child := TChildOptions.Create;
+    Obj.Child.Parent := Obj;
+    Model.ExpandSubProperties := True;
+    Model.RootGroupName := 'Options';
+    Model.DataObject := Obj;
+    if (Model.Items.Count > 10) or (Model.FindProperty('Child.Enabled') = nil) then
+      raise Exception.Create('Nested cyclic objects did not terminate or expand');
+    Previous := Obj.Child;
+    Obj.Child := nil;
+    Previous.Free;
+    Model.Refresh;
+    if Model.FindProperty('Child.Enabled') <> nil then
+      raise Exception.Create('Refresh retained properties of a freed child');
+    Obj.Child := TChildOptions.Create;
+    Model.Refresh;
+    if (Model.FindProperty('Child.Enabled') = nil) or (Model.FindProperty('Child.Enabled').Instance <> Pointer(Obj.Child)) then
+      raise Exception.Create('Refresh did not expand/bind a replacement child');
+    Writeln('PASS: nested object cycles and replacement lifetime');
+  finally
+    Model.Free;
+    Obj.Free;
+  end;
+end;
+
 var
   Inspector, Copy: ThiiPropertyEditor;
   Model: ThiiPropertyModel;
@@ -28,6 +86,7 @@ end;
 begin
   try
     Application.Initialize;
+    TestNestedObjects;
     RegisterClass(ThiiPropertyEditor);
     Inspector := ThiiPropertyEditor.Create(nil);
     Copy := nil;

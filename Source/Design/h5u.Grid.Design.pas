@@ -35,7 +35,7 @@ procedure Register;
 
 implementation
 
-{$IFNDEF FPC}
+{$IFnDEF FPC}
 uses
   Winapi.Windows, Winapi.Messages, System.Types, System.Generics.Collections,
   Vcl.ExtCtrls, Vcl.AppEvnts, h5u.Grid.Columns, h5u.Grid.Moving;
@@ -204,7 +204,7 @@ begin
   {$ENDIF}
   RegisterComponents('hiiGrid',
     [ThiiClassFactory, ThiiDatasetController, ThiiMemoryController, ThiiObjectListController, ThiiVirtualController, ThiiSampleClientDataset]);
-  {$IFNDEF FPC}
+  {$IFnDEF FPC}
   RegisterComponents('hii FormDesign', [ThiiFormDesigner]);
   {$ENDIF}
 
@@ -227,7 +227,7 @@ begin
   {$ENDIF}
 end;
 
-{$IFNDEF FPC}
+{$IFnDEF FPC}
 initialization
   ClickObservers := TList<Th5uDesignClickObserver>.Create;
   MouseMessages := Th5uDesignMouseMessages.Create;

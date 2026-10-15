@@ -33,6 +33,7 @@ type
     FObjectListController: ThiiPropertyListController;
     FNeedsRebind: Boolean;
     FShowGroups: Boolean;
+    FRestoringGroups: Boolean;
     FGroupStates: TDictionary<Integer, Boolean>;
     procedure GroupStateChanged(Sender: TObject; const AContext: ThiiAdjacentGroupStateChangedContext);
     procedure RestoreGroupStates;
@@ -92,6 +93,8 @@ begin
   FPropertyEditor.AddChangeListener(ModelChanging, ModelChanged, ModelItemChanged);
   FNeedsRebind := True;
   FShowGroups := True;
+  FPropertyEditor.RootGroupName := 'Options';
+  FPropertyEditor.ExpandSubProperties := True;
   AdjacentGroupFolding.IdColumnId := 'GroupName';
   AdjacentGroupFolding.GroupEmptyValues := False;
   OnAdjacentGroupStateChanged := GroupStateChanged;
@@ -142,11 +145,17 @@ procedure ThiiPropertyEditor.ModelChanged(Sender: TObject);
 begin
   if not FNeedsRebind then
     Exit;
-  FObjectListController.RebuildItems(FShowGroups);
+  FObjectListController.RebuildItems(FShowGroups, FGroupStates);
   AdjacentGroupFolding.Enabled := FShowGroups and FObjectListController.HasGroups;
   FNeedsRebind := False;
   DataController := FObjectListController;
-  RestoreGroupStates;
+  FRestoringGroups := True;
+  try
+    inherited ResetAdjacentGroupStates;
+    RestoreGroupStates;
+  finally
+    FRestoringGroups := False;
+  end;
 end;
 
 procedure ThiiPropertyEditor.SetShowGroups(AValue: Boolean);
@@ -162,14 +171,22 @@ procedure ThiiPropertyEditor.GroupStateChanged(Sender: TObject; const AContext: 
 var
   LID: Integer;
 begin
+  if FRestoringGroups then
+     Exit;
   if TryStrToInt(AContext.AnchorRowKey.ToString, LID) and (LID < 0) then
+  begin
     FGroupStates.AddOrSetValue(LID, AContext.Collapsed);
+    ModelChanging(Self);
+    ModelChanged(Self);
+  end;
 end;
 
 procedure ThiiPropertyEditor.ResetAdjacentGroupStates;
 begin
   FGroupStates.Clear;
   inherited;
+  ModelChanging(Self);
+  ModelChanged(Self);
 end;
 
 procedure ThiiPropertyEditor.RestoreGroupStates;

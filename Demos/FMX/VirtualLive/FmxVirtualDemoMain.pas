@@ -5,17 +5,9 @@ interface
 {$SCOPEDENUMS ON}
 
 uses
-  System.Classes,
-  System.Generics.Collections,
-  System.Rtti,
-  System.SysUtils,
-  FMX.Controls,
-  FMX.Controls.Presentation,
-  FMX.Forms,
-  FMX.StdCtrls,
-  FMX.Types,
-  h5u.Grid.Data.Core,
-  h5u.Grid.Data.Virtual,
+  System.Classes, System.Generics.Collections, System.Rtti, System.SysUtils,
+  FMX.Controls, FMX.Controls.Presentation, FMX.Forms, FMX.StdCtrls, FMX.Types,
+  h5u.Grid.Data.Core, h5u.Grid.Data.Virtual,
   Fmx.h5u.Grid;
 
 type

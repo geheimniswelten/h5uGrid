@@ -6,16 +6,9 @@ interface
 {$RTTI EXPLICIT METHODS([]) PROPERTIES([vcPublic, vcPublished]) FIELDS([])}
 
 uses
-  System.Classes,
-  System.DateUtils,
-  System.SysUtils,
-  FMX.Controls,
-  FMX.Controls.Presentation,
-  FMX.Forms,
-  FMX.StdCtrls,
-  FMX.Types,
-  h5u.Grid.Data.Core,
-  h5u.Grid.Data.Objects,
+  System.Classes, System.DateUtils, System.SysUtils,
+  FMX.Controls, FMX.Controls.Presentation, FMX.Forms, FMX.StdCtrls, FMX.Types,
+  h5u.Grid.Data.Core, h5u.Grid.Data.Objects,
   Fmx.h5u.Grid;
 
 type

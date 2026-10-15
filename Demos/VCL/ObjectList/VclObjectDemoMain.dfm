@@ -1,7 +1,7 @@
 object VclObjectDemoForm: TVclObjectDemoForm
   Left = 0
   Top = 0
-  Caption = 'h5u.Grid VCL - Objektliste / RTTI'
+  Caption = 'hiiGrid VCL - Objektliste / RTTI'
   ClientHeight = 610
   ClientWidth = 1040
   Color = clBtnFace

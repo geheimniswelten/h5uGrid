@@ -5,17 +5,9 @@ interface
 {$SCOPEDENUMS ON}
 
 uses
-  System.Classes,
-  System.Generics.Collections,
-  System.Rtti,
-  System.Math,
-  System.SysUtils,
-  Vcl.Controls,
-  Vcl.ExtCtrls,
-  Vcl.Forms,
-  Vcl.StdCtrls,
-  h5u.Grid.Data.Core,
-  h5u.Grid.Data.Virtual,
+  System.Classes, System.Generics.Collections, System.Rtti, System.Math, System.SysUtils,
+  Vcl.Controls, Vcl.ExtCtrls, Vcl.Forms, Vcl.StdCtrls,
+  h5u.Grid.Data.Core, h5u.Grid.Data.Virtual,
   Vcl.h5u.Grid;
 
 type

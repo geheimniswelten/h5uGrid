@@ -6,16 +6,9 @@ interface
 {$RTTI EXPLICIT METHODS([]) PROPERTIES([vcPublic, vcPublished]) FIELDS([])}
 
 uses
-  System.Classes,
-  System.DateUtils,
-  System.SysUtils,
-  System.Rtti,
-  Vcl.Controls,
-  Vcl.ExtCtrls,
-  Vcl.Forms,
-  Vcl.StdCtrls,
-  h5u.Grid.Data.Core,
-  h5u.Grid.Data.Objects,
+  System.Classes, System.DateUtils, System.SysUtils, System.Rtti,
+  Vcl.Controls, Vcl.ExtCtrls, Vcl.Forms, Vcl.StdCtrls,
+  h5u.Grid.Data.Core, h5u.Grid.Data.Objects,
   Vcl.h5u.Grid;
 
 type

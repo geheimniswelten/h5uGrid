@@ -5,23 +5,11 @@ interface
 {$SCOPEDENUMS ON}
 
 uses
-  System.Classes,
-  System.Math,
-  System.SysUtils,
-  System.UITypes,
-  Data.DB,
-  Datasnap.DBClient,
-  FMX.Controls,
-  FMX.Forms,
-  FMX.Layouts,
-  FMX.ListBox,
-  FMX.StdCtrls,
-  FMX.Edit,
-  FMX.Types,
-  FMX.Controls.Presentation,
-  h5u.Grid.Data.Core,
-  h5u.Grid.Data.DataSet,
-  h5u.Grid.SampleData,
+  System.Classes, System.Math, System.SysUtils, System.UITypes,
+  Data.DB, Datasnap.DBClient,
+  FMX.Controls, FMX.Forms, FMX.Layouts, FMX.ListBox, FMX.StdCtrls,
+  FMX.Edit, FMX.Types, FMX.Controls.Presentation,
+  h5u.Grid.Data.Core, h5u.Grid.Data.DataSet, h5u.Grid.SampleData,
   Fmx.h5u.Grid;
 
 type

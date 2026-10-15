@@ -54,7 +54,7 @@ const
 
 type
   EhiiGrid = class(Exception);
-  {$IFNDEF FPC}
+  {$IFnDEF FPC}
   ThiiLegacyOptionAttribute = class(TCustomAttribute);
   {$ENDIF}
   EhiiFactory = class(EhiiGrid);

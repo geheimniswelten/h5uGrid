@@ -3,16 +3,20 @@
 interface
 
 {$SCOPEDENUMS ON}
+{$RTTI EXPLICIT METHODS([]) PROPERTIES([vcPublic, vcPublished]) FIELDS([])}
 
 uses
   h5u.Grid.Types,
   System.Math,
+  System.Types,
   System.Classes,
   System.Rtti,
   System.SysUtils,
   Data.DB,
   Datasnap.DBClient,
   Winapi.Windows,
+  Winapi.Messages,
+  Vcl.AppEvnts,
   Vcl.Controls,
   Vcl.ExtCtrls,
   Vcl.Forms,
@@ -72,7 +76,21 @@ type
     procedure GridGetThumbHint(Sender: TObject; const AContext: ThiiThumbHintContext; var AText: string; var AVisible: Boolean);
   private
     FAllAdjacentGroupsCollapsed: Boolean;
+    FSidebarReady: Boolean;
+    FSidebarOverlay: Boolean;
+    FSidebarUpdating: Boolean;
+    FSidebarButton: TButton;
+    procedure InitializePropertyEditor;
+    procedure InitializeSidebar;
+    procedure SidebarToggle(Sender: TObject);
+    procedure SidebarMessage(var Msg: TMsg; var Handled: Boolean);
+    procedure SidebarGridEnter(Sender: TObject);
+    procedure SidebarIdle(Sender: TObject; var Done: Boolean);
     procedure ApplyOptions;
+  protected
+    procedure Resize; override;
+  public
+    procedure SetSidebarWidth(AWidth: Integer);
   end;
 
 var
@@ -81,6 +99,177 @@ var
 implementation
 
 {$R *.dfm}
+
+type
+  TSidebarSplitter = class(TSplitter)
+  private
+    FDragging: Boolean;
+    FStartX: Integer;
+    FStartWidth: Integer;
+  protected
+    procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
+    procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
+    procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
+  end;
+
+procedure TSidebarSplitter.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  if Button <> mbLeft then
+    Exit;
+  FStartX := ClientToScreen(Point(X, Y)).X;
+  FStartWidth := TVclMegaDemoForm(Owner).SplitView1.OpenedWidth;
+  FDragging := True;
+  MouseCapture := True;
+end;
+
+procedure TSidebarSplitter.MouseMove(Shift: TShiftState; X, Y: Integer);
+begin
+  if FDragging then
+    TVclMegaDemoForm(Owner).SetSidebarWidth(FStartWidth + ClientToScreen(Point(X, Y)).X - FStartX);
+end;
+
+procedure TSidebarSplitter.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  if Button <> mbLeft then
+    Exit;
+  FDragging := False;
+  MouseCapture := False;
+end;
+
+procedure TVclMegaDemoForm.InitializePropertyEditor;
+const
+  CHiddenProperties = 'Name,Tag,Left,Top,Width,Height,Align,AlignWithMargins,Anchors,Constraints,Margins,Padding,Position,Size,Scale,'
+    + 'RotationAngle,RotationCenter,TabOrder,TabStop,CanFocus,HitTest,AutoCapture,ClipChildren,ClipParent,Visible,'
+    + 'DragMode,DragKind,DragCursor,Touch,Action,PopupMenu,Hint,ShowHint,ParentShowHint,CustomHint,ParentCustomHint,'
+    + 'HelpContext,HelpKeyword,HelpType,StyleName,StyleLookup,Locked,Stored,DataController,SharedClassFactory,On*';
+var
+  LName: string;
+  LFilter: ThiiPropertyFilter;
+begin
+  // Only the grid component's integration properties are hidden; widths/heights
+  // inside grid options (headers, bands, columns) remain available.
+  for LName in CHiddenProperties.Split([',']) do
+  begin
+    LFilter := Properties.PropertyEditor.Filters.Add;
+    LFilter.ClassMask := 'ThiiCustomGrid';
+    LFilter.NameMask := LName;
+    LFilter.Hidden := True;
+  end;
+  Properties.DataObject := Grid;
+end;
+
+procedure TVclMegaDemoForm.InitializeSidebar;
+var
+  Events: TApplicationEvents;
+begin
+  // The resize grip belongs to the sidebar, also when it floats over the grid.
+  Splitter1.Free;
+  Splitter1 := TSidebarSplitter.Create(Self);
+  Splitter1.Name := 'Splitter1';
+  Splitter1.Parent := SplitView1;
+  Splitter1.Align := alRight;
+  Splitter1.Width := 8;
+  Splitter1.Cursor := crHSplit;
+  SplitView1.UseAnimation := False;
+  SplitView1.CloseStyle := svcCollapse;
+  SplitView1.CompactWidth := 0;
+  SplitView1.OpenedWidth := 300;
+  Button1.Caption := '×';
+  Button1.Hint := 'Eigenschaften schließen/öffnen';
+  Button1.ShowHint := True;
+  Button1.OnClick := SidebarToggle;
+  FSidebarButton := TButton.Create(Self);
+  FSidebarButton.Name := 'SidebarToggleButton';
+  FSidebarButton.Parent := Self;
+  FSidebarButton.Align := alTop;
+  FSidebarButton.Height := 28;
+  FSidebarButton.Caption := 'Grid-Eigenschaften';
+  FSidebarButton.OnClick := SidebarToggle;
+  Events := TApplicationEvents.Create(Self);
+  Events.OnMessage := SidebarMessage;
+  Events.OnIdle := SidebarIdle;
+  Grid.OnEnter := SidebarGridEnter;
+  FSidebarReady := True;
+  Resize;
+end;
+
+procedure TVclMegaDemoForm.SetSidebarWidth(AWidth: Integer);
+begin
+  SplitView1.OpenedWidth := EnsureRange(AWidth, Min(180, Max(80, ClientWidth - 40)), Max(80, ClientWidth - IfThen(FSidebarOverlay, 40, 280)));
+end;
+
+procedure TVclMegaDemoForm.Resize;
+var
+  Overlay: Boolean;
+begin
+  inherited;
+  if not FSidebarReady or FSidebarUpdating then
+    Exit;
+  FSidebarUpdating := True;
+  try
+    Overlay := ClientWidth < 700;
+    if Overlay then
+    begin
+      if not FSidebarOverlay or (SplitView1.DisplayMode <> svmOverlay) then
+      begin
+        SplitView1.Close;
+        SplitView1.DisplayMode := svmOverlay;
+      end;
+      SplitView1.Top := Grid.Top;
+      SplitView1.Height := Grid.Height;
+    end
+    else
+    begin
+      SplitView1.DisplayMode := svmDocked;
+      if FSidebarOverlay or not SplitView1.Opened then SplitView1.Open;
+    end;
+    FSidebarOverlay := Overlay;
+    SetSidebarWidth(SplitView1.OpenedWidth);
+    FSidebarButton.Visible := Overlay;
+    Button1.Visible := Overlay;
+    SplitView1.BringToFront;
+  finally
+    FSidebarUpdating := False;
+  end;
+end;
+
+procedure TVclMegaDemoForm.SidebarToggle(Sender: TObject);
+begin
+  SplitView1.Opened := not SplitView1.Opened;
+  if SplitView1.Opened then SplitView1.BringToFront;
+end;
+
+procedure TVclMegaDemoForm.SidebarGridEnter(Sender: TObject);
+begin
+  if FSidebarOverlay then SplitView1.Close;
+end;
+
+procedure TVclMegaDemoForm.SidebarMessage(var Msg: TMsg; var Handled: Boolean);
+begin
+  if not FSidebarOverlay or not SplitView1.Opened then
+    Exit;
+  if (Msg.message <> WM_LBUTTONDOWN) and (Msg.message <> WM_RBUTTONDOWN) and (Msg.message <> WM_MBUTTONDOWN) then
+    Exit;
+  if (Msg.hwnd <> Handle) and not IsChild(Handle, Msg.hwnd) then
+    Exit;
+  if (Msg.hwnd = SplitView1.Handle) or IsChild(SplitView1.Handle, Msg.hwnd) then
+    Exit;
+  if Msg.hwnd = FSidebarButton.Handle then
+    Exit;
+  SplitView1.Close;
+end;
+
+
+procedure TVclMegaDemoForm.SidebarIdle(Sender: TObject; var Done: Boolean);
+begin
+  if not FSidebarOverlay or not SplitView1.Opened or (ActiveControl = nil) then
+    Exit;
+  if (ActiveControl = FSidebarButton) or (ActiveControl = SplitView1) then
+    Exit;
+  if IsChild(SplitView1.Handle, ActiveControl.Handle) then
+    Exit;
+  SplitView1.Close;
+end;
 
 { TPriorityDemoCell }
 
@@ -234,6 +423,8 @@ begin
     end);
 
   ApplyOptions;
+  InitializePropertyEditor;
+  InitializeSidebar;
 end;
 
 procedure TVclMegaDemoForm.GridGetRowHeight(Sender: TObject; const AContext: ThiiGetRowHeightContext; var AHeight: Integer; var ACacheResult: Boolean);

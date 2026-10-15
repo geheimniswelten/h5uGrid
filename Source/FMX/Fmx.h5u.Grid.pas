@@ -55,7 +55,7 @@ type
   // Types used by the grid API; these are aliases, not additional runtime classes.
   ThiiClassId = h5u.Grid.Types.ThiiClassId;
   EhiiGrid = h5u.Grid.Types.EhiiGrid;
-  {$IFNDEF FPC}
+  {$IFnDEF FPC}
   ThiiLegacyOptionAttribute = h5u.Grid.Types.ThiiLegacyOptionAttribute;
   {$ENDIF}
   EhiiFactory = h5u.Grid.Types.EhiiFactory;

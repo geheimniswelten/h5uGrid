@@ -238,7 +238,9 @@ type
 // Registry updates belong on the UI thread. Each platform has its own namespace.
 procedure h5uRegisterEditor(APlatform: ThiiEditorPlatform; const AEditorName: string; AClass: ThiiGridEditorItemClass);
 function h5uEditorClass(APlatform: ThiiEditorPlatform; const AEditorName: string): ThiiGridEditorItemClass;
-procedure h5uUnregisterEditor(APlatform: ThiiEditorPlatform; const AEditorName: string);
+procedure h5uUnregisterEditor(APlatform: ThiiEditorPlatform; const AEditorName: string); overload;
+// Remove only the registering module's class; keep replacements from other modules.
+procedure h5uUnregisterEditor(APlatform: ThiiEditorPlatform; const AEditorName: string; AExpectedClass: ThiiGridEditorItemClass); overload;
 function h5uCreateEditor(APlatform: ThiiEditorPlatform; const AEditorName: string; ACollection: TCollection): ThiiGridEditorItem;
 function h5uResolveEditorName(AGrid: TObject; AColumns: ThiiGridColumns; AColumn: ThiiGridColumn; ARow: Int64; ADefaults: ThiiDefaultEditors; AGetValue: Th5uGetCellValueMethod;
   out AColumnScoped: Boolean): string;
@@ -352,8 +354,19 @@ end;
 
 procedure h5uUnregisterEditor(APlatform: ThiiEditorPlatform; const AEditorName: string);
 begin
-  if Assigned(GEditors[APlatform]) then
-    GEditors[APlatform].Remove(LowerCase(AEditorName));
+  h5uUnregisterEditor(APlatform, AEditorName, nil);
+end;
+
+procedure h5uUnregisterEditor(APlatform: ThiiEditorPlatform; const AEditorName: string; AExpectedClass: ThiiGridEditorItemClass);
+var
+  LClass: ThiiGridEditorItemClass;
+begin
+  if not Assigned(GEditors[APlatform]) then
+    Exit;
+  if Assigned(AExpectedClass) then
+    if not GEditors[APlatform].TryGetValue(LowerCase(AEditorName), LClass) or (LClass <> AExpectedClass) then
+      Exit;
+  GEditors[APlatform].Remove(LowerCase(AEditorName));
 end;
 
 function h5uCreateEditor(APlatform: ThiiEditorPlatform; const AEditorName: string; ACollection: TCollection): ThiiGridEditorItem;
